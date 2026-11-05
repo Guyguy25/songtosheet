@@ -417,7 +417,7 @@ body.pricing-open{overflow:hidden}
     for(const p of ['dashboard','create','library','result','billing'])show(p+'-page',page===p);
     const side=page==='dashboard'?'menu-dashboard':page==='library'||page==='result'?'menu-library':'menu-create';
     for(const id of ['menu-dashboard','menu-create','menu-library'])$(id).classList.toggle('side-active',id===side);
-    const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition',billing:'Crédits'};
+    const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition',billing:'Abonnements'};
     $('page-crumb').textContent=names[page]||'Mon espace';
     document.querySelector('.sidebar').classList.remove('mobile-open');
     if(page==='create') {if(state.link)$('workspace-url').value=state.link;if(state.file)$('workspace-file-name').textContent=state.file.name;}
@@ -590,6 +590,7 @@ body.pricing-open{overflow:hidden}
     $('mobile-menu-btn').onclick=()=>{const open=$('mobile-menu').classList.toggle('open');$('mobile-menu-btn').setAttribute('aria-expanded',String(open));};
     document.querySelectorAll('.mobile-menu a').forEach(a=>a.addEventListener('click',menuClose));
     $('tab-link').onclick=()=>switchHero('link');$('tab-upload').onclick=()=>switchHero('upload');$('hero-generate').onclick=heroGenerate;
+    $('hero-link').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();heroGenerate();}});
     $('hero-file').onchange=e=>{const file=e.target.files[0];if(file){state.file=file;$('hero-file-label').textContent=file.name;}};
     $('workspace-file').onchange=e=>{const file=e.target.files[0];if(file){state.file=file;$('workspace-file-name').textContent=file.name;}};
     for(const [dropId,fileId] of [['hero-drop','hero-file'],['workspace-drop','workspace-file']]){
@@ -602,7 +603,7 @@ body.pricing-open{overflow:hidden}
     $('sidebar-logout').onclick=logout;$('mobile-sidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('mobile-open');
     $('menu-dashboard').onclick=()=>showAppPage('dashboard');$('menu-create').onclick=()=>showAppPage('create');$('menu-library').onclick=()=>showAppPage('library');
     $('side-buy').onclick=()=>showPricing('unlimited');$('create-buy').onclick=()=>showPricing('unlimited');$('dashboard-start').onclick=()=>showAppPage('create');$('view-all').onclick=()=>showAppPage('library');$('library-new').onclick=()=>showAppPage('create');
-    $('back-to-library').onclick=()=>showAppPage('library');$('workspace-generate').onclick=submitJob;
+    $('back-to-library').onclick=()=>showAppPage('library');$('workspace-generate').onclick=()=>showPricing('unlimited');
     $('library-search').oninput=()=>renderJobs('library-jobs',filterJobs());$('auth-form').onsubmit=submitAuth;
     $('learn-more').onclick=(e)=>{e.preventDefault();go('/#comment-ca-marche');document.querySelector('#comment-ca-marche')?.scrollIntoView({behavior:'smooth'});};
     $('footer-year').textContent=new Date().getFullYear();

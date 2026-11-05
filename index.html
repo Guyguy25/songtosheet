@@ -323,9 +323,61 @@ body.pricing-open{overflow:hidden}
     if(location.pathname!=='/app'){state.activePage=page;go('/app');}
     else showAppPage(page);
   }
+
+  // Pricing demo: Stripe and backend entitlement enforcement are not activated.
+  const subscriptionPlans={
+    essential:{name:'Essentiel',monthly:10,yearly:78,usage:'1 musique tous les 7 jours, non cumulable'},
+    unlimited:{name:'Illimité',monthly:19,yearly:148.20,usage:'Transcriptions illimitées* sans quota hebdomadaire'},
+    lifetime:{name:'À vie',monthly:99,yearly:99,usage:'Transcriptions illimitées* avec un paiement unique'}
+  };
+  let subscriptionCycle='monthly',subscriptionChoice='unlimited',pricingPreviousFocus=null;
+  function euros(number){
+    return new Intl.NumberFormat('fr-FR',{minimumFractionDigits:Number.isInteger(number)?0:2,maximumFractionDigits:2}).format(number)+' €';
+  }
+  function syncPricing(){
+    document.querySelectorAll('[data-cycle]').forEach(b=>{
+      const active=b.dataset.cycle===subscriptionCycle;
+      b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
+    });
+    Object.keys(subscriptionPlans).forEach(key=>{
+      const p=subscriptionPlans[key],life=key==='lifetime';
+      const cost=life?99:subscriptionCycle==='annual'?p.yearly/12:p.monthly;
+      const billed=life?'Sans renouvellement':subscriptionCycle==='annual'?'Facturé '+euros(p.yearly)+' / an · −35 %':'Facturé chaque mois';
+      document.querySelectorAll('[data-plan-price="'+key+'"]').forEach(el=>el.textContent=euros(cost));
+      document.querySelectorAll('[data-plan-period="'+key+'"]').forEach(el=>el.textContent=life?'une fois':'/mois');
+      document.querySelectorAll('[data-plan-billed="'+key+'"]').forEach(el=>el.textContent=billed);
+      document.querySelectorAll('[data-modal-price="'+key+'"]').forEach(el=>el.textContent=euros(cost));
+      document.querySelectorAll('[data-modal-billed="'+key+'"]').forEach(el=>el.textContent=life?'une fois':subscriptionCycle==='annual'?'facturé '+euros(p.yearly)+'/an':'par mois');
+    });
+    document.querySelectorAll('.pricing-choice').forEach(b=>{
+      const active=b.dataset.plan===subscriptionChoice;
+      b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
+    });
+    const chosen=subscriptionPlans[subscriptionChoice];
+    const amount=subscriptionChoice==='lifetime'?99:subscriptionCycle==='annual'?chosen.yearly/12:chosen.monthly;
+    $('selected-plan-name').textContent=chosen.name;
+    $('selected-plan-usage').textContent=chosen.usage;
+    $('pricing-summary').textContent=chosen.name+' · '+euros(amount)+(subscriptionChoice==='lifetime'?' une fois':subscriptionCycle==='annual'?' / mois (facturé '+euros(chosen.yearly)+'/an)':' / mois');
+    $('pricing-confirm').textContent='Continuer avec '+chosen.name+' ↗';
+  }
+  function showPricing(plan){
+    if(subscriptionPlans[plan])subscriptionChoice=plan;
+    if($('pricing-overlay').classList.contains('hidden'))pricingPreviousFocus=document.activeElement;
+    $('pricing-overlay').classList.remove('hidden');
+    $('pricing-overlay').setAttribute('aria-hidden','false');
+    document.body.classList.add('pricing-open');
+    $('pricing-message').textContent='';
+    syncPricing();$('pricing-close').focus();
+  }
+  function hidePricing(){
+    $('pricing-overlay').classList.add('hidden');
+    $('pricing-overlay').setAttribute('aria-hidden','true');
+    document.body.classList.remove('pricing-open');
+    if(pricingPreviousFocus&&pricingPreviousFocus.isConnected)pricingPreviousFocus.focus();
+  }
   function renderAppPricing(){
-    const pricing=document.querySelector('.pricing-grid');
-    $('app-pricing').innerHTML=pricing.innerHTML;
+    $('app-pricing').innerHTML=document.querySelector('.pricing-grid').innerHTML;
+    syncPricing();
   }
   async function buy(pack){
     state.pendingPack=pack;

@@ -6,7 +6,7 @@
 
 ## Deux parties complémentaires
 
-- **Démo hébergée sur Vercel** : `index.html`, une landing et un studio interactifs avec offres d'abonnement affichées (sans paiement) et partition d'exemple. Aucun compte, paiement, upload ou traitement IA réel sur cette démo.
+- **Démo hébergée sur Vercel** : `index.html`, une landing orientée saisie de lien (sans grille tarifaire), un studio interactif, une fenêtre d'abonnement et une partition d'exemple. Aucun compte, paiement, upload ou traitement IA réel sur cette démo.
 - **Application locale** : `backend/` contient l'API FastAPI, les comptes, les crédits, Stripe à configurer, les tests, la transcription expérimentale monophonique et les exports PDF, MIDI, MusicXML.
 
 ## Déploiement

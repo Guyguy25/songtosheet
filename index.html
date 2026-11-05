@@ -571,10 +571,12 @@ body.pricing-open{overflow:hidden}
       const host=url.hostname.toLowerCase();
       const allowYoutube=['youtube.com','www.youtube.com','m.youtube.com','music.youtube.com','youtu.be'];
       const allowSpotify=['spotify.com','open.spotify.com'];
+      const allowDeezer=['deezer.com','www.deezer.com'];
       const allowCloud=['soundcloud.com','www.soundcloud.com'];
       if(!url.pathname||url.pathname==='/')return null;
       if(allowYoutube.includes(host))return 'YouTube';
       if(allowSpotify.includes(host))return 'Spotify';
+      if(allowDeezer.includes(host))return 'Deezer';
       if(allowCloud.includes(host))return 'SoundCloud';
     }catch{}
     return null;
@@ -596,7 +598,7 @@ body.pricing-open{overflow:hidden}
     if(path==='/api/links/inspect'){
       const value=JSON.parse(options.body||'{}').url||'';
       const provider=validLink(value);
-      if(!provider)return reply({detail:'Entre un lien HTTPS YouTube, Spotify ou SoundCloud valide.'},400);
+      if(!provider)return reply({detail:'Entre un lien HTTPS YouTube, Spotify, Deezer ou SoundCloud valide.'},400);
       return reply({provider,source_url:value,requires_audio:true,message:`Lien ${provider} reconnu ! En V1, il faut fournir un fichier audio autorisé pour la transcription. Cette page est un aperçu non connecté à un moteur.`});
     }
     return reply({detail:'Cette fonction n’est pas activée dans cet aperçu.'},503);

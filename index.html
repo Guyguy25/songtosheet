@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#160D2D" />
-  <link rel="icon" type="image/svg+xml" href="/assets/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32.png" />
+  <link rel="icon" type="image/png" sizes="64x64" href="/assets/favicon.png" />
   <meta name="description" content="SongToSheet.ai : transformez vos musiques préférées en partitions PDF, MIDI et MusicXML. Découvrez notre V1 de transcription musicale." />
   <title>SongToSheet.ai — Obtenez la partition de vos musiques préférées</title>
   
@@ -413,6 +414,25 @@ body.pricing-open{overflow:hidden}
   .brand-mark img{width:33px;height:39px}
 }
 
+
+/* Compact conversion field: input and CTA on one line, without a huge button row. */
+.hero-action-panel{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;column-gap:7px;row-gap:7px;padding:8px}
+.hero-action-panel .rev-mode{grid-column:1 / -1;grid-row:1;min-width:0;margin:0}
+.hero-action-panel .hero-source-panel{grid-column:1;grid-row:2;min-width:0}
+.hero-action-panel .hero-input,.hero-action-panel .hero-upload{height:54px;min-height:54px;width:100%;margin:0;box-sizing:border-box}
+.hero-action-panel .hero-input input{min-width:0;text-overflow:ellipsis}
+.hero-action-panel #hero-generate{grid-column:2;grid-row:2;align-self:stretch;width:auto;min-height:54px;margin:0;padding:0 19px;white-space:nowrap;border-radius:11px;font-size:13px;box-shadow:0 4px 14px #4424a851;display:flex;gap:8px}
+.hero-action-panel #hero-generate span{font-size:17px}
+@media(max-width:650px){
+  .hero-action-panel{grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:7px}
+  .hero-action-panel .hero-input,.hero-action-panel .hero-upload{height:50px;min-height:50px;padding:0 9px}
+  .hero-action-panel .hero-input input{font-size:11px}
+  .hero-action-panel .hero-input>span{font-size:17px}
+  .hero-action-panel #hero-generate{min-height:50px;padding:0 12px;font-size:12px;gap:5px}
+  .hero-action-panel .rev-mode button{padding:8px 10px}
+  .hero-action-panel .hero-upload b{font-size:10px}.hero-action-panel .hero-upload small{font-size:8px}
+}
+
 </style>
 
 
@@ -448,7 +468,7 @@ body.pricing-open{overflow:hidden}
    <div id="link-panel" class="hero-source-panel"><label class="hero-input" for="hero-link"><span>↗</span><input id="hero-link" type="url" inputmode="url" autocomplete="off" placeholder="Colle un lien YouTube, Spotify, Deezer…"></label></div>
    <div id="upload-panel" class="hero-source-panel hidden"><label id="hero-drop" class="hero-upload" for="hero-file"><span>⇧</span><span><b id="hero-file-label">Déposer ou choisir un audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo</small></span><input id="hero-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"></label></div>
    <select id="hero-instrument" aria-label="Instrument" hidden><option value="piano">Piano</option><option value="guitare">Guitare</option><option value="violon">Violon</option><option value="voix">Voix</option><option value="basse">Basse</option></select>
-   <button id="hero-generate" class="split-submit" type="button">Créer ma partition <span>↗</span></button>
+   <button id="hero-generate" class="split-submit" type="button" aria-label="Générer ma partition">Générer <span aria-hidden="true">↗</span></button>
  </div>
  <p class="split-legal">Démo de la future expérience : le lien identifie le morceau, mais un fichier audio autorisé reste nécessaire pour la transcription. Génération en ligne et paiement indisponibles actuellement.</p>
  </div>

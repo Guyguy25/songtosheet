@@ -1,6 +1,6 @@
 # SongToSheet.ai — Spécification des abonnements (V1)
 
-**Statut :** Tarifs présentés dans la landing et le modal de démo, non commercialisables tant que l'entitlement backend et le paiement n'ont pas été intégrés et testés.
+**Statut :** Tarifs accessibles dans l'espace abonnements et dans le modal déclenché après intention de génération, non commercialisables tant que l'entitlement backend et le paiement n'ont pas été intégrés et testés.
 
 | Plan | Période | Prix total | Prix mensuel affiché | Usage |
 |---|---|---:|---:|---|
@@ -13,8 +13,8 @@
 ## UX
 
 - Aucune période d'essai gratuite ni génération de transcription offerte.
-- La landing et le dashboard affichent la même grille ; l'offre **Illimité** est recommandée et sélectionnée par défaut.
-- Choix mensuel/annuel synchronisé entre la page et le modal ; l'accès à vie reste à 99 € quel que soit le choix.
+- La landing **ne présente pas de tarifs** et se concentre sur la promesse, la saisie d'un lien ou d'un audio et l'aperçu d'une partition. L'espace Abonnements contient la grille ; l'offre **Illimité** est recommandée dans le modal déclenché après intention de génération.
+- Choix mensuel/annuel synchronisé entre la page Abonnements et le modal ; l'accès à vie reste à 99 € quel que soit le choix.
 - Le prix annuel **réellement débité** doit figurer avant paiement : 78,00 € ou 148,20 €.
 - Le clic sur le CTA du modal dans la version publique n'ouvre aucun checkout ; un message informe clairement que les paiements ne sont pas actifs.
 

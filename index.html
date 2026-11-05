@@ -636,15 +636,33 @@ body.pricing-open{overflow:hidden}
   function menuClose(){$('mobile-menu').classList.remove('open');$('mobile-menu-btn').setAttribute('aria-expanded','false');}
   function renderRoute(){
     clearInterval(state.poll);state.poll=null;menuClose();
-    const pathname=location.pathname;
-    const landing=pathname==='/' || pathname==='';
+    const pathname=(location.pathname.replace(/\/$/,'')||'/').toLowerCase();
+    const publicRoutes={'/':'landing','/fonctionnalites':'features-view','/resultats':'results-view','/tarifs':'pricing-view','/faq':'faq-view'};
+    const activePublic=publicRoutes[pathname]||null;
+    const marketing=Boolean(activePublic)||pathname==='/legal';
     const app=pathname==='/app';
     const authPage=pathname==='/connexion'||pathname==='/inscription';
-    show('public-header',landing);show('landing',landing);show('public-footer',landing);
+    show('public-header',marketing);
+    show('public-footer',marketing);
+    for(const id of ['landing','features-view','results-view','pricing-view','faq-view'])show(id,activePublic===id);
     show('workspace',app);show('auth-view',authPage);show('legal-view',pathname==='/legal');
+    document.querySelectorAll('#public-header .top-nav a').forEach(a=>{
+      const current=a.getAttribute('href')===pathname;
+      a.classList.toggle('active',current);
+      if(current)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
+    });
     if(app){if(!state.user){go('/inscription',true);return;}showAppPage(state.activePage);}
     if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth();}
-    document.title=landing?'SongToSheet.ai — De ta musique à ta partition.':app?'Mon studio — SongToSheet':authPage?'Mon compte — SongToSheet':'Informations — SongToSheet';
+    const titles={'/':'SongToSheet.ai — Transforme ta musique en partition',
+      '/fonctionnalites':'Fonctionnalités — SongToSheet.ai',
+      '/resultats':'Résultats et exemples — SongToSheet.ai',
+      '/tarifs':'Tarifs et abonnements — SongToSheet.ai',
+      '/faq':'FAQ — SongToSheet.ai',
+      '/legal':'Informations légales — SongToSheet.ai',
+      '/app':'Mon studio — SongToSheet.ai',
+      '/inscription':'Créer un compte — SongToSheet.ai',
+      '/connexion':'Se connecter — SongToSheet.ai'};
+    document.title=titles[pathname]||'SongToSheet.ai';
   }
   function renderAuth(){const login=state.authMode==='login';
     $('auth-title').textContent=login?'Content de te revoir !':'Bienvenue sur SongToSheet';

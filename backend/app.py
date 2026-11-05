@@ -234,13 +234,15 @@ def inspect_link(request:Request,body:LinkInput):
         p=urlparse(value)
         if p.scheme!='https' or p.username or p.password:raise ValueError()
         host=(p.hostname or '').lower().rstrip('.')
-    except Exception:fail('Utilisez un lien HTTPS YouTube ou Spotify valide.')
+    except Exception:fail('Utilisez un lien HTTPS YouTube, Spotify, Deezer ou SoundCloud valide.')
     if host in ['youtu.be','youtube.com','www.youtube.com','m.youtube.com','music.youtube.com']:
         provider='YouTube'
     elif host in ['open.spotify.com','spotify.com']:
         provider='Spotify'
     elif host in ['soundcloud.com','www.soundcloud.com']:
         provider='SoundCloud'
+    elif host in ['deezer.com','www.deezer.com']:
+        provider='Deezer'
     else:fail('Lien non pris en charge pour le moment. Importez directement un fichier MP3 ou WAV.')
     if not p.path or p.path=='/':fail('Ce lien ne désigne pas un morceau.')
     return {'provider':provider,'source_url':value,'requires_audio':True,

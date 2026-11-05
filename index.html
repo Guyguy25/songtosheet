@@ -97,70 +97,179 @@ body.pricing-open{overflow:hidden}
 #pricing-message:empty{display:none}
 @media(max-width:650px){.cycle-switch button{padding:11px 13px}.pricing-overlay{padding:8px}.pricing-dialog{padding:24px 17px 14px;max-height:97dvh}.pricing-dialog h2{font-size:23px}.pricing-choice{padding:13px 10px;gap:9px}.pricing-choice.selected{padding:12px 9px}.pricing-choice .choice-info b{font-size:13px}.pricing-choice .choice-amount b{font-size:16px}.choice-tag{font-size:8px}.price-card .price-top p{min-height:0}.pricing-bottom{bottom:-14px}}
 
+
+/* Landing V2: intent-first pattern, without public pricing. */
+:root{--rev-ink:#16152b;--rev-violet:#7547ea;--rev-blue:#3289ff}
+#public-header{height:78px;background:#fffdfef0;backdrop-filter:blur(16px);border-bottom:1px solid #eeebf2;position:sticky;top:0;z-index:100}
+#public-header .nav-inner{height:100%;display:flex;align-items:center}
+#public-header .brand{font-weight:850}
+#public-header .top-nav{gap:34px}
+#public-header .top-nav a{font-size:13px;color:#696577}
+#public-header .nav-actions{gap:14px}
+#public-header .btn-nav{font-weight:800;border-radius:999px;min-height:42px}
+#landing{overflow:hidden;background:#fff}
+#landing [hidden],#landing .hidden{display:none!important}
+.rev-wrap{width:min(1160px,calc(100% - 48px));margin:0 auto}
+.rev-hero{position:relative;text-align:center;padding:88px 0 33px;background:radial-gradient(ellipse 55% 50% at 51% 34%,#f0e7ff 0%,#f9f6ff 55%,#fff 100%)}
+.rev-hero:before{content:"";position:absolute;inset:0;z-index:0;pointer-events:none;background-image:radial-gradient(#9b87d119 1px,transparent 1px);background-size:24px 24px;mask-image:linear-gradient(#000 0%,transparent 78%)}
+.rev-hero .rev-wrap{position:relative;z-index:1}
+.rev-pill{display:inline-flex;align-items:center;gap:9px;background:#fff;border:1px solid #eae1fd;color:#7549d5;border-radius:99px;box-shadow:0 8px 30px #7351c40b;font-size:11px;font-weight:850;letter-spacing:.045em;padding:9px 13px}
+.rev-pulse{width:7px;height:7px;border-radius:100%;background:#9877f0;box-shadow:0 0 0 4px #e9deff}
+.rev-hero h1{font-family:inherit;font-size:clamp(45px,6.15vw,83px);line-height:1.07;letter-spacing:-.075em;font-weight:870;color:#22183c;max-width:1060px;margin:26px auto 19px}
+.rev-hero h1 .rev-gradient{background:linear-gradient(110deg,#6b44e2 10%,#2a8afa 98%);color:transparent;-webkit-background-clip:text;background-clip:text}
+.rev-intro{font-size:clamp(15px,1.65vw,19px);max-width:700px;margin:0 auto 30px;color:#817b91;line-height:1.7}
+.rev-intro strong{color:#514668;font-weight:750}
+.rev-input{max-width:740px;margin:0 auto;border:1px solid #dcd2ed;border-radius:24px;background:#fff;padding:10px;box-shadow:0 22px 70px #5240a322,0 6px 20px #5240a30d;text-align:left}
+.rev-mode{display:flex;gap:8px;margin:2px 3px 12px}
+.rev-mode button{border:0;border-radius:9px;padding:10px 14px;background:transparent;color:#8d849d;font-size:12px;font-weight:800;cursor:pointer}
+.rev-mode button.active{background:#f0eaff;color:#754add}
+.rev-field{display:flex;align-items:center;gap:12px;min-height:57px;margin:0 3px 8px;padding:0 17px;background:#fbfaff;border:1px solid #ece7f4;border-radius:12px}
+.rev-field svg{width:20px;height:20px;color:#865fe0;flex:0 0 20px}
+.rev-field input{outline:0;border:0;background:none;flex:1;min-width:0;font:inherit;font-size:15px;color:#33264a;width:100%}
+.rev-field input::placeholder{color:#aaa3b7}
+.rev-upload{display:flex;align-items:center;justify-content:center;text-align:center;gap:12px;min-height:63px;padding:12px;border:1.5px dashed #d3c3f6;background:#f9f6ff;border-radius:13px;color:#7653cd;font-size:13px;cursor:pointer;font-weight:700}
+.rev-upload input{display:none}
+.rev-upload small{display:block;color:#9890a6;margin-top:4px;font-size:11px;font-weight:500}
+.rev-submit{border:0;background:linear-gradient(100deg,#7545ea,#328dff);color:#fff;min-height:56px;width:100%;border-radius:13px;font-size:16px;font-weight:850;display:flex;align-items:center;justify-content:center;gap:11px;box-shadow:0 10px 26px #7555ec28;cursor:pointer;transition:transform .18s,filter .18s}
+.rev-submit:hover{filter:brightness(1.04);transform:translateY(-1px)}
+.rev-submit span{font-size:22px}
+.rev-under-form{font-size:11px;color:#938aa3;max-width:770px;margin:16px auto 0;line-height:1.55}
+.rev-support{display:flex;justify-content:center;gap:25px;flex-wrap:wrap;margin:24px auto 0;color:#726c80;font-size:12px;font-weight:750}
+.rev-support span{display:flex;align-items:center;gap:6px}
+.rev-support i{font-style:normal;color:#3cae93}
+.rev-visual{position:relative;max-width:1050px;margin:63px auto 0;padding:21px;border:1px solid #e9e4f3;background:#ffffffb9;border-radius:26px;box-shadow:0 36px 100px #493e7c13;text-align:left}
+.rev-preview-top{display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:19px;font-size:11px;color:#7d748c;font-weight:700}
+.rev-preview-top strong{color:#3e3554;display:flex;align-items:center;gap:8px;font-size:13px}
+.rev-preview-dot{width:7px;height:7px;background:#4bc199;border-radius:50%;display:inline-block}
+.rev-demo-flow{display:grid;grid-template-columns:1fr 55px 1fr;gap:14px;align-items:stretch}
+.rev-sound,.rev-paper{border-radius:17px;min-height:190px;padding:22px;background:#faf8ff;border:1px solid #eee8fb;overflow:hidden}
+.rev-sound{display:flex;flex-direction:column;justify-content:space-between}
+.rev-source{display:flex;align-items:center;gap:11px}
+.rev-source-icon{height:43px;width:43px;background:linear-gradient(135deg,#e3dbff,#f6dff0);display:grid;place-items:center;border-radius:12px;font-size:22px;color:#6e4ad1}
+.rev-source b,.rev-source small{display:block}
+.rev-source b{font-size:12px;color:#39304b}
+.rev-source small{font-size:11px;color:#9992a7;margin-top:5px}
+.rev-wave{height:72px;display:flex;gap:4px;align-items:center;justify-content:space-around;overflow:hidden}
+.rev-wave i{width:5px;flex:1;max-width:7px;background:linear-gradient(#916cf4,#59a2ff);border-radius:10px;opacity:.84}
+.rev-flow-arrow{align-self:center;width:45px;height:45px;border-radius:50%;display:grid;place-items:center;font-size:24px;color:#7350d8;background:#eee8ff}
+.rev-paper{background:#fff}
+.rev-paper header{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.rev-paper header b{font-size:12px;color:#3f3653}
+.rev-paper header span{font-size:10px;color:#299c73;background:#e9faf3;border-radius:100px;padding:6px 9px;font-weight:800}
+.rev-paper svg{width:100%;height:auto;max-height:120px}
+.rev-paper-foot{display:flex;gap:7px;flex-wrap:wrap;margin-top:3px}
+.rev-paper-foot span{background:#f1edfc;color:#7a58db;border-radius:7px;font-size:10px;font-weight:800;padding:5px 8px}
+.rev-visual-caption{font-size:11px;text-align:center;color:#a49aaf;margin:13px 0 0}
+.rev-proof{padding:49px 0 30px;background:#fff}
+.rev-proof-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.rev-proof-item{padding:23px;border:1px solid #efebf5;border-radius:17px;background:#fff;display:flex;align-items:flex-start;gap:13px}
+.rev-proof-item>span{border-radius:12px;background:#f0ebff;color:#7445dd;width:41px;height:41px;display:grid;place-items:center;flex-shrink:0;font-size:20px}
+.rev-proof-item b{font-size:14px;color:#33274c}
+.rev-proof-item p{margin:5px 0 0;color:#8b8496;font-size:12px;line-height:1.5}
+.rev-section{padding:100px 0}
+.rev-section .rev-label{font-size:11px;font-weight:880;letter-spacing:.13em;color:#764be5;display:block;text-align:center;margin-bottom:12px}
+.rev-section h2{font-size:clamp(34px,4.2vw,57px);line-height:1.14;letter-spacing:-.05em;text-align:center;margin:0 auto 16px;color:#221d35;max-width:870px}
+.rev-section>.rev-wrap>p{font-size:15px;color:#857e8f;text-align:center;line-height:1.7;max-width:620px;margin:0 auto 39px}
+.rev-steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.rev-step{background:#fff;border:1px solid #eeeaf4;border-radius:19px;padding:27px}
+.rev-step .step-index{height:38px;width:38px;display:grid;place-items:center;background:#f0eaff;color:#764be6;border-radius:11px;font-size:14px;font-weight:900;margin-bottom:28px}
+.rev-step h3{font-size:18px;margin:0 0 10px;color:#29223b}
+.rev-step p{color:#8e8799;font-size:13px;line-height:1.75;margin:0}
+#comment-ca-marche{background:#faf8ff}
+.rev-example{background:#141121;color:#fff}
+.rev-example .rev-label{color:#b49cff}
+.rev-example h2{color:white}
+.rev-example .rev-example-copy{color:#c3bcce}
+.rev-example-display{display:grid;grid-template-columns:.9fr 1.1fr;gap:32px;align-items:center;max-width:1050px;margin:0 auto}
+.rev-example-points{display:grid;gap:19px}
+.rev-example-points div{display:flex;gap:15px;align-items:flex-start}
+.rev-example-points span{font-size:21px;color:#b39aff}
+.rev-example-points b{display:block;font-size:15px}
+.rev-example-points p{color:#aca4ba;font-size:13px;line-height:1.65;margin:6px 0 0}
+.rev-example-art{background:#fff;border-radius:16px;padding:25px;box-shadow:0 35px 95px #06040c75;color:#383044}
+.rev-example-art .rev-paper{border:0;padding:0}
+.rev-example-art .rev-paper svg{max-height:230px}
+.rev-example-actions{margin:29px auto 0;display:flex;justify-content:center}
+.rev-example-actions .btn{border-radius:100px;padding:15px 24px}
+.rev-faq{padding:85px 0;background:white}
+.rev-faq-grid{display:grid;grid-template-columns:1fr 1.2fr;gap:70px}
+.rev-faq h2{font-size:40px;line-height:1.2;letter-spacing:-.05em;margin:0;color:#2b2042}
+.rev-faq p{color:#898295;font-size:13px;line-height:1.7}
+.rev-faq-list details{border-bottom:1px solid #ebe6f0}
+.rev-faq-list summary{font-size:14px;font-weight:780;cursor:pointer;padding:21px 0;display:flex;justify-content:space-between;gap:12px}
+.rev-faq-list summary span{color:#8c62ed}
+.rev-faq-list details p{margin:0 0 22px}
+.rev-bottom{padding:20px 0 94px;background:#fff}
+.rev-bottom .rev-wrap{background:linear-gradient(115deg,#6340d6,#368cf7);border-radius:25px;max-width:1130px;padding:55px 28px;text-align:center;color:white}
+.rev-bottom h2{font-size:clamp(34px,4vw,53px);line-height:1.13;letter-spacing:-.05em;color:white;margin:0 auto 14px}
+.rev-bottom p{color:#e9e4ff;margin:0 auto 27px;font-size:14px;line-height:1.6}
+.rev-bottom button{border:0;background:#fff;color:#6546ce;font-weight:850;font-size:14px;padding:15px 26px;border-radius:100px;cursor:pointer}
+.rev-bottom small{display:block;margin-top:17px;color:#dcd5ff;font-size:11px}
+@media(max-width:900px){.rev-demo-flow{grid-template-columns:1fr 35px 1fr;gap:7px}.rev-flow-arrow{width:32px;height:32px}.rev-sound,.rev-paper{padding:13px}.rev-proof-item{padding:16px}.rev-example-display{grid-template-columns:1fr}.rev-faq-grid{grid-template-columns:1fr;gap:17px}}
+@media(max-width:650px){#public-header{height:68px}.rev-wrap{width:calc(100% - 32px)}.rev-hero{padding:64px 0 18px}.rev-hero h1{font-size:clamp(37px,11.2vw,56px);margin:24px auto 16px;letter-spacing:-.06em}.rev-intro{font-size:14px;margin-bottom:22px}.rev-input{padding:8px;border-radius:18px}.rev-mode{margin-bottom:8px}.rev-mode button{padding:10px 8px;font-size:11px}.rev-field{padding:0 10px}.rev-field input{font-size:13px}.rev-submit{font-size:14px;min-height:53px}.rev-support{gap:8px 17px;font-size:10px}.rev-under-form{font-size:10px}.rev-visual{padding:12px;margin-top:44px;border-radius:18px}.rev-demo-flow{grid-template-columns:1fr;gap:8px}.rev-flow-arrow{transform:rotate(90deg);justify-self:center;height:29px;width:29px;margin:-7px 0;z-index:1}.rev-sound,.rev-paper{min-height:155px}.rev-wave{height:49px}.rev-preview-top{font-size:10px}.rev-preview-top strong{font-size:11px}.rev-proof{padding:30px 0 5px}.rev-proof-grid,.rev-steps{grid-template-columns:1fr;gap:10px}.rev-proof-item{padding:16px}.rev-section{padding:72px 0}.rev-section h2{font-size:34px}.rev-steps{gap:11px}.rev-step{padding:24px}.rev-step .step-index{margin-bottom:15px}.rev-faq{padding:64px 0}.rev-faq h2{font-size:32px}.rev-bottom{padding-bottom:60px}.rev-bottom .rev-wrap{padding:48px 20px}.rev-example-art{padding:14px}}
+
 </style>
 
 
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <header id="public-header" class="site-header">
-    <div class="container nav-inner">
-      <a href="/" data-nav="home" class="brand" aria-label="SongToSheet — Accueil"><span class="brand-mark"><svg viewBox="0 0 34 34" fill="none" aria-hidden="true"><path d="M21 7v15.2a4.3 4.3 0 1 1-3.4-4.2V10.2l10-2.7v12.2a4.3 4.3 0 1 1-3.4-4.2V5z" fill="white"/></svg></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a>
-      <nav class="top-nav" aria-label="Menu principal"><a href="#fonctionnalites">Fonctionnalités</a><a href="#comment-ca-marche">Comment ça marche</a><a href="#tarifs">Tarifs</a></nav>
-      <div class="nav-actions"><button id="nav-login" class="nav-link-btn">Connexion</button><button id="nav-cta" class="btn btn-primary btn-nav">Créer ma partition <span aria-hidden="true">↗</span></button></div>
-      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Afficher le menu" aria-expanded="false">☰</button>
-    </div>
-    <div id="mobile-menu" class="mobile-menu"><a href="#fonctionnalites">Fonctionnalités</a><a href="#comment-ca-marche">Comment ça marche</a><a href="#tarifs">Tarifs</a><button id="mobile-login">Se connecter</button><button id="mobile-start">Créer une partition</button></div>
-  </header>
-
-  <main id="landing">
-    <section class="hero section-pad">
-      <div class="hero-aurora aurora-1"></div><div class="hero-aurora aurora-2"></div>
-      <div class="container hero-grid">
-        <div class="hero-content">
-          <span class="eyebrow"><span class="eyebrow-dot"></span> TRANSCRIPTION MUSICALE AUTOMATIQUE <span class="sparkle">✦</span></span>
-          <h1>Ta musique.<br/>Ta <span class="headline-highlight">partition<span class="scribble"></span></span>.<br/>En quelques clics.</h1>
-          <p class="hero-description">Arrête de chercher les notes à l'oreille. Transforme un enregistrement audio en partition, MIDI et MusicXML, sans être un pro du solfège.</p>
-          <div class="hero-points"><span><i class="check-circle">✓</i> Piano, guitare et plus</span><span><i class="check-circle">✓</i> Exports en un clic</span></div>
-          <div class="hero-social"><span class="mini-wave">♫</span><span>Créé pour les musiciens, pas pour les ingénieurs.</span></div>
-        </div>
-        <div class="hero-tool-wrap">
-          <div class="orbit-note note-a">♪</div><div class="orbit-note note-b">♫</div>
-          <div class="tool-card">
-            <div class="tool-card-top"><div class="tool-heading"><span class="tool-icon">✦</span><div><strong>Ton studio de transcription</strong><small>Ton premier pas vers la partition</small></div></div><span class="live-pill"><span></span> PRÊT</span></div>
-            <div class="tool-body"><div class="tool-tabs" role="tablist" aria-label="Source audio"><button id="tab-link" class="tool-tab active" role="tab" aria-selected="true">🔗 &nbsp; Coller un lien</button><button id="tab-upload" class="tool-tab" role="tab" aria-selected="false">⇧ &nbsp; Importer un audio</button></div>
-              <div id="link-panel" class="tool-pane"><label for="hero-link">Lien de ta musique</label><div class="hero-link-field"><span>🔗</span><input id="hero-link" type="url" placeholder="Lien YouTube, Spotify…" autocomplete="off" /></div><p class="input-hint">Les liens identifient le morceau ; un audio autorisé est requis pour le transcrire.</p></div>
-              <div id="upload-panel" class="tool-pane hidden"><label for="hero-file">Ton fichier audio</label><label for="hero-file" class="dropzone" id="hero-drop"><span class="drop-icon">⇧</span><strong id="hero-file-label">Clique ou dépose ton fichier ici</strong><small>MP3, WAV, M4A, FLAC · 25 Mo max</small><input id="hero-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label></div>
-              <div class="tool-row"><label for="hero-instrument">Instrument</label><select id="hero-instrument"><option value="piano">🎹 &nbsp; Piano</option><option value="guitare">🎸 &nbsp; Guitare</option><option value="violon">🎻 &nbsp; Violon</option><option value="voix">🎙️ &nbsp; Voix</option><option value="basse">🎼 &nbsp; Basse</option></select></div>
-              <button id="hero-generate" class="btn btn-primary tool-submit">Créer ma partition <span>↗</span></button>
-              <p class="tool-footnote"><span>🔒</span> Abonnements dès 10 € / mois · Sans essai gratuit.</p>
-            </div>
-          </div>
-          <div class="floating-export"><span class="float-check">✓</span><div><b>Partition prête !</b><small>PDF · MIDI · MusicXML</small></div><span class="float-star">✳</span></div>
-        </div>
-      </div>
-    </section>
-    <div class="format-strip"><div class="container strip-inner"><span>TES NOTES, TES FORMATS</span><div><span class="format-symbol">▤</span> Partition PDF</div><div><span class="format-symbol">◈</span> MIDI</div><div><span class="format-symbol">♬</span> MusicXML</div><div><span class="format-symbol">◇</span> 5 instruments</div></div></div>
-
-    <section id="comment-ca-marche" class="steps-section section-pad"><div class="container"><div class="section-intro center"><span class="section-label">COMMENT ÇA MARCHE</span><h2>Du son aux notes.<br/><span>Sans prise de tête.</span></h2><p>Trois étapes, et c'est tout. Tu peux enfin te concentrer sur ce que tu aimes : jouer.</p></div><div class="steps-grid">
-      <div class="step-card"><span class="step-number">01</span><div class="step-art step-art-link"><div class="illustration-link"><span>▶</span><div><b>Mon morceau préféré</b><small>Mon enregistrement.mp3</small></div><span class="little-plus">＋</span></div><div class="art-spark art-spark-one">✧</div></div><h3>Ajoute ta musique</h3><p>Importe un enregistrement que tu peux utiliser, ou commence par coller un lien pour identifier la chanson.</p></div>
-      <div class="step-card"><span class="step-number">02</span><div class="step-art step-art-ai"><div class="ai-core"><span>✦</span></div><div class="ai-ring r1"></div><div class="ai-ring r2"></div><span class="art-note">♫</span></div><h3>On décode les notes</h3><p>Notre moteur analyse la mélodie et prépare une version lisible, adaptée à l'instrument choisi.</p></div>
-      <div class="step-card"><span class="step-number">03</span><div class="step-art step-art-sheet"><div class="mini-sheet"><span>Ma partition</span><svg viewBox="0 0 210 100" aria-hidden="true"><g stroke="#b3a7d9" stroke-width="1"><path d="M5 29H204M5 39H204M5 49H204M5 59H204M5 69H204"/></g><g fill="#6b45e8"><ellipse cx="28" cy="59" rx="5" ry="3.5" transform="rotate(-22 28 59)"/><path d="M32 59V27" stroke="#6b45e8" stroke-width="2"/><ellipse cx="67" cy="49" rx="5" ry="3.5"/><path d="M71 49V17" stroke="#6b45e8" stroke-width="2"/><ellipse cx="106" cy="39" rx="5" ry="3.5"/><path d="M110 39V7" stroke="#6b45e8" stroke-width="2"/><ellipse cx="145" cy="49" rx="5" ry="3.5"/><path d="M149 49V17" stroke="#6b45e8" stroke-width="2"/><ellipse cx="184" cy="59" rx="5" ry="3.5"/><path d="M188 59V27" stroke="#6b45e8" stroke-width="2"/></g></svg></div><span class="sheet-check">✓</span></div><h3>Joue ta partition</h3><p>Prévisualise le résultat et télécharge-le en PDF, MIDI ou MusicXML pour le retravailler.</p></div>
-    </div></div></section>
-
-    <section id="fonctionnalites" class="showcase-section section-pad"><div class="container showcase-grid"><div class="showcase-content"><span class="section-label">UNE MUSIQUE, PLUSIEURS POSSIBILITÉS</span><h2>Les notes cachées.<br/><span>Enfin sous tes yeux.</span></h2><p>Ce riff que tu rêves de jouer ? Cette mélodie que tu n'arrives pas à retrouver ? SongToSheet pose les premières notes sur le papier pour toi.</p><div class="feature-list"><div><span class="feature-icon f-purple">♫</span><div><strong>Une partition que tu peux lire</strong><small>Des notes sur une vraie portée, au format PDF.</small></div></div><div><span class="feature-icon f-peach">▤</span><div><strong>Les bons formats, sans prise de tête</strong><small>PDF, MIDI et MusicXML pour tes outils favoris.</small></div></div><div><span class="feature-icon f-green">✧</span><div><strong>Un point de départ pour tes reprises</strong><small>Corrige et adapte le relevé à ton niveau.</small></div></div></div><button class="btn btn-dark" id="showcase-cta">Créer ma première partition <span>↗</span></button><p class="experimental-disclaimer">V1 : extraction expérimentale de mélodie principale. Les accords complexes et les arrangements multi-instruments ne sont pas encore pris en charge.</p></div>
-    <div class="showcase-visual"><div class="sample-audio"><span class="audio-disc">♫</span><div><b>Petite mélodie en do majeur</b><small>Exemple original de démonstration</small></div><span class="playing-wave">▂ ▅ ▃ ▇ ▄ ▆ ▂</span></div><div class="score-preview"><div class="score-header"><div><small>APERÇU DE PARTITION</small><strong>Petite mélodie en do majeur</strong></div><span>PDF ↗</span></div><div class="sheet-render"><svg id="sample-score" viewBox="0 0 560 235" role="img" aria-label="Exemple de partition musicale originale"><g stroke="#aaa3ba" stroke-width="1.3"><path d="M25 52H530M25 66H530M25 80H530M25 94H530M25 108H530M25 153H530M25 167H530M25 181H530M25 195H530M25 209H530"/></g><g fill="#322858" stroke="#322858" stroke-width="2"><text x="27" y="103" fill="#322858" font-size="54" font-family="serif" stroke="none">𝄞</text><ellipse cx="118" cy="101" rx="9" ry="6" transform="rotate(-22 118 101)"/><path d="M126 101V56"/><ellipse cx="186" cy="94" rx="9" ry="6" transform="rotate(-22 186 94)"/><path d="M194 94V49"/><ellipse cx="254" cy="80" rx="9" ry="6" transform="rotate(-22 254 80)"/><path d="M262 80V35"/><ellipse cx="322" cy="87" rx="9" ry="6" transform="rotate(-22 322 87)"/><path d="M330 87V42"/><ellipse cx="390" cy="101" rx="9" ry="6" transform="rotate(-22 390 101)"/><path d="M398 101V56"/><ellipse cx="458" cy="108" rx="9" ry="6" transform="rotate(-22 458 108)"/><path d="M466 108V63"/><text x="27" y="204" font-size="54" font-family="serif" stroke="none">𝄞</text><ellipse cx="117" cy="202" rx="9" ry="6"/><path d="M125 202V157"/><ellipse cx="185" cy="195" rx="9" ry="6"/><path d="M193 195V150"/><ellipse cx="253" cy="181" rx="9" ry="6"/><path d="M261 181V136"/><ellipse cx="321" cy="181" rx="9" ry="6"/><path d="M329 181V136"/><ellipse cx="389" cy="195" rx="9" ry="6"/><path d="M397 195V150"/><ellipse cx="457" cy="202" rx="9" ry="6"/><path d="M465 202V157"/></g></svg></div><div class="score-footer"><span><i></i> Partition générée</span><span>PDF · MIDI · MusicXML</span></div></div><div class="little-decor note-showcase">♪</div></div></div></section>
-
-    <section class="audience-section"><div class="container"><div class="audience-banner"><div><span class="section-label light-label">POUR TOUS CEUX QUI JOUENT</span><h2>Tu entends la musique.<br/>Maintenant, <em>joue-la.</em></h2><p>Pour apprendre un morceau au piano, relever une ligne de guitare ou garder une idée musicale sous la main.</p></div><div class="audience-pills"><span>🎹 Pianistes</span><span>🎸 Guitaristes</span><span>🎻 Violonistes</span><span>🎤 Chanteurs</span><span>🎵 Étudiants</span></div></div></div></section>
-
-    <section id="tarifs" class="pricing-section section-pad"><div class="container"><div class="section-intro center"><span class="section-label">TARIFS SIMPLES</span><h2>Ta musique.<br/><span>Ton rythme.</span></h2><p>Un morceau par semaine ou autant que tu veux. Sans essai gratuit.</p></div><div class="cycle-switch" role="group" aria-label="Fréquence de facturation"><button type="button" class="active" data-cycle="monthly" aria-pressed="true">Mensuel</button><button type="button" data-cycle="annual" aria-pressed="false">Annuel <span class="saving">−35 %</span></button></div><div class="pricing-grid"><article class="price-card"><div class="price-top"><span class="price-icon">♪</span><h3>Essentiel</h3><p>Un morceau chaque semaine, à ton rythme.</p></div><div class="price-amount"><strong data-plan-price="essential">10 €</strong><span data-plan-period="essential">/mois</span></div><div class="plan-billing" data-plan-billed="essential">Facturé chaque mois</div><div class="credit-bubble">1 musique tous les 7 jours</div><div class="price-list"><p>✓ 1 transcription par semaine (non cumulable)</p><p>✓ Exports PDF, MIDI et MusicXML</p><p>✓ Tous les instruments de la V1</p><p>✓ Morceaux de 6 minutes maximum</p></div><button type="button" class="btn btn-outline" data-plan="essential">Choisir Essentiel ↗</button></article><article class="price-card popular"><span class="popular-badge">✦ RECOMMANDÉ</span><div class="price-top"><span class="price-icon">♫</span><h3>Illimité</h3><p>Joue autant de morceaux que tu veux.</p></div><div class="price-amount"><strong data-plan-price="unlimited">19 €</strong><span data-plan-period="unlimited">/mois</span></div><div class="plan-billing" data-plan-billed="unlimited">Facturé chaque mois</div><div class="credit-bubble">♾ Transcriptions illimitées*</div><div class="price-list"><p>✓ Aucune limite hebdomadaire*</p><p>✓ Exports PDF, MIDI et MusicXML</p><p>✓ Tous les instruments de la V1</p><p>✓ Morceaux de 6 minutes maximum</p></div><button type="button" class="btn btn-primary" data-plan="unlimited">Choisir Illimité ↗</button></article><article class="price-card"><div class="price-top"><span class="price-icon">♬</span><h3>À vie</h3><p>Un paiement. Un accès durable.</p></div><div class="price-amount"><strong data-plan-price="lifetime">99 €</strong><span data-plan-period="lifetime">une fois</span></div><div class="plan-billing" data-plan-billed="lifetime">Sans renouvellement</div><div class="credit-bubble">Accès illimité à vie*</div><div class="price-list"><p>✓ Transcriptions illimitées à vie*</p><p>✓ Exports PDF, MIDI et MusicXML</p><p>✓ Tous les instruments de la V1</p><p>✓ Aucun paiement récurrent</p></div><button type="button" class="btn btn-outline" data-plan="lifetime">Choisir À vie ↗</button></article></div><p class="plan-note">*Offres illimitées pour un usage personnel raisonnable. Limite technique de 6 minutes par génération en V1. Conditions et tarifs définitifs à confirmer avant lancement. Paiements désactivés sur cette démo.</p></div></section>
-
-    <section class="faq-section section-pad"><div class="container faq-grid"><div><span class="section-label">QUESTIONS FRÉQUENTES</span><h2>Tu te poses<br/><span>une question ?</span></h2><p>Voici les réponses avant de te lancer.</p></div><div class="faq-list"><details open><summary>Est-ce que je peux coller un lien Spotify ou YouTube ? <span>＋</span></summary><p>Oui, pour identifier et conserver la référence du morceau. Pour le convertir en partition, notre V1 demande ensuite un fichier audio que tu as le droit d'utiliser. Elle ne télécharge pas l'audio depuis ces plateformes.</p></details><details><summary>Est-ce que la transcription est toujours parfaite ? <span>＋</span></summary><p>Non. La V1 réalise un relevé expérimental de la mélodie principale. Les arrangements complexes, les accords et les morceaux très chargés peuvent nécessiter des corrections. Nous préférons annoncer cette limite clairement.</p></details><details><summary>Comment fonctionne Essentiel ? <span>＋</span></summary><p>Essentiel comprend une génération tous les 7 jours, non cumulable. Le suivi de cet usage sera assuré côté serveur avant la commercialisation.</p></details><details><summary>Quels fichiers puis-je télécharger ? <span>＋</span></summary><p>PDF pour imprimer, MIDI pour un logiciel musical et MusicXML pour les éditeurs de partitions compatibles.</p></details><details><summary>Y a-t-il un essai gratuit ? <span>＋</span></summary><p>Non. Tu peux choisir Essentiel, Illimité ou l'accès à vie ; les paiements ne sont pas encore activés sur la démo.</p></details></div></div></section>
-
-    <section class="end-cta"><div class="container"><div class="end-cta-inner"><div class="end-spark">✷</div><h2>La prochaine partition<br/>que tu joueras commence ici.</h2><p>Un enregistrement, quelques clics, et les notes prennent forme.</p><button id="footer-start" class="btn btn-white">Créer ma partition <span>↗</span></button><span class="end-note">Paiement à l'usage · Sans abonnement</span></div></div></section>
-  </main>
-
-  <main id="workspace" class="hidden">
+  <header id="public-header" class="site-header"><div class="container nav-inner">
+<a href="/" data-nav="home" class="brand" aria-label="SongToSheet, accueil"><span class="brand-mark"><svg viewBox="0 0 34 34" fill="none" aria-hidden="true"><path d="M21 7v15.2a4.3 4.3 0 1 1-3.4-4.2V10.2l10-2.7v12.2a4.3 4.3 0 1 1-3.4-4.2V5z" fill="white"/></svg></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a>
+<nav class="top-nav" aria-label="Navigation"><a href="#comment-ca-marche">Comment ça marche</a><a href="#fonctionnalites">Voir un exemple</a></nav>
+<div class="nav-actions"><button id="nav-login" class="nav-link-btn" type="button">Connexion</button><button id="nav-cta" class="btn btn-primary btn-nav" type="button">Créer ma partition ↗</button></div>
+<button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Afficher le menu" aria-expanded="false">☰</button></div>
+<div id="mobile-menu" class="mobile-menu"><a href="#comment-ca-marche">Comment ça marche</a><a href="#fonctionnalites">Voir un exemple</a><button id="mobile-login" type="button">Connexion</button><button id="mobile-start" type="button">Créer ma partition</button></div></header>
+<main id="landing">
+<section class="rev-hero">
+<div class="rev-wrap">
+<div class="rev-pill"><span class="rev-pulse"></span> TON STUDIO DE PARTITIONS IA <span aria-hidden="true">✦</span></div>
+<h1>Ta musique devient<br><span class="rev-gradient">une partition.</span><br>En quelques clics.</h1>
+<p class="rev-intro">Plus besoin de chercher chaque note à l'oreille. <strong>Ajoute un morceau, choisis ton instrument et récupère un relevé musical</strong> en PDF, MIDI ou MusicXML.</p>
+<div class="rev-input" id="try-studio">
+ <div class="rev-mode" role="tablist" aria-label="Choisir la source de la musique">
+ <button type="button" id="tab-link" role="tab" aria-selected="true" class="active">🔗 Coller un lien</button>
+ <button type="button" id="tab-upload" role="tab" aria-selected="false">⇧ Importer un audio</button></div>
+ <div id="link-panel" class="rev-source-panel"><label class="rev-field" for="hero-link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.07 0l2.12-2.12a5 5 0 0 0-7.07-7.07L10.7 5.23M14 11a5 5 0 0 0-7.07 0L4.8 13.13a5 5 0 0 0 7.07 7.07L13.3 18.77"/></svg><input id="hero-link" type="url" inputmode="url" autocomplete="off" placeholder="Colle un lien YouTube, Spotify ou SoundCloud…"></label></div>
+ <div id="upload-panel" class="rev-source-panel hidden"><label for="hero-file" id="hero-drop" class="rev-upload"><span>⇧</span><span><b id="hero-file-label">Choisir un fichier audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo / 6 min max.</small></span><input id="hero-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"></label></div>
+ <select id="hero-instrument" aria-label="Instrument par défaut" hidden><option value="piano">Piano</option><option value="guitare">Guitare</option><option value="violon">Violon</option><option value="voix">Voix</option><option value="basse">Basse</option></select>
+ <button type="button" id="hero-generate" class="rev-submit">Créer ma partition <span aria-hidden="true">↗</span></button>
+</div>
+<p class="rev-under-form">Aperçu de la V1 : les liens servent à identifier le morceau. La transcription réelle nécessite un audio autorisé et n'est pas encore active sur cette démo.</p>
+<div class="rev-support"><span><i>✓</i> Sans connaissance du solfège</span><span><i>✓</i> Piano, guitare et plus</span><span><i>✓</i> PDF · MIDI · MusicXML</span></div>
+<div class="rev-visual" id="result-example">
+ <div class="rev-preview-top"><strong><span class="rev-preview-dot"></span> Voici le type de résultat obtenu</strong><span>Exemple illustratif · mélodie originale</span></div>
+ <div class="rev-demo-flow">
+  <div class="rev-sound"><div class="rev-source"><span class="rev-source-icon">♫</span><div><b>ma_melodie.wav</b><small>Un enregistrement audio</small></div></div><div class="rev-wave" aria-label="Forme d'onde illustrative"><i style="height:28%;animation-delay:0ms"></i><i style="height:53%;animation-delay:50ms"></i><i style="height:37%;animation-delay:100ms"></i><i style="height:69%;animation-delay:150ms"></i><i style="height:23%;animation-delay:200ms"></i><i style="height:47%;animation-delay:250ms"></i><i style="height:66%;animation-delay:300ms"></i><i style="height:38%;animation-delay:350ms"></i><i style="height:26%;animation-delay:400ms"></i><i style="height:62%;animation-delay:450ms"></i><i style="height:44%;animation-delay:500ms"></i><i style="height:31%;animation-delay:550ms"></i><i style="height:75%;animation-delay:0ms"></i><i style="height:46%;animation-delay:50ms"></i><i style="height:29%;animation-delay:100ms"></i><i style="height:61%;animation-delay:150ms"></i><i style="height:51%;animation-delay:200ms"></i><i style="height:34%;animation-delay:250ms"></i><i style="height:65%;animation-delay:300ms"></i><i style="height:28%;animation-delay:350ms"></i><i style="height:45%;animation-delay:400ms"></i><i style="height:72%;animation-delay:450ms"></i><i style="height:30%;animation-delay:500ms"></i><i style="height:55%;animation-delay:550ms"></i><i style="height:35%;animation-delay:0ms"></i><i style="height:69%;animation-delay:50ms"></i><i style="height:42%;animation-delay:100ms"></i><i style="height:30%;animation-delay:150ms"></i><i style="height:65%;animation-delay:200ms"></i><i style="height:38%;animation-delay:250ms"></i><i style="height:53%;animation-delay:300ms"></i><i style="height:32%;animation-delay:350ms"></i><i style="height:58%;animation-delay:400ms"></i><i style="height:44%;animation-delay:450ms"></i><i style="height:28%;animation-delay:500ms"></i><i style="height:62%;animation-delay:550ms"></i></div></div>
+  <div class="rev-flow-arrow" aria-hidden="true">→</div>
+  <div class="rev-paper"><header><b>Ma partition • Piano</b><span>✓ Exemple</span></header><svg viewBox="0 0 480 156" role="img" aria-label="Portée avec une mélodie originale à six notes"><g stroke="#cfc8dc" stroke-width="1.5"><path d="M25 51H455M25 66H455M25 81H455M25 96H455M25 111H455"/></g><text x="33" y="107" font-size="59" font-family="serif" fill="#392953">𝄞</text><g fill="#6340cd" stroke="#6340cd" stroke-width="2"><ellipse cx="133" cy="103" rx="9" ry="6" transform="rotate(-20 133 103)"/><path d="M141 101V57"/><ellipse cx="192" cy="89" rx="9" ry="6" transform="rotate(-20 192 89)"/><path d="M200 87V43"/><ellipse cx="251" cy="74" rx="9" ry="6" transform="rotate(-20 251 74)"/><path d="M259 72V28"/><ellipse cx="310" cy="81" rx="9" ry="6" transform="rotate(-20 310 81)"/><path d="M318 79V35"/><ellipse cx="369" cy="96" rx="9" ry="6" transform="rotate(-20 369 96)"/><path d="M377 94V50"/><ellipse cx="428" cy="89" rx="9" ry="6" transform="rotate(-20 428 89)"/><path d="M436 87V43"/></g></svg><div class="rev-paper-foot"><span>PDF</span><span>MIDI</span><span>MusicXML</span></div></div>
+ </div><p class="rev-visual-caption">Illustration de l'expérience, pas une génération réelle effectuée sur cette page.</p>
+</div>
+</div></section>
+<section class="rev-proof"><div class="rev-wrap"><div class="rev-proof-grid">
+<div class="rev-proof-item"><span>♩</span><div><b>Lis les notes</b><p>Une vraie portée musicale, sans relever chaque note à la main.</p></div></div>
+<div class="rev-proof-item"><span>♬</span><div><b>Joue ton morceau</b><p>Sélectionne ton instrument et utilise le relevé comme point de départ.</p></div></div>
+<div class="rev-proof-item"><span>⇩</span><div><b>Garde tes partitions</b><p>Exporte en PDF, MIDI et MusicXML pour apprendre et ajuster.</p></div></div>
+</div></div></section>
+<section class="rev-section" id="comment-ca-marche"><div class="rev-wrap">
+<span class="rev-label">COMMENT ÇA MARCHE ?</span><h2>Du morceau aux notes.<br>En trois étapes.</h2><p>Une interface simple, pensée pour apprendre à jouer plutôt que passer des heures à retranscrire.</p>
+<div class="rev-steps"><div class="rev-step"><span class="step-index">01</span><h3>Ajoute ta musique</h3><p>Colle le lien du morceau pour le retrouver, puis fournis un enregistrement que tu peux utiliser.</p></div><div class="rev-step"><span class="step-index">02</span><h3>Choisis ton instrument</h3><p>Piano, guitare, violon, voix ou basse : prépare un relevé de mélodie adapté.</p></div><div class="rev-step"><span class="step-index">03</span><h3>Récupère ta partition</h3><p>Consulte les notes puis télécharge le résultat en PDF, MIDI ou MusicXML.</p></div></div>
+</div></section>
+<section class="rev-section rev-example" id="fonctionnalites"><div class="rev-wrap">
+<span class="rev-label">LE RÉSULTAT, AVANT TOUT</span><h2>Moins de temps à chercher.<br>Plus de temps à jouer.</h2><p class="rev-example-copy">L'objectif est simple : rendre un morceau plus facile à apprendre grâce à un relevé que tu peux lire, imprimer ou modifier.</p>
+<div class="rev-example-display"><div class="rev-example-points"><div><span>✓</span><div><b>Visualise les notes</b><p>Un aperçu lisible sur une portée musicale, sans logiciel compliqué.</p></div></div><div><span>✓</span><div><b>Continue dans ton logiciel préféré</b><p>Utilise MIDI ou MusicXML pour retravailler le résultat.</p></div></div><div><span>✓</span><div><b>Conçu pour apprendre</b><p>Idéal pour commencer à relever une mélodie et l'adapter à ta manière de jouer.</p></div></div></div>
+<div class="rev-example-art"><div class="rev-paper"><header><b>Ma partition • Piano</b><span>✓ Exemple</span></header><svg viewBox="0 0 480 156" role="img" aria-label="Portée avec une mélodie originale à six notes"><g stroke="#cfc8dc" stroke-width="1.5"><path d="M25 51H455M25 66H455M25 81H455M25 96H455M25 111H455"/></g><text x="33" y="107" font-size="59" font-family="serif" fill="#392953">𝄞</text><g fill="#6340cd" stroke="#6340cd" stroke-width="2"><ellipse cx="133" cy="103" rx="9" ry="6" transform="rotate(-20 133 103)"/><path d="M141 101V57"/><ellipse cx="192" cy="89" rx="9" ry="6" transform="rotate(-20 192 89)"/><path d="M200 87V43"/><ellipse cx="251" cy="74" rx="9" ry="6" transform="rotate(-20 251 74)"/><path d="M259 72V28"/><ellipse cx="310" cy="81" rx="9" ry="6" transform="rotate(-20 310 81)"/><path d="M318 79V35"/><ellipse cx="369" cy="96" rx="9" ry="6" transform="rotate(-20 369 96)"/><path d="M377 94V50"/><ellipse cx="428" cy="89" rx="9" ry="6" transform="rotate(-20 428 89)"/><path d="M436 87V43"/></g></svg><div class="rev-paper-foot"><span>PDF</span><span>MIDI</span><span>MusicXML</span></div></div></div></div><div class="rev-example-actions"><button type="button" class="btn btn-primary" id="showcase-cta">Créer ma partition ↗</button></div>
+</div></section>
+<section class="rev-faq"><div class="rev-wrap rev-faq-grid"><div><h2>Les réponses avant de jouer.</h2><p>Une première version transparente sur ce qu'elle sait faire et ce qui reste en développement.</p></div><div class="rev-faq-list">
+<details open><summary>Est-ce que je peux coller un lien YouTube ou Spotify ? <span>+</span></summary><p>Oui, pour identifier le morceau. Aujourd'hui, il faut aussi disposer d'un fichier audio autorisé pour le transcrire : l'audio n'est pas téléchargé depuis ces plateformes.</p></details>
+<details><summary>Peut-on convertir n'importe quel instrument ? <span>+</span></summary><p>Le relevé expérimental de V1 fonctionne surtout sur des mélodies isolées. Les accords complexes et les morceaux multi-instruments demandent un moteur plus avancé.</p></details>
+<details><summary>Quels formats sont prévus ? <span>+</span></summary><p>PDF pour imprimer, MIDI pour travailler la musique dans un logiciel, MusicXML pour l'édition de partitions.</p></details>
+<details><summary>La génération et le paiement sont-ils actifs ? <span>+</span></summary><p>Pas encore sur ce site de démonstration. Tu peux tester le parcours et consulter un exemple, mais aucun paiement ni traitement audio en ligne ne sont effectués.</p></details>
+</div></div></section>
+<section class="rev-bottom"><div class="rev-wrap"><h2>La prochaine musique que tu vas jouer<br>commence ici.</h2><p>Un morceau. Quelques clics. Et les notes prennent forme.</p><button type="button" id="footer-start">Créer ma partition ↗</button><small>V1 de démonstration · Pas d'essai gratuit · Paiement non activé</small></div></section>
+<div class="pricing-grid" style="display:none" aria-hidden="true" id="plans-catalog"><article class="price-card"><div class="price-top"><span class="price-icon">♪</span><h3>Essentiel</h3><p>Un morceau chaque semaine, à ton rythme.</p></div><div class="price-amount"><strong data-plan-price="essential">10 €</strong><span data-plan-period="essential">/mois</span></div><div class="plan-billing" data-plan-billed="essential">Facturé chaque mois</div><div class="credit-bubble">1 musique tous les 7 jours</div><div class="price-list"><p>✓ 1 transcription par semaine (non cumulable)</p><p>✓ Exports PDF, MIDI et MusicXML</p><p>✓ Tous les instruments de la V1</p><p>✓ Morceaux de 6 minutes maximum</p></div><button type="button" class="btn btn-outline" data-plan="essential">Choisir Essentiel ↗</button></article><article class="price-card popular"><span class="popular-badge">✦ RECOMMANDÉ</span><div class="price-top"><span class="price-icon">♫</span><h3>Illimité</h3><p>Joue autant de morceaux que tu veux.</p></div><div class="price-amount"><strong data-plan-price="unlimited">19 €</strong><span data-plan-period="unlimited">/mois</span></div><div class="plan-billing" data-plan-billed="unlimited">Facturé chaque mois</div><div class="credit-bubble">♾ Transcriptions illimitées*</div><div class="price-list"><p>✓ Aucune limite hebdomadaire*</p><p>✓ Exports PDF, MIDI et MusicXML</p><p>✓ Tous les instruments de la V1</p><p>✓ Morceaux de 6 minutes maximum</p></div><button type="button" class="btn btn-primary" data-plan="unlimited">Choisir Illimité ↗</button></article><article class="price-card"><div class="price-top"><span class="price-icon">♬</span><h3>À vie</h3><p>Un paiement. Un accès durable.</p></div><div class="price-amount"><strong data-plan-price="lifetime">99 €</strong><span data-plan-period="lifetime">une fois</span></div><div class="plan-billing" data-plan-billed="lifetime">Sans renouvellement</div><div class="credit-bubble">Accès illimité à vie*</div><div class="price-list"><p>✓ Transcriptions illimitées à vie*</p><p>✓ Exports PDF, MIDI et MusicXML</p><p>✓ Tous les instruments de la V1</p><p>✓ Aucun paiement récurrent</p></div><button type="button" class="btn btn-outline" data-plan="lifetime">Choisir À vie ↗</button></article></div>
+</main>
+<main id="workspace" class="hidden">
     <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark"><svg viewBox="0 0 34 34" fill="none"><path d="M21 7v15.2a4.3 4.3 0 1 1-3.4-4.2V10.2l10-2.7v12.2a4.3 4.3 0 1 1-3.4-4.2V5z" fill="white"/></svg></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><span class="sidebar-label">TON ESPACE</span><nav class="side-nav"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-create"><span>✦</span> Nouvelle partition</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Démo</strong><small>Offre de démonstration</small><button class="btn btn-primary" id="side-buy">Voir les abonnements ↗</button></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
     <div class="app-layout"><header class="app-header"><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><span class="small-credit"><span>◇</span> <b id="top-credits">Démo</b> · accès</span><div class="user-avatar" id="user-avatar">S</div></div></header><div class="app-scroll">
       <section id="dashboard-page" class="app-page"><div class="app-welcome"><div><span class="dashboard-kicker">TON STUDIO PERSONNEL ✦</span><h1>Prêt à jouer quelque chose<br/><span>de nouveau ?</span></h1><p>Transforme tes enregistrements en partitions en quelques étapes.</p></div><div class="welcome-decor">♫</div></div><div class="overview-cards"><div class="overview-card"><span class="metric-symbol purple">◇</span><div><strong id="metric-credits">Démo</strong><small>Accès actuel</small></div></div><div class="overview-card"><span class="metric-symbol green">▤</span><div><strong id="metric-total">0</strong><small>Partitions générées</small></div></div><div class="overview-card"><span class="metric-symbol orange">✧</span><div><strong id="metric-progress">0</strong><small>Générations en cours</small></div></div></div><div class="dashboard-grid"><div class="dashboard-create"><div><span class="section-label">CRÉATION RAPIDE</span><h2>Ta prochaine partition est à un clic.</h2><p>Dépose un morceau et laisse SongToSheet faire le premier relevé.</p><button id="dashboard-start" class="btn btn-primary">Nouvelle partition <span>↗</span></button></div><div class="dashboard-illustration">♬</div></div><div class="dashboard-helper"><span class="helper-symbol">✦</span><h3>Comment ça marche ?</h3><p>Importe ton fichier audio, choisis ton instrument, puis lance la génération. Le résultat sera sauvegardé dans ta bibliothèque.</p><a href="/#comment-ca-marche" id="learn-more">Voir les étapes <span>↗</span></a></div></div><div class="list-heading"><h2>Dernières partitions</h2><button id="view-all">Tout voir →</button></div><div id="recent-jobs" class="jobs-list"></div></section>

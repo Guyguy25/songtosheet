@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#faf9fe" />
-  <meta name="description" content="SongToSheet transforme vos enregistrements audio en partitions PDF, MIDI et MusicXML. Une transcription musicale automatique et simple." />
-  <title>SongToSheet.ai — De ta musique à ta partition.</title>
+  <meta name="description" content="SongToSheet.ai : transformez vos musiques préférées en partitions PDF, MIDI et MusicXML. Découvrez notre V1 de transcription musicale." />
+  <title>SongToSheet.ai — Obtenez la partition de vos musiques préférées</title>
   
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
@@ -421,10 +421,8 @@ body.pricing-open{overflow:hidden}
  <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
  <div class="container split-inner">
  <div class="split-copy">
- <span class="split-eyebrow"><span class="split-spark">✦</span> LA MUSIQUE, VERSION PARTITION</span>
- <h1 id="hero-heading">Chaque chanson.<br><span>Sa partition.</span><br>En quelques clics.</h1>
- <p class="split-subtitle">Tu rêves de jouer un morceau au piano ou à la guitare ? <strong>Transforme ton audio en notes lisibles</strong>, sans passer des heures à les retrouver à l'oreille.</p>
- <div class="split-benefits"><span>✓ PDF, MIDI et MusicXML</span><span>✓ Piano, guitare et plus</span></div>
+ <h1 id="hero-heading">Obtenez la partition<br>de vos <span>musiques préférées.</span></h1>
+ <p class="split-subtitle">Collez un lien YouTube, Spotify ou Deezer, choisissez votre instrument et <strong>récupérez la partition à jouer.</strong></p>
  <div class="hero-action-panel">
    <div class="rev-mode" role="tablist" aria-label="Source de musique"><button id="tab-link" class="active" type="button" role="tab" aria-selected="true">🔗 Lien musical</button><button id="tab-upload" type="button" role="tab" aria-selected="false">⇧ Fichier audio</button></div>
    <div id="link-panel" class="hero-source-panel"><label class="hero-input" for="hero-link"><span>↗</span><input id="hero-link" type="url" inputmode="url" autocomplete="off" placeholder="Colle un lien YouTube, Spotify, Deezer…"></label></div>
@@ -432,7 +430,7 @@ body.pricing-open{overflow:hidden}
    <select id="hero-instrument" aria-label="Instrument" hidden><option value="piano">Piano</option><option value="guitare">Guitare</option><option value="violon">Violon</option><option value="voix">Voix</option><option value="basse">Basse</option></select>
    <button id="hero-generate" class="split-submit" type="button">Créer ma partition <span>↗</span></button>
  </div>
- <p class="split-legal">V1 de démonstration : un lien identifie le morceau, mais sa transcription nécessitera un audio autorisé. Les paiements et l'IA en ligne ne sont pas encore activés.</p>
+ <p class="split-legal">Démo de la future expérience : le lien identifie le morceau, mais un fichier audio autorisé reste nécessaire pour la transcription. Génération en ligne et paiement indisponibles actuellement.</p>
  </div>
  <div class="hero-morph" aria-label="Illustration de la transformation d'un morceau en partition">
    <div class="morph-glow" aria-hidden="true"></div>
@@ -655,7 +653,7 @@ body.pricing-open{overflow:hidden}
     });
     if(app){if(!state.user){go('/inscription',true);return;}showAppPage(state.activePage);}
     if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth();}
-    const titles={'/':'SongToSheet.ai — Transforme ta musique en partition',
+    const titles={'/':'SongToSheet.ai — Obtenez la partition de vos musiques préférées',
       '/fonctionnalites':'Fonctionnalités — SongToSheet.ai',
       '/resultats':'Résultats et exemples — SongToSheet.ai',
       '/tarifs':'Tarifs et abonnements — SongToSheet.ai',

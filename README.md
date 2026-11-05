@@ -2,9 +2,11 @@
 
 **SaaS B2C de transcription musicale — prototype V1.**
 
+> **Tarifs de la démo (novembre 2026)** : Essentiel à 10 €/mois pour 1 transcription tous les 7 jours (78 €/an), Illimité à 19 €/mois (148,20 €/an), À vie à 99 € en paiement unique. L'annuel inclut −35 % de réduction. Les paiements et les droits d'abonnement ne sont **pas actifs** sur le site public. Le backend expérimental sous `backend/` contient encore un ancien modèle de crédits et ne doit pas être présenté comme le système commercial. Voir [PRICING.md](PRICING.md) pour les règles cibles et les travaux nécessaires avant la vente.
+
 ## Deux parties complémentaires
 
-- **Démo hébergée sur Vercel** : `index.html`, une landing et un studio interactifs avec crédits et partition d'exemple. Aucun compte, paiement, upload ou traitement IA réel sur cette démo.
+- **Démo hébergée sur Vercel** : `index.html`, une landing et un studio interactifs avec offres d'abonnement affichées (sans paiement) et partition d'exemple. Aucun compte, paiement, upload ou traitement IA réel sur cette démo.
 - **Application locale** : `backend/` contient l'API FastAPI, les comptes, les crédits, Stripe à configurer, les tests, la transcription expérimentale monophonique et les exports PDF, MIDI, MusicXML.
 
 ## Déploiement

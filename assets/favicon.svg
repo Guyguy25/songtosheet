@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="13" fill="#160D2D"/><g transform="translate(5 2.5) scale(.36)"><defs>
+<linearGradient id="ribbon" x1=".2" y1=".9" x2=".8" y2=".1"><stop offset="0" stop-color="#7A35CF"/><stop offset=".39" stop-color="#C38BFF"/><stop offset=".68" stop-color="#8234E4"/><stop offset="1" stop-color="#5B18AE"/></linearGradient>
+<linearGradient id="shade" x1="0" y1=".5" x2="1" y2=".1"><stop stop-color="#AD5EED"/><stop offset="1" stop-color="#5C12C0"/></linearGradient>
+<linearGradient id="note" x1=".2" y1="1" x2=".8" y2="0"><stop stop-color="#2C0D5B"/><stop offset="1" stop-color="#5916AD"/></linearGradient>
+<clipPath id="sclip"><path d="M115 1L105 3 36 30 23 41 18 50 16 57 16 66 20 76 24 81 34 87 43 90 73 97 73 123 72 124 64 122 57 122 46 125 39 129 31 138 29 143 29 151 31 156 39 162 55 163 68 158 78 149 83 139 112 127 122 118 127 109 128 93 124 84 112 74 84 66 84 46 88 43 110 35 116 27 116 2Z"/></clipPath>
+</defs><path d="M115 1L105 3 36 30 23 41 18 50 16 57 16 66 20 76 24 81 34 87 43 90 73 97 73 123 72 124 64 122 57 122 46 125 39 129 31 138 29 143 29 151 31 156 39 162 55 163 68 158 78 149 83 139 112 127 122 118 127 109 128 93 124 84 112 74 84 66 84 46 88 43 110 35 116 27 116 2Z" fill="url(#ribbon)"/>
+<g clip-path="url(#sclip)">
+<path d="M83 45V143H72V59Z" fill="#3C136C" opacity=".85"/>
+<ellipse cx="53" cy="145" rx="27" ry="20" transform="rotate(-28 53 145)" fill="url(#note)"/>
+<path d="M2 54C15 76 37 78 67 87 99 96 116 94 134 120L136 84C116 66 98 68 73 61 44 54 33 39 34 31Z" fill="url(#shade)" opacity=".87"/>
+</g></g></svg>

@@ -21,6 +21,18 @@
     {
       "source": "/tarifs",
       "destination": "/index.html"
+    },
+    {
+      "source": "/fonctionnalites",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/resultats",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/faq",
+      "destination": "/index.html"
     }
   ],
   "headers": [

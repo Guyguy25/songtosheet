@@ -1,28 +1,34 @@
 # SongToSheet.ai
 
-AI-assisted sheet music transcription SaaS — V1.
+**SaaS B2C de transcription musicale — prototype V1.**
 
-**Public online preview**: an interactive, static UX demo (landing page, simulated studio, credits, preview score and downloadable demo score). The public preview does **not** process audio, charge cards, create real accounts, or provide live AI transcription. These production integrations are deliberately disabled for safe testing.
+## Deux parties complémentaires
 
-The full working local backend prototype (FastAPI, experimental monophonic melody transcription, SQLite, Stripe webhook integration and tests) is available in the original V1 bundle while the hosted architecture is being completed.
+- **Démo hébergée sur Vercel** : `index.html`, une landing et un studio interactifs avec crédits et partition d'exemple. Aucun compte, paiement, upload ou traitement IA réel sur cette démo.
+- **Application locale** : `backend/` contient l'API FastAPI, les comptes, les crédits, Stripe à configurer, les tests, la transcription expérimentale monophonique et les exports PDF, MIDI, MusicXML.
 
-## Live demo
+## Déploiement
 
-This repository is connected to Vercel. Vercel serves `index.html` from the main branch and automatically redeploys after pushes.
+Ce dépôt est configuré pour un site statique Vercel (racine du repo, preset « Other », sans commande de build). Chaque push sur `main` met à jour la démo après connexion Git.
 
-## Product direction
+## Faire tourner le moteur en local
 
-1. Paste a song link, or upload audio from an authorized source.
-2. Select an instrument and create a score.
-3. Buy credits before processing; charge only on successful generation.
-4. Export PDF, MIDI and MusicXML.
+Nécessite Python 3.11/3.12 et FFmpeg.
 
-Spotify / YouTube audio cannot be downloaded and transcribed without the relevant rights and platform permissions.
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+# Remplacer SESSION_SECRET dans .env
+uvicorn app:app --host 127.0.0.1 --port 8000 --reload
+```
 
-## Deployment
+Voir [backend/README.md](backend/README.md) pour le détail du backend et le lancement des tests.
 
-Plain static site; framework preset: **Other**. No build command is required.
+## Limites importantes
 
-## Safety
+Le site Vercel n'héberge pas encore le moteur de transcription, les comptes ni Stripe. L'analyse monophonique reste expérimentale. Les liens Spotify/YouTube sont acceptés comme références, sans extraction de l'audio ; importer uniquement un contenu autorisé.
 
-No API keys are committed, and this public preview does not handle user uploads or payments. Add a persistent database, secure auth, isolated transcription worker and configured Stripe checkout/webhooks before a real launch.
+Le déploiement commercial demandera une base SQL managée, du stockage persistant, des workers, un traitement sécurisé et la configuration Stripe. Aucune clé privée n'est publiée dans ce dépôt.

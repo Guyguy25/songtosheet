@@ -863,6 +863,8 @@ body.pricing-open{overflow:hidden}
     try{request=JSON.parse(sessionStorage.getItem(REQUEST_KEY)||'null');}
     catch(e){return null;}
     if(!request||request.kind==='saved-demo'||request.completed!==true||!Number.isFinite(request.createdAt)||!request.name||!request.instrument||!['partition','tablature'].includes(request.format))return null;
+    // Une génération ne peut pas être revendiquée par un autre email de démo.
+    if(request.savedToEmail&&request.savedToEmail!==email)return null;
     const createdAt=Math.max(0,Math.floor(request.createdAt));
     const id='demo-'+createdAt;
     const saved={
@@ -880,6 +882,8 @@ body.pricing-open{overflow:hidden}
       if(!existing.some(job=>job.id===id)){
         localStorage.setItem(demoLibraryKey(email),JSON.stringify([saved,...existing].slice(0,60)));
       }
+      request.savedToEmail=email;
+      sessionStorage.setItem(REQUEST_KEY,JSON.stringify(request));
       return saved;
     }catch(e){return null;}
   }
@@ -1268,7 +1272,7 @@ body.pricing-open{overflow:hidden}
     }catch(err){$('auth-error').textContent=err.message;show('auth-error',true);}
     finally{btn.disabled=false;renderAuth();}
   }
-  async function logout(){try{await post('/api/auth/logout',{});}catch{}state.user=null;state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
+  async function logout(){try{await post('/api/auth/logout',{});}catch{}window.SongToSheetFlow?.clearPending();state.user=null;state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
   function wire(){
     document.addEventListener('click',async(e)=>{
       const nav=e.target.closest('[data-nav]');if(nav){

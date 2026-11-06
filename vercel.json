@@ -11,6 +11,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/choisir-instrument",
+      "destination": "/index.html"
+    },
+    {
       "source": "/generation",
       "destination": "/index.html"
     },

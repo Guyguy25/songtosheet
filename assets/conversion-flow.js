@@ -30,6 +30,11 @@
     pendingInMemory=data;
     try{sessionStorage.setItem(KEY,JSON.stringify(data));}catch(e){}
   }
+  function clearPending(){
+    pendingInMemory=null;
+    stopProgress();
+    try{sessionStorage.removeItem(KEY);}catch(e){}
+  }
   function providerFor(value){
     try{
       var url=new URL(value);
@@ -473,6 +478,9 @@
   function openPreview(){
     var request=readRequest();
     if(!request||!request.completed){navigate('/');return;}
+    var currentEmail='';
+    try{currentEmail=sessionStorage.getItem(ACCOUNT_KEY)||'';}catch(e){}
+    if(request.savedToEmail&&request.savedToEmail!==currentEmail){navigate('/app');return;}
     if(window.SongToSheetDemoStore)window.SongToSheetDemoStore.savePendingForCurrentAccount();
     navigate('/apercu');
   }
@@ -586,7 +594,7 @@
     window.addEventListener('popstate',function(){render(location.pathname);});
     render(location.pathname);
   }
-  window.SongToSheetFlow={start:start,prepareSource:prepareSource,chooseInstrument:chooseInstrument,chooseFormat:chooseFormat,openSavedDemo:openSavedDemo,inspectLink:inspectLink,validateFile:validateFile,onHeroFile:onHeroFile,sourceError:sourceError,showHeroMetadata:showHeroMetadata,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview};
+  window.SongToSheetFlow={start:start,prepareSource:prepareSource,chooseInstrument:chooseInstrument,chooseFormat:chooseFormat,openSavedDemo:openSavedDemo,clearPending:clearPending,inspectLink:inspectLink,validateFile:validateFile,onHeroFile:onHeroFile,sourceError:sourceError,showHeroMetadata:showHeroMetadata,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
 })();

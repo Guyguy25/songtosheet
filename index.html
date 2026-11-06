@@ -592,7 +592,7 @@ body.pricing-open{overflow:hidden}
    <select id="hero-instrument" aria-label="Instrument" hidden><option value="piano">Piano</option><option value="guitare">Guitare</option><option value="violon">Violon</option><option value="voix">Voix</option><option value="basse">Basse</option></select>
    <button id="hero-generate" class="split-submit" type="button" aria-label="Continuer vers le choix de l’instrument">Continuer <span aria-hidden="true">↗</span></button>
  </div>
- <p class="flow-source-error hidden" id="hero-source-error" role="alert"></p><p id="hero-source-meta" class="flow-source-meta hidden" role="status" aria-live="polite"></p><p class="flow-limit">⏱ Morceaux de <strong>6 minutes maximum</strong> · durée vérifiée avant de continuer</p>
+ <p class="flow-source-error hidden" id="hero-source-error" role="alert"></p><p class="flow-limit">⏱ Morceaux de <strong>6 minutes maximum</strong> · durée vérifiée avant de continuer</p>
  <p class="split-legal">Démo de la future expérience : le lien identifie le morceau, mais un fichier audio autorisé reste nécessaire pour la transcription. Génération simulée : les liens servent à identifier les morceaux et les métadonnées disponibles. Aucun audio distant n’est transcrit et aucun paiement n’est actif.</p>
  </div>
  <div class="hero-morph" aria-label="Illustration de la transformation d'un morceau en partition">
@@ -1243,7 +1243,7 @@ body.pricing-open{overflow:hidden}
       const drop=$(dropId);drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('dragover');});
       drop.addEventListener('dragleave',()=>drop.classList.remove('dragover'));
       drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('dragover');const file=e.dataTransfer.files[0];if(!file)return;state.file=file;
-        if(fileId==='hero-file'){$('hero-file-label').textContent=file.name;window.SongToSheetFlow.onHeroFile(file);}else $('workspace-file-name').textContent=file.name;
+        if(fileId==='hero-file'){$('hero-file-label').textContent=file.name;window.SongToSheetFlow.sourceError('');}else $('workspace-file-name').textContent=file.name;
       });
     }
     $('sidebar-logout').onclick=logout;$('mobile-sidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('mobile-open');
@@ -1270,6 +1270,6 @@ const type={pdf:'application/pdf',mid:'audio/midi',musicxml:'application/vnd.rec
 const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='songtosheet-demo.'+ext;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);},true);
 })();
 </script>
-<script src="/assets/conversion-flow.js?v=3" defer></script>
+<script src="/assets/conversion-flow.js?v=4" defer></script>
 </body>
 </html>

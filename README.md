@@ -32,6 +32,14 @@ Parcours de la démo Vercel : lien YouTube/Spotify/Deezer/SoundCloud/Apple Music
 - `/generation` et `/apercu` sont rechargeables grâce aux rewrites Vercel ; les états de génération restent dans le stockage de session.
 - Code de la vue : `assets/conversion-flow.js` et `assets/conversion-flow.css`. Les routes et le CTA sont reliés dans `index.html`.
 
+
+### Parcours de sélection et métadonnées (novembre 2026)
+
+- Clic sur « Continuer » depuis la landing → lecture des métadonnées publiques via `api/media-info.js` (titre, auteur, miniature et durée **si disponible**) → `/choisir-instrument` → simulation progressive de **18 secondes** → écran prêt → inscription simulée → démonstration musicale de 30 secondes.
+- Pour les **fichiers**, vérification de 25 Mo et 6 minutes dès l'import, avec erreur sous le champ sur la landing.
+- Pour les **liens**, l'API utilise uniquement des endpoints de plateformes autorisées. YouTube : oEmbed et tentative d'extraction de la durée publiée ; Deezer et Apple Music : durées officielles disponibles ; Spotify et SoundCloud : titre et visuel sans garantie de durée. Un morceau dont la durée vérifiée dépasse 6 minutes est refusé. Si la plateforme ne fournit pas la durée, l'interface indique explicitement « Durée non vérifiée ». **Ne jamais présenter la limite comme garantie pour ces liens sans vérification réelle.**
+- Les miniatures et titres proviennent de métadonnées publiques, mais l'aperçu reste **une partition illustrative non liée au morceau**, le traitement audio réel n'étant pas activé. Aucun achat ni compte durable n'est créé.
+
 ## Déploiement
 
 Ce dépôt est configuré pour un site statique Vercel (racine du repo, preset « Other », sans commande de build). Chaque push sur `main` met à jour la démo après connexion Git.

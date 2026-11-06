@@ -821,7 +821,7 @@ body.pricing-open{overflow:hidden}
    <div class="flow-preview-paper"><div class="flow-paper-top"><b id="flow-preview-paper-label">Mélodie originale de démonstration</b><span>APERÇU · 30 S</span></div><div id="flow-score" class="flow-score-full"></div></div>
    <p class="flow-note">Ce relevé illustratif ne provient pas de la musique importée. Aucun audio n'a encore été transcrit.</p>
    <div class="flow-locked"><div class="flow-lock-content"><b id="flow-preview-locked-title">🔒 La partition complète</b><small>PDF · MIDI · MusicXML · aperçu des offres</small></div></div>
-   <div class="flow-preview-actions"><button type="button" id="flow-plans" class="flow-main-btn"><span id="flow-plans-label">Voir les offres pour la partition complète</span> <span aria-hidden="true">↗</span></button><p class="flow-note">Les achats et la transcription ne sont pas encore actifs dans cette démo.</p><button id="flow-new" type="button" class="flow-secondary">Tester un autre morceau</button></div>
+   <div class="flow-preview-actions"><button type="button" id="flow-library" class="flow-secondary">Voir ma bibliothèque <span aria-hidden="true">↗</span></button><p class="flow-note">Tes créations de démonstration sont sauvegardées dans ce navigateur uniquement. Elles ne sont pas encore synchronisées entre appareils.</p><button type="button" id="flow-plans" class="flow-main-btn"><span id="flow-plans-label">Voir les offres pour la partition complète</span> <span aria-hidden="true">↗</span></button><p class="flow-note">Les achats et la transcription ne sont pas encore actifs dans cette démo.</p><button id="flow-new" type="button" class="flow-secondary">Tester un autre morceau</button></div>
   </section>
  </div>
 </main>
@@ -862,7 +862,7 @@ body.pricing-open{overflow:hidden}
     let request;
     try{request=JSON.parse(sessionStorage.getItem(REQUEST_KEY)||'null');}
     catch(e){return null;}
-    if(!request||request.completed!==true||!Number.isFinite(request.createdAt)||!request.name||!request.instrument||!['partition','tablature'].includes(request.format))return null;
+    if(!request||request.kind==='saved-demo'||request.completed!==true||!Number.isFinite(request.createdAt)||!request.name||!request.instrument||!['partition','tablature'].includes(request.format))return null;
     const createdAt=Math.max(0,Math.floor(request.createdAt));
     const id='demo-'+createdAt;
     const saved={
@@ -1383,7 +1383,7 @@ const type={pdf:'application/pdf',mid:'audio/midi',musicxml:'application/vnd.rec
 const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='songtosheet-demo.'+ext;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);},true);
 })();
 </script>
-<script src="/assets/conversion-flow.js?v=9" defer></script>
+<script src="/assets/conversion-flow.js?v=10" defer></script>
 
 <script>
 /* Hero typewriter: partition <-> tablature. */

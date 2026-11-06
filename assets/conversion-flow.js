@@ -10,6 +10,7 @@
   var sourceCache=null;
   var sourceRequestSerial=0;
   var inputDelay=null;
+  var youtubeApiPromise=null;
   var $=function(id){return document.getElementById(id);};
   var instrumentNames={piano:'Piano',guitare:'Guitare',violon:'Violon',voix:'Voix',basse:'Basse'};
   var audioFormats=/\.(mp3|wav|m4a|flac|ogg|aac)$/i;
@@ -60,6 +61,102 @@
     var el=$('hero-source-meta');
     if(el){el.textContent='';el.classList.add('hidden');}
   }
+
+  function youtubeVideoId(value){
+    try{
+      var url=new URL(value);
+      var host=url.hostname.toLowerCase();
+      var parts=url.pathname.split('/').filter(Boolean);
+      var id=host==='youtu.be'?parts[0]:
+        url.pathname==='/watch'?url.searchParams.get('v'):
+        ['shorts','live','embed'].includes(parts[0])?parts[1]:null;
+      return /^[a-zA-Z0-9_-]{11}$/.test(id||'')?id:null;
+    }catch(e){return null;}
+  }
+
+  function loadYoutubeIframeApi(){
+    if(window.YT&&window.YT.Player)return Promise.resolve(window.YT);
+    if(youtubeApiPromise)return youtubeApiPromise;
+    youtubeApiPromise=new Promise(function(resolve,reject){
+      var previous=window.onYouTubeIframeAPIReady;
+      var finished=false;
+      var script=document.createElement('script');
+      var watchdog=setTimeout(function(){done(new Error('Impossible de vérifier la durée de cette vidéo.'));},10000);
+      function done(error){
+        if(finished)return;
+        finished=true;clearTimeout(watchdog);
+        if(window.onYouTubeIframeAPIReady===ready)window.onYouTubeIframeAPIReady=previous;
+        if(error){script.remove();reject(error);}else resolve(window.YT);
+      }
+      function ready(){
+        if(typeof previous==='function')try{previous();}catch(e){}
+        if(window.YT&&window.YT.Player)done(null);
+        else done(new Error('Impossible de vérifier la durée de cette vidéo.'));
+      }
+      window.onYouTubeIframeAPIReady=ready;
+      script.async=true;
+      script.src='https://www.youtube.com/iframe_api';
+      script.onerror=function(){done(new Error('Impossible de vérifier la durée de cette vidéo.'));};
+      document.head.appendChild(script);
+    }).catch(function(error){youtubeApiPromise=null;throw error;});
+    return youtubeApiPromise;
+  }
+
+  // Secours sans clé API : le lecteur YouTube de la vidéo demandée renvoie
+  // sa durée réelle après chargement des métadonnées (ou lecture silencieuse).
+  // Le lecteur reste visible et interactif durant la vérification.
+  async function youtubeDurationFromPlayer(value){
+    var videoId=youtubeVideoId(value);
+    var holder=$('hero-youtube-check'),slot=$('hero-youtube-player');
+    if(!videoId||!holder||!slot)throw new Error('Impossible de vérifier la durée de cette vidéo.');
+    holder.classList.remove('hidden');
+    try{
+      var YT=await loadYoutubeIframeApi();
+      return await new Promise(function(resolve,reject){
+        var player=null,interval=null,watchdog=null,finished=false;
+        function finish(error,seconds){
+          if(finished)return;
+          finished=true;
+          clearInterval(interval);clearTimeout(watchdog);
+          if(player)try{player.stopVideo();player.destroy();}catch(e){}
+          slot.textContent='';
+          if(error)reject(error);else resolve(seconds);
+        }
+        function inspect(){
+          if(!player||finished)return;
+          try{
+            var seconds=Number(player.getDuration());
+            if(!Number.isFinite(seconds)||seconds<=0)return;
+            var loaded=String(player.getVideoUrl?.()||'');
+            if(loaded&&youtubeVideoId(loaded)!==videoId){
+              finish(new Error('Impossible de vérifier la durée de cette vidéo.'));return;
+            }
+            finish(null,seconds);
+          }catch(e){}
+        }
+        watchdog=setTimeout(function(){finish(new Error('Impossible de vérifier la durée de cette vidéo.'));},18000);
+        try{
+          player=new YT.Player(slot,{
+            width:320,height:200,videoId:videoId,
+            playerVars:{autoplay:0,controls:1,playsinline:1,rel:0,origin:location.origin},
+            events:{
+              onReady:function(event){
+                try{event.target.mute();event.target.playVideo();}catch(e){}
+                inspect();
+              },
+              onStateChange:inspect,
+              onError:function(){finish(new Error('Impossible de vérifier la durée de cette vidéo.'));}
+            }
+          });
+          interval=setInterval(inspect,350);
+        }catch(e){finish(new Error('Impossible de vérifier la durée de cette vidéo.'));}
+      });
+    }finally{
+      holder.classList.add('hidden');
+      slot.textContent='';
+    }
+  }
+
   async function inspectLink(raw){
     var value=String(raw||'').trim();
     var provider=providerFor(value);
@@ -68,15 +165,19 @@
     var response;
     try{response=await fetch('/api/media-info?url='+encodeURIComponent(value),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8500)});}
     catch(e){
-      throw new Error('La durée maximale autorisée est de 6 min.');
+      throw new Error('Impossible de vérifier la durée de cette vidéo ou de ce morceau.');
     }
     var data;
     try{data=await response.json();}catch{data={};}
-    if(response.status===422)throw new Error(data.error||'La durée maximale autorisée est de 6 min.');
+    if(response.status===422)throw new Error('La durée maximale autorisée est de 6 min.');
     if(response.status===400)throw new Error(data.error||'Ce lien ne pointe pas vers un morceau accepté.');
-    if(!response.ok)throw new Error(data.error||'La durée maximale autorisée est de 6 min.');
     var duration=data.duration_verified===true&&Number.isFinite(data.duration_seconds)&&data.duration_seconds>0?data.duration_seconds:null;
-    if(duration===null)throw new Error('La durée maximale autorisée est de 6 min.');
+    if(provider==='YouTube'&&(response.status===424||response.ok&&duration===null)){
+      duration=await youtubeDurationFromPlayer(value);
+    }else if(!response.ok){
+      throw new Error('Impossible de vérifier la durée de cette vidéo ou de ce morceau.');
+    }
+    if(duration===null)throw new Error('Impossible de vérifier la durée de cette vidéo ou de ce morceau.');
     if(duration>360)throw new Error('La durée maximale autorisée est de 6 min.');
     var result={
       provider:provider,name:typeof data.title==='string'&&data.title.trim()?data.title.trim().slice(0,110):'Morceau '+provider,

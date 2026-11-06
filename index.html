@@ -592,7 +592,7 @@ body.pricing-open{overflow:hidden}
    <select id="hero-instrument" aria-label="Instrument" hidden><option value="piano">Piano</option><option value="guitare">Guitare</option><option value="violon">Violon</option><option value="voix">Voix</option><option value="basse">Basse</option></select>
    <button id="hero-generate" class="split-submit" type="button" aria-label="Continuer vers le choix de l’instrument">Continuer <span aria-hidden="true">↗</span></button>
  </div>
- <p class="flow-source-error hidden" id="hero-source-error" role="alert"></p><p id="hero-source-meta" class="flow-source-meta hidden" role="status" aria-live="polite"></p><p class="flow-limit">⏱ Morceaux de <strong>6 minutes maximum</strong> · vérification de la durée lorsqu’elle est disponible</p>
+ <p class="flow-source-error hidden" id="hero-source-error" role="alert"></p><p id="hero-source-meta" class="flow-source-meta hidden" role="status" aria-live="polite"></p><p class="flow-limit">⏱ Morceaux de <strong>6 minutes maximum</strong> · durée vérifiée avant de continuer</p>
  <p class="split-legal">Démo de la future expérience : le lien identifie le morceau, mais un fichier audio autorisé reste nécessaire pour la transcription. Génération simulée : les liens servent à identifier les morceaux et les métadonnées disponibles. Aucun audio distant n’est transcrit et aucun paiement n’est actif.</p>
  </div>
  <div class="hero-morph" aria-label="Illustration de la transformation d'un morceau en partition">
@@ -645,7 +645,7 @@ body.pricing-open{overflow:hidden}
   <div id="how-upload-panel" role="tabpanel" aria-labelledby="how-upload-tab" class="hidden"><label class="how-upload" for="how-file"><span aria-hidden="true">⇧</span><span><b id="how-file-name">Choisir un fichier audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo · 6 min max.</small></span><input type="file" id="how-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"/></label></div>
   <p class="how-error hidden" id="how-source-error" role="alert"></p>
   <button id="how-next-source" type="button" class="how-main-btn">Prochaine étape <span aria-hidden="true">→</span></button>
-  <small class="how-disclaimer">Simulation uniquement : pour les liens, la limite de 6 min sera vérifiée lors du traitement réel.</small>
+  <small class="how-disclaimer">Simulation uniquement : la durée du lien doit être vérifiable et ne pas dépasser 6 minutes.</small>
  </div>
  <div class="how-pane hidden" id="how-instrument" data-how-step="2">
   <div class="how-step-label">ÉTAPE 2 SUR 3</div><h3 tabindex="-1">Choisis ton instrument.</h3><p class="how-desc">Comment souhaites-tu apprendre à jouer ce morceau ?</p>
@@ -1270,6 +1270,6 @@ const type={pdf:'application/pdf',mid:'audio/midi',musicxml:'application/vnd.rec
 const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='songtosheet-demo.'+ext;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);},true);
 })();
 </script>
-<script src="/assets/conversion-flow.js?v=2" defer></script>
+<script src="/assets/conversion-flow.js?v=3" defer></script>
 </body>
 </html>

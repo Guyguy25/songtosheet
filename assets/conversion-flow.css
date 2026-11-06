@@ -137,3 +137,10 @@
   .flow-ready-identity .flow-chip b{max-width:180px}
   .flow-source-error,.flow-source-meta{font-size:11px;padding:9px 11px}
 }
+
+/* Lecteur YouTube temporairement visible lorsque les métadonnées serveur ne
+   permettent pas de vérifier la durée. Le lecteur respecte la taille minimale
+   des embeds et disparaît après vérification. */
+.flow-youtube-check{width:min(100%,360px);padding:10px;margin-top:12px;border:1px solid rgba(255,255,255,.2);border-radius:13px;background:rgba(255,255,255,.08)}
+.flow-youtube-check iframe{display:block;width:100%;height:220px;min-height:200px;border:0;border-radius:9px}
+.flow-youtube-check p{margin:8px 0 0;font-size:11px;line-height:1.45;color:#e9dafa}

@@ -452,6 +452,30 @@ body.pricing-open{overflow:hidden}
   #public-header .mobile-menu.open{max-height:calc(100dvh - 95px)}
 }
 
+
+/* Responsive floating capsule: the outer fixed header must not paint a rectangular backdrop. */
+@media (max-width:1000px){
+  #public-header{
+    background:transparent;
+    border:0;
+    box-shadow:none;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    pointer-events:none;
+  }
+  #public-header .nav-inner{
+    background:rgba(24,17,45,.86);
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:0 8px 24px rgba(10,6,25,.18);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    pointer-events:auto;
+  }
+  #public-header #mobile-menu.open{
+    pointer-events:auto;
+  }
+}
+
 </style>
 
 

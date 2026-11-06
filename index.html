@@ -1193,7 +1193,15 @@ body.pricing-open{overflow:hidden}
       }
     });
     window.addEventListener('popstate',renderRoute);
-    $('nav-login').onclick=()=>go('/connexion');$('nav-cta').onclick=()=>startApp('create');$('mobile-login').onclick=()=>go('/connexion');$('mobile-start').onclick=()=>startApp('create');$('footer-start').onclick=()=>startApp('create');$('showcase-cta').onclick=()=>startApp('create');
+    const focusGenerator=()=>{
+      go('/');
+      requestAnimationFrame(()=>{
+        const field=$('hero-link');
+        document.querySelector('.hero-action-panel')?.scrollIntoView({behavior:'smooth',block:'center'});
+        if(field)setTimeout(()=>field.focus({preventScroll:true}),260);
+      });
+    };
+    $('nav-login').onclick=()=>go('/connexion');$('nav-cta').onclick=focusGenerator;$('mobile-login').onclick=()=>go('/connexion');$('mobile-start').onclick=focusGenerator;$('footer-start').onclick=focusGenerator;$('showcase-cta').onclick=focusGenerator;
     $('mobile-menu-btn').onclick=()=>{
       const open=$('mobile-menu').classList.toggle('open');
       $('mobile-menu-btn').setAttribute('aria-expanded',String(open));

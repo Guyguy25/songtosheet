@@ -485,6 +485,75 @@ body.pricing-open{overflow:hidden}
   .site-subpage .sub-hero{padding-top:calc(70px + 84px)}
 }
 
+
+/* Guided, interactive "Comment ça marche" onboarding */
+#comment-ca-marche{scroll-margin-top:110px}
+.how-section{background:#faf8ff}
+.how-heading-purple{color:#7549eb}
+.how-card{max-width:790px;margin:35px auto 0;text-align:left;background:#fff;border:1px solid #e8e1f3;border-radius:25px;padding:26px;box-shadow:0 22px 75px #4a2b9217}
+.how-progress{display:flex;align-items:center;justify-content:center;gap:16px;border-bottom:1px solid #eeeaf4;padding:0 0 23px;margin-bottom:26px}
+.how-progress>span{font-size:11px;color:#9389a4;font-weight:800;display:flex;align-items:center;gap:8px;white-space:nowrap}
+.how-progress>span b{width:28px;height:28px;border-radius:50%;display:inline-grid;place-items:center;background:#f1ebf9;color:#8b7c9d;font-size:11px}
+.how-progress>span.active{color:#7549eb}
+.how-progress>span.active b{color:white;background:#7549eb}
+.how-progress>span.complete{color:#6e6680}
+.how-progress>span.complete b{color:#7355c7;background:#eee9fb}
+.how-progress>i{height:1px;background:#e8e1f2;flex:1;max-width:64px}
+.how-pane{max-width:620px;margin:0 auto}
+.how-step-label{font-size:10px;letter-spacing:.12em;color:#7549eb;font-weight:900;margin-bottom:9px}
+.how-pane h3{color:#28213b;font-size:26px;letter-spacing:-.04em;line-height:1.23;margin:0 0 8px}
+.how-pane h3:focus{outline:none}
+.how-desc{font-size:13px;color:#877e93;line-height:1.65;margin:0 0 22px}
+.how-tabs{display:flex;gap:6px;margin:0 0 13px;background:#f4effd;border-radius:11px;padding:5px;width:fit-content;max-width:100%}
+.how-tabs button{border:0;background:none;border-radius:8px;color:#85749c;font-size:12px;font-weight:800;padding:10px 13px;cursor:pointer}
+.how-tabs button.active{background:#fff;color:#7549eb;box-shadow:0 3px 12px #6041a21a}
+.how-field{display:flex;gap:12px;align-items:center;border:1px solid #e1d8ef;border-radius:12px;background:#fff;padding:0 15px;height:53px}
+.how-field:focus-within{border-color:#875cef;box-shadow:0 0 0 3px #8b62ea1e}
+.how-field>span{color:#8659e6;font-size:20px}
+.how-field input{border:0;outline:0;background:transparent;width:100%;min-width:0;color:#332849;font:inherit;font-size:13px}
+.how-field input::placeholder{color:#aea4ba}
+.how-upload{min-height:64px;display:flex;align-items:center;justify-content:center;gap:12px;border:1.5px dashed #c7b6e8;background:#f9f6ff;border-radius:12px;padding:10px 14px;cursor:pointer;color:#7045dc}
+.how-upload>span:first-child{font-size:24px}
+.how-upload b{font-size:12px;display:block}
+.how-upload small{font-size:10px;display:block;color:#9386a4;margin-top:3px}
+.how-upload input{display:none}
+.how-error{color:#a73552;background:#fff1f4;padding:10px 12px;font-size:12px;border-radius:8px;margin:13px 0 0}
+.how-main-btn{background:linear-gradient(110deg,#7549ea,#308afd);color:#fff;border:0;border-radius:12px;min-height:50px;padding:0 19px;font-size:13px;font-weight:850;display:flex;align-items:center;justify-content:center;gap:15px;white-space:nowrap;cursor:pointer}
+#how-next-source{margin:15px 0 12px;width:100%}
+.how-main-btn:hover{filter:brightness(1.06)}
+.how-disclaimer{display:block;color:#9a91a6;font-size:10px;line-height:1.6}
+.how-instruments{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.how-instruments label{cursor:pointer;position:relative}
+.how-instruments label input{position:absolute;opacity:0;width:1px;height:1px}
+.how-instruments label span{display:flex;flex-direction:column;justify-content:center;align-items:center;gap:7px;background:#faf8ff;border:1px solid #eae4f3;border-radius:13px;padding:17px 8px;font-size:25px;transition:.15s}
+.how-instruments label b{font-size:11px;color:#655b76}
+.how-instruments input:checked+span{background:#f1ebff;border-color:#8259eb;box-shadow:inset 0 0 0 1px #8259eb}
+.how-instruments input:focus-visible+span{outline:3px solid #b998fb;outline-offset:3px}
+.how-buttons{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:19px}
+.how-back-btn{border:1px solid #e7e0ef;background:#fff;color:#796d89;border-radius:11px;min-height:50px;padding:0 18px;font-size:12px;font-weight:800;cursor:pointer}
+.how-score{border:1px solid #ece6f4;background:#fff;border-radius:15px;padding:19px;box-shadow:0 12px 38px #5c429315}
+.how-score-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px;font-size:11px;color:#8f849f}
+.how-score-top>b{color:#322949;font-size:12px}
+.how-score svg{display:block;width:100%;height:auto;margin:10px 0;max-height:180px}
+.how-export{display:flex;gap:8px}
+.how-export span{font-size:10px;font-weight:850;color:#7549e5;padding:7px 9px;background:#f2ecff;border-radius:7px}
+.how-sample-warning{font-size:11px;line-height:1.6;color:#8b7e9b;margin:13px 0 0}
+@media(max-width:650px){
+ #comment-ca-marche{scroll-margin-top:91px}
+ .how-section{padding:68px 0}
+ .how-card{margin:27px auto 0;padding:17px;border-radius:18px}
+ .how-progress{gap:7px;margin-bottom:23px;padding-bottom:16px}
+ .how-progress>span{font-size:9px;gap:4px}
+ .how-progress>span b{width:23px;height:23px;font-size:10px}
+ .how-progress>i{max-width:27px}
+ .how-pane h3{font-size:22px}
+ .how-tabs button{font-size:11px;padding:10px}
+ .how-instruments{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .how-buttons .how-main-btn{flex:1;padding:0 12px;font-size:11px}
+ .how-buttons .how-back-btn{padding:0 12px}
+ .how-score{padding:13px}
+}
+
 </style>
 
 
@@ -495,7 +564,7 @@ body.pricing-open{overflow:hidden}
   <div class="container nav-inner nav-capsule">
     <a href="/" data-nav="home" class="brand" aria-label="SongToSheet — Accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a>
     <nav class="top-nav" aria-label="Menu principal">
-      <a href="/" data-nav="home">Accueil</a>
+      <a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a>
       <a href="/fonctionnalites" data-nav="features">Fonctionnalités</a>
       <a href="/resultats" data-nav="results">Résultats</a>
       <a href="/tarifs" data-nav="pricing">Tarifs</a>
@@ -505,7 +574,7 @@ body.pricing-open{overflow:hidden}
     <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Afficher le menu" aria-controls="mobile-menu" aria-expanded="false">☰</button>
   </div>
   <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
-    <a href="/" data-nav="home">Accueil</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a>
+    <a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a>
     <button id="mobile-login" type="button">Se connecter</button><button id="mobile-start" type="button">Créer ma partition</button>
   </div></header>
 <main id="landing">
@@ -560,9 +629,41 @@ body.pricing-open{overflow:hidden}
 <div class="rev-proof-item"><span>♬</span><div><b>Joue ton morceau</b><p>Sélectionne ton instrument et utilise le relevé comme point de départ.</p></div></div>
 <div class="rev-proof-item"><span>⇩</span><div><b>Garde tes partitions</b><p>Exporte en PDF, MIDI et MusicXML pour apprendre et ajuster.</p></div></div>
 </div></div></section>
-<section class="rev-section" id="comment-ca-marche"><div class="rev-wrap">
-<span class="rev-label">COMMENT ÇA MARCHE ?</span><h2>Du morceau aux notes.<br>En trois étapes.</h2><p>Une interface simple, pensée pour apprendre à jouer plutôt que passer des heures à retranscrire.</p>
-<div class="rev-steps"><div class="rev-step"><span class="step-index">01</span><h3>Ajoute ta musique</h3><p>Colle le lien du morceau pour le retrouver, puis fournis un enregistrement que tu peux utiliser.</p></div><div class="rev-step"><span class="step-index">02</span><h3>Choisis ton instrument</h3><p>Piano, guitare, violon, voix ou basse : prépare un relevé de mélodie adapté.</p></div><div class="rev-step"><span class="step-index">03</span><h3>Récupère ta partition</h3><p>Consulte les notes puis télécharge le résultat en PDF, MIDI ou MusicXML.</p></div></div>
+<section class="rev-section how-section" id="comment-ca-marche" aria-labelledby="how-title"><div class="rev-wrap">
+<span class="rev-label">COMMENT ÇA MARCHE ?</span><h2 id="how-title">Du morceau à la partition.<br><span class="how-heading-purple">En 3 étapes.</span></h2><p>Teste le parcours : ajoute un lien ou un audio, choisis ton instrument et découvre le format de ta partition.</p>
+<div class="how-card" id="how-card">
+ <div class="how-progress" aria-label="Étapes de création"><span class="active" data-how-progress="1"><b>1</b> Musique</span><i aria-hidden="true"></i><span data-how-progress="2"><b>2</b> Instrument</span><i aria-hidden="true"></i><span data-how-progress="3"><b>3</b> Partition</span></div>
+ <div class="how-pane" id="how-source" data-how-step="1">
+  <div class="how-step-label">ÉTAPE 1 SUR 3</div><h3 tabindex="-1">Ajoute ta musique.</h3><p class="how-desc">Colle le lien du morceau ou sélectionne ton propre fichier audio.</p>
+  <div class="how-tabs" role="tablist" aria-label="Choisir la source">
+   <button id="how-link-tab" class="active" type="button" role="tab" aria-selected="true" aria-controls="how-link-panel">🔗 Coller un lien</button>
+   <button id="how-upload-tab" type="button" role="tab" aria-selected="false" aria-controls="how-upload-panel">⇧ Importer un audio</button>
+  </div>
+  <div id="how-link-panel" role="tabpanel" aria-labelledby="how-link-tab"><label class="how-field" for="how-link"><span aria-hidden="true">↗</span><input id="how-link" type="url" inputmode="url" autocomplete="off" placeholder="Lien YouTube, Spotify, Deezer…"/></label></div>
+  <div id="how-upload-panel" role="tabpanel" aria-labelledby="how-upload-tab" class="hidden"><label class="how-upload" for="how-file"><span aria-hidden="true">⇧</span><span><b id="how-file-name">Choisir un fichier audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo max.</small></span><input type="file" id="how-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"/></label></div>
+  <p class="how-error hidden" id="how-source-error" role="alert"></p>
+  <button id="how-next-source" type="button" class="how-main-btn">Prochaine étape <span aria-hidden="true">→</span></button>
+  <small class="how-disclaimer">Les liens servent à identifier la chanson. Pour une transcription réelle, un audio autorisé sera nécessaire.</small>
+ </div>
+ <div class="how-pane hidden" id="how-instrument" data-how-step="2">
+  <div class="how-step-label">ÉTAPE 2 SUR 3</div><h3 tabindex="-1">Choisis ton instrument.</h3><p class="how-desc">Comment souhaites-tu apprendre à jouer ce morceau ?</p>
+  <div class="how-instruments" role="radiogroup" aria-label="Instrument">
+   <label><input type="radio" name="how-instrument" value="piano" checked/><span>🎹 <b>Piano</b></span></label>
+   <label><input type="radio" name="how-instrument" value="guitare"/><span>🎸 <b>Guitare</b></span></label>
+   <label><input type="radio" name="how-instrument" value="violon"/><span>🎻 <b>Violon</b></span></label>
+   <label><input type="radio" name="how-instrument" value="voix"/><span>🎤 <b>Voix</b></span></label>
+   <label><input type="radio" name="how-instrument" value="basse"/><span>🎵 <b>Basse</b></span></label>
+  </div>
+  <div class="how-buttons"><button id="how-back-source" type="button" class="how-back-btn">← Retour</button><button id="how-next-instrument" type="button" class="how-main-btn">Voir un exemple <span aria-hidden="true">→</span></button></div>
+ </div>
+ <div class="how-pane hidden" id="how-result" data-how-step="3">
+  <div class="how-step-label">ÉTAPE 3 SUR 3</div><h3 tabindex="-1">Voici à quoi ressemble ta partition.</h3>
+  <p class="how-desc">Aperçu du format de sortie, à partir d'une mélodie originale de démonstration.</p>
+  <div class="how-score"><div class="how-score-top"><b>Exemple de partition</b><span>♪ Mélodie · <b id="how-instrument-label">Piano</b></span></div><svg viewBox="0 0 460 150" role="img" aria-label="Portée musicale d'exemple, mélodie originale"><g stroke="#c4bdd3" stroke-width="1.5"><path d="M16 38H442M16 54H442M16 70H442M16 86H442M16 102H442"/></g><text x="23" y="98" font-family="serif" font-size="59" fill="#3e305c">𝄞</text><g fill="#7549eb" stroke="#7549eb" stroke-width="2"><ellipse cx="128" cy="94" rx="8" ry="5.6" transform="rotate(-18 128 94)"/><path d="M135 92V46"/><ellipse cx="192" cy="78" rx="8" ry="5.6" transform="rotate(-18 192 78)"/><path d="M199 76V30"/><ellipse cx="256" cy="62" rx="8" ry="5.6" transform="rotate(-18 256 62)"/><path d="M263 60V14"/><ellipse cx="320" cy="70" rx="8" ry="5.6" transform="rotate(-18 320 70)"/><path d="M327 68V22"/><ellipse cx="384" cy="86" rx="8" ry="5.6" transform="rotate(-18 384 86)"/><path d="M391 84V38"/></g></svg><div class="how-export"><span>PDF</span><span>MIDI</span><span>MusicXML</span></div></div>
+  <p class="how-sample-warning">Cet exemple n'est pas généré depuis ton lien ou ton fichier. La transcription en ligne n'est pas encore activée dans cette V1.</p>
+  <div class="how-buttons"><button id="how-back-instrument" type="button" class="how-back-btn">← Retour</button><button id="how-view-demo" type="button" class="how-main-btn">Ouvrir la partition de démo <span aria-hidden="true">↗</span></button></div>
+ </div>
+</div>
 </div></section>
 <section class="rev-section rev-example" id="fonctionnalites"><div class="rev-wrap">
 <span class="rev-label">LE RÉSULTAT, AVANT TOUT</span><h2>Moins de temps à chercher.<br>Plus de temps à jouer.</h2><p class="rev-example-copy">L'objectif est simple : rendre un morceau plus facile à apprendre grâce à un relevé que tu peux lire, imprimer ou modifier.</p>
@@ -638,7 +739,7 @@ body.pricing-open{overflow:hidden}
 
   <footer id="public-footer" class="site-footer"><div class="container footer-wrap">
 <div><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><p>Ta musique mérite d'être jouée.</p></div>
-<nav aria-label="Navigation de bas de page"><a href="/" data-nav="home">Accueil</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a><a href="/legal" data-nav="legal">Mentions</a></nav>
+<nav aria-label="Navigation de bas de page"><a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a><a href="/legal" data-nav="legal">Mentions</a></nav>
 <div><small>Version de démonstration. Les paiements et la transcription audio en ligne ne sont pas encore actifs.</small><small>© <span id="footer-year"></span> SongToSheet</small></div>
 </div></footer>
 <div id="pricing-overlay" class="pricing-overlay hidden" aria-hidden="true"><section class="pricing-dialog" role="dialog" aria-modal="true" aria-labelledby="pricing-title"><button type="button" class="pricing-x" id="pricing-close" aria-label="Fermer">×</button><h2 id="pricing-title">Débloque tes partitions ✦</h2><p>Choisis ton abonnement et transforme tes morceaux en partitions.</p><div class="cycle-switch" role="group" aria-label="Fréquence de facturation"><button type="button" class="active" data-cycle="monthly" aria-pressed="true">Mensuel</button><button type="button" data-cycle="annual" aria-pressed="false">Annuel <span class="saving">−35 %</span></button></div><div class="pricing-choices" role="group" aria-label="Formules"><button type="button" class="pricing-choice" data-plan="essential" aria-pressed="false"><span class="pricing-radio"></span><span class="choice-info"><b>Essentiel</b><small>1 musique par semaine</small></span><span class="choice-amount"><b data-modal-price="essential">10 €</b><small data-modal-billed="essential">par mois</small></span></button><button type="button" class="pricing-choice selected" data-plan="unlimited" aria-pressed="true"><span class="pricing-radio"></span><span class="choice-info"><b>Illimité <span class="choice-tag">RECOMMANDÉ</span></b><small>Musiques illimitées* · Tous les instruments</small></span><span class="choice-amount"><b data-modal-price="unlimited">19 €</b><small data-modal-billed="unlimited">par mois</small></span></button><button type="button" class="pricing-choice" data-plan="lifetime" aria-pressed="false"><span class="pricing-radio"></span><span class="choice-info"><b>À vie</b><small>Accès illimité* sans renouvellement</small></span><span class="choice-amount"><b data-modal-price="lifetime">99 €</b><small data-modal-billed="lifetime">une fois</small></span></button></div><div class="pricing-benefits"><b>Avec <span id="selected-plan-name">Illimité</span>, tu obtiens :</b><p id="selected-plan-usage">Des transcriptions illimitées* sans quota hebdomadaire</p><p>Exports PDF, MIDI et MusicXML</p><p>Tous les instruments et ta bibliothèque personnelle</p></div><div class="pricing-bottom"><span class="pricing-summary" id="pricing-summary">Illimité · 19 €/mois</span><button type="button" id="pricing-confirm">Continuer avec Illimité ↗</button><small>🔒 Démo : aucun paiement réel. *Usage personnel raisonnable, 6 min par morceau.</small><p id="pricing-message" role="status" aria-live="polite"></p></div></section></div>

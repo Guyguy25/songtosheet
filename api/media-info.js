@@ -192,9 +192,7 @@ module.exports=async function handler(req,res){
     }
     if(!result.duration_verified){
       return res.status(424).json({
-        error:src.provider==='YouTube'
-          ?'Impossible de vérifier la durée de cette vidéo YouTube. Réessaie dans un instant ou importe un fichier audio de 6 minutes maximum.'
-          :'Impossible de vérifier la durée de ce morceau. Réessaie ou importe un fichier audio de 6 minutes maximum.',
+        error:LIMIT_MESSAGE,
         provider:src.provider,
         title:result.title,
         duration_verified:false

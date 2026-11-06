@@ -91,3 +91,49 @@
  .flow-main-btn{transition:none}
  .flow-fill{transition:none}
 }
+
+/* Deuxième étape : choix de l'instrument et aperçu de la source */
+.flow-select-card{max-width:740px}
+.flow-select-card .flow-lead{margin-bottom:25px}
+.flow-track-card{display:flex;align-items:center;gap:16px;text-align:left;max-width:555px;margin:0 auto 30px;background:#faf8ff;border:1px solid #e8dff9;border-radius:17px;padding:12px 15px}
+.flow-track-cover{position:relative;flex:0 0 73px;width:73px;height:73px;border-radius:11px;overflow:hidden;background:linear-gradient(140deg,#e5d9ff,#cab3ff);display:grid;place-items:center}
+.flow-track-cover img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.flow-track-cover span{font-size:35px;color:#6240b0}
+.flow-track-cover img:not(.hidden)+span{display:none}
+.flow-track-info{min-width:0;display:grid;gap:5px;line-height:1.35}
+.flow-track-info strong{font-size:14px;color:#34264e;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:415px}
+.flow-track-info small{font-size:11px;color:#8c7c9e}
+.flow-track-info>span{width:max-content;max-width:100%;font-weight:780;font-size:10px;color:#33795d;background:#e4f7ed;border-radius:100px;padding:6px 9px}
+.flow-track-info>span.unverified{color:#886b37;background:#fff2d7}
+.flow-instrument-grid{border:0;padding:0;margin:0 auto 25px;max-width:555px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}
+.flow-picker-label{float:none;display:block;width:100%;text-align:left;font-size:11px;font-weight:850;color:#8b76a1;letter-spacing:.13em;padding:0 0 13px}
+.flow-instrument{display:flex;align-items:center;gap:9px;border:1.5px solid #e9e2f2;border-radius:14px;min-height:67px;padding:12px;background:#fff;cursor:pointer;transition:border-color .18s,background .18s,transform .18s;position:relative}
+.flow-instrument:hover{border-color:#bfa8fa;transform:translateY(-1px)}
+.flow-instrument:has(input:checked){border-color:#7549eb;background:#f5efff;box-shadow:0 5px 17px #7550da12}
+.flow-instrument>span:first-of-type{font-size:23px}
+.flow-instrument b{font-size:12px;color:#544368}
+.flow-instrument input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.flow-instrument:has(input:focus-visible){outline:3px solid #af97f6;outline-offset:2px}
+.flow-radio-check{font-size:11px;margin-left:auto;color:#fff;background:#7652da;border-radius:50%;width:17px;height:17px;display:grid;place-items:center;visibility:hidden}
+.flow-instrument:has(input:checked) .flow-radio-check{visibility:visible}
+.flow-work-source{margin:-18px auto 24px;color:#7c63ae;font-weight:750;font-size:12px}
+.flow-ready-identity{display:flex;gap:13px;align-items:center;justify-content:center;margin:5px auto 19px}
+.flow-ready-identity>img{width:58px;height:58px;object-fit:cover;border-radius:10px}
+.flow-ready-identity .flow-chip{margin:0;justify-content:flex-start;min-width:0;text-align:left}
+.flow-ready-identity .flow-chip b{max-width:340px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.flow-source-error{font-size:12px;font-weight:750;line-height:1.6;background:#fff1f0;color:#a4383e;border:1px solid #ffc4c4;border-radius:11px;padding:10px 13px;margin:12px 0 0;max-width:595px}
+.flow-source-meta{font-size:12px;font-weight:800;line-height:1.5;background:#edfff5;color:#286d53;border:1px solid #b4e8cc;border-radius:11px;padding:10px 13px;margin:12px 0 0;max-width:595px;overflow-wrap:anywhere}
+.flow-limit{margin:11px 0 0;color:#e0d6f8;font-size:11px;line-height:1.5;font-weight:650}
+.flow-limit strong{color:#fff}
+@media(max-width:650px){
+  .flow-track-card{padding:10px;gap:10px}
+  .flow-track-cover{width:57px;height:57px;flex-basis:57px}
+  .flow-track-info strong{max-width:240px;font-size:12px}
+  .flow-instrument-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .flow-instrument{padding:9px;gap:7px;min-height:62px}
+  .flow-instrument b{font-size:11px}
+  .flow-instrument>span:first-of-type{font-size:20px}
+  .flow-ready-identity>img{height:47px;width:47px}
+  .flow-ready-identity .flow-chip b{max-width:180px}
+  .flow-source-error,.flow-source-meta{font-size:11px;padding:9px 11px}
+}

@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#160D2D" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-wave-32.png?v=1" />
-  <meta name="description" content="SongToSheet.ai : transformez vos musiques préférées en partitions PDF, MIDI et MusicXML. Découvrez notre V1 de transcription musicale." />
-  <title>SongToSheet.ai — Obtenez la partition de vos musiques préférées</title>
+  <meta name="description" content="SongToSheet.ai : obtenez des partitions et, prochainement, des tablatures de vos musiques préférées depuis un lien ou un fichier audio. Découvrez la V1." />
+  <title>SongToSheet.ai — Partitions et tablatures de vos musiques préférées</title>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=3" />
   <style>
@@ -555,6 +555,17 @@ body.pricing-open{overflow:hidden}
  .how-score{padding:13px}
 }
 
+
+/* Hero typing: purple emphasis exclusively on the changing word. */
+.split-copy h1 .hero-heading-ending{background:none;color:#fff;-webkit-text-fill-color:#fff}
+.split-copy h1 .hero-word-cycle{display:inline-grid;vertical-align:baseline;white-space:nowrap;background:none;color:inherit;-webkit-text-fill-color:initial}
+.split-copy h1 .hero-word-cycle > span{grid-area:1 / 1;white-space:nowrap}
+.split-copy h1 .hero-word-cycle .hero-word-measure{visibility:hidden;pointer-events:none}
+.split-copy h1 .hero-word-cycle .hero-word-typed{justify-self:start;background:linear-gradient(100deg,#bf9dff,#7d7efa,#c5acff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;position:relative}
+.split-copy h1 .hero-word-cycle .hero-word-typed:after{content:"";position:absolute;right:-.11em;top:.13em;height:.82em;width:2.5px;background:#bf9dff;border-radius:3px;animation:hero-type-caret .85s steps(1,end) infinite}
+@keyframes hero-type-caret{50%{opacity:0}}
+@media (prefers-reduced-motion:reduce){.split-copy h1 .hero-word-cycle .hero-word-typed:after{animation:none;opacity:0}}
+
 </style>
 
 
@@ -583,8 +594,8 @@ body.pricing-open{overflow:hidden}
  <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
  <div class="container split-inner">
  <div class="split-copy">
- <h1 id="hero-heading">Obtenez la partition<br>de vos <span>musiques préférées.</span></h1>
- <p class="split-subtitle">Collez un lien YouTube, Spotify ou Deezer, choisissez votre instrument et <strong>récupérez la partition à jouer.</strong></p>
+ <h1 id="hero-heading">Obtenez la <span class="hero-word-cycle" aria-label="partition ou tablature"><span class="hero-word-measure" aria-hidden="true">partition</span><span class="hero-word-measure" aria-hidden="true">tablature</span><span id="hero-typed-word" class="hero-word-typed" aria-hidden="true">partition</span></span><br>de vos <span class="hero-heading-ending">musiques préférées.</span></h1>
+ <p class="split-subtitle">Collez un lien YouTube, Spotify ou Deezer, ou importez un audio. Choisissez votre instrument et <strong>obtenez votre partition ou tablature.</strong></p>
  <div class="hero-action-panel">
    <div class="rev-mode" role="tablist" aria-label="Source de musique"><button id="tab-link" class="active" type="button" role="tab" aria-selected="true">🔗 Lien musical</button><button id="tab-upload" type="button" role="tab" aria-selected="false">⇧ Fichier audio</button></div>
    <div id="link-panel" class="hero-source-panel"><label class="hero-input" for="hero-link"><span>↗</span><input id="hero-link" type="url" inputmode="url" autocomplete="off" placeholder="Colle un lien YouTube, Spotify, Deezer…"></label></div>
@@ -595,7 +606,7 @@ body.pricing-open{overflow:hidden}
  <p class="flow-source-error hidden" id="hero-source-error" role="alert"></p>
  <div class="flow-youtube-check hidden" id="hero-youtube-check" aria-label="Vérification de la vidéo YouTube"><div id="hero-youtube-player"></div><p>Si la vidéo ne démarre pas, appuie sur Lecture pour vérifier sa durée.</p></div>
  <p class="flow-limit">⏱ Morceaux de <strong>6 minutes maximum</strong> · durée vérifiée avant de continuer</p>
- <p class="split-legal">Démo de la future expérience : le lien identifie le morceau, mais un fichier audio autorisé reste nécessaire pour la transcription. Génération simulée : les liens servent à identifier les morceaux et les métadonnées disponibles. Aucun audio distant n’est transcrit et aucun paiement n’est actif.</p>
+ <p class="split-legal">Démo de la future expérience : les liens servent à identifier les morceaux et un audio autorisé reste nécessaire pour la transcription. La génération de partitions ou tablatures à partir de ton morceau et les paiements ne sont pas encore actifs.</p>
  </div>
  <div class="hero-morph" aria-label="Illustration de la transformation d'un morceau en partition">
    <div class="morph-glow" aria-hidden="true"></div>
@@ -631,10 +642,10 @@ body.pricing-open{overflow:hidden}
 <section class="rev-proof"><div class="rev-wrap"><div class="rev-proof-grid">
 <div class="rev-proof-item"><span>♩</span><div><b>Lis les notes</b><p>Une vraie portée musicale, sans relever chaque note à la main.</p></div></div>
 <div class="rev-proof-item"><span>♬</span><div><b>Joue ton morceau</b><p>Sélectionne ton instrument et utilise le relevé comme point de départ.</p></div></div>
-<div class="rev-proof-item"><span>⇩</span><div><b>Garde tes partitions</b><p>Exporte en PDF, MIDI et MusicXML pour apprendre et ajuster.</p></div></div>
+<div class="rev-proof-item"><span>⇩</span><div><b>Partitions et tablatures</b><p>Lis les notes sur une partition ou, bientôt, en tablature pour guitare et basse. Exports PDF, MIDI et MusicXML prévus.</p></div></div>
 </div></div></section>
 <section class="rev-section how-section" id="comment-ca-marche" aria-labelledby="how-title"><div class="rev-wrap">
-<span class="rev-label">COMMENT ÇA MARCHE ?</span><h2 id="how-title">Du morceau à la partition.<br><span class="how-heading-purple">En 3 étapes.</span></h2><p>Teste le parcours : ajoute un lien ou un audio, choisis ton instrument et découvre le format de ta partition.</p>
+<span class="rev-label">COMMENT ÇA MARCHE ?</span><h2 id="how-title">De la musique aux notes.<br><span class="how-heading-purple">En 3 étapes.</span></h2><p>Ajoute un lien ou un audio, choisis ton instrument et découvre une partition d’exemple. Les tablatures pour guitare et basse sont prévues prochainement.</p>
 <div class="how-card" id="how-card">
  <div class="how-progress" aria-label="Étapes de création"><span class="active" data-how-progress="1"><b>1</b> Musique</span><i aria-hidden="true"></i><span data-how-progress="2"><b>2</b> Instrument</span><i aria-hidden="true"></i><span data-how-progress="3"><b>3</b> Partition</span></div>
  <div class="how-pane" id="how-source" data-how-step="1">
@@ -670,14 +681,14 @@ body.pricing-open{overflow:hidden}
 </div>
 </div></section>
 <section class="rev-section rev-example" id="fonctionnalites"><div class="rev-wrap">
-<span class="rev-label">LE RÉSULTAT, AVANT TOUT</span><h2>Moins de temps à chercher.<br>Plus de temps à jouer.</h2><p class="rev-example-copy">L'objectif est simple : rendre un morceau plus facile à apprendre grâce à un relevé que tu peux lire, imprimer ou modifier.</p>
+<span class="rev-label">LE RÉSULTAT, AVANT TOUT</span><h2>Moins de temps à chercher.<br>Plus de temps à jouer.</h2><p class="rev-example-copy">L'objectif est simple : apprendre un morceau avec une partition lisible, ou bientôt une tablature pour guitare et basse. L'exemple affiché présente une partition.</p>
 <div class="rev-example-display"><div class="rev-example-points"><div><span>✓</span><div><b>Visualise les notes</b><p>Un aperçu lisible sur une portée musicale, sans logiciel compliqué.</p></div></div><div><span>✓</span><div><b>Continue dans ton logiciel préféré</b><p>Utilise MIDI ou MusicXML pour retravailler le résultat.</p></div></div><div><span>✓</span><div><b>Conçu pour apprendre</b><p>Idéal pour commencer à relever une mélodie et l'adapter à ta manière de jouer.</p></div></div></div>
 <div class="rev-example-art"><div class="rev-paper"><header><b>Ma partition • Piano</b><span>✓ Exemple</span></header><svg viewBox="0 0 480 156" role="img" aria-label="Portée avec une mélodie originale à six notes"><g stroke="#cfc8dc" stroke-width="1.5"><path d="M25 51H455M25 66H455M25 81H455M25 96H455M25 111H455"/></g><text x="33" y="107" font-size="59" font-family="serif" fill="#392953">𝄞</text><g fill="#6340cd" stroke="#6340cd" stroke-width="2"><ellipse cx="133" cy="103" rx="9" ry="6" transform="rotate(-20 133 103)"/><path d="M141 101V57"/><ellipse cx="192" cy="89" rx="9" ry="6" transform="rotate(-20 192 89)"/><path d="M200 87V43"/><ellipse cx="251" cy="74" rx="9" ry="6" transform="rotate(-20 251 74)"/><path d="M259 72V28"/><ellipse cx="310" cy="81" rx="9" ry="6" transform="rotate(-20 310 81)"/><path d="M318 79V35"/><ellipse cx="369" cy="96" rx="9" ry="6" transform="rotate(-20 369 96)"/><path d="M377 94V50"/><ellipse cx="428" cy="89" rx="9" ry="6" transform="rotate(-20 428 89)"/><path d="M436 87V43"/></g></svg><div class="rev-paper-foot"><span>PDF</span><span>MIDI</span><span>MusicXML</span></div></div></div></div><div class="rev-example-actions"><button type="button" class="btn btn-primary" id="showcase-cta">Créer ma partition ↗</button></div>
 </div></section>
 <section class="rev-faq"><div class="rev-wrap rev-faq-grid"><div><h2>Les réponses avant de jouer.</h2><p>Une première version transparente sur ce qu'elle sait faire et ce qui reste en développement.</p></div><div class="rev-faq-list">
 <details open><summary>Est-ce que je peux coller un lien YouTube ou Spotify ? <span>+</span></summary><p>Oui, pour identifier le morceau. Aujourd'hui, il faut aussi disposer d'un fichier audio autorisé pour le transcrire : l'audio n'est pas téléchargé depuis ces plateformes.</p></details>
 <details><summary>Peut-on convertir n'importe quel instrument ? <span>+</span></summary><p>Le relevé expérimental de V1 fonctionne surtout sur des mélodies isolées. Les accords complexes et les morceaux multi-instruments demandent un moteur plus avancé.</p></details>
-<details><summary>Quels formats sont prévus ? <span>+</span></summary><p>PDF pour imprimer, MIDI pour travailler la musique dans un logiciel, MusicXML pour l'édition de partitions.</p></details>
+<details><summary>Quels formats sont prévus ? <span>+</span></summary><p>Partitions en PDF, MIDI et MusicXML pour lire, imprimer ou retravailler les notes. Les tablatures pour guitare et basse sont prévues, mais ne sont pas encore disponibles dans cette démo.</p></details>
 <details><summary>La génération et le paiement sont-ils actifs ? <span>+</span></summary><p>Pas encore sur ce site de démonstration. Tu peux tester le parcours et consulter un exemple, mais aucun paiement ni traitement audio en ligne ne sont effectués.</p></details>
 </div></div></section>
 <section class="rev-bottom"><div class="rev-wrap"><h2>La prochaine musique que tu vas jouer<br>commence ici.</h2><p>Un morceau. Quelques clics. Et les notes prennent forme.</p><button type="button" id="footer-start">Créer ma partition ↗</button><small>V1 de démonstration · Pas d'essai gratuit · Paiement non activé</small></div></section>
@@ -962,7 +973,7 @@ body.pricing-open{overflow:hidden}
     if(app){if(!state.user){go('/inscription',true);return;}showAppPage(state.activePage);}
     if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth();}
     if(window.SongToSheetFlow)window.SongToSheetFlow.render(pathname);
-    const titles={'/':'SongToSheet.ai — Obtenez la partition de vos musiques préférées',
+    const titles={'/':'SongToSheet.ai — Partitions et tablatures de vos musiques préférées',
       '/fonctionnalites':'Fonctionnalités — SongToSheet.ai',
       '/resultats':'Résultats et exemples — SongToSheet.ai',
       '/tarifs':'Tarifs et abonnements — SongToSheet.ai',
@@ -1273,5 +1284,27 @@ const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const li
 })();
 </script>
 <script src="/assets/conversion-flow.js?v=7" defer></script>
+
+<script>
+/* Hero typewriter: partition <-> tablature. */
+(()=>{
+ const word=document.getElementById('hero-typed-word');
+ if(!word||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ const words=['partition','tablature'];
+ let index=0,characters=words[0].length,deleting=true;
+ function tick(){
+  if(document.hidden){setTimeout(tick,500);return;}
+  if(deleting){
+   if(characters>0){word.textContent=words[index].slice(0,--characters);setTimeout(tick,60);}
+   else{index=(index+1)%words.length;deleting=false;setTimeout(tick,150);}
+  }else{
+   if(characters<words[index].length){word.textContent=words[index].slice(0,++characters);setTimeout(tick,95);}
+   else{deleting=true;setTimeout(tick,2050);}
+  }
+ }
+ setTimeout(tick,2100);
+})();
+</script>
+
 </body>
 </html>

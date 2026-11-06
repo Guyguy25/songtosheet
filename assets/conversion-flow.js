@@ -153,7 +153,13 @@
       });
     }finally{
       holder.classList.add('hidden');
-      slot.textContent='';
+      // YT.Player remplace le nœud cible par un iframe ; son destroy()
+      // ne restaure pas forcément ce nœud. Le recréer pour le prochain essai.
+      var current=$('hero-youtube-player');
+      if(current)current.remove();
+      var next=document.createElement('div');
+      next.id='hero-youtube-player';
+      holder.insertBefore(next,holder.firstChild);
     }
   }
 
@@ -165,16 +171,16 @@
     var response;
     try{response=await fetch('/api/media-info?url='+encodeURIComponent(value),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8500)});}
     catch(e){
-      throw new Error('Impossible de vérifier la durée de cette vidéo ou de ce morceau.');
+      if(provider!=='YouTube')throw new Error('Impossible de vérifier la durée de ce morceau.');
     }
-    var data;
-    try{data=await response.json();}catch{data={};}
-    if(response.status===422)throw new Error('La durée maximale autorisée est de 6 min.');
-    if(response.status===400)throw new Error(data.error||'Ce lien ne pointe pas vers un morceau accepté.');
-    var duration=data.duration_verified===true&&Number.isFinite(data.duration_seconds)&&data.duration_seconds>0?data.duration_seconds:null;
-    if(provider==='YouTube'&&(response.status===424||response.ok&&duration===null)){
+    var data={};
+    if(response)try{data=await response.json();}catch(e){}
+    if(response&&response.status===422)throw new Error('La durée maximale autorisée est de 6 min.');
+    if(response&&response.status===400)throw new Error(data.error||'Ce lien ne pointe pas vers un morceau accepté.');
+    var duration=response&&data.duration_verified===true&&Number.isFinite(data.duration_seconds)&&data.duration_seconds>0?data.duration_seconds:null;
+    if(provider==='YouTube'&&(!response||response.status===424||response.ok&&duration===null)){
       duration=await youtubeDurationFromPlayer(value);
-    }else if(!response.ok){
+    }else if(!response||!response.ok){
       throw new Error('Impossible de vérifier la durée de cette vidéo ou de ce morceau.');
     }
     if(duration===null)throw new Error('Impossible de vérifier la durée de cette vidéo ou de ce morceau.');

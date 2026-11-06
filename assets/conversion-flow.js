@@ -68,15 +68,15 @@
     var response;
     try{response=await fetch('/api/media-info?url='+encodeURIComponent(value),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8500)});}
     catch(e){
-      throw new Error('La vérification de durée est momentanément indisponible. Réessaie ou importe un fichier audio (6 minutes max).');
+      throw new Error('La durée maximale autorisée est de 6 min.');
     }
     var data;
     try{data=await response.json();}catch{data={};}
     if(response.status===422)throw new Error(data.error||'La durée maximale autorisée est de 6 min.');
     if(response.status===400)throw new Error(data.error||'Ce lien ne pointe pas vers un morceau accepté.');
-    if(!response.ok)throw new Error(data.error||'Impossible de vérifier la durée du morceau. Réessaie ou importe un fichier audio.');
+    if(!response.ok)throw new Error(data.error||'La durée maximale autorisée est de 6 min.');
     var duration=data.duration_verified===true&&Number.isFinite(data.duration_seconds)&&data.duration_seconds>0?data.duration_seconds:null;
-    if(duration===null)throw new Error('Impossible de vérifier la durée du morceau. Réessaie ou importe un fichier audio.');
+    if(duration===null)throw new Error('La durée maximale autorisée est de 6 min.');
     if(duration>360)throw new Error('La durée maximale autorisée est de 6 min.');
     var result={
       provider:provider,name:typeof data.title==='string'&&data.title.trim()?data.title.trim().slice(0,110):'Morceau '+provider,

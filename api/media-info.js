@@ -22,22 +22,64 @@ async function fetchData(url) {
   if(raw.length>250000)throw new Error('metadata too large');
   return JSON.parse(raw);
 }
+
+/**
+ * Parse uniquement le player initial de la vidéo demandée.
+ * Ne jamais lire une occurrence globale de lengthSeconds : elle pourrait
+ * concerner une vidéo recommandée dans la page YouTube.
+ */
+function playerJson(html) {
+  const marker=/\bytInitialPlayerResponse\s*=\s*\{/g;
+  let match;
+  while((match=marker.exec(html))!==null){
+    const start=html.indexOf('{',match.index);
+    let depth=0,inString=false,escaped=false;
+    for(let i=start;i<Math.min(html.length,start+1000000);i++){
+      const char=html[i];
+      if(inString){
+        if(escaped)escaped=false;
+        else if(char==='\\')escaped=true;
+        else if(char==='"')inString=false;
+        continue;
+      }
+      if(char==='"'){inString=true;continue;}
+      if(char==='{')depth++;
+      if(char==='}'&&--depth===0){
+        try{return JSON.parse(html.slice(start,i+1));}catch{break;}
+      }
+    }
+  }
+  return null;
+}
+function verifiedPlayerDuration(html,id){
+  const data=playerJson(html);
+  if(!data||data.videoDetails?.videoId!==id||data.videoDetails?.isLiveContent)return null;
+  const seconds=safeSeconds(data.videoDetails.lengthSeconds);
+  return seconds;
+}
 async function fetchYouTubeDuration(id) {
   const response=await fetch('https://www.youtube.com/watch?v='+id,{
-    method:'GET',
-    redirect:'error',
+    method:'GET',redirect:'error',
     signal:AbortSignal.timeout(TIMEOUT_MS),
     headers:{'User-Agent':'Mozilla/5.0 (compatible; SongToSheetPreview/1.0)','Accept':'text/html'}
   });
   if(!response.ok)throw new Error('duration unavailable');
-  const html=(await response.text()).slice(0,2600000);
-  let match=html.match(/"videoDetails"\s*:\s*\{[\s\S]{0,1500}?"lengthSeconds"\s*:\s*"(\d+)"/);
-  if(!match)match=html.match(/"lengthSeconds"\s*:\s*"(\d+)"/);
-  if(match)return safeSeconds(match[1]);
-  match=html.match(/"approxDurationMs"\s*:\s*"(\d+)"/);
-  if(match)return safeSeconds(Number(match[1])/1000);
-  match=html.match(/"duration"\s*:\s*"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?"/);
-  return match?safeSeconds(Number(match[1]||0)*3600+Number(match[2]||0)*60+Number(match[3]||0)):null;
+  const html=(await response.text()).slice(0,3200000);
+  return verifiedPlayerDuration(html,id);
+}
+function parseIsoDuration(iso){
+  const match=/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(String(iso||''));
+  if(!match)return null;
+  return safeSeconds(Number(match[1]||0)*86400+Number(match[2]||0)*3600+Number(match[3]||0)*60+Number(match[4]||0));
+}
+async function fetchYouTubeOfficial(id){
+  const key=process.env.YOUTUBE_DATA_API_KEY;
+  if(!key)return null;
+  const data=await fetchData('https://www.googleapis.com/youtube/v3/videos?part=contentDetails%2Csnippet%2CliveStreamingDetails&id='+id+'&key='+encodeURIComponent(key));
+  const video=data.items?.find(item=>item.id===id);
+  if(!video||video.snippet?.liveBroadcastContent==='live'||video.liveStreamingDetails?.actualEndTime===undefined&&video.liveStreamingDetails?.actualStartTime)return null;
+  const duration=parseIsoDuration(video.contentDetails?.duration);
+  return {duration,title:clean(video.snippet?.title),artist:clean(video.snippet?.channelTitle,80)};
 }
 
 function parseSource(raw) {
@@ -81,7 +123,8 @@ async function getInfo(src) {
   if(src.provider==='YouTube'){
     const work=await Promise.allSettled([
       fetchData('https://www.youtube.com/oembed?url='+encodeURIComponent(src.canonical)+'&format=json'),
-      fetchYouTubeDuration(src.id)
+      fetchYouTubeDuration(src.id),
+      fetchYouTubeOfficial(src.id)
     ]);
     if(work[0].status==='fulfilled'){
       const data=work[0].value;
@@ -90,6 +133,12 @@ async function getInfo(src) {
       if(typeof data.thumbnail_url==='string'&&/^https:\/\/(?:i\.ytimg\.com|img\.youtube\.com)\//.test(data.thumbnail_url))result.thumbnail_url=data.thumbnail_url;
     }
     if(work[1].status==='fulfilled')result.duration_seconds=safeSeconds(work[1].value);
+    if(work[2].status==='fulfilled'&&work[2].value){
+      const official=work[2].value;
+      if(official.duration!==null)result.duration_seconds=official.duration;
+      if(official.title)result.title=official.title;
+      if(official.artist)result.artist=official.artist;
+    }
   }else if(src.provider==='Spotify'){
     if(src.canonical){
       try{
@@ -138,8 +187,18 @@ module.exports=async function handler(req,res){
   try{
     const src=parseSource(req.query?.url);
     const result=await getInfo(src);
-    if(result.duration_verified && result.duration_seconds>MAX_LENGTH_SECONDS){
-      return res.status(422).json({error:LIMIT_MESSAGE,duration_seconds:result.duration_seconds,provider:src.provider});
+    if(result.duration_verified&&result.duration_seconds>MAX_LENGTH_SECONDS){
+      return res.status(422).json({error:'Cette vidéo ou ce morceau dure '+Math.floor(result.duration_seconds/60)+':'+String(result.duration_seconds%60).padStart(2,'0')+'. La limite est de 6 minutes maximum.',duration_seconds:result.duration_seconds,provider:src.provider});
+    }
+    if(!result.duration_verified){
+      return res.status(424).json({
+        error:src.provider==='YouTube'
+          ?'Impossible de vérifier la durée de cette vidéo YouTube. Réessaie dans un instant ou importe un fichier audio de 6 minutes maximum.'
+          :'Impossible de vérifier la durée de ce morceau. Réessaie ou importe un fichier audio de 6 minutes maximum.',
+        provider:src.provider,
+        title:result.title,
+        duration_verified:false
+      });
     }
     return res.status(200).json(result);
   }catch(e){

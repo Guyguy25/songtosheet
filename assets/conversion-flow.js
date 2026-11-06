@@ -54,13 +54,11 @@
     el.classList.toggle('hidden',!message);
     if(message)$('hero-source-meta')?.classList.add('hidden');
   }
-  function showHeroMetadata(info){
-    var el=$('hero-source-meta');if(!el)return;
-    if(!info){el.classList.add('hidden');return;}
-    var label=info.name||info.title||'Morceau';
-    el.textContent=label+' · '+info.provider+' · '+(info.durationVerified?durationText(info.duration):'durée à vérifier');
-    el.classList.remove('hidden');
-    sourceError('');
+  function showHeroMetadata(){
+    // Pas de message de succès sous le champ : seule une erreur est affichée,
+    // et seulement après la tentative de génération.
+    var el=$('hero-source-meta');
+    if(el){el.textContent='';el.classList.add('hidden');}
   }
   async function inspectLink(raw){
     var value=String(raw||'').trim();
@@ -111,14 +109,10 @@
     if(!value)return;
     inputDelay=setTimeout(verifyHeroLink,650);
   }
-  async function onHeroFile(file){
+  function onHeroFile(){
+    // Le contrôle du fichier reste dans validateFile(), appelé après le clic.
     sourceRequestSerial++;clearTimeout(inputDelay);
     sourceError('');showHeroMetadata(null);
-    if(!file)return;
-    try{
-      var seconds=await validateFile(file);
-      showHeroMetadata({provider:'Fichier audio',name:file.name.replace(audioFormats,'').slice(0,90),duration:seconds,durationVerified:true});
-    }catch(e){sourceError(e.message);}
   }
   function setCover(id,request){
     var image=$(id);
@@ -367,8 +361,10 @@
       var chosen=document.querySelector('input[name="flow-instrument"]:checked');
       chooseInstrument(chosen?chosen.value:'piano');
     });
-    if($('hero-link'))$('hero-link').addEventListener('input',onHeroLinkInput);
-    if($('hero-file'))$('hero-file').addEventListener('change',function(e){onHeroFile(e.target.files[0]);});
+    // Ne vérifie pas la source à la saisie : les erreurs s'affichent
+    // uniquement après un clic explicite sur « Continuer ».
+    if($('hero-link'))$('hero-link').addEventListener('input',function(){sourceRequestSerial++;clearTimeout(inputDelay);sourceError('');showHeroMetadata(null);});
+    if($('hero-file'))$('hero-file').addEventListener('change',function(){sourceError('');showHeroMetadata(null);});
     $('flow-discover').addEventListener('click',function(){
       if(!readRequest())return;
       try{

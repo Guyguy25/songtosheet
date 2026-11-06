@@ -824,6 +824,70 @@ body.pricing-open{overflow:hidden}
   function go(path,replace=false){if(replace)history.replaceState({},'',path);else history.pushState({},'',path);renderRoute();if(!path.includes('#'))window.scrollTo({top:0,behavior:'instant'});}
   function show(id,yes){$(id).classList.toggle('hidden',!yes);}
   function menuClose(){$('mobile-menu').classList.remove('open');$('mobile-menu').setAttribute('aria-hidden','true');$('mobile-menu-btn').setAttribute('aria-expanded','false');$('mobile-menu-btn').setAttribute('aria-label','Afficher le menu');}
+
+  let howMode='link';
+  let howStep=1;
+  function howShowStep(step){
+    howStep=step;
+    for(const [number,id] of [[1,'how-source'],[2,'how-instrument'],[3,'how-result']]){
+      $(id).classList.toggle('hidden',number!==step);
+    }
+    document.querySelectorAll('[data-how-progress]').forEach(el=>{
+      const n=Number(el.dataset.howProgress);
+      el.classList.toggle('active',n===step);
+      el.classList.toggle('complete',n<step);
+    });
+    const title=$(['how-source','how-instrument','how-result'][step-1]).querySelector('h3');
+    title?.focus({preventScroll:true});
+  }
+  function howChangeMode(mode){
+    howMode=mode;
+    const link=mode==='link';
+    show('how-link-panel',link);
+    show('how-upload-panel',!link);
+    for(const [id,active] of [['how-link-tab',link],['how-upload-tab',!link]]){
+      $(id).classList.toggle('active',active);
+      $(id).setAttribute('aria-selected',String(active));
+    }
+    show('how-source-error',false);
+  }
+  function howError(message){
+    $('how-source-error').textContent=message;
+    show('how-source-error',true);
+  }
+  async function howContinueSource(){
+    show('how-source-error',false);
+    const next=$('how-next-source');next.disabled=true;
+    try{
+      if(howMode==='link'){
+        const value=$('how-link').value.trim();
+        if(!value){howError('Colle un lien musical pour continuer, ou choisis « Importer un audio ».');return;}
+        const details=await post('/api/links/inspect',{url:value});
+        state.link=details.source_url;
+        state.file=null;
+      }else{
+        const file=$('how-file').files[0];
+        if(!file){howError('Sélectionne un fichier audio pour continuer.');return;}
+        if(file.size>25*1024*1024){howError('Le fichier dépasse la limite de 25 Mo.');return;}
+        if(!/\.(mp3|wav|m4a|flac|ogg|aac)$/i.test(file.name)){howError('Format non pris en charge. Utilise MP3, WAV, M4A, FLAC, OGG ou AAC.');return;}
+        state.file=file;
+        state.link='';
+        $('workspace-file-name').textContent=file.name;
+      }
+      howShowStep(2);
+    }catch(error){
+      howError(error?.message||'Impossible de vérifier cette source. Essaie un autre lien.');
+    }finally{next.disabled=false;}
+  }
+  function howContinueInstrument(){
+    const selection=document.querySelector('input[name="how-instrument"]:checked');
+    const instrument=selection?.value||'piano';
+    $('workspace-instrument').value=instrument;
+    const labels={piano:'Piano',guitare:'Guitare',violon:'Violon',voix:'Voix',basse:'Basse'};
+    $('how-instrument-label').textContent=labels[instrument]||'Piano';
+    howShowStep(3);
+  }
+
   function renderRoute(){
     clearInterval(state.poll);state.poll=null;menuClose();
     const pathname=(location.pathname.replace(/\/$/,'')||'/').toLowerCase();
@@ -838,7 +902,7 @@ body.pricing-open{overflow:hidden}
     for(const id of ['landing','features-view','results-view','pricing-view','faq-view'])show(id,activePublic===id);
     show('workspace',app);show('auth-view',authPage);show('legal-view',pathname==='/legal');
     document.querySelectorAll('#public-header .top-nav a').forEach(a=>{
-      const current=a.getAttribute('href')===pathname;
+      const current=a.getAttribute('href')===pathname || (pathname==='/'&&location.hash==='#comment-ca-marche'&&a.getAttribute('href')==='/#comment-ca-marche');
       a.classList.toggle('active',current);
       if(current)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
     });
@@ -854,6 +918,9 @@ body.pricing-open{overflow:hidden}
       '/inscription':'Créer un compte — SongToSheet.ai',
       '/connexion':'Se connecter — SongToSheet.ai'};
     document.title=titles[pathname]||'SongToSheet.ai';
+    if(pathname==='/' && location.hash==='#comment-ca-marche'){
+      requestAnimationFrame(()=>$('comment-ca-marche').scrollIntoView({behavior:'smooth',block:'start'}));
+    }
   }
   function renderAuth(){const login=state.authMode==='login';
     $('auth-title').textContent=login?'Content de te revoir !':'Bienvenue sur SongToSheet';
@@ -1034,7 +1101,14 @@ body.pricing-open{overflow:hidden}
   async function logout(){try{await post('/api/auth/logout',{});}catch{}state.user=null;state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
   function wire(){
     document.addEventListener('click',async(e)=>{
-      const nav=e.target.closest('[data-nav]');if(nav){e.preventDefault();go(nav.getAttribute('href')|| (nav.dataset.nav==='home'?'/':'/connexion'));return;}
+      const nav=e.target.closest('[data-nav]');if(nav){
+        e.preventDefault();
+        const target=nav.getAttribute('href') || (nav.dataset.nav==='home'?'/':'/connexion');
+        if(target==='/#comment-ca-marche' && !$('how-link').value.trim() && $('hero-link').value.trim()){
+          $('how-link').value=$('hero-link').value.trim();
+        }
+        go(target);return;
+      }
       if(e.target.closest('[data-start]')){startApp('create');return;}
       const job=e.target.closest('[data-job]');if(job){openResult(job.dataset.job);return;}
       const cycle=e.target.closest('[data-cycle]');if(cycle){subscriptionCycle=cycle.dataset.cycle;syncPricing();return;}
@@ -1078,6 +1152,20 @@ body.pricing-open{overflow:hidden}
     window.addEventListener('resize',()=>{if(window.innerWidth>1000)menuClose();});
     document.querySelectorAll('.mobile-menu a').forEach(a=>a.addEventListener('click',menuClose));
     $('tab-link').onclick=()=>switchHero('link');$('tab-upload').onclick=()=>switchHero('upload');$('hero-generate').onclick=heroGenerate;
+    $('how-link-tab').onclick=()=>howChangeMode('link');
+    $('how-upload-tab').onclick=()=>howChangeMode('upload');
+    $('how-link').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();howContinueSource();}});
+    $('how-file').onchange=e=>{
+      const file=e.target.files[0];
+      $('how-file-name').textContent=file?file.name:'Choisir un fichier audio';
+      show('how-source-error',false);
+    };
+    $('how-next-source').onclick=howContinueSource;
+    $('how-back-source').onclick=()=>howShowStep(1);
+    $('how-next-instrument').onclick=howContinueInstrument;
+    $('how-back-instrument').onclick=()=>howShowStep(2);
+    $('how-view-demo').onclick=()=>{state.resultId='preview-melody';startApp('result');};
+
     $('hero-link').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();heroGenerate();}});
     $('hero-file').onchange=e=>{const file=e.target.files[0];if(file){state.file=file;$('hero-file-label').textContent=file.name;}};
     $('workspace-file').onchange=e=>{const file=e.target.files[0];if(file){state.file=file;$('workspace-file-name').textContent=file.name;}};
@@ -1096,7 +1184,7 @@ body.pricing-open{overflow:hidden}
     $('learn-more').onclick=(e)=>{e.preventDefault();go('/#comment-ca-marche');document.querySelector('#comment-ca-marche')?.scrollIntoView({behavior:'smooth'});};
     $('footer-year').textContent=new Date().getFullYear();
   }
-  async function init(){wire();syncPricing();await Promise.all([loadUser(),loadPackages()]);renderRoute();if(state.user){await refresh();if(location.search.includes('checkout=success')){
+  async function init(){wire();syncPricing();howShowStep(1);await Promise.all([loadUser(),loadPackages()]);renderRoute();if(state.user){await refresh();if(location.search.includes('checkout=success')){
       toast('Paiement confirmé : les crédits apparaîtront dès que Stripe aura envoyé sa confirmation.');history.replaceState({},'',location.pathname);showAppPage('billing');
       let count=0;const timer=setInterval(async()=>{await refresh();if(++count>=8)clearInterval(timer);},2000);
     }}else if(location.pathname==='/app'){go('/inscription',true);}}

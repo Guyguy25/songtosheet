@@ -472,6 +472,19 @@ body.pricing-open{overflow:hidden}
   }
 }
 
+
+/* Fixed header overlay: allow each dark hero to extend behind the floating capsule.
+   We shift the header clearance into the hero content, avoiding a blank white strip at scrollY=0. */
+@media (max-width:1000px){
+  body.has-public-header{padding-top:0}
+  #landing .split-inner{padding-top:calc(55px + 96px)}
+  .site-subpage .sub-hero{padding-top:calc(90px + 96px)}
+}
+@media (max-width:650px){
+  #landing .split-inner{padding-top:calc(40px + 84px)}
+  .site-subpage .sub-hero{padding-top:calc(70px + 84px)}
+}
+
 </style>
 
 

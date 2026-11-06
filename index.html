@@ -588,7 +588,7 @@ body.pricing-open{overflow:hidden}
  <div class="hero-action-panel">
    <div class="rev-mode" role="tablist" aria-label="Source de musique"><button id="tab-link" class="active" type="button" role="tab" aria-selected="true">🔗 Lien musical</button><button id="tab-upload" type="button" role="tab" aria-selected="false">⇧ Fichier audio</button></div>
    <div id="link-panel" class="hero-source-panel"><label class="hero-input" for="hero-link"><span>↗</span><input id="hero-link" type="url" inputmode="url" autocomplete="off" placeholder="Colle un lien YouTube, Spotify, Deezer…"></label></div>
-   <div id="upload-panel" class="hero-source-panel hidden"><label id="hero-drop" class="hero-upload" for="hero-file"><span>⇧</span><span><b id="hero-file-label">Déposer ou choisir un audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo</small></span><input id="hero-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"></label></div>
+   <div id="upload-panel" class="hero-source-panel hidden"><label id="hero-drop" class="hero-upload" for="hero-file"><span>⇧</span><span><b id="hero-file-label">Déposer ou choisir un audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo · 6 min</small></span><input id="hero-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"></label></div>
    <select id="hero-instrument" aria-label="Instrument" hidden><option value="piano">Piano</option><option value="guitare">Guitare</option><option value="violon">Violon</option><option value="voix">Voix</option><option value="basse">Basse</option></select>
    <button id="hero-generate" class="split-submit" type="button" aria-label="Générer ma partition">Générer <span aria-hidden="true">↗</span></button>
  </div>
@@ -641,10 +641,10 @@ body.pricing-open{overflow:hidden}
    <button id="how-upload-tab" type="button" role="tab" aria-selected="false" aria-controls="how-upload-panel">⇧ Importer un audio</button>
   </div>
   <div id="how-link-panel" role="tabpanel" aria-labelledby="how-link-tab"><label class="how-field" for="how-link"><span aria-hidden="true">↗</span><input id="how-link" type="url" inputmode="url" autocomplete="off" placeholder="Lien YouTube, Spotify, Deezer…"/></label></div>
-  <div id="how-upload-panel" role="tabpanel" aria-labelledby="how-upload-tab" class="hidden"><label class="how-upload" for="how-file"><span aria-hidden="true">⇧</span><span><b id="how-file-name">Choisir un fichier audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo max.</small></span><input type="file" id="how-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"/></label></div>
+  <div id="how-upload-panel" role="tabpanel" aria-labelledby="how-upload-tab" class="hidden"><label class="how-upload" for="how-file"><span aria-hidden="true">⇧</span><span><b id="how-file-name">Choisir un fichier audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo · 6 min max.</small></span><input type="file" id="how-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"/></label></div>
   <p class="how-error hidden" id="how-source-error" role="alert"></p>
   <button id="how-next-source" type="button" class="how-main-btn">Prochaine étape <span aria-hidden="true">→</span></button>
-  <small class="how-disclaimer">Les liens servent à identifier la chanson. Pour une transcription réelle, un audio autorisé sera nécessaire.</small>
+  <small class="how-disclaimer">Simulation uniquement : pour les liens, la limite de 6 min sera vérifiée lors du traitement réel.</small>
  </div>
  <div class="how-pane hidden" id="how-instrument" data-how-step="2">
   <div class="how-step-label">ÉTAPE 2 SUR 3</div><h3 tabindex="-1">Choisis ton instrument.</h3><p class="how-desc">Comment souhaites-tu apprendre à jouer ce morceau ?</p>
@@ -655,7 +655,7 @@ body.pricing-open{overflow:hidden}
    <label><input type="radio" name="how-instrument" value="voix"/><span>🎤 <b>Voix</b></span></label>
    <label><input type="radio" name="how-instrument" value="basse"/><span>🎵 <b>Basse</b></span></label>
   </div>
-  <div class="how-buttons"><button id="how-back-source" type="button" class="how-back-btn">← Retour</button><button id="how-next-instrument" type="button" class="how-main-btn">Voir un exemple <span aria-hidden="true">→</span></button></div>
+  <div class="how-buttons"><button id="how-back-source" type="button" class="how-back-btn">← Retour</button><button id="how-next-instrument" type="button" class="how-main-btn">Générer ma partition <span aria-hidden="true">→</span></button></div>
  </div>
  <div class="how-pane hidden" id="how-result" data-how-step="3">
   <div class="how-step-label">ÉTAPE 3 SUR 3</div><h3 tabindex="-1">Voici à quoi ressemble ta partition.</h3>

@@ -1264,7 +1264,10 @@ body.pricing-open{overflow:hidden}
   async function submitAuth(e){e.preventDefault();
     const email=$('auth-email').value.trim(),password=$('auth-password').value;
     const btn=$('auth-submit');btn.disabled=true;btn.textContent='Un instant…';show('auth-error',false);
-    try{const result=await post(`/api/auth/${state.authMode==='login'?'login':'signup'}`,{email,password});
+    try{
+      if(password.length<8)throw new Error('Entre au moins 8 caractères pour ce mot de passe de démonstration.');
+      // Le champ est purement fictif en V1 : ne pas envoyer cette valeur au serveur.
+      const result=await post(`/api/auth/${state.authMode==='login'?'login':'signup'}`,{email});
       state.user=result.user;$('auth-password').value='';window.SongToSheetDemoStore?.savePendingForCurrentAccount();await refresh();
       if(state.pendingPack){const pack=state.pendingPack;state.pendingPack=null;startApp('billing');await buy(pack);}
       else if(window.SongToSheetFlow&&window.SongToSheetFlow.pending()){window.SongToSheetFlow.openPreview();return;}

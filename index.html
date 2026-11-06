@@ -438,6 +438,20 @@ body.pricing-open{overflow:hidden}
 .brand-mark img{width:40px!important;height:40px!important;max-width:100%;object-fit:contain;display:block}
 @media(max-width:650px){.brand-mark,.sidebar-brand .brand-mark,.auth-brand .brand-mark,#public-header .brand-mark{width:36px;height:36px;min-width:36px;flex-basis:36px}.brand-mark img{width:35px!important;height:35px!important}}
 
+
+/* Mobile-only: keep the marketing navigation visible as the page scrolls. */
+@media (max-width:1000px){
+  #public-header{position:fixed;top:0;left:0;right:0;width:100%;z-index:2500}
+  body.has-public-header{padding-top:96px}
+  html{scroll-padding-top:106px}
+  #public-header .mobile-menu.open{max-height:calc(100dvh - 104px);overflow-y:auto;overscroll-behavior:contain}
+}
+@media (max-width:650px){
+  body.has-public-header{padding-top:84px}
+  html{scroll-padding-top:94px}
+  #public-header .mobile-menu.open{max-height:calc(100dvh - 95px)}
+}
+
 </style>
 
 
@@ -455,9 +469,9 @@ body.pricing-open{overflow:hidden}
       <a href="/faq" data-nav="faq">FAQ</a>
     </nav>
     <div class="nav-actions"><button id="nav-login" class="nav-link-btn" type="button">Se connecter</button><button id="nav-cta" class="btn btn-primary btn-nav" type="button">Commencer ↗</button></div>
-    <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Afficher le menu" aria-expanded="false">☰</button>
+    <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Afficher le menu" aria-controls="mobile-menu" aria-expanded="false">☰</button>
   </div>
-  <div id="mobile-menu" class="mobile-menu">
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
     <a href="/" data-nav="home">Accueil</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a>
     <button id="mobile-login" type="button">Se connecter</button><button id="mobile-start" type="button">Créer ma partition</button>
   </div></header>
@@ -678,7 +692,7 @@ body.pricing-open{overflow:hidden}
   const post=(path,object)=>api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(object)});
   function go(path,replace=false){if(replace)history.replaceState({},'',path);else history.pushState({},'',path);renderRoute();if(!path.includes('#'))window.scrollTo({top:0,behavior:'instant'});}
   function show(id,yes){$(id).classList.toggle('hidden',!yes);}
-  function menuClose(){$('mobile-menu').classList.remove('open');$('mobile-menu-btn').setAttribute('aria-expanded','false');}
+  function menuClose(){$('mobile-menu').classList.remove('open');$('mobile-menu').setAttribute('aria-hidden','true');$('mobile-menu-btn').setAttribute('aria-expanded','false');$('mobile-menu-btn').setAttribute('aria-label','Afficher le menu');}
   function renderRoute(){
     clearInterval(state.poll);state.poll=null;menuClose();
     const pathname=(location.pathname.replace(/\/$/,'')||'/').toLowerCase();
@@ -688,6 +702,7 @@ body.pricing-open{overflow:hidden}
     const app=pathname==='/app';
     const authPage=pathname==='/connexion'||pathname==='/inscription';
     show('public-header',marketing);
+    document.body.classList.toggle('has-public-header',marketing);
     show('public-footer',marketing);
     for(const id of ['landing','features-view','results-view','pricing-view','faq-view'])show(id,activePublic===id);
     show('workspace',app);show('auth-view',authPage);show('legal-view',pathname==='/legal');
@@ -912,7 +927,24 @@ body.pricing-open{overflow:hidden}
     });
     window.addEventListener('popstate',renderRoute);
     $('nav-login').onclick=()=>go('/connexion');$('nav-cta').onclick=()=>startApp('create');$('mobile-login').onclick=()=>go('/connexion');$('mobile-start').onclick=()=>startApp('create');$('footer-start').onclick=()=>startApp('create');$('showcase-cta').onclick=()=>startApp('create');
-    $('mobile-menu-btn').onclick=()=>{const open=$('mobile-menu').classList.toggle('open');$('mobile-menu-btn').setAttribute('aria-expanded',String(open));};
+    $('mobile-menu-btn').onclick=()=>{
+      const open=$('mobile-menu').classList.toggle('open');
+      $('mobile-menu-btn').setAttribute('aria-expanded',String(open));
+      $('mobile-menu-btn').setAttribute('aria-label',open?'Fermer le menu':'Afficher le menu');
+      $('mobile-menu').setAttribute('aria-hidden',String(!open));
+    };
+    // Close only when clicking outside the toggle and menu; don't intercept the click itself.
+    document.addEventListener('pointerdown',e=>{
+      if(!$('mobile-menu').classList.contains('open'))return;
+      if($('mobile-menu').contains(e.target)||$('mobile-menu-btn').contains(e.target))return;
+      menuClose();
+    });
+    document.addEventListener('keydown',e=>{
+      if(e.key==='Escape'&&$('mobile-menu').classList.contains('open')){
+        e.preventDefault();menuClose();$('mobile-menu-btn').focus();
+      }
+    });
+    window.addEventListener('resize',()=>{if(window.innerWidth>1000)menuClose();});
     document.querySelectorAll('.mobile-menu a').forEach(a=>a.addEventListener('click',menuClose));
     $('tab-link').onclick=()=>switchHero('link');$('tab-upload').onclick=()=>switchHero('upload');$('hero-generate').onclick=heroGenerate;
     $('hero-link').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();heroGenerate();}});

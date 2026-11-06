@@ -460,19 +460,34 @@
       submit.innerHTML='Accéder au studio de démo <span>↗</span>';
     }
     var password=$('auth-password');
-    if(password){password.required=false;password.hidden=true;password.value='';}
+    if(password){password.hidden=false;password.required=true;password.minLength=8;password.autocomplete='off';}
     var passwordLabel=document.querySelector('label[for="auth-password"]');
-    if(passwordLabel)passwordLabel.hidden=true;
+    if(passwordLabel)passwordLabel.hidden=false;
     var info=$('flow-auth-disclaimer');
     if(!info){
       info=document.createElement('p');info.id='flow-auth-disclaimer';info.className='flow-auth-disclaimer';
-      info.textContent='Mode démo : ton email reste dans cet onglet. Aucun compte réel ni mot de passe n’est créé.';
+      info.textContent='Mode démo : ton email sert uniquement à ta session. Tes créations sont conservées dans ce navigateur, pas sur un serveur. Ton mot de passe fictif n’est pas enregistré.';
       var form=$('auth-form');if(form)form.insertAdjacentElement('afterend',info);
     }
   }
   function openPreview(){
     var request=readRequest();
     if(!request||!request.completed){navigate('/');return;}
+    if(window.SongToSheetDemoStore)window.SongToSheetDemoStore.savePendingForCurrentAccount();
+    navigate('/apercu');
+  }
+  function openSavedDemo(job){
+    if(!job||job.demo_saved!==true||typeof job.title!=='string'||!['partition','tablature'].includes(job.format))return;
+    var safeInstrument=instrumentNames[job.instrument]?job.instrument:'piano';
+    var request={
+      kind:'saved-demo',provider:String(job.provider||'Fichier audio').slice(0,40),
+      name:job.title.slice(0,110),instrument:safeInstrument,format:job.format,
+      duration:Number.isFinite(job.duration)?job.duration:null,
+      durationVerified:job.duration_verified===true,
+      artist:null,thumbnail:null,metadataUnavailable:true,
+      completed:true,createdAt:Number.isFinite(job.created_at)?job.created_at*1000:Date.now()
+    };
+    saveRequest(request);
     navigate('/apercu');
   }
   function backHome(){
@@ -562,12 +577,16 @@
       }catch(e){}
       navigate('/inscription');
     });
+    $('flow-library').addEventListener('click',function(){
+      if(typeof window.SongToSheetOpenLibrary==='function')window.SongToSheetOpenLibrary();
+      else navigate('/app');
+    });
     $('flow-plans').addEventListener('click',function(){navigate('/tarifs');});
     $('flow-new').addEventListener('click',backHome);
     window.addEventListener('popstate',function(){render(location.pathname);});
     render(location.pathname);
   }
-  window.SongToSheetFlow={start:start,prepareSource:prepareSource,chooseInstrument:chooseInstrument,chooseFormat:chooseFormat,inspectLink:inspectLink,validateFile:validateFile,onHeroFile:onHeroFile,sourceError:sourceError,showHeroMetadata:showHeroMetadata,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview};
+  window.SongToSheetFlow={start:start,prepareSource:prepareSource,chooseInstrument:chooseInstrument,chooseFormat:chooseFormat,openSavedDemo:openSavedDemo,inspectLink:inspectLink,validateFile:validateFile,onHeroFile:onHeroFile,sourceError:sourceError,showHeroMetadata:showHeroMetadata,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
 })();

@@ -72,12 +72,12 @@
     }
     var data;
     try{data=await response.json();}catch{data={};}
-    if(response.status===422)throw new Error(data.error||'Ce morceau dépasse 6 minutes. Choisis une version plus courte.');
+    if(response.status===422)throw new Error(data.error||'La durée maximale autorisée est de 6 min.');
     if(response.status===400)throw new Error(data.error||'Ce lien ne pointe pas vers un morceau accepté.');
     if(!response.ok)throw new Error(data.error||'Impossible de vérifier la durée du morceau. Réessaie ou importe un fichier audio.');
     var duration=data.duration_verified===true&&Number.isFinite(data.duration_seconds)&&data.duration_seconds>0?data.duration_seconds:null;
     if(duration===null)throw new Error('Impossible de vérifier la durée du morceau. Réessaie ou importe un fichier audio.');
-    if(duration>360)throw new Error('Ce morceau dure '+durationText(duration)+'. Limite : 6 minutes maximum.');
+    if(duration>360)throw new Error('La durée maximale autorisée est de 6 min.');
     var result={
       provider:provider,name:typeof data.title==='string'&&data.title.trim()?data.title.trim().slice(0,110):'Morceau '+provider,
       artist:typeof data.artist==='string'?data.artist.slice(0,80):null,
@@ -151,7 +151,7 @@
     if(file.size<=0)throw new Error('Le fichier sélectionné est vide.');
     if(file.size>25*1024*1024)throw new Error('Ton fichier dépasse 25 Mo. Choisis un fichier plus léger.');
     var duration=await audioDuration(file);
-    if(duration>360)throw new Error('Ce morceau dure '+durationText(duration)+'. La limite est de 6 minutes maximum.');
+    if(duration>360)throw new Error('La durée maximale autorisée est de 6 min.');
     return duration;
   }
   function navigate(path){

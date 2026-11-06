@@ -1270,6 +1270,6 @@ const type={pdf:'application/pdf',mid:'audio/midi',musicxml:'application/vnd.rec
 const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='songtosheet-demo.'+ext;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);},true);
 })();
 </script>
-<script src="/assets/conversion-flow.js?v=4" defer></script>
+<script src="/assets/conversion-flow.js?v=5" defer></script>
 </body>
 </html>

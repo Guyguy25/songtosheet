@@ -67,6 +67,17 @@ async function fetchYouTubeDuration(id) {
   const html=(await response.text()).slice(0,3200000);
   return verifiedPlayerDuration(html,id);
 }
+async function fetchYouTubeEmbedDuration(id) {
+  // Seconde source publique : l'embed peut répondre même si la page watch
+  // est inaccessible depuis l'infrastructure serveur.
+  const response=await fetch('https://www.youtube-nocookie.com/embed/'+id+'?playsinline=1',{
+    method:'GET',redirect:'error',signal:AbortSignal.timeout(TIMEOUT_MS),
+    headers:{'User-Agent':'Mozilla/5.0','Accept':'text/html'}
+  });
+  if(!response.ok)return null;
+  const html=(await response.text()).slice(0,3200000);
+  return verifiedPlayerDuration(html,id);
+}
 function parseIsoDuration(iso){
   const match=/^P(?:(\d+)D)?(?:T(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/.exec(String(iso||''));
   if(!match)return null;
@@ -124,6 +135,7 @@ async function getInfo(src) {
     const work=await Promise.allSettled([
       fetchData('https://www.youtube.com/oembed?url='+encodeURIComponent(src.canonical)+'&format=json'),
       fetchYouTubeDuration(src.id),
+      fetchYouTubeEmbedDuration(src.id),
       fetchYouTubeOfficial(src.id)
     ]);
     if(work[0].status==='fulfilled'){
@@ -133,8 +145,9 @@ async function getInfo(src) {
       if(typeof data.thumbnail_url==='string'&&/^https:\/\/(?:i\.ytimg\.com|img\.youtube\.com)\//.test(data.thumbnail_url))result.thumbnail_url=data.thumbnail_url;
     }
     if(work[1].status==='fulfilled')result.duration_seconds=safeSeconds(work[1].value);
-    if(work[2].status==='fulfilled'&&work[2].value){
-      const official=work[2].value;
+    if(result.duration_seconds===null&&work[2].status==='fulfilled')result.duration_seconds=safeSeconds(work[2].value);
+    if(work[3].status==='fulfilled'&&work[3].value){
+      const official=work[3].value;
       if(official.duration!==null)result.duration_seconds=official.duration;
       if(official.title)result.title=official.title;
       if(official.artist)result.artist=official.artist;
@@ -192,9 +205,11 @@ module.exports=async function handler(req,res){
     }
     if(!result.duration_verified){
       return res.status(424).json({
-        error:LIMIT_MESSAGE,
+        error:'Impossible de vérifier la durée de cette vidéo ou de ce morceau.',
         provider:src.provider,
         title:result.title,
+        artist:result.artist,
+        thumbnail_url:result.thumbnail_url,
         duration_verified:false
       });
     }

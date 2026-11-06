@@ -16,6 +16,12 @@ La V1 utilise un routeur client et des réécritures Vercel : chaque page dispos
 
 Les plans ne sont **pas** affichés sur l'accueil. L'espace studio présente les formules au moment de la génération (démo, sans paiement réel).
 
+## Persistance de démo et future base de données
+
+- Après la génération fictive et l'inscription de démo : enregistrement local du titre, de l'instrument, du format, de la durée (si connue), de la source et de la date dans la bibliothèque. Aucun mot de passe ou fichier audio n'est conservé.
+- Au retour avec la **même adresse email fictive sur le même navigateur**, les générations sauvegardées restent visibles. Pour synchroniser plusieurs appareils et sécuriser de vrais comptes, **MongoDB Atlas n'est pas encore connecté**.
+- Consulter [MONGODB_SETUP.md](MONGODB_SETUP.md) pour la connexion Atlas/Vercel et le futur schéma `users` / `generations`, à mettre en place après connexion autorisée au cluster et ajout d'une véritable authentification serveur.
+
 ## Deux parties complémentaires
 
 - **Démo hébergée sur Vercel** : `index.html`, une landing orientée saisie de lien (sans grille tarifaire), un studio interactif, une fenêtre d'abonnement et une partition d'exemple. Aucun compte, paiement, upload ou traitement IA réel sur cette démo.
@@ -28,7 +34,7 @@ Parcours de la démo Vercel : lien YouTube/Spotify/Deezer/SoundCloud/Apple Music
 - **Aucune transcription réelle n'est produite à partir d'un lien ou d'un fichier.** L'extrait est une mélodie originale fixe, explicitement indiquée comme démonstration. Le paiement est toujours désactivé.
 - Les fichiers audio doivent respecter 25 Mo et 6 minutes au maximum : durée lue localement avec l'API audio du navigateur ; si le format ou la durée ne peuvent pas être vérifiés, le fichier est refusé.
 - Les liens sont contrôlés par domaine/HTTPS, **mais leur durée ne peut pas être vérifiée sans intégration serveur aux plateformes**. Il faudra imposer les 6 minutes côté backend avant toute vraie génération et tout paiement.
-- L'inscription est simulée avec une adresse email conservée dans le `sessionStorage` de l'onglet ; aucun compte durable ni mot de passe n'est créé.
+- L'inscription reste **fictive** : adresse email conservée dans le `sessionStorage` de l'onglet, champ de mot de passe de test affiché (8 caractères minimum) mais **jamais enregistré ni vérifié** ; aucun compte réel n'est créé. Une génération simulée terminée est enregistrée après inscription dans `localStorage`, sous une clé propre à l'adresse email choisie. La bibliothèque propose de rouvrir cet aperçu sur le même navigateur, sans PDF/MIDI réel. Ce n'est ni une sauvegarde cloud ni une authentification sécurisée.
 - `/generation` et `/apercu` sont rechargeables grâce aux rewrites Vercel ; les états de génération restent dans le stockage de session.
 - Code de la vue : `assets/conversion-flow.js` et `assets/conversion-flow.css`. Les routes et le CTA sont reliés dans `index.html`.
 

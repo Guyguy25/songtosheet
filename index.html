@@ -8,7 +8,7 @@
   <meta name="description" content="SongToSheet.ai : transformez vos musiques préférées en partitions PDF, MIDI et MusicXML. Découvrez notre V1 de transcription musicale." />
   <title>SongToSheet.ai — Obtenez la partition de vos musiques préférées</title>
   
-  <link rel="stylesheet" href="/assets/conversion-flow.css?v=1" />
+  <link rel="stylesheet" href="/assets/conversion-flow.css?v=2" />
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.6}a{color:inherit;text-decoration:none}p,h1,h2,h3{margin-top:0}h1,h2,h3{letter-spacing:-.045em}.hidden{display:none!important}.container{max-width:1216px;width:calc(100% - 64px);margin:0 auto}.section-pad{padding:104px 0}.btn{border:1px solid transparent;display:inline-flex;justify-content:center;align-items:center;gap:14px;font-weight:750;border-radius:13px;min-height:49px;padding:13px 21px;transition:.18s transform,.18s background,.18s box-shadow;white-space:nowrap}.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(0)}.btn span:last-child{font-size:19px;font-weight:500}.btn-primary{color:#fff;background:var(--purple);box-shadow:0 8px 22px rgba(109,61,220,.16)}.btn-primary:hover{background:var(--purple-dark);box-shadow:0 11px 23px rgba(109,61,220,.24)}.btn-outline{border-color:#ded7ed;background:#fff;color:var(--ink)}.btn-outline:hover{border-color:var(--purple);background:#f9f6ff}.btn-dark{color:#fff;background:#29213e}.btn-dark:hover{background:#443363}.btn-white{background:white;color:var(--purple-dark)}.section-label{display:block;font-size:12px;letter-spacing:.14em;color:var(--purple);font-weight:850;margin-bottom:18px}.section-intro h2,.showcase-content h2,.faq-grid h2{font-size:clamp(38px,4vw,55px);line-height:1.12;margin-bottom:18px}.section-intro h2 span,.showcase-content h2 span,.faq-grid h2 span{color:var(--purple)}.section-intro>p{font-size:16px;color:var(--muted);max-width:530px;margin:0 auto;line-height:1.7}.center{text-align:center}
@@ -590,9 +590,10 @@ body.pricing-open{overflow:hidden}
    <div id="link-panel" class="hero-source-panel"><label class="hero-input" for="hero-link"><span>↗</span><input id="hero-link" type="url" inputmode="url" autocomplete="off" placeholder="Colle un lien YouTube, Spotify, Deezer…"></label></div>
    <div id="upload-panel" class="hero-source-panel hidden"><label id="hero-drop" class="hero-upload" for="hero-file"><span>⇧</span><span><b id="hero-file-label">Déposer ou choisir un audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo · 6 min</small></span><input id="hero-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"></label></div>
    <select id="hero-instrument" aria-label="Instrument" hidden><option value="piano">Piano</option><option value="guitare">Guitare</option><option value="violon">Violon</option><option value="voix">Voix</option><option value="basse">Basse</option></select>
-   <button id="hero-generate" class="split-submit" type="button" aria-label="Générer ma partition">Générer <span aria-hidden="true">↗</span></button>
+   <button id="hero-generate" class="split-submit" type="button" aria-label="Continuer vers le choix de l’instrument">Continuer <span aria-hidden="true">↗</span></button>
  </div>
- <p class="split-legal">Démo de la future expérience : le lien identifie le morceau, mais un fichier audio autorisé reste nécessaire pour la transcription. Génération simulée : les liens ne sont pas analysés, la limite de 6 minutes sera vérifiée à l’activation du moteur. Aucun paiement actif.</p>
+ <p class="flow-source-error hidden" id="hero-source-error" role="alert"></p><p id="hero-source-meta" class="flow-source-meta hidden" role="status" aria-live="polite"></p><p class="flow-limit">⏱ Morceaux de <strong>6 minutes maximum</strong> · vérification de la durée lorsqu’elle est disponible</p>
+ <p class="split-legal">Démo de la future expérience : le lien identifie le morceau, mais un fichier audio autorisé reste nécessaire pour la transcription. Génération simulée : les liens servent à identifier les morceaux et les métadonnées disponibles. Aucun audio distant n’est transcrit et aucun paiement n’est actif.</p>
  </div>
  <div class="hero-morph" aria-label="Illustration de la transformation d'un morceau en partition">
    <div class="morph-glow" aria-hidden="true"></div>
@@ -738,18 +739,37 @@ body.pricing-open{overflow:hidden}
 <main id="generation-view" class="hidden">
  <div class="flow-shell">
   <header class="flow-header"><a href="/" class="flow-logo"><img src="/assets/songtosheet-wave-mark.svg" alt=""><span>song<span>to</span>sheet.ai</span></a><button type="button" id="flow-back" class="flow-back">← Modifier mon morceau</button></header>
+  <section id="flow-select" class="flow-card flow-select-card hidden" aria-labelledby="flow-select-title">
+   <span class="flow-eyebrow">✦ Étape 2 sur 3 · Personnalise ton aperçu</span>
+   <h1 id="flow-select-title">Quel instrument veux-tu <em>jouer ?</em></h1>
+   <p class="flow-lead">Choisis l’instrument de ta future partition avant de lancer la démonstration.</p>
+   <div class="flow-track-card">
+    <div class="flow-track-cover"><img id="flow-select-cover" class="hidden" alt="" /><span aria-hidden="true">♪</span></div>
+    <div class="flow-track-info"><strong id="flow-select-track">Ton morceau</strong><small id="flow-select-source">YouTube</small><span id="flow-select-duration">Durée à vérifier</span></div>
+   </div>
+   <fieldset class="flow-instrument-grid" aria-label="Choisis ton instrument">
+    <legend class="flow-picker-label">TON INSTRUMENT</legend>
+    <label class="flow-instrument"><input type="radio" name="flow-instrument" value="piano" checked><span>🎹</span><b>Piano</b><span class="flow-radio-check">✓</span></label>
+    <label class="flow-instrument"><input type="radio" name="flow-instrument" value="guitare"><span>🎸</span><b>Guitare</b><span class="flow-radio-check">✓</span></label>
+    <label class="flow-instrument"><input type="radio" name="flow-instrument" value="violon"><span>🎻</span><b>Violon</b><span class="flow-radio-check">✓</span></label>
+    <label class="flow-instrument"><input type="radio" name="flow-instrument" value="voix"><span>🎤</span><b>Voix</b><span class="flow-radio-check">✓</span></label>
+    <label class="flow-instrument"><input type="radio" name="flow-instrument" value="basse"><span>🎸</span><b>Basse</b><span class="flow-radio-check">✓</span></label>
+   </fieldset>
+   <button id="flow-select-continue" class="flow-main-btn" type="button">Générer mon aperçu <span aria-hidden="true">↗</span></button>
+   <p class="flow-note"><strong>Simulation :</strong> aucun audio n’est réellement transcrit. L’extrait présenté est illustratif.</p>
+  </section>
   <section id="flow-working" class="flow-card flow-working" aria-labelledby="flow-working-title">
    <span class="flow-eyebrow">✦ Simulation interactive</span><div class="flow-circle" aria-hidden="true">♫</div>
-   <h1 id="flow-working-title">Ta partition prend <em>forme.</em></h1><p class="flow-lead">Un petit instant : nous préparons une démonstration du rendu de ta future partition.</p>
+   <h1 id="flow-working-title">Ton aperçu prend <em>forme.</em></h1><p class="flow-lead">Préparation de l’aperçu illustratif pour <strong id="flow-work-track">ton morceau</strong>.</p><p id="flow-work-provider" class="flow-work-source">YouTube · Piano</p>
    <div class="flow-progress-info"><span id="flow-progress-label" role="status" aria-live="polite">Préparation de ton aperçu…</span><strong id="flow-percent">0 %</strong></div>
    <div id="flow-progressbar" class="flow-track" role="progressbar" aria-label="Progression de la simulation" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="flow-bar" class="flow-fill"></div></div>
-   <ol id="flow-step-list" class="flow-step-list"><li class="flow-step current"><span>1</span>Préparation de l'extrait</li><li class="flow-step"><span>2</span>Disposition des notes</li><li class="flow-step"><span>3</span>Mise en page de la partition</li></ol>
+   <ol id="flow-step-list" class="flow-step-list"><li class="flow-step current"><span>1</span>Préparation de la musique</li><li class="flow-step"><span>2</span>Construction de la maquette</li><li class="flow-step"><span>3</span>Disposition des notes</li><li class="flow-step"><span>4</span>Finalisation de l’aperçu</li></ol>
    <p class="flow-note"><strong>Mode démo :</strong> aucune analyse musicale réelle n'est effectuée pendant cette animation.</p>
   </section>
   <section id="flow-finished" class="flow-card hidden" aria-labelledby="flow-finished-title">
    <span class="flow-eyebrow">✦ Aperçu prêt</span><div class="flow-success-icon" aria-hidden="true">✓</div>
    <h1 id="flow-finished-title">Ta partition est <em>prête !</em></h1><p class="flow-lead">Tu peux maintenant découvrir à quoi ressembleront les <strong>30 premières secondes</strong> d'une partition SongToSheet.</p>
-   <div class="flow-chip"><b id="flow-ready-track">Ton morceau</b><span>·</span><span id="flow-ready-provider">Piano</span></div>
+   <div class="flow-ready-identity"><img id="flow-ready-cover" class="hidden" alt="Pochette du morceau" /><div class="flow-chip"><b id="flow-ready-track">Ton morceau</b><span>·</span><span id="flow-ready-provider">Piano</span></div></div>
    <div class="flow-mock-sheet" aria-hidden="true"><div class="flow-mock-head"><span>songtosheet.ai · APERÇU</span><span>00:30</span></div><div id="flow-ready-score" class="flow-score-art"></div></div>
    <button id="flow-discover" type="button" class="flow-main-btn">Découvrir mes 30 secondes <span aria-hidden="true">↗</span></button>
    <p class="flow-incentive">Aucun paiement demandé pour voir l'aperçu.</p><button id="flow-change" type="button" class="flow-secondary">Essayer une autre musique</button>
@@ -810,6 +830,7 @@ body.pricing-open{overflow:hidden}
     const input=typeof resource==='string'?resource:resource?.url;
     if(!input||!input.startsWith('/api/'))return originalFetch(resource,options);
     const url=new URL(input,location.origin); const path=url.pathname;
+    if(path==='/api/media-info')return originalFetch(resource,options);
     if(path==='/api/auth/me')return reply({user:demoUser()});
     if(path==='/api/packs')return reply({packs,checkout_enabled:false});
     if(path==='/api/jobs'){
@@ -894,13 +915,13 @@ body.pricing-open{overflow:hidden}
       if(howMode==='link'){
         const value=$('how-link').value.trim();
         if(!value){howError('Colle un lien musical pour continuer, ou choisis « Importer un audio ».');return;}
-        const details=await post('/api/links/inspect',{url:value});
-        state.link=details.source_url;
+        await window.SongToSheetFlow.prepareSource({kind:'link',value});
+        state.link=value;
         state.file=null;
       }else{
         const file=$('how-file').files[0];
         if(!file){howError('Sélectionne un fichier audio pour continuer.');return;}
-        await window.SongToSheetFlow.validateFile(file);
+        await window.SongToSheetFlow.prepareSource({kind:'file',file});
         state.file=file;
         state.link='';
         $('workspace-file-name').textContent=file.name;
@@ -914,8 +935,7 @@ body.pricing-open{overflow:hidden}
     const selection=document.querySelector('input[name="how-instrument"]:checked');
     const instrument=selection?.value||'piano';
     $('workspace-instrument').value=instrument;
-    try{await window.SongToSheetFlow.start(howMode==='link'?{kind:'link',value:state.link,instrument}:{kind:'file',file:state.file,instrument});}
-    catch(e){toast(e.message||'Impossible de préparer cet aperçu.',true);}
+    window.SongToSheetFlow.chooseInstrument(instrument);
   }
 
   function renderRoute(){
@@ -931,7 +951,7 @@ body.pricing-open{overflow:hidden}
     show('public-footer',marketing);
     for(const id of ['landing','features-view','results-view','pricing-view','faq-view'])show(id,activePublic===id);
     show('workspace',app);show('auth-view',authPage);show('legal-view',pathname==='/legal');
-    show('generation-view',pathname==='/generation'||pathname==='/apercu');
+    show('generation-view',pathname==='/choisir-instrument'||pathname==='/generation'||pathname==='/apercu');
     document.querySelectorAll('#public-header .top-nav a').forEach(a=>{
       const current=a.getAttribute('href')===pathname || (pathname==='/'&&location.hash==='#comment-ca-marche'&&a.getAttribute('href')==='/#comment-ca-marche');
       a.classList.toggle('active',current);
@@ -948,6 +968,7 @@ body.pricing-open{overflow:hidden}
       '/legal':'Informations légales — SongToSheet.ai',
       '/app':'Mon studio — SongToSheet.ai',
       '/inscription':'Créer un compte — SongToSheet.ai',
+      '/choisir-instrument':'Choisir mon instrument — SongToSheet.ai',
       '/generation':'Ta partition se prépare — SongToSheet.ai',
       '/apercu':'Ton aperçu de partition — SongToSheet.ai',
       '/connexion':'Se connecter — SongToSheet.ai'};
@@ -1066,7 +1087,7 @@ body.pricing-open{overflow:hidden}
     try{const data=await post('/api/checkout',{pack_id:pack});const url=new URL(data.url);if(url.hostname.endsWith('.stripe.com')&&url.protocol==='https:')location.assign(data.url);else throw new Error('URL de paiement invalide');}catch(e){toast(e.message,true);}
   }
   async function inspectLink(value){const info=await post('/api/links/inspect',{url:value});state.link=info.source_url;toast(info.message);return info;}
-  function switchHero(mode){state.heroMode=mode;const link=mode==='link';show('link-panel',link);show('upload-panel',!link);$('tab-link').classList.toggle('active',link);$('tab-upload').classList.toggle('active',!link);$('tab-link').setAttribute('aria-selected',link);$('tab-upload').setAttribute('aria-selected',!link);}
+  function switchHero(mode){state.heroMode=mode;window.SongToSheetFlow?.sourceError('');window.SongToSheetFlow?.showHeroMetadata(null);const link=mode==='link';show('link-panel',link);show('upload-panel',!link);$('tab-link').classList.toggle('active',link);$('tab-upload').classList.toggle('active',!link);$('tab-link').setAttribute('aria-selected',link);$('tab-upload').setAttribute('aria-selected',!link);}
   async function heroGenerate(){
     const instrument=$('hero-instrument').value;$('workspace-instrument').value=instrument;
     const button=$('hero-generate');if(button.disabled)return;button.disabled=true;
@@ -1079,7 +1100,7 @@ body.pricing-open{overflow:hidden}
         if(!file)throw new Error('Ajoute un fichier audio pour commencer.');
         state.file=file;await window.SongToSheetFlow.start({kind:'file',file,instrument});
       }
-    }catch(e){toast(e.message||'Source non prise en charge.',true);}
+    }catch(e){window.SongToSheetFlow.sourceError(e.message||'Source non prise en charge.');}
     finally{button.disabled=false;}
   }
   async function submitJob(){
@@ -1172,7 +1193,15 @@ body.pricing-open{overflow:hidden}
       }
     });
     window.addEventListener('popstate',renderRoute);
-    $('nav-login').onclick=()=>go('/connexion');$('nav-cta').onclick=()=>startApp('create');$('mobile-login').onclick=()=>go('/connexion');$('mobile-start').onclick=()=>startApp('create');$('footer-start').onclick=()=>startApp('create');$('showcase-cta').onclick=()=>startApp('create');
+    const focusGenerator=()=>{
+      go('/');
+      requestAnimationFrame(()=>{
+        const field=$('hero-link');
+        document.querySelector('.hero-action-panel')?.scrollIntoView({behavior:'smooth',block:'center'});
+        if(field)setTimeout(()=>field.focus({preventScroll:true}),260);
+      });
+    };
+    $('nav-login').onclick=()=>go('/connexion');$('nav-cta').onclick=focusGenerator;$('mobile-login').onclick=()=>go('/connexion');$('mobile-start').onclick=focusGenerator;$('footer-start').onclick=focusGenerator;$('showcase-cta').onclick=focusGenerator;
     $('mobile-menu-btn').onclick=()=>{
       const open=$('mobile-menu').classList.toggle('open');
       $('mobile-menu-btn').setAttribute('aria-expanded',String(open));
@@ -1214,7 +1243,7 @@ body.pricing-open{overflow:hidden}
       const drop=$(dropId);drop.addEventListener('dragover',e=>{e.preventDefault();drop.classList.add('dragover');});
       drop.addEventListener('dragleave',()=>drop.classList.remove('dragover'));
       drop.addEventListener('drop',e=>{e.preventDefault();drop.classList.remove('dragover');const file=e.dataTransfer.files[0];if(!file)return;state.file=file;
-        if(fileId==='hero-file')$('hero-file-label').textContent=file.name;else $('workspace-file-name').textContent=file.name;
+        if(fileId==='hero-file'){$('hero-file-label').textContent=file.name;window.SongToSheetFlow.onHeroFile(file);}else $('workspace-file-name').textContent=file.name;
       });
     }
     $('sidebar-logout').onclick=logout;$('mobile-sidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('mobile-open');
@@ -1241,6 +1270,6 @@ const type={pdf:'application/pdf',mid:'audio/midi',musicxml:'application/vnd.rec
 const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='songtosheet-demo.'+ext;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);},true);
 })();
 </script>
-<script src="/assets/conversion-flow.js?v=1" defer></script>
+<script src="/assets/conversion-flow.js?v=2" defer></script>
 </body>
 </html>

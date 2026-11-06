@@ -7,6 +7,9 @@
   var pendingInMemory=null;
   var timer=null;
   var starting=false;
+  var sourceCache=null;
+  var sourceRequestSerial=0;
+  var inputDelay=null;
   var $=function(id){return document.getElementById(id);};
   var instrumentNames={piano:'Piano',guitare:'Guitare',violon:'Violon',voix:'Voix',basse:'Basse'};
   var audioFormats=/\.(mp3|wav|m4a|flac|ogg|aac)$/i;
@@ -39,6 +42,91 @@
     }catch(e){}
     return null;
   }
+
+  function durationText(seconds){
+    if(!Number.isFinite(seconds)||seconds<=0)return 'Durée non vérifiée';
+    return Math.floor(seconds/60)+':'+String(Math.round(seconds%60)).padStart(2,'0');
+  }
+  function sourceError(message){
+    var el=$('hero-source-error');
+    if(!el)return;
+    el.textContent=message||'';
+    el.classList.toggle('hidden',!message);
+    if(message)$('hero-source-meta')?.classList.add('hidden');
+  }
+  function showHeroMetadata(info){
+    var el=$('hero-source-meta');if(!el)return;
+    if(!info){el.classList.add('hidden');return;}
+    var label=info.name||info.title||'Morceau';
+    el.textContent=label+' · '+info.provider+' · '+(info.durationVerified?durationText(info.duration):'durée à vérifier');
+    el.classList.remove('hidden');
+    sourceError('');
+  }
+  async function inspectLink(raw){
+    var value=String(raw||'').trim();
+    var provider=providerFor(value);
+    if(!provider)throw new Error('Lien non reconnu. Utilise un lien direct HTTPS YouTube, Spotify, Deezer, Apple Music ou SoundCloud.');
+    if(sourceCache&&sourceCache.url===value)return sourceCache.data;
+    var response;
+    try{response=await fetch('/api/media-info?url='+encodeURIComponent(value),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8500)});}
+    catch(e){
+      return {provider,name:'Morceau '+provider,artist:null,thumbnail:null,duration:null,durationVerified:false,metadataUnavailable:true};
+    }
+    var data;
+    try{data=await response.json();}catch{data={};}
+    if(response.status===422)throw new Error(data.error||'Ce morceau dépasse 6 minutes. Choisis une version plus courte.');
+    if(response.status===400)throw new Error(data.error||'Ce lien ne pointe pas vers un morceau accepté.');
+    if(!response.ok)return {provider,name:'Morceau '+provider,artist:null,thumbnail:null,duration:null,durationVerified:false,metadataUnavailable:true};
+    var duration=Number.isFinite(data.duration_seconds)?data.duration_seconds:null;
+    if(duration!==null&&duration>360)throw new Error('Ce morceau dure '+durationText(duration)+'. Limite : 6 minutes maximum.');
+    var result={
+      provider:provider,name:typeof data.title==='string'&&data.title.trim()?data.title.trim().slice(0,110):'Morceau '+provider,
+      artist:typeof data.artist==='string'?data.artist.slice(0,80):null,
+      thumbnail:typeof data.thumbnail_url==='string'?data.thumbnail_url:null,
+      duration:duration,durationVerified:duration!==null,metadataUnavailable:!data.title
+    };
+    sourceCache={url:value,data:result};
+    return result;
+  }
+  async function verifyHeroLink(){
+    var input=$('hero-link');if(!input)return;
+    var value=input.value.trim();
+    var serial=++sourceRequestSerial;
+    if(!value){showHeroMetadata(null);sourceError('');return;}
+    if(!providerFor(value)){showHeroMetadata(null);sourceError('');return;}
+    var meta=$('hero-source-meta');
+    if(meta){meta.textContent='Vérification du morceau…';meta.classList.remove('hidden');}
+    sourceError('');
+    try{
+      var details=await inspectLink(value);
+      if(serial===sourceRequestSerial&&input.value.trim()===value)showHeroMetadata(details);
+    }catch(e){if(serial===sourceRequestSerial&&input.value.trim()===value)sourceError(e.message);}
+  }
+  function onHeroLinkInput(){
+    sourceRequestSerial++;clearTimeout(inputDelay);
+    sourceError('');
+    $('hero-source-meta')?.classList.add('hidden');
+    var value=$('hero-link')?.value.trim();
+    if(!value)return;
+    inputDelay=setTimeout(verifyHeroLink,650);
+  }
+  async function onHeroFile(file){
+    sourceRequestSerial++;clearTimeout(inputDelay);
+    sourceError('');showHeroMetadata(null);
+    if(!file)return;
+    try{
+      var seconds=await validateFile(file);
+      showHeroMetadata({provider:'Fichier audio',name:file.name.replace(audioFormats,'').slice(0,90),duration:seconds,durationVerified:true});
+    }catch(e){sourceError(e.message);}
+  }
+  function setCover(id,request){
+    var image=$(id);
+    if(!image)return;
+    if(request&&request.thumbnail&&/^https:\/\/(?:i\.ytimg\.com|img\.youtube\.com|i\.scdn\.co|image-cdn-ak\.spotifycdn\.com|mosaic\.scdn\.co|e-cdns-images\.dzcdn\.net|is\d+-ssl\.mzstatic\.com|i1\.sndcdn\.com)\//.test(request.thumbnail)){
+      image.src=request.thumbnail;image.classList.remove('hidden');
+    }else{image.removeAttribute('src');image.classList.add('hidden');}
+  }
+
   function audioDuration(file){
     return new Promise(function(resolve,reject){
       var audio=document.createElement('audio');
@@ -68,7 +156,7 @@
     if(file.size<=0)throw new Error('Le fichier sélectionné est vide.');
     if(file.size>25*1024*1024)throw new Error('Ton fichier dépasse 25 Mo. Choisis un fichier plus léger.');
     var duration=await audioDuration(file);
-    if(duration>360)throw new Error('Ce morceau dure '+Math.ceil(duration/60)+' minutes. La limite est de 6 minutes maximum.');
+    if(duration>360)throw new Error('Ce morceau dure '+durationText(duration)+'. La limite est de 6 minutes maximum.');
     return duration;
   }
   function navigate(path){
@@ -78,7 +166,7 @@
   }
   function stopProgress(){if(timer){clearInterval(timer);timer=null;}}
   function setStage(stage){
-    var texts=['Préparation de ton aperçu…','Organisation des notes…','Mise en page de la partition…'];
+    var texts=['Préparation de ta musique…','Construction de la maquette…','Mise en place des notes…','Finalisation de l’aperçu…'];
     $('flow-progress-label').textContent=texts[stage]||texts[0];
     document.querySelectorAll('#flow-step-list .flow-step').forEach(function(item,index){
       item.classList.toggle('current',index===stage);
@@ -92,7 +180,8 @@
     var request=readRequest();
     if(request){
       $('flow-ready-track').textContent=request.name;
-      $('flow-ready-provider').textContent=request.provider+' · '+(instrumentNames[request.instrument]||'Piano');
+      $('flow-ready-provider').textContent=request.provider+' · '+(instrumentNames[request.instrument]||'Piano')+(request.durationVerified?' · '+durationText(request.duration):'');
+      setCover('flow-ready-cover',request);
     }
     $('flow-discover').focus({preventScroll:true});
   }
@@ -102,14 +191,14 @@
     $('flow-working').classList.remove('hidden');
     $('flow-finished').classList.add('hidden');
     var start=performance.now();
-    var duration=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches?1400:6700;
+    var duration=window.matchMedia&&matchMedia('(prefers-reduced-motion: reduce)').matches?2400:18000;
     function frame(){
       var fraction=Math.min(1,(performance.now()-start)/duration);
       var percent=Math.min(100,Math.round((1-Math.pow(1-fraction,1.5))*100));
       $('flow-percent').textContent=percent+' %';
       $('flow-bar').style.width=percent+'%';
       $('flow-progressbar').setAttribute('aria-valuenow',String(percent));
-      setStage(fraction<.35?0:fraction<.74?1:2);
+      setStage(fraction<.21?0:fraction<.48?1:fraction<.76?2:3);
       if(fraction>=1){
         request.completed=true;
         saveRequest(request);
@@ -119,55 +208,84 @@
     frame();
     timer=setInterval(frame,85);
   }
-  function setScreen(isPreview){
+  function setScreen(screen){
+    $('flow-select').classList.add('hidden');
     $('flow-working').classList.add('hidden');
     $('flow-finished').classList.add('hidden');
     $('flow-preview').classList.add('hidden');
-    if(isPreview){
-      var request=readRequest();
+    var request=readRequest();
+    if(screen==='select'){
+      if(!request)return;
+      $('flow-select-track').textContent=request.name;
+      $('flow-select-source').textContent=request.provider+(request.artist?' · '+request.artist:'');
+      $('flow-select-duration').textContent=request.durationVerified?durationText(request.duration)+' / 6:00 max':'Durée non vérifiée · max 6:00';
+      $('flow-select-duration').classList.toggle('unverified',!request.durationVerified);
+      setCover('flow-select-cover',request);
+      var option=document.querySelector('input[name="flow-instrument"][value="'+request.instrument+'"]');
+      if(option)option.checked=true;
+      $('flow-select').classList.remove('hidden');
+      return;
+    }
+    if(screen==='preview'){
       $('flow-preview-source').textContent=request?request.name:'Ta musique';
       $('flow-preview-instrument').textContent=request?(instrumentNames[request.instrument]||'Piano'):'Piano';
       $('flow-preview').classList.remove('hidden');
-    }else{
-      var r=readRequest();
-      if(r&&r.completed)showReady();else runProgress();
+      return;
     }
+    $('flow-work-track').textContent=request?request.name:'Ton morceau';
+    $('flow-work-provider').textContent=request?request.provider+' · '+(instrumentNames[request.instrument]||'Piano'):'';
+    if(request&&request.completed)showReady();else runProgress();
   }
   function render(path){
     var view=$('generation-view');if(!view)return;
-    var flowPage=path==='/generation'||path==='/apercu';
+    var flowPage=path==='/choisir-instrument'||path==='/generation'||path==='/apercu';
     if(!flowPage){view.classList.add('hidden');stopProgress();return;}
     var request=readRequest();
     if(!request){navigate('/');return;}
     if(path==='/apercu'&&!request.completed){navigate('/generation');return;}
     view.classList.remove('hidden');
-    $('flow-back').textContent=path==='/apercu'?'← Revenir à l’accueil':'← Modifier mon morceau';
-    if(path==='/generation'&&!request.completed){stopProgress();}
-    setScreen(path==='/apercu');
+    $('flow-back').textContent=path==='/apercu'?'← Revenir à l’accueil':path==='/generation'?'← Changer d’instrument':'← Modifier mon morceau';
+    if(path==='/choisir-instrument'||path==='/apercu')stopProgress();
+    if(path==='/generation'&&!request.completed)stopProgress();
+    setScreen(path==='/choisir-instrument'?'select':path==='/apercu'?'preview':'working');
   }
-  async function start(input){
-    if(starting)return;
+  async function prepareSource(input){
+    if(starting)return null;
     starting=true;
     try{
-      var provider, name, duration=null;
+      var source;
       if(input.kind==='link'){
-        provider=providerFor((input.value||'').trim());
-        if(!provider)throw new Error('Ajoute un lien HTTPS valide : YouTube, Spotify, Deezer, SoundCloud ou Apple Music.');
-        name='Ton morceau '+provider;
+        var value=String(input.value||'').trim();
+        source=await inspectLink(value);
+        source.kind='link';
+        source.sourceUrl=value;
       }else{
-        duration=await validateFile(input.file);
-        provider='Fichier audio';
-        name=input.file.name.replace(audioFormats,'').slice(0,80)||'Mon morceau';
+        var duration=await validateFile(input.file);
+        source={
+          kind:'file',provider:'Fichier audio',
+          name:input.file.name.replace(audioFormats,'').slice(0,95)||'Mon morceau',
+          duration:duration,durationVerified:true,thumbnail:null,artist:null,metadataUnavailable:false
+        };
       }
-      var data={
-        kind:input.kind,provider:provider,name:name,
-        instrument:instrumentNames[input.instrument]?input.instrument:'piano',
-        duration:duration,completed:false,
-        createdAt:Date.now()
-      };
-      saveRequest(data);
-      navigate('/generation');
+      source.instrument='piano';
+      source.completed=false;
+      source.createdAt=Date.now();
+      saveRequest(source);
+      return source;
     }finally{starting=false;}
+  }
+  async function start(input){
+    var result=await prepareSource(input);
+    if(result)navigate('/choisir-instrument');
+    return result;
+  }
+  function chooseInstrument(instrument){
+    var request=readRequest();
+    if(!request){navigate('/');return;}
+    request.instrument=instrumentNames[instrument]?instrument:'piano';
+    request.completed=false;
+    saveRequest(request);
+    navigate('/generation');
   }
   function pending(){return Boolean(readRequest());}
   function configureAuth(login){
@@ -200,6 +318,7 @@
     navigate('/apercu');
   }
   function backHome(){
+    if(location.pathname==='/generation'){navigate('/choisir-instrument');return;}
     var request=readRequest();
     navigate('/');
     if(request&&request.kind==='link'){
@@ -233,6 +352,12 @@
     var miniature=$('flow-ready-score');if(miniature)miniature.innerHTML=staffSvg();
     $('flow-back').addEventListener('click',backHome);
     $('flow-change').addEventListener('click',backHome);
+    $('flow-select-continue').addEventListener('click',function(){
+      var chosen=document.querySelector('input[name="flow-instrument"]:checked');
+      chooseInstrument(chosen?chosen.value:'piano');
+    });
+    if($('hero-link'))$('hero-link').addEventListener('input',onHeroLinkInput);
+    if($('hero-file'))$('hero-file').addEventListener('change',function(e){onHeroFile(e.target.files[0]);});
     $('flow-discover').addEventListener('click',function(){
       if(!readRequest())return;
       try{
@@ -245,7 +370,7 @@
     window.addEventListener('popstate',function(){render(location.pathname);});
     render(location.pathname);
   }
-  window.SongToSheetFlow={start:start,validateFile:validateFile,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview};
+  window.SongToSheetFlow={start:start,prepareSource:prepareSource,chooseInstrument:chooseInstrument,inspectLink:inspectLink,validateFile:validateFile,onHeroFile:onHeroFile,sourceError:sourceError,showHeroMetadata:showHeroMetadata,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
 })();

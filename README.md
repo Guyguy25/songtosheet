@@ -71,3 +71,12 @@ Voir [backend/README.md](backend/README.md) pour le détail du backend et le lan
 Le site Vercel n'héberge pas encore le moteur de transcription, les comptes ni Stripe. L'analyse monophonique reste expérimentale. Les liens Spotify/YouTube sont acceptés comme références, sans extraction de l'audio ; importer uniquement un contenu autorisé.
 
 Le déploiement commercial demandera une base SQL managée, du stockage persistant, des workers, un traitement sécurisé et la configuration Stripe. Aucune clé privée n'est publiée dans ce dépôt.
+
+
+## MongoDB Atlas — état de l'intégration
+
+L'accès au compte Atlas via ChatGPT est actif et la base `songtosheet` existe dans le cluster. Deux collections ont été préparées : `users` (futurs comptes) et `generations` (futures transcriptions et métadonnées). Un index simple sur `users.email` et un index `generations(user_id, created_at DESC)` sont en place. La connexion du compte Atlas dans ChatGPT **n'est pas** une connexion automatique entre Vercel et la base.
+
+**Le site public est encore en mode démo local.** Pour la vraie synchronisation, créer un utilisateur de base de données à droits minimaux, ajouter `MONGODB_URI` comme **secret serveur** et `MONGODB_DB_NAME=songtosheet` dans Vercel, puis intégrer des endpoints d'inscription/authentification sécurisés. Les mots de passe réels devront être hachés (Argon2id) et les sessions protégées par des cookies `HttpOnly`/`Secure`. Chaque requête d'accès aux générations devra filtrer par `user_id` authentifié, pas par simple email saisi dans le navigateur. Avant lancement, imposer un index unique sur les emails canoniques et des limites de débit. Aucun mot de passe en clair ni fichier audio ne doit être enregistré dans MongoDB.
+
+Les générations de la démo restent dans `localStorage` sur l'appareil utilisé et ne sont **pas** envoyées à Atlas.

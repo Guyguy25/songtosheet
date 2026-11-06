@@ -70,15 +70,16 @@
     var response;
     try{response=await fetch('/api/media-info?url='+encodeURIComponent(value),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8500)});}
     catch(e){
-      return {provider,name:'Morceau '+provider,artist:null,thumbnail:null,duration:null,durationVerified:false,metadataUnavailable:true};
+      throw new Error('La vérification de durée est momentanément indisponible. Réessaie ou importe un fichier audio (6 minutes max).');
     }
     var data;
     try{data=await response.json();}catch{data={};}
     if(response.status===422)throw new Error(data.error||'Ce morceau dépasse 6 minutes. Choisis une version plus courte.');
     if(response.status===400)throw new Error(data.error||'Ce lien ne pointe pas vers un morceau accepté.');
-    if(!response.ok)return {provider,name:'Morceau '+provider,artist:null,thumbnail:null,duration:null,durationVerified:false,metadataUnavailable:true};
-    var duration=Number.isFinite(data.duration_seconds)?data.duration_seconds:null;
-    if(duration!==null&&duration>360)throw new Error('Ce morceau dure '+durationText(duration)+'. Limite : 6 minutes maximum.');
+    if(!response.ok)throw new Error(data.error||'Impossible de vérifier la durée du morceau. Réessaie ou importe un fichier audio.');
+    var duration=data.duration_verified===true&&Number.isFinite(data.duration_seconds)&&data.duration_seconds>0?data.duration_seconds:null;
+    if(duration===null)throw new Error('Impossible de vérifier la durée du morceau. Réessaie ou importe un fichier audio.');
+    if(duration>360)throw new Error('Ce morceau dure '+durationText(duration)+'. Limite : 6 minutes maximum.');
     var result={
       provider:provider,name:typeof data.title==='string'&&data.title.trim()?data.title.trim().slice(0,110):'Morceau '+provider,
       artist:typeof data.artist==='string'?data.artist.slice(0,80):null,
@@ -242,6 +243,11 @@
     if(!flowPage){view.classList.add('hidden');stopProgress();return;}
     var request=readRequest();
     if(!request){navigate('/');return;}
+    if(request.kind==='link'&&(!request.durationVerified||!Number.isFinite(request.duration)||request.duration>360)){
+      navigate('/');
+      sourceError('Ce lien doit être vérifié avant de continuer : 6 minutes maximum.');
+      return;
+    }
     if(path==='/apercu'&&!request.completed){navigate('/generation');return;}
     view.classList.remove('hidden');
     $('flow-back').textContent=path==='/apercu'?'← Revenir à l’accueil':path==='/generation'?'← Changer d’instrument':'← Modifier mon morceau';
@@ -282,6 +288,11 @@
   function chooseInstrument(instrument){
     var request=readRequest();
     if(!request){navigate('/');return;}
+    if(request.kind==='link'&&(!request.durationVerified||!Number.isFinite(request.duration)||request.duration>360)){
+      navigate('/');
+      sourceError('La durée de ce morceau doit être vérifiée (6 min maximum). Colle à nouveau ton lien.');
+      return;
+    }
     request.instrument=instrumentNames[instrument]?instrument:'piano';
     request.completed=false;
     saveRequest(request);

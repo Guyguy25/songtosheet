@@ -7,7 +7,7 @@
 
 const TIMEOUT_MS=4700;
 const MAX_LENGTH_SECONDS=360;
-const LIMIT_MESSAGE='Ce morceau dépasse 6 minutes. Choisis une version de 6 minutes maximum pour créer ta partition.';
+const LIMIT_MESSAGE='La durée maximale autorisée est de 6 min.';
 const clean=(value,limit=120)=>String(value||'').replace(/<[^>]*>/g,'').replace(/[\u0000-\u001f\u007f]/g,' ').trim().slice(0,limit);
 const safeSeconds=(value)=>Number.isFinite(Number(value))&&Number(value)>0&&Number(value)<24*3600?Math.round(Number(value)):null;
 
@@ -188,7 +188,7 @@ module.exports=async function handler(req,res){
     const src=parseSource(req.query?.url);
     const result=await getInfo(src);
     if(result.duration_verified&&result.duration_seconds>MAX_LENGTH_SECONDS){
-      return res.status(422).json({error:'Cette vidéo ou ce morceau dure '+Math.floor(result.duration_seconds/60)+':'+String(result.duration_seconds%60).padStart(2,'0')+'. La limite est de 6 minutes maximum.',duration_seconds:result.duration_seconds,provider:src.provider});
+      return res.status(422).json({error:LIMIT_MESSAGE,duration_seconds:result.duration_seconds,provider:src.provider});
     }
     if(!result.duration_verified){
       return res.status(424).json({

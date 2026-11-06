@@ -21,6 +21,17 @@ Les plans ne sont **pas** affichés sur l'accueil. L'espace studio présente les
 - **Démo hébergée sur Vercel** : `index.html`, une landing orientée saisie de lien (sans grille tarifaire), un studio interactif, une fenêtre d'abonnement et une partition d'exemple. Aucun compte, paiement, upload ou traitement IA réel sur cette démo.
 - **Application locale** : `backend/` contient l'API FastAPI, les comptes, les crédits, Stripe à configurer, les tests, la transcription expérimentale monophonique et les exports PDF, MIDI, MusicXML.
 
+## Tunnel simulé avant inscription (novembre 2026)
+
+Parcours de la démo Vercel : lien YouTube/Spotify/Deezer/SoundCloud/Apple Music ou fichier audio → simulation animée (~7 s) → « Ta partition est prête » → « Découvrir mes 30 secondes » → `/inscription` → `/apercu` (extrait **illustratif** de 30 secondes) → consultation des offres.
+
+- **Aucune transcription réelle n'est produite à partir d'un lien ou d'un fichier.** L'extrait est une mélodie originale fixe, explicitement indiquée comme démonstration. Le paiement est toujours désactivé.
+- Les fichiers audio doivent respecter 25 Mo et 6 minutes au maximum : durée lue localement avec l'API audio du navigateur ; si le format ou la durée ne peuvent pas être vérifiés, le fichier est refusé.
+- Les liens sont contrôlés par domaine/HTTPS, **mais leur durée ne peut pas être vérifiée sans intégration serveur aux plateformes**. Il faudra imposer les 6 minutes côté backend avant toute vraie génération et tout paiement.
+- L'inscription est simulée avec une adresse email conservée dans le `sessionStorage` de l'onglet ; aucun compte durable ni mot de passe n'est créé.
+- `/generation` et `/apercu` sont rechargeables grâce aux rewrites Vercel ; les états de génération restent dans le stockage de session.
+- Code de la vue : `assets/conversion-flow.js` et `assets/conversion-flow.css`. Les routes et le CTA sont reliés dans `index.html`.
+
 ## Déploiement
 
 Ce dépôt est configuré pour un site statique Vercel (racine du repo, preset « Other », sans commande de build). Chaque push sur `main` met à jour la démo après connexion Git.

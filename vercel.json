@@ -7,6 +7,14 @@
       "destination": "/index.html"
     },
     {
+      "source": "/apercu",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/generation",
+      "destination": "/index.html"
+    },
+    {
       "source": "/connexion",
       "destination": "/index.html"
     },

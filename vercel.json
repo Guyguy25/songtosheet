@@ -15,6 +15,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/choisir-format",
+      "destination": "/index.html"
+    },
+    {
       "source": "/generation",
       "destination": "/index.html"
     },

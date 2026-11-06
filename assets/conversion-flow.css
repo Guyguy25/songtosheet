@@ -143,3 +143,40 @@
    YouTube IFrame et la vérification de durée. */
 .flow-youtube-check{position:fixed;left:-10000px;top:0;width:360px;height:240px;overflow:hidden;pointer-events:none;padding:0;margin:0;border:0;background:transparent;box-shadow:none}
 .flow-youtube-check iframe{display:block;width:320px;height:200px;min-width:320px;min-height:200px;border:0}
+
+
+/* Étape « Partition ou tablature ? » — même langage visuel que l'instrument. */
+.flow-format-card{max-width:740px}
+.flow-format-card .flow-lead{margin-bottom:25px}
+.flow-format-grid{border:0;padding:0;margin:0 auto 26px;max-width:555px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;min-width:0}
+.flow-format-grid .flow-picker-label{grid-column:1 / -1}
+.flow-format-option{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:11px;min-width:0;min-height:204px;padding:19px;border:1.5px solid #e9e2f2;border-radius:17px;background:#fff;text-align:left;cursor:pointer;transition:background .18s,border-color .18s,transform .18s}
+.flow-format-option:hover{border-color:#bfa8fa;transform:translateY(-1px)}
+.flow-format-option:has(input:checked){border-color:#7549eb;background:#f5efff;box-shadow:0 5px 17px #7550da12}
+.flow-format-option:has(input:focus-visible){outline:3px solid #af97f6;outline-offset:2px}
+.flow-format-option>input{position:absolute;opacity:0;width:1px;height:1px;pointer-events:none}
+.flow-format-option .flow-radio-check{position:absolute;top:18px;right:18px;margin:0}
+.flow-format-option:has(input:checked) .flow-radio-check{visibility:visible}
+.flow-format-illustration{width:100%;height:65px;display:flex;justify-content:center;align-items:center;flex-direction:column;border-radius:10px;background:#f1edfb;color:#7048d9}
+.flow-format-notes{font-family:Georgia,serif;font-size:35px;letter-spacing:10px;white-space:nowrap}
+.flow-format-tabs{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;font-weight:800;line-height:1.15;letter-spacing:.05em}
+.flow-format-tabs span{display:block}
+.flow-format-info{display:flex;flex-direction:column;gap:7px;min-width:0}
+.flow-format-info b{color:#32244b;font-size:17px;letter-spacing:-.03em}
+.flow-format-info small{font-size:12px;font-weight:550;line-height:1.5;color:#81758f}
+@media(max-width:650px){
+  .flow-format-grid{gap:9px}
+  .flow-format-option{padding:12px;min-height:198px;gap:9px;border-radius:13px}
+  .flow-format-illustration{height:57px}
+  .flow-format-notes{font-size:27px;letter-spacing:5px}
+  .flow-format-tabs{font-size:10px;letter-spacing:0}
+  .flow-format-info b{font-size:15px}
+  .flow-format-info small{font-size:11px;line-height:1.4}
+  .flow-format-option .flow-radio-check{right:10px;top:10px}
+}
+@media(max-width:380px){
+  .flow-format-grid{grid-template-columns:1fr}
+  .flow-format-option{min-height:0;flex-direction:row;align-items:center;gap:12px}
+  .flow-format-illustration{flex:0 0 82px;width:82px;height:64px}
+  .flow-format-option .flow-radio-check{top:8px;right:8px}
+}

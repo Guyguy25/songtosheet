@@ -121,7 +121,7 @@
 .flow-ready-identity>img{width:58px;height:58px;object-fit:cover;border-radius:10px}
 .flow-ready-identity .flow-chip{margin:0;justify-content:flex-start;min-width:0;text-align:left}
 .flow-ready-identity .flow-chip b{max-width:340px;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
-.flow-source-error{font-size:12px;font-weight:750;line-height:1.6;background:#fff1f0;color:#a4383e;border:1px solid #ffc4c4;border-radius:11px;padding:10px 13px;margin:12px 0 0;max-width:595px}
+.flow-source-error{box-sizing:border-box;display:block;width:100%;max-width:540px;min-width:0;overflow-wrap:anywhere;font-size:12px;font-weight:750;line-height:1.6;background:#fff1f0;color:#a4383e;border:1px solid #ffc4c4;border-radius:11px;padding:10px 13px;margin:12px 0 0}
 .flow-source-meta{font-size:12px;font-weight:800;line-height:1.5;background:#edfff5;color:#286d53;border:1px solid #b4e8cc;border-radius:11px;padding:10px 13px;margin:12px 0 0;max-width:595px;overflow-wrap:anywhere}
 .flow-limit{margin:11px 0 0;color:#e0d6f8;font-size:11px;line-height:1.5;font-weight:650}
 .flow-limit strong{color:#fff}

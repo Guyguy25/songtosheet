@@ -81,7 +81,7 @@
       var previous=window.onYouTubeIframeAPIReady;
       var finished=false;
       var script=document.createElement('script');
-      var watchdog=setTimeout(function(){done(new Error('Impossible de vérifier la durée de cette vidéo.'));},10000);
+      var watchdog=setTimeout(function(){done(new Error('Impossible de vérifier la durée de cette vidéo.'));},6000);
       function done(error){
         if(finished)return;
         finished=true;clearTimeout(watchdog);
@@ -134,7 +134,7 @@
             finish(null,seconds);
           }catch(e){}
         }
-        watchdog=setTimeout(function(){finish(new Error('Impossible de vérifier la durée de cette vidéo.'));},18000);
+        watchdog=setTimeout(function(){finish(new Error('Impossible de vérifier la durée de cette vidéo.'));},7500);
         try{
           player=new YT.Player(slot,{
             width:320,height:200,videoId:videoId,
@@ -168,23 +168,29 @@
     var provider=providerFor(value);
     if(!provider)throw new Error('Lien non reconnu. Utilise un lien direct HTTPS YouTube, Spotify, Deezer, Apple Music ou SoundCloud.');
     if(sourceCache&&sourceCache.url===value)return sourceCache.data;
+    if(provider==='YouTube'&&!youtubeVideoId(value))throw new Error('Colle un lien vers une vidéo YouTube valide.');
     var response;
     try{response=await fetch('/api/media-info?url='+encodeURIComponent(value),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8500)});}
     catch(e){
-      if(provider!=='YouTube')throw new Error('Impossible de vérifier la durée de ce morceau.');
+      // La récupération des métadonnées est parfois bloquée par YouTube.
+      // Ce n'est pas une preuve que la vidéo dépasse les 6 minutes.
+      if(provider!=='YouTube')throw new Error('Impossible de récupérer les informations de ce morceau.');
     }
     var data={};
     if(response)try{data=await response.json();}catch(e){}
     if(response&&response.status===422)throw new Error('La durée maximale autorisée est de 6 min.');
     if(response&&response.status===400)throw new Error(data.error||'Ce lien ne pointe pas vers un morceau accepté.');
     var duration=response&&data.duration_verified===true&&Number.isFinite(data.duration_seconds)&&data.duration_seconds>0?data.duration_seconds:null;
-    if(provider==='YouTube'&&(!response||response.status===424||response.ok&&duration===null)){
-      duration=await youtubeDurationFromPlayer(value);
+    if(provider==='YouTube'&&duration===null){
+      // Deuxième tentative côté navigateur. Si l'embed est bloqué, on
+      // autorise la démo en gardant durationVerified=false.
+      try{duration=await youtubeDurationFromPlayer(value);}
+      catch(e){duration=null;}
     }else if(!response||!response.ok){
-      throw new Error('Impossible de vérifier la durée de cette vidéo ou de ce morceau.');
+      throw new Error('Impossible de récupérer les informations de ce morceau.');
     }
-    if(duration===null)throw new Error('Impossible de vérifier la durée de cette vidéo ou de ce morceau.');
-    if(duration>360)throw new Error('La durée maximale autorisée est de 6 min.');
+    // Seule une durée réellement connue peut déclencher l'erreur 6 min.
+    if(duration!==null&&duration>360)throw new Error('La durée maximale autorisée est de 6 min.');
     var result={
       provider:provider,name:typeof data.title==='string'&&data.title.trim()?data.title.trim().slice(0,110):'Morceau '+provider,
       artist:typeof data.artist==='string'?data.artist.slice(0,80):null,
@@ -344,9 +350,9 @@
     if(!flowPage){view.classList.add('hidden');stopProgress();return;}
     var request=readRequest();
     if(!request){navigate('/');return;}
-    if(request.kind==='link'&&(!request.durationVerified||!Number.isFinite(request.duration)||request.duration>360)){
+    if(request.kind==='link'&&request.durationVerified===true&&Number.isFinite(request.duration)&&request.duration>360){
       navigate('/');
-      sourceError('Ce lien doit être vérifié avant de continuer : 6 minutes maximum.');
+      sourceError('La durée maximale autorisée est de 6 min.');
       return;
     }
     if(path==='/apercu'&&!request.completed){navigate('/generation');return;}
@@ -389,9 +395,9 @@
   function chooseInstrument(instrument){
     var request=readRequest();
     if(!request){navigate('/');return;}
-    if(request.kind==='link'&&(!request.durationVerified||!Number.isFinite(request.duration)||request.duration>360)){
+    if(request.kind==='link'&&request.durationVerified===true&&Number.isFinite(request.duration)&&request.duration>360){
       navigate('/');
-      sourceError('La durée de ce morceau doit être vérifiée (6 min maximum). Colle à nouveau ton lien.');
+      sourceError('La durée maximale autorisée est de 6 min.');
       return;
     }
     request.instrument=instrumentNames[instrument]?instrument:'piano';

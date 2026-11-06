@@ -278,7 +278,8 @@
   }
   function stopProgress(){if(timer){clearInterval(timer);timer=null;}}
   function setStage(stage){
-    var texts=['Préparation de ta musique…','Construction de la maquette…','Mise en place des notes…','Finalisation de l’aperçu…'];
+    var tab=chosenFormat(readRequest())==='tablature';
+    var texts=['Préparation de ta musique…','Construction de la maquette…',tab?'Placement des cases…':'Mise en place des notes…','Finalisation de l’aperçu…'];
     $('flow-progress-label').textContent=texts[stage]||texts[0];
     document.querySelectorAll('#flow-step-list .flow-step').forEach(function(item,index){
       item.classList.toggle('current',index===stage);
@@ -358,6 +359,7 @@
     if(screen==='preview'){
       $('flow-preview-source').textContent=request?request.name:'Ta musique';
       $('flow-preview-instrument').textContent=(request?(instrumentNames[request.instrument]||'Piano'):'Piano')+' · '+formatLabel(request);
+      $('flow-preview-paper-label').textContent=chosenFormat(request)==='tablature'?'Tablature originale de démonstration':'Mélodie originale de démonstration';
       $('flow-preview-locked-title').textContent='🔒 La '+formatLongName(request)+' complète';
       $('flow-plans-label').textContent='Voir les offres pour la '+formatLongName(request)+' complète';
       updatePreviewNotation(request);
@@ -366,6 +368,7 @@
     }
     $('flow-work-track').textContent=request?request.name:'Ton morceau';
     $('flow-work-provider').textContent=request?request.provider+' · '+(instrumentNames[request.instrument]||'Piano')+' · '+formatLabel(request):'';
+    $('flow-step-notation').textContent=chosenFormat(request)==='tablature'?'Disposition des cases':'Disposition des notes';
     if(request&&request.completed)showReady();else runProgress();
   }
   function render(path){

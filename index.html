@@ -631,6 +631,11 @@ body.pricing-open{overflow:hidden}
 .auth-demo-hint{font-size:12px;line-height:1.55;margin:6px 0 15px;color:#6c6481}.auth-demo-flag{display:inline-block;background:#efe9ff;color:#6c46cf;border-radius:30px;padding:2px 7px;margin-left:5px;font-size:10px;font-weight:800}
 #public-header[data-session-pending] .nav-actions,
 #public-header[data-session-pending] .mobile-menu button{visibility:hidden}
+.track-options{margin:20px 0 0;padding:12px 16px 16px;border:1px solid #e4daf5;border-radius:12px}
+.track-options legend{font-size:14px;font-weight:750;padding:0 6px}
+.track-options p,.track-options label{font-size:13px;line-height:1.5}
+.track-options label{display:flex;align-items:baseline;gap:8px;margin-top:10px}
+.track-options input{accent-color:#7148d6}
 </style>
 
 
@@ -802,7 +807,12 @@ body.pricing-open{overflow:hidden}
     <div class="app-layout"><header class="app-header"><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><span class="small-credit"><span>◇</span> <b id="top-credits">Démo</b> · accès</span><div class="user-avatar" id="user-avatar">S</div></div></header><div class="app-scroll">
       <section id="dashboard-page" class="app-page"><div class="app-welcome"><div><span class="dashboard-kicker">TON STUDIO PERSONNEL ✦</span><h1>Prêt à jouer quelque chose<br/><span>de nouveau ?</span></h1><p>Transforme tes enregistrements en partitions en quelques étapes.</p></div><div class="welcome-decor">♫</div></div><div class="overview-cards"><div class="overview-card"><span class="metric-symbol purple">◇</span><div><strong id="metric-credits">Démo</strong><small>Accès actuel</small></div></div><div class="overview-card"><span class="metric-symbol green">▤</span><div><strong id="metric-total">0</strong><small>Partitions générées</small></div></div><div class="overview-card"><span class="metric-symbol orange">✧</span><div><strong id="metric-progress">0</strong><small>Générations en cours</small></div></div></div><div class="dashboard-grid"><div class="dashboard-create"><div><span class="section-label">CRÉATION RAPIDE</span><h2>Ta prochaine partition est à un clic.</h2><p>Dépose un morceau et laisse SongToSheet faire le premier relevé.</p><button id="dashboard-start" class="btn btn-primary">Nouvelle partition <span>↗</span></button></div><div class="dashboard-illustration">♬</div></div><div class="dashboard-helper"><span class="helper-symbol">✦</span><h3>Comment ça marche ?</h3><p>Importe ton fichier audio, choisis ton instrument, puis lance la génération. Le résultat sera sauvegardé dans ta bibliothèque.</p><a href="/#comment-ca-marche" id="learn-more">Voir les étapes <span>↗</span></a></div></div><div class="list-heading"><h2>Dernières partitions</h2><button id="view-all">Tout voir →</button></div><div id="recent-jobs" class="jobs-list"></div></section>
 
-      <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo / 6 min max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span>◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Essentiel : 1 musique tous les 7 jours.</p></div><div class="tip-line"><i>✓</i><p>L'illimité prévoit un usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><button class="btn btn-outline" id="create-buy">Voir les abonnements ↗</button></aside></div></section>
+      <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo / 6 min max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><fieldset id="workspace-track-options" class="track-options hidden">
+        <legend>Transcription réelle · Accès admin</legend>
+        <p>Choisis la piste à isoler. Pour la guitare et la basse, une tablature est proposée si le moteur trouve une ligne jouable.</p>
+        <label><input id="workspace-track-isolated" type="checkbox"> Mon fichier contient déjà uniquement cette piste.</label>
+        <label><input id="workspace-track-authorized" type="checkbox" required> Je dispose des droits nécessaires pour transcrire cet audio.</label>
+      </fieldset><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Essentiel : 1 musique tous les 7 jours.</p></div><div class="tip-line"><i>✓</i><p>L'illimité prévoit un usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><button class="btn btn-outline" id="create-buy">Voir les abonnements ↗</button></aside></div></section>
 
       <section id="library-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">TA BIBLIOTHÈQUE</span><h1>Toutes tes partitions.</h1><p>Retrouve et télécharge les musiques que tu as transcrites.</p></div><button id="library-new" class="btn btn-primary">＋ Nouvelle partition</button></div><div class="library-toolbar"><span id="library-count">0 partition</span><div class="search-wrapper"><span>⌕</span><input id="library-search" placeholder="Rechercher un morceau..."/></div></div><div id="library-jobs" class="jobs-list library-jobs"></div></section>
 
@@ -1092,7 +1102,8 @@ body.pricing-open{overflow:hidden}
   async function refresh(){if(!state.user)return;
     try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);setCurrentUser(user.user);state.jobs=jobs.jobs||[];
       if(!state.user){go('/inscription');return;}
-      $('sidebar-credits').textContent='Démo';$('top-credits').textContent='Démo';$('metric-credits').textContent='Démo';
+      const access=state.user.role==='admin'?'Admin':'Démo';
+      $('sidebar-credits').textContent=access;$('top-credits').textContent=access;$('metric-credits').textContent=access;
       $('create-balance').textContent='Démo';$('billing-balance').textContent='Démo';
       $('metric-total').textContent=state.jobs.length;
       $('metric-progress').textContent=state.jobs.filter(j=>['processing','queued'].includes(j.status)).length;
@@ -1106,9 +1117,13 @@ body.pricing-open{overflow:hidden}
   function renderJobs(id,jobs){const box=$(id);
     if(!jobs.length){box.innerHTML='<div class="empty-jobs"><span>♬</span><strong>Aucune création pour le moment</strong><p>Choisis une musique pour commencer.</p><button class="btn btn-outline" data-start>Créer une partition ↗</button></div>';return;}
     box.innerHTML=jobs.map(j=>{
-      const format=j.format==='tablature'?'Tablature':'Partition';
+      const format=j.downloads?.includes('tab')?'Partition + tablature':j.format==='tablature'?'Tablature':'Partition';
       const details=safe(j.instrument)+' · '+format+' · '+(j.duration_verified===false?'Durée non vérifiée':timeFmt(j.duration))+' · '+dateFmt(j.created_at);
-      const label=j.preview_revealed?'Voir mon aperçu':'Générer mon aperçu';
+      if(j.track){
+        const status=j.status==='completed'?'Prête':statusText[j.status]||'Import en cours';
+        return `<div class="job-row demo-job-row"><button type="button" class="demo-job-details" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${status}</span></button></div>`;
+      }
+      const label=state.user.role==='admin'?'Transcrire l’audio':j.preview_revealed?'Voir mon aperçu':'Générer mon aperçu';
       return `<div class="job-row demo-job-row"><button type="button" class="demo-job-details" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${statusText[j.status]||'À générer'}</span></button><button type="button" class="demo-job-generate" data-demo-generate="${safe(j.id)}">${label} <span aria-hidden="true">↗</span></button></div>`;
     }).join('');
   }
@@ -1120,7 +1135,17 @@ body.pricing-open{overflow:hidden}
     const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition',billing:'Abonnements'};
     $('page-crumb').textContent=names[page]||'Mon espace';
     document.querySelector('.sidebar').classList.remove('mobile-open');
-    if(page==='create') {if(state.link)$('workspace-url').value=state.link;if(state.file)$('workspace-file-name').textContent=state.file.name;}
+    if(page==='create'){
+      if(state.link)$('workspace-url').value=state.link;
+      if(state.file)$('workspace-file-name').textContent=state.file.name;
+      const admin=state.user.role==='admin';
+      show('workspace-track-options',admin);
+      show('create-plan-note',!admin);
+      show('create-buy',!admin);
+      const instrument=$('workspace-instrument');
+      instrument.querySelector('[value="violon"]').hidden=admin;
+      if(admin&&instrument.value==='violon')instrument.value='piano';
+    }
     if(page==='billing')renderAppPricing();
     if(page==='result'&&state.resultId)loadResult(state.resultId);
     document.querySelector('.app-scroll').scrollTo({top:0,behavior:'smooth'});
@@ -1217,26 +1242,84 @@ body.pricing-open{overflow:hidden}
       }else{
         const file=$('hero-file').files[0]||state.file;
         if(!file)throw new Error('Ajoute un fichier audio pour commencer.');
-        state.file=file;await window.SongToSheetFlow.start({kind:'file',file,instrument});
+        state.file=file;
+        if(state.user?.role==='admin')startApp('create');
+        else await window.SongToSheetFlow.start({kind:'file',file,instrument});
       }
     }catch(e){window.SongToSheetFlow.sourceError(e.message||'Source non prise en charge.');}
     finally{button.disabled=false;}
   }
   async function submitJob(){
     const file=state.file||$('workspace-file').files[0];
-    if(!file){toast('Ajoute un fichier audio pour préparer ta démonstration.',true);return;}
+    if(!file){toast('Ajoute un fichier audio pour continuer.',true);return;}
+    if(state.user?.role==='admin')return submitTrack(file);
     try{await window.SongToSheetFlow.start({kind:'file',file,instrument:$('workspace-instrument').value});}
     catch(e){toast(e.message||'Import impossible.',true);}
   }
+  function encodeChunk(blob){
+    return new Promise((resolve,reject)=>{
+      const reader=new FileReader();
+      reader.onload=()=>resolve(reader.result.split(',',2)[1]);
+      reader.onerror=()=>reject(new Error('Impossible de lire le fichier audio.'));
+      reader.readAsDataURL(blob);
+    });
+  }
+  async function submitTrack(file){
+    if(!$('workspace-track-authorized').reportValidity())return;
+    const button=$('workspace-generate'),feedback=$('upload-feedback');
+    button.disabled=true;
+    feedback.textContent='Préparation de l’envoi…';
+    show('upload-feedback',true);
+    let id,queued=false;
+    try{
+      const title=$('workspace-title').value.trim()||file.name.replace(/\.[^.]+$/,'');
+      const extension=file.name.split('.').at(-1).toLowerCase();
+      const result=await post('/api/track',{action:'begin',title,extension,size:file.size,authorized:true,
+        instrument:$('workspace-instrument').value,isolated:$('workspace-track-isolated').checked});
+      id=result.id;
+      const count=Math.ceil(file.size/result.chunk_bytes);
+      for(let index=0;index<count;index++){
+        feedback.textContent=`Envoi de l’audio (${index+1}/${count})…`;
+        const start=index*result.chunk_bytes;
+        const data=await encodeChunk(file.slice(start,start+result.chunk_bytes));
+        await post('/api/track',{action:'chunk',id,index,data});
+      }
+      await post('/api/track',{action:'queue',id});
+      queued=true;
+      state.file=null;$('workspace-file').value='';
+      $('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
+      $('workspace-track-authorized').checked=false;
+      $('workspace-track-isolated').checked=false;
+      show('upload-feedback',false);
+      await refresh();
+      openResult(id);
+    }catch(error){
+      if(id&&!queued)await post('/api/track',{action:'cancel',id}).catch(()=>{});
+      feedback.textContent=error.message;
+      toast(error.message,true);
+    }finally{button.disabled=false;}
+  }
   async function revealDemo(id){
     if(!state.user){go('/inscription');return;}
+    if(state.user.role==='admin'){
+      const job=state.jobs.find(item=>item.id===id&&item.demo_saved);
+      if(job){
+        $('workspace-title').value=job.title;
+        $('workspace-instrument').value=job.instrument;
+        state.file=null;$('workspace-file').value='';
+        $('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
+        startApp('create');
+        toast('Importe l’audio original pour lancer la transcription réelle.');
+        return;
+      }
+    }
     try{
       const job=await post('/api/jobs/'+encodeURIComponent(id),{action:'reveal'});
       await refresh();
       window.SongToSheetFlow.openSavedDemo(job);
     }catch(e){toast(e.message||'Impossible de lancer cet aperçu.',true);}
   }
-    function openResult(id){state.resultId=id;startApp('result');}
+    function openResult(id){state.resultId=id;$('result-content').textContent='Chargement de la création…';startApp('result');}
   function notesSvg(notes){
     const notesToDraw=notes.slice(0,48),perLine=12,lineCount=Math.max(1,Math.ceil(notesToDraw.length/perLine)),height=150*lineCount+12;
     let svg=`<svg viewBox="0 0 720 ${height}" role="img" aria-label="Aperçu des premières notes transcrites" xmlns="http://www.w3.org/2000/svg">`;
@@ -1260,11 +1343,37 @@ body.pricing-open{overflow:hidden}
   }
   async function loadResult(id){
     try{const j=await api(`/api/jobs/${encodeURIComponent(id)}`);if(state.activePage!=='result'||state.resultId!==id)return;
+      if(j.track){
+        const links={musicxml:'Partition MusicXML',tab:'Tablature MusicXML',mid:'MIDI'};
+        const completed=j.status==='completed';
+        const waiting=['queued','processing'].includes(j.status);
+        const downloads=Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
+          `<a class="btn btn-outline" href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}">↓ ${label}</a>`).join('');
+        const status=completed?'PARTITION PRÊTE':waiting?'TRANSCRIPTION EN COURS':'TRANSCRIPTION INTERROMPUE';
+        const detail=completed?`${j.note_count} notes estimées. Tu peux corriger le résultat dans un éditeur MusicXML.`
+          :j.status==='queued'?'Ton audio est en attente du moteur de transcription.'
+          :waiting?'Le moteur analyse ton audio. Cette page se met à jour automatiquement.'
+          :j.error_message||'Importe ton fichier pour réessayer.';
+        $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">${status}</span>
+          <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)} · Accès admin</p>
+          <p>${safe(detail)}</p>${completed?`<div class="result-actions">${downloads}</div>`:''}
+          ${!waiting&&!completed?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}</div>`;
+        clearInterval(state.poll);state.poll=null;
+        if(waiting)state.poll=setInterval(()=>{
+          if(state.activePage==='result'&&state.resultId===id)loadResult(id);
+          else{clearInterval(state.poll);state.poll=null;}
+        },5000);
+        else await refresh();
+        return;
+      }
       if(j.demo_saved===true){
         const kind=j.format==='tablature'?'tablature':'partition';
         const details=(instrumentIcon[j.instrument]||'♫')+' '+safe(j.instrument)+' · '+(kind==='tablature'?'Tablature':'Partition')+' · '+(j.duration_verified===false?'Durée non vérifiée':timeFmt(j.duration))+' · '+dateFmt(j.created_at);
-        const action=j.preview_revealed?'Voir mon aperçu':'Générer mon aperçu';
-        $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">CRÉATION ENREGISTRÉE ✦</span><h1>${safe(j.title)}</h1><p class="result-meta">${details}</p></div><div class="note-notation"><h3>Ton ${kind} est dans ton espace</h3><p class="result-note">Tu peux lancer ton aperçu illustratif depuis ton compte. Le moteur musical réel n’est pas encore connecté.</p><button class="btn btn-primary" type="button" data-demo-generate="${safe(j.id)}">${action} ↗</button></div>`;
+        const admin=state.user.role==='admin';
+        const action=admin?'Transcrire l’audio':j.preview_revealed?'Voir mon aperçu':'Générer mon aperçu';
+        const message=admin?'Cette création a été enregistrée en démo. Importe l’audio original pour obtenir le relevé complet.'
+          :'Tu peux lancer ton aperçu illustratif depuis ton compte.';
+        $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">CRÉATION ENREGISTRÉE ✦</span><h1>${safe(j.title)}</h1><p class="result-meta">${details}</p></div><div class="note-notation"><h3>Ton ${kind} est dans ton espace</h3><p class="result-note">${message}</p><button class="btn btn-primary" type="button" data-demo-generate="${safe(j.id)}">${action} ↗</button></div>`;
         clearInterval(state.poll);state.poll=null;return;
       }
       const completed=j.status==='completed',processing=['queued','processing'].includes(j.status);
@@ -1386,7 +1495,7 @@ body.pricing-open{overflow:hidden}
     $('sidebar-logout').onclick=logout;$('mobile-sidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('mobile-open');
     $('menu-dashboard').onclick=()=>showAppPage('dashboard');$('menu-create').onclick=()=>showAppPage('create');$('menu-library').onclick=()=>showAppPage('library');
     $('side-buy').onclick=()=>showPricing('unlimited');$('create-buy').onclick=()=>showPricing('unlimited');$('dashboard-start').onclick=()=>showAppPage('create');$('view-all').onclick=()=>showAppPage('library');$('library-new').onclick=()=>showAppPage('create');
-    $('back-to-library').onclick=()=>showAppPage('library');$('workspace-generate').onclick=async()=>{try{await window.SongToSheetFlow.start({kind:'file',file:state.file||$('workspace-file').files[0],instrument:$('workspace-instrument').value});}catch(e){toast(e.message||'Import impossible.',true);}};
+    $('back-to-library').onclick=()=>showAppPage('library');$('workspace-generate').onclick=submitJob;
     $('library-search').oninput=()=>renderJobs('library-jobs',filterJobs());$('auth-form').onsubmit=submitAuth;
     $('learn-more').onclick=(e)=>{e.preventDefault();go('/#comment-ca-marche');document.querySelector('#comment-ca-marche')?.scrollIntoView({behavior:'smooth'});};
     $('footer-year').textContent=new Date().getFullYear();

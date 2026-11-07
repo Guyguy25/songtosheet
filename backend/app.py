@@ -11,6 +11,7 @@ import math
 import os
 import re
 import secrets
+import shutil
 import sqlite3
 import subprocess
 import tempfile
@@ -29,6 +30,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from transcriber import get_duration, process_file
+from transcribe_track import TRACKS, transcribe
 
 ROOT=Path(__file__).resolve().parent
 load_dotenv(ROOT/'.env')
@@ -40,6 +42,7 @@ UPLOADS=DATA/'uploads'; UPLOADS.mkdir(exist_ok=True)
 BASE_URL=os.getenv('PUBLIC_BASE_URL','http://localhost:8000').rstrip('/')
 SECRET=os.getenv('SESSION_SECRET') or secrets.token_urlsafe(48)
 DEV=os.getenv('DEV_MODE','1')=='1'
+TRACK_TEST=DEV and os.getenv('TRACK_TRANSCRIPTION_TEST')=='1'
 STRIPE_KEY=os.getenv('STRIPE_SECRET_KEY','')
 STRIPE_WEBHOOK=os.getenv('STRIPE_WEBHOOK_SECRET','')
 # Prices are initial positioning hypotheses, not a profitability guarantee.
@@ -84,6 +87,10 @@ def init_db():
             FOREIGN KEY(user_id) REFERENCES users(id)
           );
         ''')
+        if TRACK_TEST:
+            c.execute("""UPDATE jobs SET status='failed', error_message=?, finished_at=?
+                WHERE reserved_credits=0 AND status IN ('queued','processing')""",
+                ('Le serveur de test a redémarré. Relance la transcription.',int(time.time())))
 init_db()
 
 
@@ -179,12 +186,19 @@ async def secure_headers(request:Request,call_next):
 
 
 @app.get('/api/health')
-def health():return {'ok':True,'version':'0.1.0','transcription':'experimental-melody'}
+def health():return {'ok':True,'version':'0.1.0','transcription':'track-test' if TRACK_TEST else 'experimental-melody'}
 
 
 @app.get('/api/packs')
 def packs():
-    return {'packs':[{'id':k,**v,'euros':v['cents']/100} for k,v in PACKS.items()], 'checkout_enabled':bool(STRIPE_KEY and STRIPE_WEBHOOK)}
+    return {'packs':[{'id':k,**v,'euros':v['cents']/100} for k,v in PACKS.items()],
+            'checkout_enabled':not TRACK_TEST and bool(STRIPE_KEY and STRIPE_WEBHOOK), 'track_test':TRACK_TEST}
+
+
+@app.get('/api/transcription-test/sample')
+def track_test_sample():
+    if not TRACK_TEST:fail('Exemple indisponible.',404)
+    return FileResponse(ROOT/'tests'/'melody.wav',media_type='audio/wav')
 
 
 @app.get('/api/auth/me')
@@ -264,26 +278,39 @@ def job(request:Request,job_id:str):
         row=c.execute('SELECT * FROM jobs WHERE id=? AND user_id=?',(job_id,u['id'])).fetchone()
     if not row:fail('Transcription introuvable.',404)
     result={k:row[k] for k in ['id','title','instrument','duration','reserved_credits','status','note_count','bpm','created_at','error_message']}
+    result['track_test']=row['reserved_credits']==0
     if row['status']=='completed' and row['notes_json']:
         result['notes']=json.loads(row['notes_json'])
+        result['downloads']=[kind for kind,(filename,_,_) in EXPORT_FORMATS.items()
+                             if (EXPORTS/job_id/filename).is_file()]
     return result
 
 
-def work_job(job_id:str,source:Path,title:str,instrument:str):
+def work_job(job_id:str,source:Path,title:str,instrument:str,track_user:str|None=None,isolated:bool=False):
     folder=EXPORTS/job_id
     try:
         with db() as c:c.execute('UPDATE jobs SET status=? WHERE id=?',('processing',job_id))
-        result=process_file(str(source),title,instrument,str(folder))
+        if track_user is None:
+            result=process_file(str(source),title,instrument,str(folder))
+        else:
+            cached=transcribe(source,instrument,DATA/'track-cache'/track_user,isolated=isolated,title=title)
+            folder.mkdir(exist_ok=True)
+            for filename in ('score.mid','score.musicxml','tab.musicxml'):
+                if (cached/filename).is_file():
+                    shutil.copyfile(cached/filename,folder/filename)
+            result=json.loads((cached/'notes.json').read_text(encoding='utf-8'))
+            result['note_count']=len(result['notes'])
         with db() as c:
             c.execute('BEGIN IMMEDIATE')
             r=c.execute('SELECT user_id,reserved_credits,status FROM jobs WHERE id=?',(job_id,)).fetchone()
             if r and r['status']=='processing':
-                upd=c.execute('UPDATE users SET credits=credits-? WHERE id=? AND credits>=?',(r['reserved_credits'],r['user_id'],r['reserved_credits']))
-                if upd.rowcount!=1:raise RuntimeError('Solde insuffisant lors de la finalisation')
+                if r['reserved_credits']:
+                    upd=c.execute('UPDATE users SET credits=credits-? WHERE id=? AND credits>=?',(r['reserved_credits'],r['user_id'],r['reserved_credits']))
+                    if upd.rowcount!=1:raise RuntimeError('Solde insuffisant lors de la finalisation')
+                    c.execute('INSERT INTO credit_events(event_id,user_id,delta,source,created_at) VALUES(?,?,?,?,?)',
+                              ('job:'+job_id,r['user_id'],-r['reserved_credits'],'transcription',int(time.time())))
                 c.execute('UPDATE jobs SET status=?,notes_json=?,bpm=?,note_count=?,finished_at=? WHERE id=?',
                     ('completed',json.dumps(result['notes']),result['bpm'],result['note_count'],int(time.time()),job_id))
-                c.execute('INSERT INTO credit_events(event_id,user_id,delta,source,created_at) VALUES(?,?,?,?,?)',
-                          ('job:'+job_id,r['user_id'],-r['reserved_credits'],'transcription',int(time.time())))
     except Exception as e:
         with db() as c:
             c.execute('UPDATE jobs SET status=?,error_message=?,finished_at=? WHERE id=?',('failed',str(e)[:350],int(time.time()),job_id))
@@ -293,9 +320,11 @@ def work_job(job_id:str,source:Path,title:str,instrument:str):
 
 @app.post('/api/jobs')
 async def create_job(request:Request,background:BackgroundTasks,
-    audio:UploadFile=File(...),title:str=Form('Ma partition'),instrument:str=Form('piano'),source_url:str=Form('')):
+    audio:UploadFile=File(...),title:str=Form('Ma partition'),instrument:str=Form('piano'),source_url:str=Form(''),
+    authorized:bool=Form(False),isolated:bool=Form(False)):
     check_origin(request);u=auth(request);rate_limit(request,'upload',12,3600)
-    if instrument not in ('piano','guitare','voix','violon','basse'):fail('Instrument invalide.')
+    if instrument not in TRACKS and (TRACK_TEST or instrument!='violon'):fail('Instrument invalide.')
+    if TRACK_TEST and not authorized:fail('Confirme que tu disposes des droits nécessaires pour transcrire cet audio.')
     title=title.strip()[:90] or 'Ma partition'
     filename=(audio.filename or '').lower()
     suffix=Path(filename).suffix
@@ -315,16 +344,18 @@ async def create_job(request:Request,background:BackgroundTasks,
         try:duration=get_duration(str(source))
         except Exception:fail('Impossible de lire la durée du fichier audio.')
         if duration>6*60:fail('Cette V1 accepte les fichiers de 6 minutes maximum.')
-        cost=max(1,math.ceil(duration/60))
+        cost=0 if TRACK_TEST else max(1,math.ceil(duration/60))
         with db() as c:
             c.execute('BEGIN IMMEDIATE')
+            if TRACK_TEST and c.execute("SELECT 1 FROM jobs WHERE reserved_credits=0 AND status IN ('queued','processing') LIMIT 1").fetchone():
+                fail('Une transcription de test est déjà en cours. Réessaie quand elle sera terminée.',409)
             credit=int(c.execute('SELECT credits FROM users WHERE id=?',(u['id'],)).fetchone()['credits'])
             reserved=int(c.execute("SELECT COALESCE(SUM(reserved_credits),0) AS amount FROM jobs WHERE user_id=? AND status IN ('queued','processing')",(u['id'],)).fetchone()['amount'])
             if credit-reserved<cost:
                 raise HTTPException(status_code=402,detail={'message':f'{cost} crédits nécessaires pour {math.ceil(duration)} secondes d’audio.','needed':cost,'available':credit-reserved})
             c.execute('INSERT INTO jobs(id,user_id,title,instrument,source_url,duration,reserved_credits,status,created_at) VALUES(?,?,?,?,?,?,?,?,?)',
                 (job_id,u['id'],title,instrument,source_url,duration,cost,'queued',int(time.time())))
-        background.add_task(work_job,job_id,source,title,instrument)
+        background.add_task(work_job,job_id,source,title,instrument,u['id'] if TRACK_TEST else None,isolated)
         return {'id':job_id,'status':'queued','credits_reserved':cost,'duration':duration}
     except Exception:
         source.unlink(missing_ok=True)
@@ -333,23 +364,33 @@ async def create_job(request:Request,background:BackgroundTasks,
         await audio.close()
 
 
+EXPORT_FORMATS={
+    'pdf':('score.pdf','pdf','application/pdf'),
+    'mid':('score.mid','mid','audio/midi'),
+    'musicxml':('score.musicxml','musicxml','application/vnd.recordare.musicxml+xml'),
+    'tab':('tab.musicxml','musicxml','application/vnd.recordare.musicxml+xml'),
+}
+
+
 @app.get('/api/jobs/{job_id}/download/{format}')
 def download(request:Request,job_id:str,format:str):
     u=auth(request)
-    if format not in ('pdf','mid','musicxml'):fail('Format invalide.')
+    if format not in EXPORT_FORMATS:fail('Format invalide.')
     with db() as c:
         row=c.execute('SELECT title,status FROM jobs WHERE id=? AND user_id=?',(job_id,u['id'])).fetchone()
     if not row or row['status']!='completed':fail('Export indisponible.',404)
-    filename={'pdf':'score.pdf','mid':'score.mid','musicxml':'score.musicxml'}[format]
+    filename,extension,media_type=EXPORT_FORMATS[format]
     target=EXPORTS/job_id/filename
     if not target.is_file():fail('Fichier indisponible.',404)
     slug=re.sub(r'[^a-z0-9-]','-',row['title'].lower())[:40].strip('-') or 'partition'
-    return FileResponse(target,filename=f'{slug}.{format}',media_type={'pdf':'application/pdf','mid':'audio/midi','musicxml':'application/vnd.recordare.musicxml+xml'}[format])
+    if format=='tab':slug+='-tablature'
+    return FileResponse(target,filename=f'{slug}.{extension}',media_type=media_type)
 
 
 @app.post('/api/checkout')
 def checkout(request:Request,body:CheckoutInput):
     check_origin(request);u=auth(request);rate_limit(request,'checkout',10,3600)
+    if TRACK_TEST:fail('Les transcriptions de test sont gratuites.',503)
     pack=PACKS.get(body.pack_id)
     if not pack:fail('Pack inconnu.')
     if not STRIPE_KEY or not STRIPE_WEBHOOK:fail('Le paiement n’est pas encore configuré complètement. Configurez Stripe et le webhook avant de lancer le service.',503)

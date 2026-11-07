@@ -8,4 +8,5 @@ __pycache__/
 *.sqlite*
 *.db
 .vercel/
+node_modules/
 .DS_Store

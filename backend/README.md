@@ -34,6 +34,51 @@ Recharge le dashboard, sélectionne « Nouvelle partition » et importe un fichi
 
 Le fichier `tests/melody.wav` est un enregistrement synthétique original utilisé pour les tests automatisés, et permet de valider le moteur.
 
+## Prototype de transcription par instrument
+
+Le moteur `transcribe_track.py` utilise Demucs pour estimer une piste de voix, basse, guitare ou piano, puis Basic Pitch pour en détecter les notes. Demucs peut mélanger certains instruments, en particulier sur la piste de piano. La précision reste à mesurer sur un corpus autorisé.
+
+### Tester dans SongToSheet
+
+Dans le dossier `backend`, utilise Python 3.11 et FFmpeg. Sous PowerShell :
+
+```powershell
+python -m pip install -r requirements.txt -r requirements-transcription.txt
+$env:DEV_MODE = '1'
+$env:TRACK_TRANSCRIPTION_TEST = '1'
+$env:DATA_DIR = './data/track-test'
+python -m uvicorn app:app --host 127.0.0.1 --port 8765
+```
+
+Ouvre http://127.0.0.1:8765/inscription, crée un compte local et sélectionne **Nouvelle partition**. Tu peux charger la mélodie de test depuis le formulaire ou importer ton propre audio. Sélectionne l’instrument, confirme les droits nécessaires et lance la génération. Les exports disponibles restent dans ta bibliothèque locale. Le mode de test fonctionne sans crédits ni paiement et traite un fichier à la fois. Le lien public Vercel ne dessert pas ce moteur.
+
+### Tester en ligne de commande
+
+Dans un environnement Python 3.11 séparé, avec FFmpeg et FFprobe disponibles :
+
+```sh
+python -m pip install -r requirements-transcription.txt
+python transcribe_track.py tests/melody.wav guitare ./exports-prives --isolated --authorized
+```
+
+Pour traiter un mix, retire `--isolated` et choisis la piste à extraire. Demucs télécharge ses poids au premier usage. Utilise `--bpm` si tu connais le tempo. Le MIDI conserve les timings estimés et le MusicXML les quantifie à un tempo et une mesure fixes. La tablature guitare ou basse propose une ligne à une note à la fois, en accordage standard. Les accords détectés restent dans la partition et le MIDI.
+
+Le moteur écrit `score.mid`, `score.musicxml`, `notes.json` et, lorsqu’une ligne jouable est disponible, `tab.musicxml`. Il efface les fichiers audio intermédiaires et réutilise un export complet si les octets du fichier et les paramètres correspondent. Réserve un dossier d’exports privé à chaque utilisateur si tu intègres le moteur à un service.
+
+Le prototype exige une confirmation explicite des droits via `--authorized`. Il lit un fichier local. Les liens YouTube et Spotify restent des références pour identifier le morceau. Un catalogue partagé devra vérifier la licence de chaque partition, conserver sa provenance et respecter les conditions d’accès du fournisseur. La confirmation de l’utilisateur ne vaut pas autorisation de republier le résultat.
+
+### Moteur pour la bêta administrateur
+
+Le site public utilise les comptes MongoDB existants. La transcription réelle est réservée aux comptes portant `role: "admin"` dans la base. Le site stocke les fragments audio jusqu’à la fin du traitement, avec une expiration automatique après deux heures. La bibliothèque conserve les exports et les affiche uniquement au propriétaire.
+
+Installe les dépendances du moteur sur la machine de calcul. Configure le jeton hexadécimal de 32 octets dans `TRACK_WORKER_TOKEN` sur cette machine et uniquement son empreinte SHA-256 hexadécimale dans `TRACK_WORKER_DIGEST` sur Vercel. Lance le moteur depuis `backend` :
+
+```powershell
+python .\track_worker.py https://songtosheet.vercel.app .\data\production-track-cache
+```
+
+Les demandes passent par le site public. La machine qui exécute le moteur doit rester allumée et connectée pour les traiter. Les fichiers audio intermédiaires sont supprimés en fin de traitement. Le cache local contient les exports.
+
 ## Paiement Stripe
 
 Les packs de crédits sont définis côté serveur dans `PACKS` dans `app.py` :

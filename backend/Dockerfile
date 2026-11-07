@@ -3,7 +3,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -r
 WORKDIR /service
 COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
-COPY app.py transcriber.py ./
+COPY app.py transcriber.py transcribe_track.py ./
 COPY web ./web
 RUN mkdir -p /service/data
 ENV DEV_MODE=0 DATA_DIR=/service/data

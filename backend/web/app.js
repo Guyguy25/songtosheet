@@ -40,7 +40,7 @@
     show('auth-error',false);
   }
   async function loadUser(){try{const data=await api('/api/auth/me');state.user=data.user;}catch{state.user=null;}}
-  async function loadPackages(){try{const data=await api('/api/packs');state.packages=data.packs;state.checkoutEnabled=data.checkout_enabled;}catch{state.packages=[];state.checkoutEnabled=false;}}
+  async function loadPackages(){try{const data=await api('/api/packs');state.packages=data.packs;state.checkoutEnabled=data.checkout_enabled;state.trackTest=data.track_test===true;}catch{state.packages=[];state.checkoutEnabled=false;}}
   async function refresh(){if(!state.user)return;
     try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);state.user=user.user;state.jobs=jobs.jobs||[];
       if(!state.user){go('/inscription');return;}
@@ -67,7 +67,17 @@
     const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition',billing:'Crédits'};
     $('page-crumb').textContent=names[page]||'Mon espace';
     document.querySelector('.sidebar').classList.remove('mobile-open');
-    if(page==='create') {if(state.link)$('workspace-url').value=state.link;if(state.file)$('workspace-file-name').textContent=state.file.name;}
+    if(page==='create'){
+      if(state.link)$('workspace-url').value=state.link;
+      if(state.file)$('workspace-file-name').textContent=state.file.name;
+      if(state.trackTest){
+        show('track-options',true);
+        for(const id of ['create-credit-note','create-credit-tip','create-debit-tip','create-buy'])show(id,false);
+        const instrument=$('workspace-instrument');
+        instrument.querySelector('[value="violon"]').hidden=true;
+        if(instrument.value==='violon')instrument.value='piano';
+      }
+    }
     if(page==='billing')renderAppPricing();
     if(page==='result'&&state.resultId)loadResult(state.resultId);
     document.querySelector('.app-scroll').scrollTo({top:0,behavior:'smooth'});
@@ -101,13 +111,22 @@
   }
   async function submitJob(){
     const file=state.file||$('workspace-file').files[0];if(!file){toast('Ajoute un fichier audio avant de lancer la génération.',true);return;}
+    if(state.trackTest&&!$('track-authorized').reportValidity())return;
     const title=$('workspace-title').value.trim()||'Ma partition',instrument=$('workspace-instrument').value,url=$('workspace-url').value.trim();
     const btn=$('workspace-generate');btn.disabled=true;btn.textContent='Analyse du fichier…';
-    $('upload-feedback').textContent='Vérification de ton audio et de tes crédits…';show('upload-feedback',true);
+    $('upload-feedback').textContent=state.trackTest?'Envoi de ton audio…':'Vérification de ton audio et de tes crédits…';show('upload-feedback',true);
     const form=new FormData();form.append('audio',file);form.append('title',title);form.append('instrument',instrument);form.append('source_url',url);
+    if(state.trackTest){
+      form.append('authorized',String($('track-authorized').checked));
+      form.append('isolated',String($('track-isolated').checked));
+    }
     try{const result=await api('/api/jobs',{method:'POST',body:form});
       state.file=null;$('workspace-file').value='';$('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
-      toast(`${result.credits_reserved} crédit(s) réservé(s). Génération en cours !`);
+      if(state.trackTest){
+        $('track-authorized').checked=false;
+        $('track-isolated').checked=false;
+      }
+      toast(state.trackTest?'Transcription lancée.':`${result.credits_reserved} crédit(s) réservé(s). Génération en cours !`);
       await refresh();openResult(result.id);
     }catch(e){
       if(e.status===402){toast(e.message+' Ajoute des crédits.',true);showAppPage('billing');}
@@ -139,8 +158,23 @@
   async function loadResult(id){
     try{const j=await api(`/api/jobs/${encodeURIComponent(id)}`);if(state.activePage!=='result'||state.resultId!==id)return;
       const completed=j.status==='completed',processing=['queued','processing'].includes(j.status);
-      const details=`${instrumentIcon[j.instrument]||'♫'} ${safe(j.instrument)} · ${timeFmt(j.duration)} · ${dateFmt(j.created_at)} · ${j.reserved_credits} crédit(s)`;
-      $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">${completed?'TA PARTITION EST PRÊTE ✦':processing?'GÉNÉRATION EN COURS':'TRANSCRIPTION IMPOSSIBLE'}</span><h1>${safe(j.title)}</h1><p class="result-meta">${details}</p>${completed?`<div class="result-actions"><a class="btn btn-primary" href="/api/jobs/${encodeURIComponent(id)}/download/pdf">↓ Télécharger PDF</a><a class="btn btn-outline" href="/api/jobs/${encodeURIComponent(id)}/download/mid">↓ MIDI</a><a class="btn btn-outline" href="/api/jobs/${encodeURIComponent(id)}/download/musicxml">↓ MusicXML</a></div>`:''}</div>${completed?`<div class="note-notation"><h3>Aperçu de la mélodie</h3>${notesSvg(j.notes||[])}<p class="result-note">${j.note_count} notes estimées · Tempo indicatif ${j.bpm} BPM. Le relevé est expérimental : vérifie les hauteurs, rythmes et harmonies. Un export MusicXML est fourni pour tes corrections.</p></div>`:processing?`<div class="note-notation"><h3>✦ On décode ta musique…</h3><p class="result-note">Le fichier est analysé en arrière-plan. Les crédits ne seront consommés que si tout se passe bien. Cette page se met à jour automatiquement.</p></div>`:`<div class="note-notation"><h3>Le relevé n'a pas abouti</h3><p class="result-note">${safe(j.error_message||'Une erreur de génération est survenue.')}<br/>Aucun crédit débité pour ce traitement.</p><button class="btn btn-outline" data-start>Réessayer avec un autre audio ↗</button></div>`}`;
+      const trackTest=j.track_test===true;
+      const details=`${instrumentIcon[j.instrument]||'♫'} ${safe(j.instrument)} · ${timeFmt(j.duration)} · ${dateFmt(j.created_at)} · ${trackTest?'Test local':j.reserved_credits+' crédit(s)'}`;
+      const formats=j.downloads||['pdf','mid','musicxml'];
+      const labels={pdf:'Télécharger PDF',mid:'MIDI',musicxml:trackTest?'Partition MusicXML':'MusicXML',tab:'Tablature MusicXML'};
+      const links=['pdf','musicxml','tab','mid'].filter(format=>formats.includes(format)).map((format,i)=>
+        `<a class="btn ${i===0?'btn-primary':'btn-outline'}" href="/api/jobs/${encodeURIComponent(id)}/download/${format}">↓ ${labels[format]}</a>`).join('');
+      const progress=trackTest?'Le moteur traite ton audio. Cette page se met à jour automatiquement.':'Le fichier est analysé en arrière-plan. Les crédits ne seront consommés que si tout se passe bien. Cette page se met à jour automatiquement.';
+      const resultNote=`${j.note_count} notes estimées · Tempo indicatif ${j.bpm} BPM. Le relevé est expérimental. Tu peux le vérifier et le corriger dans un éditeur MusicXML.`;
+      const body=completed
+        ? `<h3>${trackTest?'Notes détectées':'Aperçu de la mélodie'}</h3>${trackTest?'':notesSvg(j.notes||[])}<p class="result-note">${resultNote}</p>`
+        : processing
+          ? `<h3>✦ On décode ta musique…</h3><p class="result-note">${progress}</p>`
+          : `<h3>Le relevé n'a pas abouti</h3><p class="result-note">${safe(j.error_message||'Une erreur de génération est survenue.')}<br/>Aucun crédit débité pour ce traitement.</p><button class="btn btn-outline" data-start>Réessayer avec un autre audio ↗</button>`;
+      $('result-content').innerHTML=`
+        <div class="result-hero"><span class="dashboard-kicker">${completed?'TA PARTITION EST PRÊTE ✦':processing?'GÉNÉRATION EN COURS':'TRANSCRIPTION IMPOSSIBLE'}</span>
+        <h1>${safe(j.title)}</h1><p class="result-meta">${details}</p>${completed?`<div class="result-actions">${links}</div>`:''}</div>
+        <div class="note-notation">${body}</div>`;
       if(processing){clearInterval(state.poll);state.poll=setInterval(async()=>{if(state.activePage==='result'&&state.resultId===id){await loadResult(id);}else clearInterval(state.poll);},4500);}
       else{clearInterval(state.poll);state.poll=null;await refresh();}
     }catch(e){toast(e.message,true);}
@@ -157,6 +191,20 @@
   }
   async function logout(){try{await post('/api/auth/logout',{});}catch{}state.user=null;state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
   function wire(){
+    const sample=$('track-sample');
+    if(sample)sample.onclick=async()=>{
+      sample.disabled=true;
+      try{
+        const response=await fetch('/api/transcription-test/sample');
+        if(!response.ok)throw new Error('Impossible de charger la mélodie de test.');
+        state.file=new File([await response.blob()],'melodie-de-test.wav',{type:'audio/wav'});
+        $('workspace-file').value='';
+        $('workspace-file-name').textContent=state.file.name;
+        $('workspace-instrument').value='guitare';
+        $('track-isolated').checked=true;
+      }catch(e){toast(e.message,true);}
+      finally{sample.disabled=false;}
+    };
     document.addEventListener('click',async(e)=>{
       const nav=e.target.closest('[data-nav]');if(nav){e.preventDefault();go(nav.getAttribute('href')|| (nav.dataset.nav==='home'?'/':'/connexion'));return;}
       if(e.target.closest('[data-start]')){startApp('create');return;}

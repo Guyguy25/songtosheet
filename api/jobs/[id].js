@@ -4,6 +4,7 @@ const {database}=require('../../lib/mongodb');
 const {authenticated,json}=require('../../lib/session');
 const {method,fail}=require('../../lib/authorization');
 const {serial}=require('../../lib/generations');
+const {serialTrack,JOB_FIELDS}=require('../../lib/track-jobs');
 module.exports=async(req,res)=>{
   if(req.method!=='GET'&&req.method!=='POST'){res.setHeader('Allow','GET, POST');return json(res,405,{detail:'Méthode non autorisée.'});}
   if(!method(req,res,req.method))return;
@@ -12,9 +13,14 @@ module.exports=async(req,res)=>{
   try{
     const user=await authenticated(req);
     if(!user)return json(res,401,{detail:'Connexion requise.'});
-    const collection=(await database()).collection('generations');
+    const db=await database();
+    const collection=db.collection('generations');
     const filter={_id:new ObjectId(id),user_id:user._id};
     let job=await collection.findOne(filter);
+    if(!job&&req.method==='GET'&&user.role==='admin'){
+      const track=await db.collection('track_jobs').findOne(filter,{projection:JOB_FIELDS});
+      if(track)return json(res,200,serialTrack(track));
+    }
     if(!job)return json(res,404,{detail:'Création introuvable.'});
     if(req.method==='POST'){
       if(req.body?.action!=='reveal')return json(res,400,{detail:'Action invalide.'});

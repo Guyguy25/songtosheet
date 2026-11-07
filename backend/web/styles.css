@@ -35,8 +35,3 @@
 .preview-banner strong{background:#eadcff;color:#29133f;padding:3px 7px;border-radius:4px;letter-spacing:.05em;font-size:10px}
 .preview-banner a{color:#dfc6ff;text-decoration:underline;text-underline-offset:3px;font-weight:700}
 #auth-form[hidden],#auth-alternate[hidden]{display:none!important}
-.track-options{margin:20px 0 0;padding:12px 16px 16px;border:1px solid #e4daf5;border-radius:12px}
-.track-options legend{font-size:14px;font-weight:750;padding:0 6px}
-.track-options p,.track-options label{font-size:13px;line-height:1.5}
-.track-options label{display:flex;align-items:baseline;gap:8px;margin-top:10px}
-.track-options input{accent-color:#7148d6}

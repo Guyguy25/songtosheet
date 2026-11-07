@@ -10,6 +10,8 @@
   <script>document.documentElement.classList.toggle('is-landing', location.pathname === '/');</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
+  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=1" />
+  <script src="/backend/web/track-onboarding.js?v=1" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.6}a{color:inherit;text-decoration:none}p,h1,h2,h3{margin-top:0}h1,h2,h3{letter-spacing:-.045em}.hidden{display:none!important}.container{max-width:1216px;width:calc(100% - 64px);margin:0 auto}.section-pad{padding:104px 0}.btn{border:1px solid transparent;display:inline-flex;justify-content:center;align-items:center;gap:14px;font-weight:750;border-radius:13px;min-height:49px;padding:13px 21px;transition:.18s transform,.18s background,.18s box-shadow;white-space:nowrap}.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(0)}.btn span:last-child{font-size:19px;font-weight:500}.btn-primary{color:#fff;background:var(--purple);box-shadow:0 8px 22px rgba(109,61,220,.16)}.btn-primary:hover{background:var(--purple-dark);box-shadow:0 11px 23px rgba(109,61,220,.24)}.btn-outline{border-color:#ded7ed;background:#fff;color:var(--ink)}.btn-outline:hover{border-color:var(--purple);background:#f9f6ff}.btn-dark{color:#fff;background:#29213e}.btn-dark:hover{background:#443363}.btn-white{background:white;color:var(--purple-dark)}.section-label{display:block;font-size:12px;letter-spacing:.14em;color:var(--purple);font-weight:850;margin-bottom:18px}.section-intro h2,.showcase-content h2,.faq-grid h2{font-size:clamp(38px,4vw,55px);line-height:1.12;margin-bottom:18px}.section-intro h2 span,.showcase-content h2 span,.faq-grid h2 span{color:var(--purple)}.section-intro>p{font-size:16px;color:var(--muted);max-width:530px;margin:0 auto;line-height:1.7}.center{text-align:center}
@@ -631,11 +633,6 @@ body.pricing-open{overflow:hidden}
 .auth-demo-hint{font-size:12px;line-height:1.55;margin:6px 0 15px;color:#6c6481}.auth-demo-flag{display:inline-block;background:#efe9ff;color:#6c46cf;border-radius:30px;padding:2px 7px;margin-left:5px;font-size:10px;font-weight:800}
 #public-header[data-session-pending] .nav-actions,
 #public-header[data-session-pending] .mobile-menu button{visibility:hidden}
-.track-options{margin:20px 0 0;padding:12px 16px 16px;border:1px solid #e4daf5;border-radius:12px}
-.track-options legend{font-size:14px;font-weight:750;padding:0 6px}
-.track-options p,.track-options label{font-size:13px;line-height:1.5}
-.track-options label{display:flex;align-items:baseline;gap:8px;margin-top:10px}
-.track-options input{accent-color:#7148d6}
 </style>
 
 
@@ -807,12 +804,7 @@ body.pricing-open{overflow:hidden}
     <div class="app-layout"><header class="app-header"><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><span class="small-credit"><span>◇</span> <b id="top-credits">Démo</b> · accès</span><div class="user-avatar" id="user-avatar">S</div></div></header><div class="app-scroll">
       <section id="dashboard-page" class="app-page"><div class="app-welcome"><div><span class="dashboard-kicker">TON STUDIO PERSONNEL ✦</span><h1>Prêt à jouer quelque chose<br/><span>de nouveau ?</span></h1><p>Transforme tes enregistrements en partitions en quelques étapes.</p></div><div class="welcome-decor">♫</div></div><div class="overview-cards"><div class="overview-card"><span class="metric-symbol purple">◇</span><div><strong id="metric-credits">Démo</strong><small>Accès actuel</small></div></div><div class="overview-card"><span class="metric-symbol green">▤</span><div><strong id="metric-total">0</strong><small>Partitions générées</small></div></div><div class="overview-card"><span class="metric-symbol orange">✧</span><div><strong id="metric-progress">0</strong><small>Générations en cours</small></div></div></div><div class="dashboard-grid"><div class="dashboard-create"><div><span class="section-label">CRÉATION RAPIDE</span><h2>Ta prochaine partition est à un clic.</h2><p>Dépose un morceau et laisse SongToSheet faire le premier relevé.</p><button id="dashboard-start" class="btn btn-primary">Nouvelle partition <span>↗</span></button></div><div class="dashboard-illustration">♬</div></div><div class="dashboard-helper"><span class="helper-symbol">✦</span><h3>Comment ça marche ?</h3><p>Importe ton fichier audio, choisis ton instrument, puis lance la génération. Le résultat sera sauvegardé dans ta bibliothèque.</p><a href="/#comment-ca-marche" id="learn-more">Voir les étapes <span>↗</span></a></div></div><div class="list-heading"><h2>Dernières partitions</h2><button id="view-all">Tout voir →</button></div><div id="recent-jobs" class="jobs-list"></div></section>
 
-      <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo / 6 min max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><fieldset id="workspace-track-options" class="track-options hidden">
-        <legend>Transcription réelle · Accès admin</legend>
-        <p>Choisis la piste à isoler. Pour la guitare et la basse, une tablature est proposée si le moteur trouve une ligne jouable.</p>
-        <label><input id="workspace-track-isolated" type="checkbox"> Mon fichier contient déjà uniquement cette piste.</label>
-        <label><input id="workspace-track-authorized" type="checkbox" required> Je dispose des droits nécessaires pour transcrire cet audio.</label>
-      </fieldset><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Essentiel : 1 musique tous les 7 jours.</p></div><div class="tip-line"><i>✓</i><p>L'illimité prévoit un usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><button class="btn btn-outline" id="create-buy">Voir les abonnements ↗</button></aside></div></section>
+      <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo / 6 min max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><div id="track-onboarding"></div><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Essentiel : 1 musique tous les 7 jours.</p></div><div class="tip-line"><i>✓</i><p>L'illimité prévoit un usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><button class="btn btn-outline" id="create-buy">Voir les abonnements ↗</button></aside></div></section>
 
       <section id="library-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">TA BIBLIOTHÈQUE</span><h1>Toutes tes partitions.</h1><p>Retrouve et télécharge les musiques que tu as transcrites.</p></div><button id="library-new" class="btn btn-primary">＋ Nouvelle partition</button></div><div class="library-toolbar"><span id="library-count">0 partition</span><div class="search-wrapper"><span>⌕</span><input id="library-search" placeholder="Rechercher un morceau..."/></div></div><div id="library-jobs" class="jobs-list library-jobs"></div></section>
 
@@ -1127,6 +1119,7 @@ body.pricing-open{overflow:hidden}
       return `<div class="job-row demo-job-row"><button type="button" class="demo-job-details" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${statusText[j.status]||'À générer'}</span></button><button type="button" class="demo-job-generate" data-demo-generate="${safe(j.id)}">${label} <span aria-hidden="true">↗</span></button></div>`;
     }).join('');
   }
+  let trackWizard;
   function showAppPage(page){if(!state.user)return go('/inscription');
     state.activePage=page;
     for(const p of ['dashboard','create','library','result','billing'])show(p+'-page',page===p);
@@ -1139,12 +1132,9 @@ body.pricing-open{overflow:hidden}
       if(state.link)$('workspace-url').value=state.link;
       if(state.file)$('workspace-file-name').textContent=state.file.name;
       const admin=state.user.role==='admin';
-      show('workspace-track-options',admin);
-      show('create-plan-note',!admin);
-      show('create-buy',!admin);
-      const instrument=$('workspace-instrument');
-      instrument.querySelector('[value="violon"]').hidden=admin;
-      if(admin&&instrument.value==='violon')instrument.value='piano';
+      $('create-page').classList.toggle('track-guided',admin);
+      show('track-onboarding',admin);
+      if(admin&&!trackWizard)trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{onSubmit:submitTrack});
     }
     if(page==='billing')renderAppPricing();
     if(page==='result'&&state.resultId)loadResult(state.resultId);
@@ -1243,7 +1233,10 @@ body.pricing-open{overflow:hidden}
         const file=$('hero-file').files[0]||state.file;
         if(!file)throw new Error('Ajoute un fichier audio pour commencer.');
         state.file=file;
-        if(state.user?.role==='admin')startApp('create');
+        if(state.user?.role==='admin'){
+          startApp('create');
+          trackWizard.prefill({file});
+        }
         else await window.SongToSheetFlow.start({kind:'file',file,instrument});
       }
     }catch(e){window.SongToSheetFlow.sourceError(e.message||'Source non prise en charge.');}
@@ -1252,7 +1245,6 @@ body.pricing-open{overflow:hidden}
   async function submitJob(){
     const file=state.file||$('workspace-file').files[0];
     if(!file){toast('Ajoute un fichier audio pour continuer.',true);return;}
-    if(state.user?.role==='admin')return submitTrack(file);
     try{await window.SongToSheetFlow.start({kind:'file',file,instrument:$('workspace-instrument').value});}
     catch(e){toast(e.message||'Import impossible.',true);}
   }
@@ -1264,22 +1256,17 @@ body.pricing-open{overflow:hidden}
       reader.readAsDataURL(blob);
     });
   }
-  async function submitTrack(file){
-    if(!$('workspace-track-authorized').reportValidity())return;
-    const button=$('workspace-generate'),feedback=$('upload-feedback');
-    button.disabled=true;
-    feedback.textContent='Préparation de l’envoi…';
-    show('upload-feedback',true);
+  async function submitTrack({file,title,instrument,format,source},setStatus){
+    setStatus('Préparation de l’envoi…');
     let id,queued=false;
     try{
-      const title=$('workspace-title').value.trim()||file.name.replace(/\.[^.]+$/,'');
       const extension=file.name.split('.').at(-1).toLowerCase();
       const result=await post('/api/track',{action:'begin',title,extension,size:file.size,authorized:true,
-        instrument:$('workspace-instrument').value,isolated:$('workspace-track-isolated').checked});
+        instrument,format,source});
       id=result.id;
       const count=Math.ceil(file.size/result.chunk_bytes);
       for(let index=0;index<count;index++){
-        feedback.textContent=`Envoi de l’audio (${index+1}/${count})…`;
+        setStatus(`Envoi de l’audio (${index+1}/${count})…`);
         const start=index*result.chunk_bytes;
         const data=await encodeChunk(file.slice(start,start+result.chunk_bytes));
         await post('/api/track',{action:'chunk',id,index,data});
@@ -1288,16 +1275,12 @@ body.pricing-open{overflow:hidden}
       queued=true;
       state.file=null;$('workspace-file').value='';
       $('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
-      $('workspace-track-authorized').checked=false;
-      $('workspace-track-isolated').checked=false;
-      show('upload-feedback',false);
       await refresh();
       openResult(id);
     }catch(error){
       if(id&&!queued)await post('/api/track',{action:'cancel',id}).catch(()=>{});
-      feedback.textContent=error.message;
-      toast(error.message,true);
-    }finally{button.disabled=false;}
+      throw error;
+    }
   }
   async function revealDemo(id){
     if(!state.user){go('/inscription');return;}
@@ -1309,6 +1292,7 @@ body.pricing-open{overflow:hidden}
         state.file=null;$('workspace-file').value='';
         $('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
         startApp('create');
+        trackWizard.prefill({instrument:job.instrument,name:job.title,file:null});
         toast('Importe l’audio original pour lancer la transcription réelle.');
         return;
       }
@@ -1344,13 +1328,15 @@ body.pricing-open{overflow:hidden}
   async function loadResult(id){
     try{const j=await api(`/api/jobs/${encodeURIComponent(id)}`);if(state.activePage!=='result'||state.resultId!==id)return;
       if(j.track){
-        const links={musicxml:'Partition MusicXML',tab:'Tablature MusicXML',mid:'MIDI'};
+        const links={pdf:'Télécharger le PDF',musicxml:'Partition MusicXML',tab:'Tablature MusicXML',mid:'MIDI'};
         const completed=j.status==='completed';
         const waiting=['queued','processing'].includes(j.status);
         const downloads=Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
-          `<a class="btn btn-outline" href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}">↓ ${label}</a>`).join('');
-        const status=completed?'PARTITION PRÊTE':waiting?'TRANSCRIPTION EN COURS':'TRANSCRIPTION INTERROMPUE';
-        const detail=completed?`${j.note_count} notes estimées. Tu peux corriger le résultat dans un éditeur MusicXML.`
+          `<a class="btn ${key==='pdf'?'btn-primary':'btn-outline'}" href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}">↓ ${label}</a>`).join('');
+        const tab=j.format==='tablature'&&j.downloads.includes('tab');
+        const status=completed?(tab?'TABLATURE PRÊTE':'PARTITION PRÊTE'):waiting?'TRANSCRIPTION EN COURS':'TRANSCRIPTION INTERROMPUE';
+        const fallback=j.format==='tablature'&&!tab?' Aucune ligne jouable n’a été détectée pour la tablature. Le PDF contient la partition.':'';
+        const detail=completed?`${j.note_count} notes estimées.${fallback} Tu peux corriger le résultat dans un éditeur MusicXML.`
           :j.status==='queued'?'Ton audio est en attente du moteur de transcription.'
           :waiting?'Le moteur analyse ton audio. Cette page se met à jour automatiquement.'
           :j.error_message||'Importe ton fichier pour réessayer.';

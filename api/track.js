@@ -4,7 +4,7 @@ const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
-const {CHUNK_BYTES,MAX_BYTES,INSTRUMENTS,AUDIO_TYPES,FORMATS,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
+const {CHUNK_BYTES,MAX_BYTES,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,FORMATS,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
@@ -21,18 +21,23 @@ function workerAuthorized(req){
 async function begin(db,res,user,body){
   const {size,extension,instrument}=body;
   const title=typeof body.title==='string'?body.title.trim().slice(0,110):'';
+  const format=body.format??'partition';
   if(body.authorized!==true)return json(res,400,{detail:'Confirme que tu disposes des droits nécessaires pour transcrire cet audio.'});
   if(!title||!INSTRUMENTS.has(instrument)||!AUDIO_TYPES.has(extension)||!Number.isInteger(size)||size<1024||size>MAX_BYTES){
     return json(res,400,{detail:'Choisis un titre, une piste et un fichier audio de 25 Mo maximum.'});
   }
+  if(format!=='partition'&&(format!=='tablature'||!['guitare','basse'].includes(instrument))){
+    return json(res,400,{detail:'La tablature est disponible pour la guitare et la basse.'});
+  }
+  if(body.source!=null&&!SOURCE_TYPES.has(body.source))return json(res,400,{detail:'Choisis le contenu de ton audio.'});
   await prepareTracks(db);
   const jobs=db.collection('track_jobs');
   const now=new Date();
   await jobs.updateMany({user_id:user._id,active:true,expires_at:{$lte:now}},
     {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'}});
   try{
-    const result=await jobs.insertOne({user_id:user._id,title,instrument,extension,size,
-      isolated:body.isolated===true,status:'uploading',active:true,
+    const result=await jobs.insertOne({user_id:user._id,title,instrument,extension,size,format,
+      isolated:body.source==null?body.isolated===true:body.source!=='mixed',status:'uploading',active:true,
       created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+UPLOAD_MS)});
     return json(res,201,{id:String(result.insertedId),chunk_bytes:CHUNK_BYTES});
   }catch(error){
@@ -79,12 +84,13 @@ async function worker(db,res,body){
   const now=new Date();
   if(body.action==='claim'){
     const lease=randomUUID();
-    const job=await jobs.findOneAndUpdate({active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
+    const compatible=body.pdf===true?{}:{format:{$exists:false}};
+    const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
       $or:[{status:'queued'},{status:'processing',lease_until:{$lte:now}}]},
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS)}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
-      extension:job.extension,isolated:job.isolated,chunks:Math.ceil(job.size/CHUNK_BYTES)}:null});
+      extension:job.extension,isolated:job.isolated,format:job.format||'partition',chunks:Math.ceil(job.size/CHUNK_BYTES)}:null});
   }
   if(!isId(body.id)||typeof body.lease!=='string')return json(res,400,{detail:'Traitement invalide.'});
   const filter={_id:new ObjectId(body.id),status:'processing',active:true,lease:body.lease,lease_until:{$gt:now}};

@@ -40,7 +40,7 @@ Le moteur `transcribe_track.py` utilise Demucs pour estimer une piste de voix, b
 
 ### Tester dans SongToSheet
 
-Dans le dossier `backend`, utilise Python 3.11 et FFmpeg. Sous PowerShell :
+Dans le dossier `backend`, utilise Python 3.11, FFmpeg et un navigateur Chromium (Chrome ou Edge sous Windows). Sous PowerShell :
 
 ```powershell
 python -m pip install -r requirements.txt -r requirements-transcription.txt
@@ -50,7 +50,7 @@ $env:DATA_DIR = './data/track-test'
 python -m uvicorn app:app --host 127.0.0.1 --port 8765
 ```
 
-Ouvre http://127.0.0.1:8765/inscription, crée un compte local et sélectionne **Nouvelle partition**. Tu peux charger la mélodie de test depuis le formulaire ou importer ton propre audio. Sélectionne l’instrument, confirme les droits nécessaires et lance la génération. Les exports disponibles restent dans ta bibliothèque locale. Le mode de test fonctionne sans crédits ni paiement et traite un fichier à la fois. Le lien public Vercel ne dessert pas ce moteur.
+Ouvre http://127.0.0.1:8765/inscription, crée un compte local et sélectionne **Nouvelle partition**. Choisis la piste, le format puis le contenu de l’audio. À la dernière étape, charge la mélodie de test ou importe un fichier et confirme les droits. Le PDF suit le format choisi. Si aucune tablature jouable ne peut être générée, le moteur fournit le PDF de la partition. Les exports restent dans ta bibliothèque locale. Le mode de test fonctionne sans crédits ni paiement et traite un fichier à la fois.
 
 ### Tester en ligne de commande
 
@@ -71,7 +71,7 @@ Le prototype exige une confirmation explicite des droits via `--authorized`. Il 
 
 Le site public utilise les comptes MongoDB existants. La transcription réelle est réservée aux comptes portant `role: "admin"` dans la base. Le site stocke les fragments audio jusqu’à la fin du traitement, avec une expiration automatique après deux heures. La bibliothèque conserve les exports et les affiche uniquement au propriétaire.
 
-Installe les dépendances du moteur sur la machine de calcul. Configure le jeton hexadécimal de 32 octets dans `TRACK_WORKER_TOKEN` sur cette machine et uniquement son empreinte SHA-256 hexadécimale dans `TRACK_WORKER_DIGEST` sur Vercel. Lance le moteur depuis `backend` :
+Installe les dépendances du moteur et Chromium sur la machine de calcul. Si le navigateur est installé dans un dossier personnalisé, configure le chemin de l’exécutable avec `TRACK_PDF_BROWSER`. Configure le jeton hexadécimal de 32 octets dans `TRACK_WORKER_TOKEN` sur cette machine et uniquement son empreinte SHA-256 hexadécimale dans `TRACK_WORKER_DIGEST` sur Vercel. Lance le moteur depuis `backend` :
 
 ```powershell
 python .\track_worker.py https://songtosheet.vercel.app .\data\production-track-cache

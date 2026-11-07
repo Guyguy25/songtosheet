@@ -59,6 +59,7 @@
     if(!jobs.length){box.innerHTML=`<div class="empty-jobs"><span>♬</span><strong>Pas encore de partition ici</strong><p>Ton prochain morceau n'attend que toi.</p><button class="btn btn-outline" data-start>Créer une partition ↗</button></div>`;return;}
     box.innerHTML=jobs.map(j=>`<button class="job-row" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${safe(j.instrument)} · ${timeFmt(j.duration)} · ${dateFmt(j.created_at)}</small></span><span class="job-status ${safe(j.status)}">${statusText[j.status]||'Inconnu'}</span><span class="job-chevron">›</span></button>`).join('');
   }
+  let trackWizard;
   function showAppPage(page){if(!state.user)return go('/inscription');
     state.activePage=page;
     for(const p of ['dashboard','create','library','result','billing'])show(p+'-page',page===p);
@@ -71,11 +72,13 @@
       if(state.link)$('workspace-url').value=state.link;
       if(state.file)$('workspace-file-name').textContent=state.file.name;
       if(state.trackTest){
-        show('track-options',true);
-        for(const id of ['create-credit-note','create-credit-tip','create-debit-tip','create-buy'])show(id,false);
-        const instrument=$('workspace-instrument');
-        instrument.querySelector('[value="violon"]').hidden=true;
-        if(instrument.value==='violon')instrument.value='piano';
+        $('create-page').classList.add('track-guided');
+        if(!trackWizard){
+          trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{
+            sampleUrl:'/api/transcription-test/sample',onSubmit:submitTrack
+          });
+          if(state.file)trackWizard.prefill({file:state.file});
+        }
       }
     }
     if(page==='billing')renderAppPricing();
@@ -107,31 +110,37 @@
     }else{
       const file=$('hero-file').files[0];if(!file){toast('Ajoute un fichier audio pour commencer.',true);return;}
       state.file=file;$('workspace-file-name').textContent=file.name;startApp('create');
+      if(state.trackTest&&trackWizard)trackWizard.prefill({file});
     }
   }
   async function submitJob(){
     const file=state.file||$('workspace-file').files[0];if(!file){toast('Ajoute un fichier audio avant de lancer la génération.',true);return;}
-    if(state.trackTest&&!$('track-authorized').reportValidity())return;
     const title=$('workspace-title').value.trim()||'Ma partition',instrument=$('workspace-instrument').value,url=$('workspace-url').value.trim();
     const btn=$('workspace-generate');btn.disabled=true;btn.textContent='Analyse du fichier…';
-    $('upload-feedback').textContent=state.trackTest?'Envoi de ton audio…':'Vérification de ton audio et de tes crédits…';show('upload-feedback',true);
+    $('upload-feedback').textContent='Vérification de ton audio et de tes crédits…';show('upload-feedback',true);
     const form=new FormData();form.append('audio',file);form.append('title',title);form.append('instrument',instrument);form.append('source_url',url);
-    if(state.trackTest){
-      form.append('authorized',String($('track-authorized').checked));
-      form.append('isolated',String($('track-isolated').checked));
-    }
     try{const result=await api('/api/jobs',{method:'POST',body:form});
       state.file=null;$('workspace-file').value='';$('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
-      if(state.trackTest){
-        $('track-authorized').checked=false;
-        $('track-isolated').checked=false;
-      }
-      toast(state.trackTest?'Transcription lancée.':`${result.credits_reserved} crédit(s) réservé(s). Génération en cours !`);
+      toast(`${result.credits_reserved} crédit(s) réservé(s). Génération en cours !`);
       await refresh();openResult(result.id);
     }catch(e){
       if(e.status===402){toast(e.message+' Ajoute des crédits.',true);showAppPage('billing');}
       else{toast(e.message,true);$('upload-feedback').textContent=e.message;}
     }finally{btn.disabled=false;btn.innerHTML='Générer la partition <span>↗</span>';}
+  }
+  async function submitTrack({file,title,instrument,format,source},setStatus){
+    setStatus('Envoi de ton audio…');
+    const form=new FormData();
+    form.append('audio',file);
+    form.append('title',title);
+    form.append('instrument',instrument);
+    form.append('format',format);
+    form.append('source_content',source);
+    form.append('authorized','true');
+    const job=await api('/api/jobs',{method:'POST',body:form});
+    state.file=null;
+    await refresh();
+    openResult(job.id);
   }
   function openResult(id){state.resultId=id;startApp('result');}
   function notesSvg(notes){
@@ -161,7 +170,7 @@
       const trackTest=j.track_test===true;
       const details=`${instrumentIcon[j.instrument]||'♫'} ${safe(j.instrument)} · ${timeFmt(j.duration)} · ${dateFmt(j.created_at)} · ${trackTest?'Test local':j.reserved_credits+' crédit(s)'}`;
       const formats=j.downloads||['pdf','mid','musicxml'];
-      const labels={pdf:'Télécharger PDF',mid:'MIDI',musicxml:trackTest?'Partition MusicXML':'MusicXML',tab:'Tablature MusicXML'};
+      const labels={pdf:'Télécharger le PDF',mid:'MIDI',musicxml:trackTest?'Partition MusicXML':'MusicXML',tab:'Tablature MusicXML'};
       const links=['pdf','musicxml','tab','mid'].filter(format=>formats.includes(format)).map((format,i)=>
         `<a class="btn ${i===0?'btn-primary':'btn-outline'}" href="/api/jobs/${encodeURIComponent(id)}/download/${format}">↓ ${labels[format]}</a>`).join('');
       const progress=trackTest?'Le moteur traite ton audio. Cette page se met à jour automatiquement.':'Le fichier est analysé en arrière-plan. Les crédits ne seront consommés que si tout se passe bien. Cette page se met à jour automatiquement.';
@@ -191,20 +200,6 @@
   }
   async function logout(){try{await post('/api/auth/logout',{});}catch{}state.user=null;state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
   function wire(){
-    const sample=$('track-sample');
-    if(sample)sample.onclick=async()=>{
-      sample.disabled=true;
-      try{
-        const response=await fetch('/api/transcription-test/sample');
-        if(!response.ok)throw new Error('Impossible de charger la mélodie de test.');
-        state.file=new File([await response.blob()],'melodie-de-test.wav',{type:'audio/wav'});
-        $('workspace-file').value='';
-        $('workspace-file-name').textContent=state.file.name;
-        $('workspace-instrument').value='guitare';
-        $('track-isolated').checked=true;
-      }catch(e){toast(e.message,true);}
-      finally{sample.disabled=false;}
-    };
     document.addEventListener('click',async(e)=>{
       const nav=e.target.closest('[data-nav]');if(nav){e.preventDefault();go(nav.getAttribute('href')|| (nav.dataset.nav==='home'?'/':'/connexion'));return;}
       if(e.target.closest('[data-start]')){startApp('create');return;}

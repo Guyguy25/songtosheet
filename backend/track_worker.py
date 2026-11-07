@@ -11,6 +11,7 @@ from urllib.parse import urlparse
 import requests
 
 from transcribe_track import transcribe
+from score_pdf import render_pdf
 
 
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid"}
@@ -26,11 +27,14 @@ def process_job(call, job, data):
                     chunk = call("read", **identity, index=index)
                     file.write(base64.b64decode(chunk["data"], validate=True))
             result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"])
+            pdf = Path(temporary) / "score.pdf"
+            render_pdf(result, job["title"], job["instrument"], job.get("format", "partition"), pdf)
+            exports = {
+                key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
+                for key, filename in EXPORTS.items() if (result / filename).is_file()
+            }
+            exports["pdf"] = base64.b64encode(pdf.read_bytes()).decode("ascii")
         meta = json.loads((result / "notes.json").read_text(encoding="utf-8"))
-        exports = {
-            key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
-            for key, filename in EXPORTS.items() if (result / filename).is_file()
-        }
         if sum(map(len, exports.values())) > 4_000_000:
             payload = {"ok": False, "error": "Les exports dépassent la taille maximale. Essaie un extrait plus court."}
         else:
@@ -82,7 +86,7 @@ def main():
         print("Moteur de transcription prêt.", flush=True)
         while True:
             try:
-                job = call("claim")["job"]
+                job = call("claim", pdf=True)["job"]
                 if job:
                     process_job(call, job, args.cache)
                 if args.once:

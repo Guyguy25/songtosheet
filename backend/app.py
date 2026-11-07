@@ -31,6 +31,7 @@ from pydantic import BaseModel, Field
 
 from transcriber import get_duration, process_file
 from transcribe_track import TRACKS, transcribe
+from score_pdf import render_pdf
 
 ROOT=Path(__file__).resolve().parent
 load_dotenv(ROOT/'.env')
@@ -286,7 +287,7 @@ def job(request:Request,job_id:str):
     return result
 
 
-def work_job(job_id:str,source:Path,title:str,instrument:str,track_user:str|None=None,isolated:bool=False):
+def work_job(job_id:str,source:Path,title:str,instrument:str,track_user:str|None=None,isolated:bool=False,format:str='partition'):
     folder=EXPORTS/job_id
     try:
         with db() as c:c.execute('UPDATE jobs SET status=? WHERE id=?',('processing',job_id))
@@ -298,6 +299,7 @@ def work_job(job_id:str,source:Path,title:str,instrument:str,track_user:str|None
             for filename in ('score.mid','score.musicxml','tab.musicxml'):
                 if (cached/filename).is_file():
                     shutil.copyfile(cached/filename,folder/filename)
+            render_pdf(cached,title,instrument,format,folder/'score.pdf')
             result=json.loads((cached/'notes.json').read_text(encoding='utf-8'))
             result['note_count']=len(result['notes'])
         with db() as c:
@@ -321,10 +323,15 @@ def work_job(job_id:str,source:Path,title:str,instrument:str,track_user:str|None
 @app.post('/api/jobs')
 async def create_job(request:Request,background:BackgroundTasks,
     audio:UploadFile=File(...),title:str=Form('Ma partition'),instrument:str=Form('piano'),source_url:str=Form(''),
-    authorized:bool=Form(False),isolated:bool=Form(False)):
+    authorized:bool=Form(False),isolated:bool=Form(False),format:str=Form('partition'),source_content:str=Form('')):
     check_origin(request);u=auth(request);rate_limit(request,'upload',12,3600)
     if instrument not in TRACKS and (TRACK_TEST or instrument!='violon'):fail('Instrument invalide.')
     if TRACK_TEST and not authorized:fail('Confirme que tu disposes des droits nécessaires pour transcrire cet audio.')
+    if TRACK_TEST and format!='partition' and (format!='tablature' or instrument not in ('guitare','basse')):
+        fail('La tablature est disponible pour la guitare et la basse.')
+    if TRACK_TEST and source_content:
+        if source_content not in ('mixed','voice','instrument'):fail('Choisis le contenu de ton audio.')
+        isolated=source_content!='mixed'
     title=title.strip()[:90] or 'Ma partition'
     filename=(audio.filename or '').lower()
     suffix=Path(filename).suffix
@@ -355,7 +362,7 @@ async def create_job(request:Request,background:BackgroundTasks,
                 raise HTTPException(status_code=402,detail={'message':f'{cost} crédits nécessaires pour {math.ceil(duration)} secondes d’audio.','needed':cost,'available':credit-reserved})
             c.execute('INSERT INTO jobs(id,user_id,title,instrument,source_url,duration,reserved_credits,status,created_at) VALUES(?,?,?,?,?,?,?,?,?)',
                 (job_id,u['id'],title,instrument,source_url,duration,cost,'queued',int(time.time())))
-        background.add_task(work_job,job_id,source,title,instrument,u['id'] if TRACK_TEST else None,isolated)
+        background.add_task(work_job,job_id,source,title,instrument,u['id'] if TRACK_TEST else None,isolated,format)
         return {'id':job_id,'status':'queued','credits_reserved':cost,'duration':duration}
     except Exception:
         source.unlink(missing_ok=True)

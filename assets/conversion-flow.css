@@ -200,3 +200,17 @@
  .flow-paywall-overlay{padding:27px 17px;border-radius:17px}
  .flow-paywall-overlay .flow-main-btn{font-size:12px;padding:14px 12px}
 }
+
+/* Bibliothèque : génération conservée dans le compte, CTA distinct de la ligne. */
+.demo-job-row{display:flex;align-items:center;gap:12px;padding:10px 14px;max-width:100%;box-sizing:border-box}
+.demo-job-details{background:transparent;border:0;min-width:0;flex:1;display:flex;gap:14px;align-items:center;text-align:left;color:inherit;padding:5px 0;cursor:pointer}
+.demo-job-details:focus-visible,.demo-job-generate:focus-visible{outline:3px solid #ae8af6;outline-offset:2px}
+.demo-job-details .job-row-info b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.demo-job-details .job-row-info small{white-space:normal}
+.demo-job-generate{border:1px solid #e2d7fc;background:#f4eeff;color:#7044d4;flex-shrink:0;font-size:12px;font-weight:850;border-radius:11px;min-height:43px;padding:10px 14px;cursor:pointer;transition:background .15s}
+.demo-job-generate:hover{background:#e9ddff}
+@media(max-width:650px){
+ .demo-job-row{flex-wrap:wrap;padding:12px}
+ .demo-job-details{flex:1 1 100%;gap:10px}
+ .demo-job-generate{margin-left:auto;min-height:38px}
+}

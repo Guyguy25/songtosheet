@@ -7,6 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-wave-32.png?v=1" />
   <meta name="description" content="SongToSheet.ai : obtenez des partitions et, prochainement, des tablatures de vos musiques préférées depuis un lien ou un fichier audio. Découvrez la V1." />
   <title>SongToSheet.ai — Partitions et tablatures de vos musiques préférées</title>
+  <script>document.documentElement.classList.toggle('is-landing', location.pathname === '/');</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <style>
@@ -488,13 +489,13 @@ body.pricing-open{overflow:hidden}
 
 /* Desktop home: the hero continues behind the floating navigation. */
 @media (min-width:1101px){
-  body.is-landing #public-header{
+  .is-landing #public-header{
     margin-bottom:-96px;
     background:transparent;
     backdrop-filter:none;
     pointer-events:none;
   }
-  body.is-landing #public-header .nav-inner{
+  .is-landing #public-header .nav-inner{
     width:calc(100% - 64px);
     max-width:1480px;
     height:80px;
@@ -507,7 +508,7 @@ body.pricing-open{overflow:hidden}
     transition:max-width .32s ease,height .32s ease,transform .32s ease,
       border-radius .32s ease,border-color .32s ease,background-color .32s ease,box-shadow .32s ease;
   }
-  body.is-landing #public-header.is-compact .nav-inner{
+  .is-landing #public-header.is-compact .nav-inner{
     max-width:1240px;
     height:60px;
     transform:translateY(8px);
@@ -517,8 +518,8 @@ body.pricing-open{overflow:hidden}
     backdrop-filter:blur(14px);
     box-shadow:0 8px 28px #09061229;
   }
-  body.is-landing #public-header .top-nav a{position:relative}
-  body.is-landing #public-header .top-nav a.active::after{position:absolute;inset:auto 0 -8px}
+  .is-landing #public-header .top-nav a{position:relative}
+  .is-landing #public-header .top-nav a.active::after{position:absolute;inset:auto 0 -8px}
   #landing .split-inner{padding-top:121px}
   #landing .split-subtitle{margin-bottom:30px}
 }
@@ -544,7 +545,7 @@ body.pricing-open{overflow:hidden}
   #landing .hero-morph{height:600px}
 }
 @media (min-width:1101px) and (prefers-reduced-motion:reduce){
-  body.is-landing #public-header .nav-inner{transition:none}
+  .is-landing #public-header .nav-inner{transition:none}
 }
 
 /* Guided, interactive "Comment ça marche" onboarding */
@@ -621,23 +622,26 @@ body.pricing-open{overflow:hidden}
 .split-copy h1 .hero-word-cycle{display:inline-grid;vertical-align:baseline;white-space:nowrap;background:none;color:inherit;-webkit-text-fill-color:initial}
 .split-copy h1 .hero-word-cycle > span{grid-area:1 / 1;white-space:nowrap}
 .split-copy h1 .hero-word-cycle .hero-word-measure{visibility:hidden;pointer-events:none}
-.split-copy h1 .hero-word-cycle .hero-word-typed{justify-self:start;background:linear-gradient(100deg,#bf9dff,#7d7efa,#c5acff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;position:relative}
-.split-copy h1 .hero-word-cycle .hero-word-typed:after{content:"";position:absolute;right:-.11em;top:.13em;height:.82em;width:2.5px;background:#bf9dff;border-radius:3px;animation:hero-type-caret .85s steps(1,end) infinite}
+/* Let the gradient paint the full glyph without widening the heading. */
+.split-copy h1 .hero-word-cycle .hero-word-typed{justify-self:start;padding-inline-end:.14em;margin-inline-end:-.14em;background:linear-gradient(100deg,#bf9dff,#7d7efa,#c5acff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;position:relative}
+.split-copy h1 .hero-word-cycle .hero-word-typed:after{content:"";position:absolute;right:.03em;top:.13em;height:.82em;width:2.5px;background:#bf9dff;border-radius:3px;animation:hero-type-caret .85s steps(1,end) infinite}
 @keyframes hero-type-caret{50%{opacity:0}}
 @media (prefers-reduced-motion:reduce){.split-copy h1 .hero-word-cycle .hero-word-typed:after{animation:none;opacity:0}}
 
 .auth-demo-hint{font-size:12px;line-height:1.55;margin:6px 0 15px;color:#6c6481}.auth-demo-flag{display:inline-block;background:#efe9ff;color:#6c46cf;border-radius:30px;padding:2px 7px;margin-left:5px;font-size:10px;font-weight:800}
+#public-header[data-session-pending] .nav-actions,
+#public-header[data-session-pending] .mobile-menu button{visibility:hidden}
 </style>
 
 
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <header id="public-header" class="site-header">
+  <header id="public-header" class="site-header" data-session-pending>
   <div class="container nav-inner nav-capsule">
     <a href="/" data-nav="home" class="brand" aria-label="SongToSheet — Accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a>
     <nav class="top-nav" aria-label="Menu principal">
-      <a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a>
+      <a href="/#comment-ca-marche" data-nav="how">Comment ça marche ?</a>
       <a href="/fonctionnalites" data-nav="features">Fonctionnalités</a>
       <a href="/resultats" data-nav="results">Résultats</a>
       <a href="/tarifs" data-nav="pricing">Tarifs</a>
@@ -647,7 +651,7 @@ body.pricing-open{overflow:hidden}
     <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Afficher le menu" aria-controls="mobile-menu" aria-expanded="false">☰</button>
   </div>
   <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
-    <a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a>
+    <a href="/#comment-ca-marche" data-nav="how">Comment ça marche ?</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a>
     <button id="mobile-login" type="button">Se connecter</button><button id="mobile-start" type="button">Créer ma partition</button>
   </div></header>
 <main id="landing">
@@ -1029,7 +1033,7 @@ body.pricing-open{overflow:hidden}
     const authPage=pathname==='/connexion'||pathname==='/inscription';
     show('public-header',marketing);
     document.body.classList.toggle('has-public-header',marketing);
-    document.body.classList.toggle('is-landing',activePublic==='landing');
+    document.documentElement.classList.toggle('is-landing',activePublic==='landing');
     updatePublicHeader();
     show('public-footer',marketing);
     for(const id of ['landing','features-view','results-view','pricing-view','faq-view'])show(id,activePublic===id);
@@ -1073,10 +1077,20 @@ body.pricing-open{overflow:hidden}
     show('auth-error',false);
     if(window.SongToSheetFlow)window.SongToSheetFlow.configureAuth(login);
   }
-  async function loadUser(){try{const data=await api('/api/auth/me');state.user=data.user;}catch{state.user=null;}window.SongToSheetCurrentUser=state.user;}
+  function setCurrentUser(user){
+    state.user=user;
+    window.SongToSheetCurrentUser=user;
+    const signedIn=Boolean(user);
+    show('nav-login',!signedIn);
+    show('mobile-login',!signedIn);
+    $('nav-cta').textContent=signedIn?'Ouvrir mon espace ↗':'Commencer ↗';
+    $('mobile-start').textContent=signedIn?'Ouvrir mon espace':'Créer ma partition';
+    $('public-header').removeAttribute('data-session-pending');
+  }
+  async function loadUser(){try{const data=await api('/api/auth/me');setCurrentUser(data.user);}catch{setCurrentUser(null);}}
   async function loadPackages(){try{const data=await api('/api/packs');state.packages=data.packs;state.checkoutEnabled=data.checkout_enabled;}catch{state.packages=[];state.checkoutEnabled=false;}}
   async function refresh(){if(!state.user)return;
-    try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);state.user=user.user;state.jobs=jobs.jobs||[];
+    try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);setCurrentUser(user.user);state.jobs=jobs.jobs||[];
       if(!state.user){go('/inscription');return;}
       $('sidebar-credits').textContent='Démo';$('top-credits').textContent='Démo';$('metric-credits').textContent='Démo';
       $('create-balance').textContent='Démo';$('billing-balance').textContent='Démo';
@@ -1269,7 +1283,7 @@ body.pricing-open{overflow:hidden}
       const payload={email,password};
       if(pending&&pending.completed===true)payload.pending_generation=pending;
       const result=await post('/api/auth/'+(state.authMode==='login'?'login':'signup'),payload);
-      state.user=result.user;window.SongToSheetCurrentUser=result.user;
+      setCurrentUser(result.user);
       $('auth-password').value='';
       if(pending&&pending.completed===true)window.SongToSheetFlow.clearPending();
       await refresh();
@@ -1278,7 +1292,7 @@ body.pricing-open{overflow:hidden}
     }catch(err){$('auth-error').textContent=err.message;show('auth-error',true);}
     finally{btn.disabled=false;renderAuth();}
   }
-  async function logout(){try{await post('/api/auth/logout',{});}catch{}window.SongToSheetFlow?.clearPending();state.user=null;window.SongToSheetCurrentUser=null;state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
+  async function logout(){try{await post('/api/auth/logout',{});}catch(e){toast(e.message,true);return;}window.SongToSheetFlow?.clearPending();setCurrentUser(null);state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
   function wire(){
     document.addEventListener('click',async(e)=>{
       const nav=e.target.closest('[data-nav]');if(nav){
@@ -1323,7 +1337,8 @@ body.pricing-open{overflow:hidden}
         if(field)setTimeout(()=>field.focus({preventScroll:true}),260);
       });
     };
-    $('nav-login').onclick=()=>go('/connexion');$('nav-cta').onclick=focusGenerator;$('mobile-login').onclick=()=>go('/connexion');$('mobile-start').onclick=focusGenerator;$('footer-start').onclick=focusGenerator;$('showcase-cta').onclick=focusGenerator;
+    const openFromHeader=()=>state.user?startApp('dashboard'):focusGenerator();
+    $('nav-login').onclick=()=>go('/connexion');$('nav-cta').onclick=openFromHeader;$('mobile-login').onclick=()=>go('/connexion');$('mobile-start').onclick=openFromHeader;$('footer-start').onclick=focusGenerator;$('showcase-cta').onclick=focusGenerator;
     $('mobile-menu-btn').onclick=()=>{
       const open=$('mobile-menu').classList.toggle('open');
       $('mobile-menu-btn').setAttribute('aria-expanded',String(open));

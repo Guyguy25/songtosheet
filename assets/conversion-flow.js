@@ -384,6 +384,10 @@
     if(!flowPage){view.classList.add('hidden');stopProgress();return;}
     var request=readRequest();
     if(!request){navigate('/');return;}
+    if(path==='/apercu'&&(!window.SongToSheetCurrentUser||request.kind!=='saved-demo'||request.previewRevealed!==true)){
+      navigate(window.SongToSheetCurrentUser?'/app':'/inscription');
+      return;
+    }
     if(request.kind==='link'&&request.durationVerified===true&&Number.isFinite(request.duration)&&request.duration>360){
       navigate('/');
       sourceError('La durée maximale autorisée est de 6 min.');
@@ -488,7 +492,7 @@
     navigate('/apercu');
   }
   function openSavedDemo(job){
-    if(!job||job.demo_saved!==true||typeof job.title!=='string'||!['partition','tablature'].includes(job.format))return;
+    if(!window.SongToSheetCurrentUser||!job||job.demo_saved!==true||job.preview_revealed!==true||typeof job.title!=='string'||!['partition','tablature'].includes(job.format))return;
     var safeInstrument=instrumentNames[job.instrument]?job.instrument:'piano';
     var request={
       kind:'saved-demo',provider:String(job.provider||'Fichier audio').slice(0,40),
@@ -496,7 +500,7 @@
       duration:Number.isFinite(job.duration)?job.duration:null,
       durationVerified:job.duration_verified===true,
       artist:null,thumbnail:null,metadataUnavailable:true,
-      completed:true,createdAt:Number.isFinite(job.created_at)?job.created_at*1000:Date.now()
+      completed:true,previewRevealed:true,createdAt:Number.isFinite(job.created_at)?job.created_at*1000:Date.now()
     };
     saveRequest(request);
     navigate('/apercu');

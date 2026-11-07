@@ -299,8 +299,9 @@
     if(request){
       $('flow-ready-track').textContent=request.name;
       $('flow-ready-provider').textContent=request.provider+' · '+(instrumentNames[request.instrument]||'Piano')+' · '+formatLabel(request)+(request.durationVerified?' · '+durationText(request.duration):'');
-      $('flow-finished-title').innerHTML=chosenFormat(request)==='tablature'?'Ta tablature est <em>prête !</em>':'Ta partition est <em>prête !</em>';
-      $('flow-finished-lead').innerHTML='Tu peux maintenant découvrir à quoi ressembleront les <strong>30 premières secondes</strong> d’une '+formatLongName(request)+' SongToSheet.';
+      $('flow-finished-title').innerHTML=chosenFormat(request)==='tablature'?'Ta tablature prend <em>forme.</em>':'Ta partition prend <em>forme.</em>';
+      $('flow-finished-lead').textContent=window.SongToSheetCurrentUser?'Ton morceau est prêt à être enregistré dans ton espace. Tu pourras y lancer ton aperçu.':'Crée ton compte pour conserver cette création et lancer son aperçu depuis ton espace.';
+      $('flow-discover').innerHTML=window.SongToSheetCurrentUser?'Enregistrer dans mon espace <span aria-hidden="true">↗</span>':'Créer mon compte pour continuer <span aria-hidden="true">↗</span>';
       updatePreviewNotation(request);
       setCover('flow-ready-cover',request);
     }
@@ -365,8 +366,10 @@
       $('flow-preview-source').textContent=request?request.name:'Ta musique';
       $('flow-preview-instrument').textContent=(request?(instrumentNames[request.instrument]||'Piano'):'Piano')+' · '+formatLabel(request);
       $('flow-preview-paper-label').textContent=chosenFormat(request)==='tablature'?'Tablature originale de démonstration':'Mélodie originale de démonstration';
+      $('flow-paywall-title').textContent='Tu n’as accès qu’à 30 secondes de ta '+formatLongName(request);
+      $('flow-plans-label').textContent='Débloquer la '+formatLongName(request)+' complète';
       $('flow-preview-locked-title').textContent='🔒 La '+formatLongName(request)+' complète';
-      $('flow-plans-label').textContent='Voir les offres pour la '+formatLongName(request)+' complète';
+      $('flow-plans-label').textContent='Débloquer la '+formatLongName(request)+' complète';
       updatePreviewNotation(request);
       $('flow-preview').classList.remove('hidden');
       return;
@@ -413,7 +416,7 @@
           duration:duration,durationVerified:true,thumbnail:null,artist:null,metadataUnavailable:false
         };
       }
-      source.instrument='piano';
+      source.instrument=instrumentNames[input.instrument]?input.instrument:'piano';
       source.format=null;
       source.completed=false;
       source.createdAt=Date.now();
@@ -451,27 +454,28 @@
     navigate('/generation');
   }
   function pending(){return Boolean(readRequest());}
+  function pendingData(){var r=readRequest();return r&&r.kind!=='saved-demo'&&r.completed===true?r:null;}
   function configureAuth(login){
     var title=$('auth-title'),sub=$('auth-subtitle'),submit=$('auth-submit');
     if(!title||!sub||!submit)return;
     var request=readRequest();
     if(request&&!login){
-      title.textContent='Tes 30 secondes t’attendent ✦';
-      sub.textContent='Une dernière étape pour découvrir ton extrait de '+formatLongName(request)+'. Aucun paiement nécessaire pour cet aperçu de démonstration.';
-      submit.innerHTML='Découvrir mon extrait <span>↗</span>';
+      title.textContent='Conserve ton morceau ✦';
+      sub.textContent='Crée ton compte pour enregistrer ta création et lancer son aperçu depuis ta bibliothèque.';
+      submit.innerHTML='Créer mon compte <span>↗</span>';
     }else if(!login){
       title.textContent='Entre dans ton studio musical';
-      sub.textContent='Teste l’espace SongToSheet. Les comptes sont simulés pour le moment.';
+      sub.textContent='Enregistre tes créations et retrouve-les dans ta bibliothèque.';
       submit.innerHTML='Accéder au studio de démo <span>↗</span>';
     }
     var password=$('auth-password');
-    if(password){password.hidden=false;password.required=true;password.minLength=8;password.autocomplete='off';}
+    if(password){password.hidden=false;password.required=true;password.minLength=8;password.autocomplete=login?'current-password':'new-password';}
     var passwordLabel=document.querySelector('label[for="auth-password"]');
     if(passwordLabel)passwordLabel.hidden=false;
     var info=$('flow-auth-disclaimer');
     if(!info){
       info=document.createElement('p');info.id='flow-auth-disclaimer';info.className='flow-auth-disclaimer';
-      info.textContent='Mode démo : ton email sert uniquement à ta session. Tes créations sont conservées dans ce navigateur, pas sur un serveur. Ton mot de passe fictif n’est pas enregistré.';
+      info.textContent='Tes créations sont conservées dans ton compte. L’aperçu musical est une démonstration illustrée : aucune transcription réelle n’est encore effectuée.';
       var form=$('auth-form');if(form)form.insertAdjacentElement('afterend',info);
     }
   }
@@ -580,9 +584,9 @@
     if($('hero-file'))$('hero-file').addEventListener('change',function(){sourceError('');showHeroMetadata(null);});
     $('flow-discover').addEventListener('click',function(){
       if(!readRequest())return;
-      try{
-        if(sessionStorage.getItem(ACCOUNT_KEY)){openPreview();return;}
-      }catch(e){}
+      if(window.SongToSheetCurrentUser&&typeof window.SongToSheetSavePending==='function'){
+        window.SongToSheetSavePending();return;
+      }
       navigate('/inscription');
     });
     $('flow-library').addEventListener('click',function(){
@@ -594,7 +598,7 @@
     window.addEventListener('popstate',function(){render(location.pathname);});
     render(location.pathname);
   }
-  window.SongToSheetFlow={start:start,prepareSource:prepareSource,chooseInstrument:chooseInstrument,chooseFormat:chooseFormat,openSavedDemo:openSavedDemo,clearPending:clearPending,inspectLink:inspectLink,validateFile:validateFile,onHeroFile:onHeroFile,sourceError:sourceError,showHeroMetadata:showHeroMetadata,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview};
+  window.SongToSheetFlow={start:start,prepareSource:prepareSource,chooseInstrument:chooseInstrument,chooseFormat:chooseFormat,openSavedDemo:openSavedDemo,clearPending:clearPending,pendingData:pendingData,inspectLink:inspectLink,validateFile:validateFile,onHeroFile:onHeroFile,sourceError:sourceError,showHeroMetadata:showHeroMetadata,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
 })();

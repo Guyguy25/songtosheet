@@ -249,7 +249,6 @@ body.pricing-open{overflow:hidden}
 .split-submit{display:flex;gap:12px;align-items:center;justify-content:center;width:100%;border:0;border-radius:11px;background:linear-gradient(105deg,#7552ec,#2f8afa);min-height:52px;font-size:14px;font-weight:850;color:#fff;cursor:pointer;margin-top:7px;box-shadow:0 10px 30px #4021ad6b}
 .split-submit:hover{filter:brightness(1.1);transform:translateY(-1px)}
 .split-submit span{font-size:20px}
-.split-legal{color:#9388ab;font-size:10px;line-height:1.55;max-width:535px;margin:12px 0 0}
 .hero-morph{height:570px;position:relative;align-self:center;min-width:0;isolation:isolate}
 .morph-glow{position:absolute;left:11%;right:-12%;top:6%;bottom:3%;background:radial-gradient(ellipse at center,#9d66fb55 0%,#8743e119 43%,transparent 70%);filter:blur(17px);z-index:-1}
 .morph-source{position:absolute;left:0;top:23%;width:56%;min-width:250px;background:#151321;border:1px solid #c4a1f480;border-radius:17px;overflow:hidden;box-shadow:0 22px 50px #0008,0 0 32px #9a6de447;transform:perspective(1000px) rotateY(-11deg) rotateZ(-7deg);animation:morph-source-float 7s ease-in-out infinite}
@@ -487,6 +486,67 @@ body.pricing-open{overflow:hidden}
 }
 
 
+/* Desktop home: the hero continues behind the floating navigation. */
+@media (min-width:1101px){
+  body.is-landing #public-header{
+    margin-bottom:-96px;
+    background:transparent;
+    backdrop-filter:none;
+    pointer-events:none;
+  }
+  body.is-landing #public-header .nav-inner{
+    width:calc(100% - 64px);
+    max-width:1480px;
+    height:80px;
+    transform:translateY(16px);
+    border-radius:26px;
+    border-color:transparent;
+    background:transparent;
+    box-shadow:none;
+    pointer-events:auto;
+    transition:max-width .32s ease,height .32s ease,transform .32s ease,
+      border-radius .32s ease,border-color .32s ease,background-color .32s ease,box-shadow .32s ease;
+  }
+  body.is-landing #public-header.is-compact .nav-inner{
+    max-width:1240px;
+    height:60px;
+    transform:translateY(8px);
+    border-radius:18px;
+    border-color:#ffffff26;
+    background-color:rgba(18,13,34,.93);
+    backdrop-filter:blur(14px);
+    box-shadow:0 8px 28px #09061229;
+  }
+  body.is-landing #public-header .top-nav a{position:relative}
+  body.is-landing #public-header .top-nav a.active::after{position:absolute;inset:auto 0 -8px}
+  #landing .split-inner{padding-top:121px}
+  #landing .split-subtitle{margin-bottom:30px}
+}
+@media (min-width:1440px){
+  #landing .split-hero{
+    display:grid;
+    grid-template-rows:1fr auto;
+    min-height:100vh;
+    min-height:100svh;
+  }
+  #landing .split-inner{
+    width:calc(100% - 100px);
+    max-width:1432px;
+    padding-block:clamp(128px,16vh,176px) clamp(54px,7vh,84px);
+  }
+  #landing .split-copy{max-width:100%}
+  #landing .split-copy h1{font-size:clamp(70px,4.3vw,84px)}
+  #landing .split-subtitle{max-width:570px;font-size:17px;margin-bottom:36px}
+  #landing .hero-action-panel{max-width:600px}
+  #landing .hero-action-panel .hero-input,
+  #landing .hero-action-panel .hero-upload,
+  #landing #hero-generate{min-height:58px}
+  #landing .hero-morph{height:600px}
+}
+@media (min-width:1101px) and (prefers-reduced-motion:reduce){
+  body.is-landing #public-header .nav-inner{transition:none}
+}
+
 /* Guided, interactive "Comment ça marche" onboarding */
 #comment-ca-marche{scroll-margin-top:110px}
 .how-section{background:#faf8ff}
@@ -607,7 +667,6 @@ body.pricing-open{overflow:hidden}
  <p class="flow-source-error hidden" id="hero-source-error" role="alert"></p>
  <div class="flow-youtube-check hidden" id="hero-youtube-check" aria-hidden="true"><div id="hero-youtube-player"></div></div>
  <p class="flow-limit">⏱ Morceaux de <strong>6 minutes maximum</strong> par morceau</p>
- <p class="split-legal">Démo de la future expérience : les liens servent à identifier les morceaux et un audio autorisé reste nécessaire pour la transcription. La génération de partitions ou tablatures à partir de ton morceau et les paiements ne sont pas encore actifs.</p>
  </div>
  <div class="hero-morph" aria-label="Illustration de la transformation d'un morceau en partition">
    <div class="morph-glow" aria-hidden="true"></div>
@@ -895,6 +954,9 @@ body.pricing-open{overflow:hidden}
   const post=(path,object)=>api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(object)});
   function go(path,replace=false){if(replace)history.replaceState({},'',path);else history.pushState({},'',path);renderRoute();if(!path.includes('#'))window.scrollTo({top:0,behavior:'instant'});}
   function show(id,yes){$(id).classList.toggle('hidden',!yes);}
+  function updatePublicHeader(){
+    $('public-header').classList.toggle('is-compact',window.scrollY>72);
+  }
   function menuClose(){$('mobile-menu').classList.remove('open');$('mobile-menu').setAttribute('aria-hidden','true');$('mobile-menu-btn').setAttribute('aria-expanded','false');$('mobile-menu-btn').setAttribute('aria-label','Afficher le menu');}
 
   let howMode='link';
@@ -967,6 +1029,8 @@ body.pricing-open{overflow:hidden}
     const authPage=pathname==='/connexion'||pathname==='/inscription';
     show('public-header',marketing);
     document.body.classList.toggle('has-public-header',marketing);
+    document.body.classList.toggle('is-landing',activePublic==='landing');
+    updatePublicHeader();
     show('public-footer',marketing);
     for(const id of ['landing','features-view','results-view','pricing-view','faq-view'])show(id,activePublic===id);
     show('workspace',app);show('auth-view',authPage);show('legal-view',pathname==='/legal');
@@ -1249,6 +1313,8 @@ body.pricing-open{overflow:hidden}
       }
     });
     window.addEventListener('popstate',renderRoute);
+    window.addEventListener('scroll',updatePublicHeader,{passive:true});
+    window.addEventListener('pageshow',updatePublicHeader);
     const focusGenerator=()=>{
       go('/');
       requestAnimationFrame(()=>{

@@ -368,7 +368,6 @@
       $('flow-preview-paper-label').textContent=chosenFormat(request)==='tablature'?'Tablature originale de démonstration':'Mélodie originale de démonstration';
       $('flow-paywall-title').textContent='Tu n’as accès qu’à 30 secondes de ta '+formatLongName(request);
       $('flow-plans-label').textContent='Débloquer la '+formatLongName(request)+' complète';
-      $('flow-preview-locked-title').textContent='🔒 La '+formatLongName(request)+' complète';
       $('flow-plans-label').textContent='Débloquer la '+formatLongName(request)+' complète';
       updatePreviewNotation(request);
       $('flow-preview').classList.remove('hidden');

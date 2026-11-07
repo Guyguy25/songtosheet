@@ -808,20 +808,35 @@ body.pricing-open{overflow:hidden}
   </section>
   <section id="flow-finished" class="flow-card hidden" aria-labelledby="flow-finished-title">
    <span class="flow-eyebrow">✦ Aperçu prêt</span><div class="flow-success-icon" aria-hidden="true">✓</div>
-   <h1 id="flow-finished-title">Ta partition est <em>prête !</em></h1><p class="flow-lead" id="flow-finished-lead">Tu peux maintenant découvrir à quoi ressembleront les <strong>30 premières secondes</strong> d'une partition SongToSheet.</p>
+   <h1 id="flow-finished-title">Ta partition prend <em>forme.</em></h1><p class="flow-lead" id="flow-finished-lead">Crée ton compte pour conserver cette création et lancer son aperçu depuis ta bibliothèque.</p>
    <div class="flow-ready-identity"><img id="flow-ready-cover" class="hidden" alt="Pochette du morceau" /><div class="flow-chip"><b id="flow-ready-track">Ton morceau</b><span>·</span><span id="flow-ready-provider">Piano</span></div></div>
-   <div class="flow-mock-sheet" aria-hidden="true"><div class="flow-mock-head"><span>songtosheet.ai · APERÇU</span><span>00:30</span></div><div id="flow-ready-score" class="flow-score-art"></div></div>
-   <button id="flow-discover" type="button" class="flow-main-btn">Découvrir mes 30 secondes <span aria-hidden="true">↗</span></button>
-   <p class="flow-incentive">Aucun paiement demandé pour voir l'aperçu.</p><button id="flow-change" type="button" class="flow-secondary">Essayer une autre musique</button>
+   <div class="flow-mock-sheet" aria-hidden="true"><div class="flow-mock-head"><span>songtosheet.ai · PRÉVISUALISATION</span><span>PRÊT</span></div><div id="flow-ready-score" class="flow-score-art"></div></div>
+   <button id="flow-discover" type="button" class="flow-main-btn">Créer mon compte pour continuer <span aria-hidden="true">↗</span></button>
+   <p class="flow-incentive">Retrouve ton morceau et son format dans ta bibliothèque.</p><button id="flow-change" type="button" class="flow-secondary">Essayer une autre musique</button>
    <p class="flow-note">Il s'agit d'une <strong>mélodie originale de démonstration</strong>, pas d'une transcription de ton lien ou de ton fichier. La vraie génération sera disponible ultérieurement.</p>
   </section>
   <section id="flow-preview" class="flow-card flow-preview-card hidden" aria-labelledby="flow-preview-title">
-   <span class="flow-eyebrow">✓ Ton aperçu est débloqué</span>
+   <span class="flow-eyebrow">✓ Ton aperçu de démonstration</span>
    <div class="flow-preview-heading"><div><h1 id="flow-preview-title">Voici tes <em>30 secondes.</em></h1><p>Extrait illustratif pour <b id="flow-preview-source">Ta musique</b> · <span id="flow-preview-instrument">Piano</span></p></div><span class="flow-preview-badge">00:00 – 00:30</span></div>
    <div class="flow-preview-paper"><div class="flow-paper-top"><b id="flow-preview-paper-label">Mélodie originale de démonstration</b><span>APERÇU · 30 S</span></div><div id="flow-score" class="flow-score-full"></div></div>
    <p class="flow-note">Ce relevé illustratif ne provient pas de la musique importée. Aucun audio n'a encore été transcrit.</p>
-   <div class="flow-locked"><div class="flow-lock-content"><b id="flow-preview-locked-title">🔒 La partition complète</b><small>PDF · MIDI · MusicXML · aperçu des offres</small></div></div>
-   <div class="flow-preview-actions"><button type="button" id="flow-library" class="flow-secondary">Voir ma bibliothèque <span aria-hidden="true">↗</span></button><p class="flow-note">Tes créations sont enregistrées dans ton compte. Les partitions et tablatures affichées restent des exemples illustratifs, sans transcription réelle.</p><button type="button" id="flow-plans" class="flow-main-btn"><span id="flow-plans-label">Voir les offres pour la partition complète</span> <span aria-hidden="true">↗</span></button><p class="flow-note">Les achats et la transcription ne sont pas encore actifs dans cette démo.</p><button id="flow-new" type="button" class="flow-secondary">Tester un autre morceau</button></div>
+   <div class="flow-locked flow-paywall-area" aria-label="Suite de l’aperçu masquée">
+    <div class="flow-paywall-faux-sheet" aria-hidden="true">
+     <div class="flow-paywall-staff">𝄞 ♪ ♫ ♩ ♪ ♬ ♫ ♩ ♫ ♪ ♩ ♬</div>
+     <div class="flow-paywall-staff">♪ ♩ ♬ ♫ ♩ ♪ ♫ ♬ ♪ ♩ ♬</div>
+     <div class="flow-paywall-staff">♫ ♬ ♩ ♪ ♫ ♩ ♬ ♫ ♪ ♩</div>
+     <div class="flow-paywall-staff">♬ ♫ ♪ ♩ ♩ ♫ ♪ ♬ ♫</div>
+    </div>
+    <div class="flow-paywall-overlay">
+     <span class="flow-paywall-lock">🔒 APERÇU LIMITÉ</span>
+     <h2 id="flow-paywall-title">Tu n’as accès qu’à 30 secondes de ta partition</h2>
+     <div class="flow-paywall-progress" aria-hidden="true"><span></span></div>
+     <p>La suite de ton morceau est masquée. Débloque l'accès au format complet pour voir les offres disponibles.</p>
+     <button type="button" id="flow-plans" class="flow-main-btn"><span id="flow-plans-label">Débloquer la partition complète</span> <span aria-hidden="true">↗</span></button>
+     <small>Présentation de la future expérience · paiement désactivé pour cette démo</small>
+    </div>
+   </div>
+   <div class="flow-preview-actions"><button type="button" id="flow-library" class="flow-secondary">← Retour à ma bibliothèque</button><p class="flow-note">Cet extrait est une notation originale illustrative, pas une transcription de ta musique. Aucun audio réel n'a encore été analysé.</p><button id="flow-new" type="button" class="flow-secondary">Essayer un autre morceau</button></div>
   </section>
  </div>
 </main>

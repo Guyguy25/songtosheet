@@ -568,7 +568,7 @@
     if(full)full.innerHTML=svg;
     // Le relevé se poursuit dans la même feuille, puis se floute :
     // pas de seconde carte ni de faux symboles décoratifs déconnectés.
-    if(blurred)blurred.innerHTML=svg;
+    if(blurred)blurred.innerHTML=svg+svg;
     if(mini)mini.innerHTML=svg;
   }
   function init(){

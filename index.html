@@ -1003,10 +1003,15 @@ body.pricing-open{overflow:hidden}
     }catch(e){toast(e.message,true);}
   }
   function filterJobs(){const query=($('library-search').value||'').toLowerCase().trim();return state.jobs.filter(j=>(j.title+' '+j.instrument+' '+(j.format||'')).toLowerCase().includes(query));}
-  const statusText={completed:'Terminée',failed:'Échec',processing:'En cours',queued:'En attente'};
+  const statusText={ready:'À générer',completed:'Aperçu disponible',failed:'Échec',processing:'En cours',queued:'En attente'};
   function renderJobs(id,jobs){const box=$(id);
-    if(!jobs.length){box.innerHTML=`<div class="empty-jobs"><span>♬</span><strong>Pas encore de partition ici</strong><p>Ton prochain morceau n'attend que toi.</p><button class="btn btn-outline" data-start>Créer une partition ↗</button></div>`;return;}
-    box.innerHTML=jobs.map(j=>`<button class="job-row" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${safe(j.instrument)} · ${safe(j.format==='tablature'?'Tablature':j.format==='partition'?'Partition':'Partition')} · ${j.duration_verified===false?'Durée non vérifiée':timeFmt(j.duration)} · ${dateFmt(j.created_at)}</small></span><span class="job-status ${safe(j.status)}">${j.demo_saved?'Démo sauvegardée':statusText[j.status]||'Inconnu'}</span><span class="job-chevron">›</span></button>`).join('');
+    if(!jobs.length){box.innerHTML='<div class="empty-jobs"><span>♬</span><strong>Aucune création pour le moment</strong><p>Choisis une musique pour commencer.</p><button class="btn btn-outline" data-start>Créer une partition ↗</button></div>';return;}
+    box.innerHTML=jobs.map(j=>{
+      const format=j.format==='tablature'?'Tablature':'Partition';
+      const details=safe(j.instrument)+' · '+format+' · '+(j.duration_verified===false?'Durée non vérifiée':timeFmt(j.duration))+' · '+dateFmt(j.created_at);
+      const label=j.preview_revealed?'Voir mon aperçu':'Générer mon aperçu';
+      return `<div class="job-row demo-job-row"><button type="button" class="demo-job-details" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${statusText[j.status]||'À générer'}</span></button><button type="button" class="demo-job-generate" data-demo-generate="${safe(j.id)}">${label} <span aria-hidden="true">↗</span></button></div>`;
+    }).join('');
   }
   function showAppPage(page){if(!state.user)return go('/inscription');
     state.activePage=page;
@@ -1022,6 +1027,18 @@ body.pricing-open{overflow:hidden}
     document.querySelector('.app-scroll').scrollTo({top:0,behavior:'smooth'});
   }
   window.SongToSheetOpenLibrary=()=>startApp('library');
+  window.SongToSheetSavePending=async()=>{
+    if(!state.user){go('/inscription');return;}
+    const pending=window.SongToSheetFlow?.pendingData?.();
+    if(!pending||pending.completed!==true){toast('Aucune génération à enregistrer.',true);return;}
+    try{
+      await post('/api/jobs',{generation:pending});
+      window.SongToSheetFlow.clearPending();
+      await refresh();
+      state.activePage='library';
+      startApp('library');
+    }catch(e){toast(e.message||'Impossible de sauvegarder ta création.',true);}
+  };
   function startApp(page='create'){
     if(!state.user){state.activePage=page;go('/inscription');return;}
     if(location.pathname!=='/app'){state.activePage=page;go('/app');}
@@ -1107,21 +1124,20 @@ body.pricing-open{overflow:hidden}
     finally{button.disabled=false;}
   }
   async function submitJob(){
-    const file=state.file||$('workspace-file').files[0];if(!file){toast('Ajoute un fichier audio avant de lancer la génération.',true);return;}
-    const title=$('workspace-title').value.trim()||'Ma partition',instrument=$('workspace-instrument').value,url=$('workspace-url').value.trim();
-    const btn=$('workspace-generate');btn.disabled=true;btn.textContent='Analyse du fichier…';
-    $('upload-feedback').textContent='Vérification de ton audio et de tes crédits…';show('upload-feedback',true);
-    const form=new FormData();form.append('audio',file);form.append('title',title);form.append('instrument',instrument);form.append('source_url',url);
-    try{const result=await api('/api/jobs',{method:'POST',body:form});
-      state.file=null;$('workspace-file').value='';$('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
-      toast(`${result.credits_reserved} crédit(s) réservé(s). Génération en cours !`);
-      await refresh();openResult(result.id);
-    }catch(e){
-      if(e.status===402){toast(e.message+' Ajoute des crédits.',true);showAppPage('billing');}
-      else{toast(e.message,true);$('upload-feedback').textContent=e.message;}
-    }finally{btn.disabled=false;btn.innerHTML='Générer la partition <span>↗</span>';}
+    const file=state.file||$('workspace-file').files[0];
+    if(!file){toast('Ajoute un fichier audio pour préparer ta démonstration.',true);return;}
+    try{await window.SongToSheetFlow.start({kind:'file',file,instrument:$('workspace-instrument').value});}
+    catch(e){toast(e.message||'Import impossible.',true);}
   }
-  function openResult(id){state.resultId=id;startApp('result');}
+  async function revealDemo(id){
+    if(!state.user){go('/inscription');return;}
+    try{
+      const job=await post('/api/jobs/'+encodeURIComponent(id),{action:'reveal'});
+      await refresh();
+      window.SongToSheetFlow.openSavedDemo(job);
+    }catch(e){toast(e.message||'Impossible de lancer cet aperçu.',true);}
+  }
+    function openResult(id){state.resultId=id;startApp('result');}
   function notesSvg(notes){
     const notesToDraw=notes.slice(0,48),perLine=12,lineCount=Math.max(1,Math.ceil(notesToDraw.length/perLine)),height=150*lineCount+12;
     let svg=`<svg viewBox="0 0 720 ${height}" role="img" aria-label="Aperçu des premières notes transcrites" xmlns="http://www.w3.org/2000/svg">`;
@@ -1147,8 +1163,9 @@ body.pricing-open{overflow:hidden}
     try{const j=await api(`/api/jobs/${encodeURIComponent(id)}`);if(state.activePage!=='result'||state.resultId!==id)return;
       if(j.demo_saved===true){
         const kind=j.format==='tablature'?'tablature':'partition';
-        const details=`${instrumentIcon[j.instrument]||'♫'} ${safe(j.instrument)} · ${kind==='tablature'?'Tablature':'Partition'} · ${j.duration_verified===false?'Durée non vérifiée':timeFmt(j.duration)} · ${dateFmt(j.created_at)}`;
-        $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">CRÉATION DE DÉMONSTRATION ENREGISTRÉE ✦</span><h1>${safe(j.title)}</h1><p class="result-meta">${details}</p></div><div class="note-notation"><h3>Ton aperçu de ${kind}</h3><p class="result-note">Ce morceau, ton instrument et ton choix de format sont enregistrés sur cet appareil. La transcription est simulée : aucun audio n’a été analysé et aucun fichier PDF, MIDI ou MusicXML réel n’a été créé.</p><button class="btn btn-primary" type="button" data-demo-open="${safe(j.id)}">Voir mon aperçu de démo ↗</button></div>`;
+        const details=(instrumentIcon[j.instrument]||'♫')+' '+safe(j.instrument)+' · '+(kind==='tablature'?'Tablature':'Partition')+' · '+(j.duration_verified===false?'Durée non vérifiée':timeFmt(j.duration))+' · '+dateFmt(j.created_at);
+        const action=j.preview_revealed?'Voir mon aperçu':'Générer mon aperçu';
+        $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">CRÉATION ENREGISTRÉE ✦</span><h1>${safe(j.title)}</h1><p class="result-meta">${details}</p></div><div class="note-notation"><h3>Ton ${kind} est dans ton espace</h3><p class="result-note">Tu peux lancer ton aperçu illustratif depuis ton compte. Le moteur musical réel n’est pas encore connecté.</p><button class="btn btn-primary" type="button" data-demo-generate="${safe(j.id)}">${action} ↗</button></div>`;
         clearInterval(state.poll);state.poll=null;return;
       }
       const completed=j.status==='completed',processing=['queued','processing'].includes(j.status);
@@ -1162,13 +1179,17 @@ body.pricing-open{overflow:hidden}
     const email=$('auth-email').value.trim(),password=$('auth-password').value;
     const btn=$('auth-submit');btn.disabled=true;btn.textContent='Un instant…';show('auth-error',false);
     try{
-      if(password.length<8)throw new Error('Entre au moins 8 caractères pour ce mot de passe de démonstration.');
-      // Le champ est purement fictif en V1 : ne pas envoyer cette valeur au serveur.
-      const result=await post(`/api/auth/${state.authMode==='login'?'login':'signup'}`,{email});
-      state.user=result.user;$('auth-password').value='';window.SongToSheetDemoStore?.savePendingForCurrentAccount();await refresh();
+      if(password.length<8)throw new Error('Le mot de passe doit contenir au moins 8 caractères.');
+      const pending=window.SongToSheetFlow?.pendingData?.();
+      const payload={email,password};
+      if(pending&&pending.completed===true)payload.pending_generation=pending;
+      const result=await post('/api/auth/'+(state.authMode==='login'?'login':'signup'),payload);
+      state.user=result.user;window.SongToSheetCurrentUser=result.user;
+      $('auth-password').value='';
+      if(pending&&pending.completed===true)window.SongToSheetFlow.clearPending();
+      await refresh();
       if(state.pendingPack){const pack=state.pendingPack;state.pendingPack=null;startApp('billing');await buy(pack);}
-      else if(window.SongToSheetFlow&&window.SongToSheetFlow.pending()){window.SongToSheetFlow.openPreview();return;}
-      else startApp(state.activePage||'dashboard');
+      else{state.activePage='library';startApp('library');}
     }catch(err){$('auth-error').textContent=err.message;show('auth-error',true);}
     finally{btn.disabled=false;renderAuth();}
   }
@@ -1184,6 +1205,8 @@ body.pricing-open{overflow:hidden}
         go(target);return;
       }
       if(e.target.closest('[data-start]')){startApp('create');return;}
+      const demoGenerate=e.target.closest('[data-demo-generate]');
+      if(demoGenerate){e.preventDefault();await revealDemo(demoGenerate.dataset.demoGenerate);return;}
       const demoOpen=e.target.closest('[data-demo-open]');if(demoOpen){
         const saved=state.jobs.find(job=>job.id===demoOpen.dataset.demoOpen&&job.demo_saved===true);
         if(saved&&window.SongToSheetFlow?.openSavedDemo)window.SongToSheetFlow.openSavedDemo(saved);

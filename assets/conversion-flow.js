@@ -364,10 +364,10 @@
     }
     if(screen==='preview'){
       $('flow-preview-source').textContent=request?request.name:'Ta musique';
+      $('flow-preview-title').innerHTML='Voici ta <em>'+formatLongName(request)+'.</em>';
       $('flow-preview-instrument').textContent=(request?(instrumentNames[request.instrument]||'Piano'):'Piano')+' · '+formatLabel(request);
       $('flow-preview-paper-label').textContent=chosenFormat(request)==='tablature'?'Tablature originale de démonstration':'Mélodie originale de démonstration';
-      $('flow-paywall-title').textContent='Tu n’as accès qu’à 30 secondes de ta '+formatLongName(request);
-      $('flow-plans-label').textContent='Débloquer la '+formatLongName(request)+' complète';
+      $('flow-paywall-title').textContent='Tu n’as accès qu’aux 30 premières secondes de ta '+formatLongName(request);
       $('flow-plans-label').textContent='Débloquer la '+formatLongName(request)+' complète';
       updatePreviewNotation(request);
       $('flow-preview').classList.remove('hidden');
@@ -564,8 +564,11 @@
   }
   function updatePreviewNotation(request){
     var svg=chosenFormat(request)==='tablature'?tabSvg(request.instrument):staffSvg();
-    var full=$('flow-score'),mini=$('flow-ready-score');
+    var full=$('flow-score'),blurred=$('flow-score-blurred'),mini=$('flow-ready-score');
     if(full)full.innerHTML=svg;
+    // Le relevé se poursuit dans la même feuille, puis se floute :
+    // pas de seconde carte ni de faux symboles décoratifs déconnectés.
+    if(blurred)blurred.innerHTML=svg+svg;
     if(mini)mini.innerHTML=svg;
   }
   function init(){

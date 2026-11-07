@@ -1,0 +1,12 @@
+{
+  "name": "songtosheet-web",
+  "version": "0.2.0",
+  "private": true,
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "dependencies": {
+    "mongodb": "^6.21.0"
+  }
+}

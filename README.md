@@ -16,39 +16,37 @@ La V1 utilise un routeur client et des réécritures Vercel : chaque page dispos
 
 Les plans ne sont **pas** affichés sur l'accueil. L'espace studio présente les formules au moment de la génération (démo, sans paiement réel).
 
-## Persistance de démo et future base de données
+## Persistance de comptes et créations
 
-- Après la génération fictive et l'inscription de démo : enregistrement local du titre, de l'instrument, du format, de la durée (si connue), de la source et de la date dans la bibliothèque. Aucun mot de passe ou fichier audio n'est conservé.
-- Au retour avec la **même adresse email fictive sur le même navigateur**, les générations sauvegardées restent visibles. Pour synchroniser plusieurs appareils et sécuriser de vrais comptes, **MongoDB Atlas n'est pas encore connecté**.
-- Consulter [MONGODB_SETUP.md](MONGODB_SETUP.md) pour la connexion Atlas/Vercel et le futur schéma `users` / `generations`, à mettre en place après connexion autorisée au cluster et ajout d'une véritable authentification serveur.
+- L'inscription et la connexion sont désormais traitées par des routes Node.js Vercel, avec mots de passe salés et hachés (scrypt) en collection `songtosheet.users`.
+- Une génération simulée terminée avant inscription est rattachée au compte et enregistrée dans `songtosheet.generations`, avec le titre, la source, l'instrument, le format (partition/tablature), la durée, la date et l'état de révélation de l'aperçu.
+- Après connexion, les générations sont consultables dans la bibliothèque, y compris sur un autre appareil. L'aperçu ne devient visible qu'après clic sur « Générer mon aperçu » dans le compte.
+- Seules les métadonnées sont conservées : les fichiers audio et les transcriptions réelles ne sont pas encore traités. Les anciens comptes fictifs stockés en session ne sont pas migrés automatiquement.
 
 ## Deux parties complémentaires
 
-- **Démo hébergée sur Vercel** : `index.html`, une landing orientée saisie de lien (sans grille tarifaire), un studio interactif, une fenêtre d'abonnement et une partition d'exemple. Aucun compte, paiement, upload ou traitement IA réel sur cette démo.
-- **Application locale** : `backend/` contient l'API FastAPI, les comptes, les crédits, Stripe à configurer, les tests, la transcription expérimentale monophonique et les exports PDF, MIDI, MusicXML.
+- **Site Vercel et fonctions Node.js** : landing, API de métadonnées, authentification et sauvegarde réelle des demandes de démonstration dans MongoDB, mais simulation visuelle du relevé musical et paiement désactivé.
+- **Moteur expérimental local** : `backend/` contient le prototype FastAPI et ses tests de transcription monophonique et exports, non connecté au parcours public.
 
-## Tunnel simulé avant inscription (novembre 2026)
+## Tunnel de conversion V1 (novembre 2026)
 
-Parcours de la démo Vercel : lien YouTube/Spotify/Deezer/SoundCloud/Apple Music ou fichier audio → simulation animée (~7 s) → « Ta partition est prête » → « Découvrir mes 30 secondes » → `/inscription` → `/apercu` (extrait **illustratif** de 30 secondes) → consultation des offres.
+Parcours : lien ou fichier → instrument → partition/tablature → animation fictive (~18 s) → inscription ou connexion → compte et bibliothèque → « Générer mon aperçu » → aperçu de démonstration limité à 30 secondes, suite floutée et bouton d'accès aux offres.
 
-- **Aucune transcription réelle n'est produite à partir d'un lien ou d'un fichier.** L'extrait est une mélodie originale fixe, explicitement indiquée comme démonstration. Le paiement est toujours désactivé.
-- Les fichiers audio doivent respecter 25 Mo et 6 minutes au maximum : durée lue localement avec l'API audio du navigateur ; si le format ou la durée ne peuvent pas être vérifiés, le fichier est refusé.
-- Les liens sont contrôlés par domaine/HTTPS, **mais leur durée ne peut pas être vérifiée sans intégration serveur aux plateformes**. Il faudra imposer les 6 minutes côté backend avant toute vraie génération et tout paiement.
-- L'inscription reste **fictive** : adresse email conservée dans le `sessionStorage` de l'onglet, champ de mot de passe de test affiché (8 caractères minimum) mais **jamais enregistré ni vérifié** ; aucun compte réel n'est créé. Une génération simulée terminée est enregistrée après inscription dans `localStorage`, sous une clé propre à l'adresse email choisie. La bibliothèque propose de rouvrir cet aperçu sur le même navigateur, sans PDF/MIDI réel. Ce n'est ni une sauvegarde cloud ni une authentification sécurisée.
-- `/generation` et `/apercu` sont rechargeables grâce aux rewrites Vercel ; les états de génération restent dans le stockage de session.
-- Code de la vue : `assets/conversion-flow.js` et `assets/conversion-flow.css`. Les routes et le CTA sont reliés dans `index.html`.
-
+- **Aucune transcription réelle n'est produite.** Le relevé visible est une mélodie originale illustrative qui ne provient pas de la vidéo ou du fichier. Les achats et exports réels restent désactivés.
+- Les fichiers audio sont limités à 25 Mo et 6 minutes ; la durée est lue dans le navigateur. Les liens YouTube sont contrôlés dans la mesure où les plateformes fournissent leurs métadonnées ; une vidéo à la durée inconnue peut accéder au parcours de démonstration sans que la limite puisse être garantie.
+- Les routes `/generation`, `/apercu`, `/inscription`, `/connexion` et `/app` sont rechargeables grâce aux rewrites Vercel. Les sessions sont stockées en cookies signés et les générations réelles dans MongoDB.
+- Code front-end : `index.html`, `assets/conversion-flow.js` et `assets/conversion-flow.css`.
 
 ### Parcours de sélection et métadonnées (novembre 2026)
 
-- Clic sur « Continuer » depuis la landing → lecture des métadonnées publiques via `api/media-info.js` (titre, auteur, miniature et durée **si disponible**) → `/choisir-instrument` → **`/choisir-format` : partition ou tablature** → simulation progressive de **18 secondes** → écran prêt → inscription simulée → aperçu illustratif de 30 secondes. Le choix du format est conservé dans le `sessionStorage`, présenté dans la progression et l'écran prêt ; l'aperçu utilise une portée pour la partition et un exemple original à cordes/cases pour la tablature.
+- Clic sur « Continuer » depuis la landing → lecture des métadonnées publiques via `api/media-info.js` (titre, auteur, miniature et durée **si disponible**) → `/choisir-instrument` → **`/choisir-format` : partition ou tablature** → simulation progressive de **18 secondes** → écran prêt sans révéler la durée limitée → inscription réelle → bibliothèque → clic « Générer mon aperçu » → aperçu illustratif limité de 30 secondes. Le choix du format est conservé dans le `sessionStorage`, présenté dans la progression et l'écran prêt ; l'aperçu utilise une portée pour la partition et un exemple original à cordes/cases pour la tablature.
 - Pour les **fichiers**, vérification de 25 Mo et 6 minutes dès l'import, avec erreur sous le champ sur la landing.
 - Pour les **liens**, la limite V1 est de **6 minutes (360 secondes)**. Les fichiers audio importés sont contrôlés directement dans le navigateur. Pour YouTube, le serveur essaie la page vidéo, l'embed et éventuellement l'API officielle si `YOUTUBE_DATA_API_KEY` est configurée. Si la durée est introuvable côté serveur, le navigateur tente une vérification via le lecteur YouTube officiel. **Si YouTube refuse également de fournir sa durée, le parcours de démonstration reste accessible** avec le statut explicite « Durée non vérifiée » : il est donc impossible de garantir le filtrage des vidéos longues sans la clé officielle. En revanche, toute durée *confirmée* supérieure à 360 secondes bloque le parcours avec « La durée maximale autorisée est de 6 min. ». Pour les autres plateformes, les durées ne sont pas toujours accessibles et certains liens restent bloqués. Aucun morceau distant n'est transcrit en V1.
 - Les miniatures et titres proviennent de métadonnées publiques, mais l'aperçu reste **une partition illustrative non liée au morceau**, le traitement audio réel n'étant pas activé. Aucun achat ni compte durable n'est créé.
 
 ## Déploiement
 
-Ce dépôt est configuré pour un site statique Vercel (racine du repo, preset « Other », sans commande de build). Chaque push sur `main` met à jour la démo après connexion Git.
+Site Vercel avec fonctions Node.js sous `api/`, dépendances `package.json` et pages HTML statiques. La configuration nécessite les variables `MONGODB_URI` (secret serveur) et `MONGODB_DB_NAME=songtosheet`. Une clé distincte `AUTH_SESSION_SECRET` est recommandée ; sans elle, une clé de signature dérivée du secret MongoDB est utilisée. Ne jamais exposer les secrets dans le front-end.
 
 ## Faire tourner le moteur en local
 
@@ -68,15 +66,16 @@ Voir [backend/README.md](backend/README.md) pour le détail du backend et le lan
 
 ## Limites importantes
 
-Le site Vercel n'héberge pas encore le moteur de transcription, les comptes ni Stripe. L'analyse monophonique reste expérimentale. Les liens Spotify/YouTube sont acceptés comme références, sans extraction de l'audio ; importer uniquement un contenu autorisé.
+La base MongoDB sert aujourd'hui à stocker de **vrais comptes** et les **demandes de génération simulées**, pas des partitions générées par IA. Le moteur de transcription, l'import audio distant, les téléchargements PDF/MIDI/MusicXML et les paiements ne sont pas encore activés sur le site public.
 
-Le déploiement commercial demandera une base SQL managée, du stockage persistant, des workers, un traitement sécurisé et la configuration Stripe. Aucune clé privée n'est publiée dans ce dépôt.
+L'accès au cluster Atlas est partagé avec d'autres projets mais les droits du compte applicatif sont limités à la base `songtosheet`. Les collections `users` et `generations` disposent d'index d'identification et de rattachement, et `/api/health` permet de vérifier la connexion. Avant commercialisation : renforcer la protection contre le spam, configurer des sauvegardes, restreindre autant que possible l'accès réseau et intégrer une vraie infrastructure de traitement musical.
 
+## Authentification et conversions V1 (novembre 2026)
 
-## MongoDB Atlas — état de l'intégration
+**Nouveau parcours :** lien/fichier → instrument → partition ou tablature → animation de génération (maquette uniquement) → inscription (ou connexion) → **bibliothèque personnelle** avec la création préparée → clic sur « Générer mon aperçu » → **seulement alors** révélation du quota de 30 secondes, suite illustrative floutée et CTA « Débloquer la partition/tablature complète ». La transcription audio et l'achat d'accès ne sont pas encore disponibles : le prototype ne doit pas prétendre produire une véritable partition du morceau importé.
 
-L'accès au compte Atlas via ChatGPT est actif et la base `songtosheet` existe dans le cluster. Deux collections ont été préparées : `users` (futurs comptes) et `generations` (futures transcriptions et métadonnées). Un index simple sur `users.email` et un index `generations(user_id, created_at DESC)` sont en place. La connexion du compte Atlas dans ChatGPT **n'est pas** une connexion automatique entre Vercel et la base.
+**Enregistrement réel des comptes :** le site utilise maintenant des routes Vercel Node.js liées à MongoDB Atlas : `/api/auth/signup`, `/api/auth/login`, `/api/auth/me`, `/api/auth/logout`, `/api/jobs`, `/api/jobs/:id`. Les comptes sont stockés en collection `users` avec un hash salé scrypt (pas de mot de passe en clair) et un cookie signé HttpOnly/Secure/SameSite=Lax. Les générations simulées sont conservées en collection `generations`, liées à un `user_id` MongoDB et avec une clé idempotente `client_generation_id`. La lecture et l'action de révélation appliquent un filtre serveur sur l'utilisateur connecté. Un frein aux tentatives de connexion est stocké dans `login_limits`.
 
-**Le site public est encore en mode démo local.** Pour la vraie synchronisation, créer un utilisateur de base de données à droits minimaux, ajouter `MONGODB_URI` comme **secret serveur** et `MONGODB_DB_NAME=songtosheet` dans Vercel, puis intégrer des endpoints d'inscription/authentification sécurisés. Les mots de passe réels devront être hachés (Argon2id) et les sessions protégées par des cookies `HttpOnly`/`Secure`. Chaque requête d'accès aux générations devra filtrer par `user_id` authentifié, pas par simple email saisi dans le navigateur. Avant lancement, imposer un index unique sur les emails canoniques et des limites de débit. Aucun mot de passe en clair ni fichier audio ne doit être enregistré dans MongoDB.
+Les dépendances du serveur se trouvent dans `package.json` (`mongodb`). Les secrets sont **exclusivement dans les variables Vercel chiffrées**, jamais dans Git ou le navigateur : `MONGODB_URI` (identifiant de base limité à la base `songtosheet`) et `MONGODB_DB_NAME=songtosheet`. En complément, un `AUTH_SESSION_SECRET` dédié est recommandé pour dissocier la clé de signature des cookies du secret de la base. MongoDB et son accès réseau doivent rester restreints et surveillés avant l'ouverture commerciale. La configuration de production peut nécessiter un nouveau déploiement lors de la modification des variables.
 
-Les générations de la démo restent dans `localStorage` sur l'appareil utilisé et ne sont **pas** envoyées à Atlas.
+**Migration :** les anciens « comptes » de démo locaux (email stocké en session) ne sont pas de vrais comptes. Ils doivent créer un compte avec un vrai mot de passe. Les créations stockées en local ne sont pas automatiquement migrées vers MongoDB. Vérifier le flux de création, session, stockage, rechargement, séparation entre comptes et reprise après erreur avant acquisition payante.

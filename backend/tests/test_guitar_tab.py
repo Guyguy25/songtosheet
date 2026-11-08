@@ -35,9 +35,21 @@ def test_musicxml_writes_chords_and_full_bars_without_playback_drift(tmp_path):
     assert len(bars) == 2
     for bar in bars:
         assert sum(int(note.findtext("duration")) for note in bar.findall("note")
-                   if note.find("chord") is None) == 16
+                   if note.find("chord") is None) == 32
     first_chord = bars[0].findall("note")[:3]
     assert [note.find("chord") is not None for note in first_chord] == [False, True, True]
     assert len({note.findtext("notations/technical/string") for note in first_chord}) == 3
-    assert bars[1].find("note/tie[@type='stop']") is not None
+    assert len(ET.parse(path).findall(".//note/pitch")) == len(notes)
+    assert bars[0].find("note/notations/tied[@type='let-ring']") is not None
+    assert bars[1].find("note[@print-object='no']/rest") is not None
     assert any(note["start"] == 2.04 for note in midi_notes(tab))
+
+
+def test_arpeggio_does_not_print_sustaining_strings_as_new_chords(tmp_path):
+    notes = [event(40, .10, .9), event(55, .14, .75), event(59, .20, .68)]
+    tab = arrange(notes, TUNINGS["guitare"])
+    path = tmp_path / "arpeggio.musicxml"
+    write_tab(tab, path, TUNINGS["guitare"], 120, "Arpège", "guitare")
+    score = ET.parse(path)
+    assert len(score.findall(".//note/pitch")) == 3
+    assert score.findall(".//note/chord") == []

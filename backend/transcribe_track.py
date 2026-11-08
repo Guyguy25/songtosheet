@@ -78,7 +78,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": 3 if instrument in TUNINGS else 1}
+              "instrument": instrument, "bpm": bpm, "version": 4 if instrument in TUNINGS else 1}
     if title:
         config["title"] = title
     with source.open("rb") as audio:

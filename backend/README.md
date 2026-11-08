@@ -63,7 +63,7 @@ python -m pip install -r requirements-transcription.txt
 python transcribe_track.py tests/melody.wav guitare ./exports-prives --isolated --authorized
 ```
 
-Pour traiter un mix, retire `--isolated` et choisis la piste à extraire. Demucs télécharge ses poids au premier usage. Utilise `--bpm` si tu connais le tempo. Le MIDI conserve les timings estimés et le MusicXML les quantifie à un tempo et une mesure fixes. En accordage standard, la tablature place les notes simultanées sur des cordes différentes quand un doigté est disponible. Le MIDI de tablature conserve les attaques originales des notes placées, tandis que la notation les arrondit sur une grille de doubles croches.
+Pour traiter un mix, retire `--isolated` et choisis la piste à extraire. Demucs télécharge ses poids au premier usage. Utilise `--bpm` si tu connais le tempo. Le MIDI conserve les timings estimés et le MusicXML les quantifie à un tempo et une mesure fixes. En accordage standard, la tablature place les notes simultanées sur des cordes différentes quand un doigté est disponible. Elle affiche les attaques sur une grille de triples croches et indique les notes à laisser résonner. Le MIDI de tablature conserve les attaques et durées des notes placées.
 
 Le moteur écrit `score.mid`, `score.musicxml`, `notes.json` et, lorsqu’un doigté est disponible, `tab.musicxml` et `tab.mid`. Il efface les fichiers audio intermédiaires et réutilise un export complet si les octets du fichier et les paramètres correspondent. Réserve un dossier d’exports privé à chaque utilisateur si tu intègres le moteur à un service.
 

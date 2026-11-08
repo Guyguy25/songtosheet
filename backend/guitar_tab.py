@@ -1,14 +1,17 @@
 """Choose polyphonic guitar fingerings and engrave them on a fixed beat grid."""
-from collections import defaultdict
 from dataclasses import dataclass
 from itertools import groupby
 from xml.etree import ElementTree as ET
 
 
 NOTE_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
-DIVISIONS = 4
+DIVISIONS = 8
 BAR = 4 * DIVISIONS
-TYPES = {16: "whole", 8: "half", 4: "quarter", 2: "eighth", 1: "16th"}
+TYPES = {
+    32: ("whole", False), 24: ("half", True), 16: ("half", False),
+    12: ("quarter", True), 8: ("quarter", False), 6: ("eighth", True),
+    4: ("eighth", False), 3: ("16th", True), 2: ("16th", False), 1: ("32nd", False),
+}
 BEAM_SIZE = 64
 
 
@@ -20,6 +23,7 @@ class TabNote:
     velocity: int
     string: int
     fret: int
+    attack: float
 
 
 def choose_fingering(group, tuning, held, position):
@@ -58,17 +62,21 @@ def choose_fingering(group, tuning, held, position):
     return candidates[0][0]
 
 
-def arrange(notes, tuning):
-    ordered = sorted(notes, key=lambda note: note["start"])
+def attack_groups(notes, onset):
+    ordered = sorted(notes, key=onset)
     group_start = 0
     groups = []
     for note in ordered:
-        if not groups or note["start"] - group_start > .03:
-            group_start = note["start"]
+        if not groups or onset(note) - group_start > .03:
+            group_start = onset(note)
             groups.append([])
         groups[-1].append(note)
+    return groups
+
+
+def arrange(notes, tuning):
     held, result, position = {}, [], 2
-    for group in groups:
+    for group in attack_groups(notes, lambda note: note["start"]):
         start = group[0]["start"]
         held = {key: note for key, note in held.items() if note.end > start}
         picked = choose_fingering(group, tuning, held, position)
@@ -78,7 +86,7 @@ def arrange(notes, tuning):
         for source, string, fret in picked:
             if previous := held.get(string):
                 previous.end = min(previous.end, source["start"])
-            note = TabNote(**source, string=string, fret=fret)
+            note = TabNote(**source, string=string, fret=fret, attack=start)
             held[string] = note
             result.append(note)
     return result
@@ -89,21 +97,17 @@ def midi_notes(notes):
             for n in notes if n.start < n.end]
 
 
-def notated_notes(notes, bpm):
+def notated_attacks(notes, bpm):
     grid = bpm * DIVISIONS / 60
     result = []
-    for _, string_notes in groupby(sorted(notes, key=lambda n: (n.string, n.start)), key=lambda n: n.string):
-        track = []
-        for note in string_notes:
-            start = round(note.start * grid)
-            end = max(start + 1, round(note.end * grid))
-            if track and start <= track[-1][0]:
-                start = track[-1][0] + 1
-                end = max(start + 1, end)
-            if track and track[-1][1] > start:
-                track[-1] = (track[-1][0], start, track[-1][2])
-            track.append((start, end, note))
-        result.extend(track)
+    previous = -1
+    for _, attacks in groupby(sorted(notes, key=lambda note: (note.attack, note.start)), key=lambda note: note.attack):
+        group = list(attacks)
+        # Preserve separate attacks that happen to round to the same grid slot.
+        start = max(previous + 1, round(group[0].start * grid))
+        ends = [(max(start + 1, round(note.end * grid)), note) for note in group]
+        result.append((start, ends))
+        previous = start
     return result
 
 
@@ -136,14 +140,23 @@ def write_header(measure, tuning, bpm):
     ET.SubElement(direction, "sound", tempo=str(bpm))
 
 
-def write_segment(measure, start, length, playing):
-    if not playing:
-        note = ET.SubElement(measure, "note")
-        ET.SubElement(note, "rest")
-        add(note, "duration", length)
-        add(note, "type", TYPES[length])
-        return
-    for index, (onset, end, event) in enumerate(playing):
+def write_duration(note, length):
+    kind, dotted = TYPES[length]
+    add(note, "duration", length)
+    add(note, "type", kind)
+    if dotted:
+        ET.SubElement(note, "dot")
+
+
+def write_rest(measure, length, ringing):
+    attributes = {"print-object": "no", "print-spacing": "yes"} if ringing else {}
+    note = ET.SubElement(measure, "note", **attributes)
+    ET.SubElement(note, "rest")
+    write_duration(note, length)
+
+
+def write_attack(measure, start, length, events):
+    for index, (end, event) in enumerate(sorted(events, key=lambda item: item[1].pitch)):
         note = ET.SubElement(measure, "note")
         if index:
             ET.SubElement(note, "chord")
@@ -153,14 +166,10 @@ def write_segment(measure, start, length, playing):
         if name.endswith("#"):
             add(pitch, "alter", 1)
         add(pitch, "octave", event.pitch // 12 - 1)
-        add(note, "duration", length)
-        ties = [kind for kind, active in (("stop", onset < start), ("start", end > start + length)) if active]
-        for kind in ties:
-            ET.SubElement(note, "tie", type=kind)
-        add(note, "type", TYPES[length])
+        write_duration(note, length)
         notation = ET.SubElement(note, "notations")
-        for kind in ties:
-            ET.SubElement(notation, "tied", type=kind)
+        if end > start + length:
+            ET.SubElement(notation, "tied", type="let-ring")
         technical = ET.SubElement(notation, "technical")
         add(technical, "string", event.string)
         add(technical, "fret", event.fret)
@@ -172,25 +181,30 @@ def write_tab(notes, destination, tuning, bpm, title, instrument):
     part_list = ET.SubElement(root, "part-list")
     add(ET.SubElement(part_list, "score-part", id="P1"), "part-name", instrument.capitalize())
     part = ET.SubElement(root, "part", id="P1")
-    starts, stops = defaultdict(list), defaultdict(list)
-    for start, end, event in notated_notes(notes, bpm):
-        starts[start].append((start, end, event))
-        stops[end].append(event.string)
-    end = ((max(stops) + BAR - 1) // BAR) * BAR
-    boundaries = sorted(set(starts) | set(stops) | set(range(0, end + 1, BAR)))
-    active = {}
-    for start, following in zip(boundaries, boundaries[1:]):
-        if start % BAR == 0:
-            measure = ET.SubElement(part, "measure", number=str(start // BAR + 1))
-            if not start:
-                write_header(measure, tuning, bpm)
-        for string in stops[start]:
-            active.pop(string, None)
-        for note in starts[start]:
-            active[note[2].string] = note
-        playing = sorted(active.values(), key=lambda note: note[2].pitch)
-        while start < following:
-            length = next(length for length in TYPES if length <= following - start)
-            write_segment(measure, start, length, playing)
+    attacks = notated_attacks(notes, bpm)
+    end = max(stop for _, group in attacks for stop, _ in group)
+    bars = (end + BAR - 1) // BAR
+    index, ringing_until = 0, 0
+    for bar in range(bars):
+        start, bar_end = bar * BAR, (bar + 1) * BAR
+        measure = ET.SubElement(part, "measure", number=str(bar + 1))
+        if not bar:
+            write_header(measure, tuning, bpm)
+        while start < bar_end:
+            if index < len(attacks) and attacks[index][0] == start:
+                events = attacks[index][1]
+                index += 1
+                group_end = max(stop for stop, _ in events)
+                ringing_until = max(ringing_until, group_end)
+                next_attack = attacks[index][0] if index < len(attacks) else bar_end
+                limit = min(group_end, next_attack, bar_end)
+                length = next(size for size in TYPES if size <= limit - start)
+                write_attack(measure, start, length, events)
+            else:
+                next_attack = attacks[index][0] if index < len(attacks) else bar_end
+                ringing = start < ringing_until
+                limit = min(next_attack, bar_end, ringing_until if ringing else bar_end)
+                length = next(size for size in TYPES if size <= limit - start)
+                write_rest(measure, length, ringing)
             start += length
     ET.ElementTree(root).write(destination, encoding="utf-8", xml_declaration=True)

@@ -24,7 +24,7 @@
     const pathname=location.pathname;
     const landing=pathname==='/' || pathname==='';
     const app=pathname==='/app';
-    if(!app)stopPlayer();
+    if(!app){stopPlayer();trackWizard?.pause();}
     const authPage=pathname==='/connexion'||pathname==='/inscription';
     show('public-header',landing);show('landing',landing);show('public-footer',landing);
     show('workspace',app);show('auth-view',authPage);show('legal-view',pathname==='/legal');
@@ -65,6 +65,7 @@
   function stopPlayer(){closePlayer?.();closePlayer=undefined;}
   function showAppPage(page){if(!state.user)return go('/inscription');
     if(page!=='result')stopPlayer();
+    if(page!=='create')trackWizard?.pause();
     state.activePage=page;
     for(const p of ['dashboard','create','library','result','billing'])show(p+'-page',page===p);
     const side=page==='dashboard'?'menu-dashboard':page==='library'||page==='result'?'menu-library':'menu-create';

@@ -10,8 +10,8 @@
   <script>document.documentElement.classList.toggle('is-landing', location.pathname === '/');</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=3" />
-  <script src="/backend/web/track-onboarding.js?v=3" defer></script>
+  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=4" />
+  <script src="/backend/web/track-onboarding.js?v=4" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=3" />
   <script src="/backend/web/score-player.js?v=3" defer></script>
   <style>
@@ -1034,7 +1034,7 @@ body.pricing-open{overflow:hidden}
     const activePublic=publicRoutes[pathname]||null;
     const marketing=Boolean(activePublic)||pathname==='/legal';
     const app=pathname==='/app';
-    if(!app)stopPlayer();
+    if(!app){stopPlayer();trackWizard?.pause();}
     const authPage=pathname==='/connexion'||pathname==='/inscription';
     show('public-header',marketing);
     document.body.classList.toggle('has-public-header',marketing);
@@ -1127,6 +1127,7 @@ body.pricing-open{overflow:hidden}
   function stopPlayer(){closePlayer?.();closePlayer=undefined;}
   function showAppPage(page){if(!state.user)return go('/inscription');
     if(page!=='result')stopPlayer();
+    if(page!=='create')trackWizard?.pause();
     state.activePage=page;
     for(const p of ['dashboard','create','library','result','billing'])show(p+'-page',page===p);
     const side=page==='dashboard'?'menu-dashboard':page==='library'||page==='result'?'menu-library':'menu-create';

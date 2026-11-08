@@ -25,6 +25,7 @@ async function begin(db,res,user,body){
     ?body.sourceName.split(/[\\/]/).at(-1).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,160)
     :'';
   const format=body.format??'partition';
+  if(!source_name)return json(res,409,{detail:'Actualise la page, puis sélectionne à nouveau ton fichier audio.'});
   if(body.authorized!==true)return json(res,400,{detail:'Confirme que tu disposes des droits nécessaires pour transcrire cet audio.'});
   if(!title||!INSTRUMENTS.has(instrument)||!AUDIO_TYPES.has(extension)||!Number.isInteger(size)||size<1024||size>MAX_BYTES){
     return json(res,400,{detail:'Choisis un titre, une piste et un fichier audio de 25 Mo maximum.'});

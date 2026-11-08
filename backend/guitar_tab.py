@@ -259,12 +259,16 @@ def write_rest(measure, length, ringing):
     write_duration(note, length)
 
 
-def write_attack(measure, start, length, events, techniques, beam):
-    for _, event in events:
-        kind, role = techniques.get((event.start, event.pitch), (None, None))
-        if role == "start":
-            direction = ET.SubElement(measure, "direction", placement="above")
-            add(ET.SubElement(direction, "direction-type"), "words", "P" if kind == "pull-off" else "sl.")
+def write_attack(measure, start, length, events, techniques, beam, strummed):
+    labels = {kind for _, event in events
+              for kind, role in [techniques.get((event.start, event.pitch), (None, None))]
+              if role == "start"}
+    words = (["Gratté"] if strummed else []) + [
+        "P" if kind == "pull-off" else "sl." for kind in sorted(labels)
+    ]
+    if words:
+        direction = ET.SubElement(measure, "direction", placement="below" if strummed else "above")
+        add(ET.SubElement(direction, "direction-type"), "words", " · ".join(words))
     for index, (end, event) in enumerate(sorted(events, key=lambda item: item[1].pitch)):
         note = ET.SubElement(measure, "note")
         if index:
@@ -285,7 +289,7 @@ def write_attack(measure, start, length, events, techniques, beam):
         if kind == "pull-off":
             ET.SubElement(notation, "slur", type=role, number="1")
         elif kind == "slide":
-            ET.SubElement(notation, "slide", type=role, number="1")
+            ET.SubElement(notation, "slide", type=role, number=str(event.string))
         technical = ET.SubElement(notation, "technical")
         add(technical, "string", event.string)
         add(technical, "fret", event.fret)
@@ -306,7 +310,7 @@ def write_harmony(measure, root, quality):
 
 
 def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=(), capo=0, chords=(),
-              meter=(4, 4), intro_count=0, pull_offs=(), slides=()):
+              meter=(4, 4), intro_count=0, pull_offs=(), slides=(), strummed=()):
     root = ET.Element("score-partwise", version="4.0")
     add(root, "movement-title", title)
     part_list = ET.SubElement(root, "part-list")
@@ -318,8 +322,9 @@ def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=
     for kind, pairs in (("pull-off", pull_offs), ("slide", slides)):
         for first, second in pairs:
             before, after = played.get(first), played.get(second)
-            if (before and after and before.string == after.string and before.fret > after.fret
-                    and (after.fret == 0 if kind == "pull-off" else after.fret > 0)
+            if (before and after and before.string == after.string
+                    and (before.fret > 0 and after.fret == 0 if kind == "pull-off"
+                         else before.fret > 0 and after.fret > 0 and before.fret != after.fret)
                     and first not in techniques and second not in techniques):
                 techniques.update({first: (kind, "start"), second: (kind, "stop")})
     ticks = [start for start, _ in attacks]
@@ -352,7 +357,8 @@ def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=
                 next_attack = attacks[index][0] if index < len(attacks) else bar_end
                 limit = min(group_end, next_attack, bar_end)
                 length = next(size for size in TYPES if size <= limit - start)
-                write_attack(measure, start, length, events, techniques, beam)
+                is_strum = len(events) > 1 and events[0][1].start in strummed
+                write_attack(measure, start, length, events, techniques, beam, is_strum)
             else:
                 next_attack = attacks[index][0] if index < len(attacks) else bar_end
                 ringing = start < ringing_until

@@ -1,6 +1,6 @@
 from xml.etree import ElementTree
 
-from guitar_evidence import mixed_attacks, refine_mixed_guitar, refine_picked_notes
+from guitar_evidence import audible_slides, mixed_attacks, refine_mixed_guitar, refine_picked_notes
 from guitar_intro import open_pull_offs, repeated_open_intro
 from guitar_tab import arrange, write_tab
 from transcribe_track import TUNINGS
@@ -143,3 +143,30 @@ def test_musicxml_slide_requires_both_frets_on_the_same_string(tmp_path):
     tab = arrange(notes, tuning, string_hints={keys[0]: 1, keys[1]: 2})
     write_tab(tab, path, tuning, 70, "Slide", "guitare", slides=[keys])
     assert ElementTree.parse(path).findall(".//slide") == []
+
+
+def test_multistring_glide_is_annotated_once_and_keeps_both_strings(tmp_path):
+    import numpy as np
+    import soundfile as sf
+
+    rate = 22050
+    times = np.arange(rate) / rate
+    glide = 2 * np.clip((times - .335) / .065, 0, 1)
+    tones = [np.sin(np.cumsum(2 * np.pi * 440 * 2 ** ((pitch + glide - 69) / 12) / rate))
+             for pitch in (60, 67)]
+    audio = tmp_path / "glide.wav"
+    sf.write(audio, .3 * sum(tones), rate)
+    tuning = TUNINGS["guitare"]
+    notes = [note(60, .2), note(67, .2), note(62, .4), note(69, .4)]
+    strings = {(.2, 60): 2, (.2, 67): 1, (.4, 62): 2, (.4, 69): 1}
+    tab = arrange(notes, tuning, string_hints=strings)
+    slides = audible_slides(audio, tab, {.2: 8, .4: 2})
+    assert len(slides) == 2
+    assert audible_slides(audio, tab, {.2: 8, .4: 8}) == []
+    path = tmp_path / "tab.musicxml"
+    write_tab(tab, path, tuning, 95, "Glissé", "guitare", slides=slides, strummed={.2})
+    score = ElementTree.parse(path)
+    assert [element.text for element in score.findall(".//direction-type/words")] == ["Gratté · sl."]
+    assert {(node.get("type"), node.get("number")) for node in score.findall(".//slide")} == {
+        ("start", "1"), ("stop", "1"), ("start", "2"), ("stop", "2"),
+    }

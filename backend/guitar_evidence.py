@@ -3,7 +3,7 @@ from bisect import bisect_left, bisect_right
 from functools import lru_cache
 from pathlib import Path
 
-from guitar_tab import attack_groups
+from guitar_tab import attack_groups, group_for_notation
 
 
 @lru_cache(maxsize=1)
@@ -263,9 +263,73 @@ def mixed_guitar_tempo(drums, fallback):
     return round(60 / pulse)
 
 
-def descending_slides(path, notes, evidence, tuning, attack_levels, protected):
+def audible_slides(path, tab, attack_levels):
+    """Confirm a same-string fret shift with pitch movement between the notes."""
+    groups = [group for _, group, _ in group_for_notation(tab, ())]
+    candidates = []
+    times = sorted(attack_levels)
+    for left, right in zip(groups, groups[1:]):
+        before = {note.string: note for note in left}
+        after = {note.string: note for note in right}
+        if before.keys() != after.keys():
+            continue
+        pairs = [(note, after[string]) for string, note in before.items()]
+        interval = pairs[0][1].fret - pairs[0][0].fret
+        start, arrival = min(note.start for note in left), min(note.start for note in right)
+        if not 2 <= abs(interval) <= 5 or not .08 <= arrival - start <= .33:
+            continue
+        if any(first.fret == 0 or second.fret == 0 or second.fret - first.fret != interval
+               for first, second in pairs):
+            continue
+        begin = max((attack_levels[t] for t in times[bisect_left(times, start - .05):bisect_right(times, start + .05)]), default=0)
+        end = max((attack_levels[t] for t in times[bisect_left(times, arrival - .045):bisect_right(times, arrival + .035)]), default=0)
+        if begin and end <= .7 * begin:
+            candidates.append(pairs)
+    if not candidates:
+        return []
+
+    import librosa
+
+    audio, rate = librosa.load(path, sr=22050, mono=True)
+    slides = []
+    for pairs in candidates:
+        confirmed = sum(
+            has_glide(audio, rate, first.pitch, second.pitch, second.start)
+            for first, second in pairs if min(first.pitch, second.pitch) >= 48
+        )
+        if confirmed >= (2 if len(pairs) > 1 else 1):
+            slides.extend(((first.start, first.pitch), (second.start, second.pitch)) for first, second in pairs)
+    return slides
+
+
+def has_glide(audio, rate, first, second, arrival):
     import librosa
     import numpy as np
+
+    low, high = sorted((first, second))
+    window, fft_size = 1024, 8192
+    taper = np.hanning(window)
+    band_start, band_end = [round(float(librosa.midi_to_hz(pitch)) * fft_size / rate)
+                            for pitch in (low - 1, high + 1)]
+    between = 0
+    for offset in (-.055, -.043, -.031, -.019, -.007, .005, .017):
+        frame = round((arrival + offset) * rate) - window // 2
+        if frame < 0 or frame + window > len(audio):
+            continue
+        spectrum = np.abs(np.fft.rfft(audio[frame:frame + window] * taper, n=fft_size))
+        peak = band_start + int(np.argmax(spectrum[band_start:band_end]))
+        if spectrum[peak] < .06 * np.max(spectrum):
+            continue
+        a, b, c = np.log(np.maximum(spectrum[peak - 1:peak + 2], 1e-8))
+        delta = .5 * (a - c) / min(a - 2 * b + c, -1e-8)
+        pitch = float(librosa.hz_to_midi((peak + delta) * rate / fft_size))
+        if low + .5 <= pitch <= high - .5:
+            between += 1
+    return between >= 2
+
+
+def descending_slides(path, notes, evidence, tuning, attack_levels, protected):
+    import librosa
 
     groups = attack_groups(notes, lambda note: note["start"])
     candidates = []
@@ -291,27 +355,5 @@ def descending_slides(path, notes, evidence, tuning, attack_levels, protected):
         return []
 
     audio, rate = librosa.load(path, sr=22050, mono=True)
-    result = []
-    window, fft_size = 1024, 8192
-    taper = np.hanning(window)
-    for first, second, string in candidates:
-        low, high = second["pitch"], first["pitch"]
-        band_start, band_end = [round(float(librosa.midi_to_hz(pitch)) * fft_size / rate)
-                                for pitch in (low - 1, high + 1)]
-        between = 0
-        for offset in (-.055, -.043, -.031, -.019, -.007, .005, .017):
-            frame = round((second["start"] + offset) * rate) - window // 2
-            if frame < 0 or frame + window > len(audio):
-                continue
-            spectrum = np.abs(np.fft.rfft(audio[frame:frame + window] * taper, n=fft_size))
-            peak = band_start + int(np.argmax(spectrum[band_start:band_end]))
-            if spectrum[peak] < .06 * np.max(spectrum):
-                continue
-            a, b, c = np.log(np.maximum(spectrum[peak - 1:peak + 2], 1e-8))
-            delta = .5 * (a - c) / min(a - 2 * b + c, -1e-8)
-            pitch = float(librosa.hz_to_midi((peak + delta) * rate / fft_size))
-            if low + .5 <= pitch <= high - .5:
-                between += 1
-        if between >= 2:
-            result.append((first, second, string))
-    return result
+    return [(first, second, string) for first, second, string in candidates
+            if has_glide(audio, rate, first["pitch"], second["pitch"], second["start"])]

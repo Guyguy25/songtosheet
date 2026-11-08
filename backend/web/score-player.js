@@ -121,7 +121,9 @@
         </select></label>
         <span class="sp-audio-label">Transcription MIDI</span>
         <a class="sp-audio-credit" hidden target="_blank" rel="noopener" aria-label="Crédits audio">ⓘ</a>
-      </div><p class="sp-source-duration" hidden></p><p class="sp-status" role="status" hidden></p>`;
+      </div><p class="sp-source-duration" hidden></p>
+      <p class="sp-source-duration sp-technique-key" hidden><strong>Lire la tablature</strong> · Cases alignées : ensemble · Cases décalées : une à une · Gratté : un coup sur plusieurs cordes · sl. : glissé · P : pull-off</p>
+      <p class="sp-status" role="status" hidden></p>`;
     const get=selector=>root.querySelector(selector);
     const body=get('.sp-body'),pageScroll=root.closest('.app-scroll'),controls=get('.sp-controls');
     const sheet=get('.sp-sheet'),engraving=get('.sp-engraving'),sheetStatus=get('.sp-sheet p');
@@ -359,6 +361,7 @@
       }
     }
     async function drawSheet(){
+      get('.sp-technique-key').hidden=!guitar||kind?.value!=='tab';
       if(sheet.hidden||signal.aborted)return;
       const current=++loadId,url=kind?.value==='tab'?tabUrl:scoreUrl;
       try{

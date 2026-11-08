@@ -139,6 +139,57 @@ def refine_picked_notes(notes, strengths, evidence, protected=()):
     return [note for note in notes if id(note) not in removed], hints
 
 
+def matches_leakage(dominance, coherence, onset, evidence):
+    if dominance < 1.7 or coherence < .76:
+        return False
+    if evidence:
+        _, rise, confidence, previous, _, _ = evidence
+        if rise >= 1.55 and (onset >= .72 or confidence - previous >= .45):
+            return False
+    return onset < .62 or (dominance >= 2.5 and coherence >= .88 and onset < .72)
+
+
+def refine_mixed_guitar(path, notes, transients, tuning, strengths):
+    """Reject notes whose energy and waveform follow another separated stem."""
+    import librosa
+    import numpy as np
+
+    evidence = guitar_evidence(path, notes, transients, tuning)
+    rate, hop = 22050, 256
+
+    def spectrum(source):
+        audio, _ = librosa.load(source, sr=rate, mono=True)
+        if not np.any(audio):
+            return None
+        return librosa.cqt(audio, sr=rate, hop_length=hop,
+                           fmin=librosa.midi_to_hz(40), n_bins=49)
+
+    guitar = spectrum(path)
+    others = [result for name in ("bass", "vocals", "piano", "other")
+              if (result := spectrum(path.with_name(name + ".wav"))) is not None]
+    kept = []
+    for note in notes:
+        start = note["start"]
+        frames = frame_window(start, .025, min(.20, note["end"] - start), rate, hop, guitar.shape[1])
+        pitch = note["pitch"] - 40
+        sample = guitar[pitch, frames]
+        guitar_level = np.linalg.norm(sample)
+        if frames.size < 5 or guitar_level < 1e-5:
+            kept.append(note)
+            continue
+        for stem in others:
+            reference = stem[pitch, frames]
+            reference_level = np.linalg.norm(reference)
+            if reference_level < 1.7 * guitar_level:
+                continue
+            coherence = abs(np.vdot(reference, sample)) / (reference_level * guitar_level)
+            if matches_leakage(reference_level / guitar_level, coherence, strengths[id(note)], evidence.get(id(note))):
+                break
+        else:
+            kept.append(note)
+    return refine_picked_notes(kept, strengths, evidence)
+
+
 def descending_slides(path, notes, evidence, tuning, attack_levels, protected):
     import librosa
     import numpy as np

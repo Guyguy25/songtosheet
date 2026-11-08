@@ -1,6 +1,6 @@
 from xml.etree import ElementTree
 
-from guitar_evidence import refine_picked_notes
+from guitar_evidence import refine_mixed_guitar, refine_picked_notes
 from guitar_intro import open_pull_offs, repeated_open_intro
 from guitar_tab import arrange, write_tab
 from transcribe_track import TUNINGS
@@ -89,6 +89,29 @@ def test_acoustic_evidence_keeps_a_real_double_stop_and_filters_a_ringing_harmon
     clean, strings = refine_picked_notes([bass, harmonic, melody], strengths, evidence)
     assert clean == [bass, melody]
     assert strings == {(1.50, 40): 6, (1.52, 71): 1}
+
+
+def test_mixed_guitar_drops_leaked_bass_but_keeps_a_doubled_chord(tmp_path, monkeypatch):
+    import numpy as np
+    import soundfile as sf
+
+    rate = 22050
+    time = np.arange(rate * 2) / rate
+    envelope = np.clip((time - .5) * 100, 0, 1) * np.clip((1.2 - time) * 12, 0, 1)
+
+    def tone(pitch):
+        return envelope * np.sin(2 * np.pi * 440 * 2 ** ((pitch - 69) / 12) * time)
+
+    bass, doubled, melody = (note(pitch, .5) for pitch in (45, 60, 67))
+    sf.write(tmp_path / "guitar.wav", .04 * tone(45) + .11 * tone(60) + .10 * tone(67), rate)
+    sf.write(tmp_path / "bass.wav", .26 * tone(45) + .35 * tone(60), rate)
+    for stem in ("vocals", "piano", "other"):
+        sf.write(tmp_path / f"{stem}.wav", np.zeros_like(time), rate)
+    evidence = {id(doubled): (.5, 3., .92, .10, 2, .80), id(melody): (.5, 2., .91, .1, 1, .81)}
+    monkeypatch.setattr("guitar_evidence.guitar_evidence", lambda *args: evidence)
+    strengths = {id(bass): .40, id(doubled): .85, id(melody): .80}
+    kept, _ = refine_mixed_guitar(tmp_path / "guitar.wav", [bass, doubled, melody], [.5], TUNINGS["guitare"], strengths)
+    assert kept == [doubled, melody]
 
 
 def test_musicxml_slide_requires_both_frets_on_the_same_string(tmp_path):

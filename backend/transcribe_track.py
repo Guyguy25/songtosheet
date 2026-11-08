@@ -16,7 +16,7 @@ from pathlib import Path
 
 from guitar_tab import arrange, arrange_with_capo, attack_groups, group_for_notation, midi_notes, write_tab
 from guitar_harmony import chord_changes, clean_arpeggio, onset_strengths
-from guitar_evidence import descending_slides, guitar_evidence, refine_picked_notes
+from guitar_evidence import descending_slides, guitar_evidence, refine_mixed_guitar, refine_picked_notes
 from guitar_intro import open_pull_offs, repeated_open_intro
 from piano_score import clean_piano_notes, estimate_piano_grid, write_piano_score
 
@@ -200,7 +200,8 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": {"guitare": 11, "basse": 4, "piano": 3}.get(instrument, 1)}
+              "instrument": instrument, "bpm": bpm,
+              "version": {"guitare": 11 if isolated else 12, "basse": 4, "piano": 3}.get(instrument, 1)}
     if capo:
         config["capo"] = capo
     if title:
@@ -290,6 +291,11 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                     clean = clean_arpeggio(notes, strengths)
                     filtered += len(notes) - len(clean)
                     notes = clean
+            elif notes:
+                strengths = onset_strengths(model, notes)
+                clean, string_hints = refine_mixed_guitar(wav, notes, transients, tuning, strengths)
+                filtered += len(notes) - len(clean)
+                notes = clean
         if not notes:
             raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre instrument.")
 

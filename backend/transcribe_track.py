@@ -16,6 +16,7 @@ from pathlib import Path
 
 from guitar_tab import arrange, arrange_with_capo, attack_groups, group_for_notation, midi_notes, write_tab
 from guitar_harmony import chord_changes, clean_arpeggio, onset_strengths
+from guitar_intro import open_pull_offs, repeated_open_intro
 from piano_score import clean_piano_notes, estimate_piano_grid, write_piano_score
 
 
@@ -57,11 +58,15 @@ def load_note_model():
     return Model(build_icassp_2022_model_path(FilenameSuffix.onnx))
 
 
-def guitar_transients(path):
+def guitar_attacks(path):
     import librosa
 
     audio, rate = librosa.load(path, sr=22050, mono=True)
-    return librosa.onset.onset_detect(y=audio, sr=rate, hop_length=220, units="time").tolist()
+    hop = 220
+    envelope = librosa.onset.onset_strength(y=audio, sr=rate, hop_length=hop)
+    frames = librosa.onset.onset_detect(onset_envelope=envelope, sr=rate, hop_length=hop)
+    levels = [float(envelope[max(0, frame - 3):frame + 4].max()) for frame in frames]
+    return librosa.frames_to_time(frames, sr=rate, hop_length=hop).tolist(), levels
 
 
 def near_attack(time, transients, tolerance):
@@ -162,12 +167,12 @@ def guitar_diagnostic(notes, tab, transients, filtered):
     }
 
 
-def write_midi(notes, destination, program, instrument, bpm, *, beats=None):
+def write_midi(notes, destination, program, instrument, bpm, *, beats=None, beat_type=4):
     from pretty_midi import Instrument, Note, PrettyMIDI, TimeSignature
 
     midi = PrettyMIDI(initial_tempo=bpm)
     if beats is not None:
-        midi.time_signature_changes.append(TimeSignature(beats, 4, 0))
+        midi.time_signature_changes.append(TimeSignature(beats, beat_type, 0))
     track = Instrument(program, name=instrument.capitalize())
     track.notes.extend(Note(**note) for note in notes)
     midi.instruments.append(track)
@@ -194,7 +199,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": {"guitare": 8, "basse": 4, "piano": 3}.get(instrument, 1)}
+              "instrument": instrument, "bpm": bpm, "version": {"guitare": 9, "basse": 4, "piano": 3}.get(instrument, 1)}
     if capo:
         config["capo"] = capo
     if title:
@@ -233,10 +238,14 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         filtered = 0
         simple = False
         chords = []
+        tab_meter = (4, 4)
+        intro_count = 0
+        pull_offs = []
+        string_hints = {}
         if instrument == "guitare":
             tuning = TUNINGS[instrument]
             notes = [note for note in notes if tuning[-1] <= note["pitch"] <= tuning[0] + 24]
-            transients = guitar_transients(wav)
+            transients, attack_levels = guitar_attacks(wav)
             clean = filter_guitar_echoes(notes, transients)
             filtered = len(notes) - len(clean)
             notes = clean
@@ -247,7 +256,25 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             elif isolated:
                 strengths = onset_strengths(model, notes)
                 chords = chord_changes(notes, strengths)
-                if len(chords) >= 2:
+                open_tuning = tuple(pitch + capo for pitch in tuning) if type(capo) is int else ()
+                open_intro = repeated_open_intro(notes, strengths, transients, set(open_tuning)) if open_tuning else None
+                if open_intro:
+                    clean, intro, cutoff, pulse, cycle, count = open_intro
+                    techniques, echoes = open_pull_offs(notes, strengths, transients, attack_levels, cutoff, pulse, open_tuning)
+                    clean = [note for note in clean if id(note) not in echoes]
+                    filtered += len(notes) - len(clean)
+                    notes = [{**note, "start": note["start"] - intro, "end": note["end"] - intro} for note in clean]
+                    for before, after, string in techniques:
+                        pair = tuple((note["start"] - intro, note["pitch"]) for note in (before, after))
+                        pull_offs.append(pair)
+                        string_hints.update(dict.fromkeys(pair, string))
+                    transients = [max(0., time - intro) for time in transients if time >= intro - .12]
+                    chords = [(max(0., time - intro), root, kind) for time, root, kind in chords if time >= intro - .12]
+                    if cycle == 6:
+                        tab_meter = (6, 8)
+                        bpm = round(30 / pulse)
+                        intro_count = count
+                elif len(chords) >= 2:
                     clean = clean_arpeggio(notes, strengths)
                     filtered += len(notes) - len(clean)
                     notes = clean
@@ -267,23 +294,27 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             write_midi(notes, result / "score.mid", program, instrument, detected_bpm, beats=beats)
             write_piano_score(notes, result / "score.musicxml", score_title, detected_bpm, beats)
         else:
-            write_midi(notes, result / "score.mid", program, instrument, bpm)
+            write_midi(notes, result / "score.mid", program, instrument, bpm,
+                       beats=tab_meter[0] if tab_meter != (4, 4) else None, beat_type=tab_meter[1])
             write_score(result / "score.mid", result / "score.musicxml", score_title, guitar=instrument == "guitare")
         tuning = TUNINGS.get(instrument)
         if capo == "auto":
             resolved_capo, tab = arrange_with_capo(notes, tuning, simple=simple)
         else:
-            resolved_capo, tab = capo, arrange(notes, tuning, capo=capo, simple=simple) if tuning else []
+            resolved_capo, tab = capo, arrange(notes, tuning, capo=capo, simple=simple, string_hints=string_hints) if tuning else []
         if tab:
-            write_midi(midi_notes(tab), result / "tab.mid", program, instrument, bpm)
+            write_midi(midi_notes(tab), result / "tab.mid", program, instrument, bpm,
+                       beats=tab_meter[0] if tab_meter != (4, 4) else None, beat_type=tab_meter[1])
             write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument,
-                      transients=transients, capo=resolved_capo, chords=chords)
+                      transients=transients, capo=resolved_capo, chords=chords, meter=tab_meter,
+                      intro_count=intro_count, pull_offs=pull_offs)
         manifest = {**config, "notes": notes, "duration": duration, "tab": bool(tab)}
         if instrument == "piano":
             manifest.update(bpm=detected_bpm, meter=f"{beats}/4", intro=intro)
         if capo == "auto":
             manifest["resolved_capo"] = resolved_capo
         if instrument == "guitare":
+            manifest.update(bpm=bpm, meter=f"{tab_meter[0]}/{tab_meter[1]}")
             manifest["diagnostic"] = guitar_diagnostic(notes, tab, transients, filtered)
         (result / "notes.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
         try:

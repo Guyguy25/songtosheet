@@ -6,7 +6,7 @@
   ];
   const formats=[
     ['partition','𝄞','Partition','Garde les notes simultanées détectées sur une portée.'],
-    ['tablature','≡','Tablature','Lis les cordes et les cases d’une mélodie à une note à la fois.']
+    ['tablature','≡','Tablature','Lis les cordes et les cases, avec les accords jouables.']
   ];
   const sources=[
     ['mixed','🎙️','Il y a une voix'],

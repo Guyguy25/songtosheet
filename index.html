@@ -11,9 +11,9 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=4" />
-  <script src="/backend/web/track-onboarding.js?v=4" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=5" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=3" />
-  <script src="/backend/web/score-player.js?v=3" defer></script>
+  <script src="/backend/web/score-player.js?v=4" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.6}a{color:inherit;text-decoration:none}p,h1,h2,h3{margin-top:0}h1,h2,h3{letter-spacing:-.045em}.hidden{display:none!important}.container{max-width:1216px;width:calc(100% - 64px);margin:0 auto}.section-pad{padding:104px 0}.btn{border:1px solid transparent;display:inline-flex;justify-content:center;align-items:center;gap:14px;font-weight:750;border-radius:13px;min-height:49px;padding:13px 21px;transition:.18s transform,.18s background,.18s box-shadow;white-space:nowrap}.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(0)}.btn span:last-child{font-size:19px;font-weight:500}.btn-primary{color:#fff;background:var(--purple);box-shadow:0 8px 22px rgba(109,61,220,.16)}.btn-primary:hover{background:var(--purple-dark);box-shadow:0 11px 23px rgba(109,61,220,.24)}.btn-outline{border-color:#ded7ed;background:#fff;color:var(--ink)}.btn-outline:hover{border-color:var(--purple);background:#f9f6ff}.btn-dark{color:#fff;background:#29213e}.btn-dark:hover{background:#443363}.btn-white{background:white;color:var(--purple-dark)}.section-label{display:block;font-size:12px;letter-spacing:.14em;color:var(--purple);font-weight:850;margin-bottom:18px}.section-intro h2,.showcase-content h2,.faq-grid h2{font-size:clamp(38px,4vw,55px);line-height:1.12;margin-bottom:18px}.section-intro h2 span,.showcase-content h2 span,.faq-grid h2 span{color:var(--purple)}.section-intro>p{font-size:16px;color:var(--muted);max-width:530px;margin:0 auto;line-height:1.7}.center{text-align:center}
@@ -1338,34 +1338,37 @@ body.pricing-open{overflow:hidden}
         const links={pdf:'Télécharger le PDF',musicxml:'Partition MusicXML',tab:'Tablature MusicXML',mid:'MIDI'};
         const completed=j.status==='completed';
         const waiting=['queued','processing'].includes(j.status);
+        const ready=j.downloads.includes('mid')&&j.downloads.includes('musicxml');
         const downloads=Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
           `<a class="btn ${key==='pdf'?'btn-primary':'btn-outline'}" href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}">↓ ${label}</a>`).join('');
         const tab=j.format==='tablature'&&j.downloads.includes('tab');
-        const status=completed?(tab?'TABLATURE PRÊTE':'PARTITION PRÊTE'):waiting?'TRANSCRIPTION EN COURS':'TRANSCRIPTION INTERROMPUE';
-        const fallback=j.format==='tablature'&&!tab?' Aucune ligne jouable n’a été détectée pour la tablature. Le PDF contient la partition.':'';
-        const detail=completed?`${j.note_count} notes estimées.${fallback} Tu peux corriger le résultat dans un éditeur MusicXML.`
+        const status=ready?(tab?'TABLATURE PRÊTE':'PARTITION PRÊTE'):waiting?'TRANSCRIPTION EN COURS':'TRANSCRIPTION INTERROMPUE';
+        const fallback=j.format==='tablature'&&!tab?' Aucune tablature jouable n’a été détectée. La partition est disponible.':'';
+        const detail=ready?`${j.note_count} notes estimées.${fallback} ${waiting?'Le PDF se prépare.':j.pdf_error?'Le PDF est indisponible pour ce relevé.':'Tu peux corriger le résultat dans un éditeur MusicXML.'}`
           :j.status==='queued'?'Ton audio est en attente du moteur de transcription.'
           :waiting?'Le moteur analyse ton audio. Cette page se met à jour automatiquement.'
           :j.error_message||'Importe ton fichier pour réessayer.';
-        $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">${status}</span>
+        if(!$('track-result-summary'))$('result-content').innerHTML='<div id="track-result-summary" class="result-hero"></div>';
+        $('track-result-summary').innerHTML=`<span class="dashboard-kicker">${status}</span>
           <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)} · Accès admin</p>
           ${j.source_name?`<p class="result-meta">Fichier importé : ${safe(j.source_name)}</p>`:''}
-          <p>${safe(detail)}</p>${completed?`<div class="result-actions">${downloads}</div>`:''}
-          ${!waiting&&!completed?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}</div>
-          ${completed&&j.downloads.includes('mid')?'<section id="score-player" class="score-player" aria-label="Lecteur de la transcription"></section>':''}`;
-        stopPlayer();
-        if($('score-player')&&window.SongToSheetPlayer){
+          <p>${safe(detail)}</p>${ready?`<div class="result-actions">${downloads}</div>`:''}
+          ${!waiting&&!completed&&!ready?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;
+        if(ready&&!$('score-player'))$('result-content').insertAdjacentHTML('beforeend',
+          '<section id="score-player" class="score-player" aria-label="Lecteur de la transcription"></section>');
+        if(ready&&!closePlayer&&window.SongToSheetPlayer){
           const exportUrl=kind=>`/api/track?id=${encodeURIComponent(id)}&download=${kind}`;
           closePlayer=window.SongToSheetPlayer.mount($('score-player'),{
             scoreUrl:exportUrl('musicxml'),midiUrl:exportUrl('mid'),instrument:j.instrument,sourceDuration:j.duration,
-            tabUrl:j.downloads.includes('tab')?exportUrl('tab'):null,preferTab:tab
+            tabUrl:j.downloads.includes('tab')?exportUrl('tab'):null,
+            tabMidiUrl:j.downloads.includes('tabmid')?exportUrl('tabmid'):null,preferTab:tab
           });
         }
         clearInterval(state.poll);state.poll=null;
-        if(waiting)state.poll=setInterval(()=>{
+        if(waiting)state.poll=setTimeout(()=>{
           if(state.activePage==='result'&&state.resultId===id)loadResult(id);
           else{clearInterval(state.poll);state.poll=null;}
-        },5000);
+        },2000);
         else await refresh();
         return;
       }

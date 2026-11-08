@@ -195,7 +195,8 @@
         const exportUrl=kind=>`/api/jobs/${encodeURIComponent(id)}/download/${kind}`;
         closePlayer=window.SongToSheetPlayer.mount($('score-player'),{
           scoreUrl:exportUrl('musicxml'),midiUrl:exportUrl('mid'),instrument:j.instrument,sourceDuration:j.duration,
-          tabUrl:formats.includes('tab')?exportUrl('tab'):null
+          tabUrl:formats.includes('tab')?exportUrl('tab'):null,
+          tabMidiUrl:formats.includes('tabmid')?exportUrl('tabmid'):null
         });
       }
       if(processing){clearInterval(state.poll);state.poll=setInterval(async()=>{if(state.activePage==='result'&&state.resultId===id){await loadResult(id);}else clearInterval(state.poll);},4500);}

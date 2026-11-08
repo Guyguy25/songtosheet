@@ -10,11 +10,11 @@ from urllib.parse import urlparse
 
 import requests
 
-from transcribe_track import transcribe
+from transcribe_track import load_note_model, transcribe
 from score_pdf import render_pdf
 
 
-EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid"}
+EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
 
 
 def process_job(call, job, data):
@@ -27,24 +27,32 @@ def process_job(call, job, data):
                     chunk = call("read", **identity, index=index)
                     file.write(base64.b64decode(chunk["data"], validate=True))
             result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"])
-            pdf = Path(temporary) / "score.pdf"
-            render_pdf(result, job["title"], job["instrument"], job.get("format", "partition"), pdf)
             exports = {
                 key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
                 for key, filename in EXPORTS.items() if (result / filename).is_file()
             }
-            exports["pdf"] = base64.b64encode(pdf.read_bytes()).decode("ascii")
-        meta = json.loads((result / "notes.json").read_text(encoding="utf-8"))
-        if sum(map(len, exports.values())) > 4_000_000:
-            payload = {"ok": False, "error": "Les exports dépassent la taille maximale. Essaie un extrait plus court."}
-        else:
-            payload = {"ok": True, "duration": meta["duration"], "note_count": len(meta["notes"]), "exports": exports}
+            meta = json.loads((result / "notes.json").read_text(encoding="utf-8"))
+            if sum(map(len, exports.values())) > 4_000_000:
+                raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
+            call("preview", **identity, duration=meta["duration"], note_count=len(meta["notes"]), exports=exports)
+            print(f"{job['id']}: relevé disponible", flush=True)
+            pdf = Path(temporary) / "score.pdf"
+            payload = {"ok": True, "preview": True, "exports": {}}
+            try:
+                render_pdf(result, job["title"], job["instrument"], job.get("format", "partition"), pdf)
+                encoded_pdf = base64.b64encode(pdf.read_bytes()).decode("ascii")
+                if len(encoded_pdf) > 4_000_000:
+                    raise ValueError("PDF trop volumineux.")
+                payload["exports"]["pdf"] = encoded_pdf
+            except Exception as error:
+                print(f"{job['id']}: PDF : {error}", flush=True)
+                payload["pdf_error"] = True
     except requests.RequestException:
         raise  # The lease lets another attempt recover after a connection failure.
     except Exception as error:
         print(f"{job['id']}: {error}", flush=True)
         message = "La transcription a échoué. Essaie un audio valide ou une piste plus claire."
-        if str(error).startswith(("L’audio doit durer", "Aucune note exploitable")):
+        if str(error).startswith(("L’audio doit durer", "Aucune note exploitable", "Les exports dépassent")):
             message = str(error)
         payload = {"ok": False, "error": message}
     for attempt in range(3):
@@ -83,6 +91,8 @@ def main():
             response.raise_for_status()
             return response.json()
 
+        if not args.once:
+            load_note_model()
         print("Moteur de transcription prêt.", flush=True)
         while True:
             try:
@@ -92,7 +102,7 @@ def main():
                 if args.once:
                     return
                 if not job:
-                    time.sleep(20)
+                    time.sleep(5)
             except requests.RequestException as error:
                 if args.once:
                     raise

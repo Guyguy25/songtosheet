@@ -9,7 +9,13 @@ const {CHUNK_BYTES,MAX_BYTES,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,FORMATS,isId,t
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
 const LEASE_MS=25*60*1000;
-const WORKER_ACTIONS=new Set(['claim','read','finish']);
+const WORKER_ACTIONS=new Set(['claim','read','preview','finish']);
+
+function validExports(exports){
+  return exports&&typeof exports==='object'&&!Array.isArray(exports)&&
+    Object.entries(exports).every(([key,value])=>Object.hasOwn(FORMATS,key)&&typeof value==='string'&&value)&&
+    Object.values(exports).reduce((size,value)=>size+value.length,0)<=4000000;
+}
 
 function workerAuthorized(req){
   const expected=process.env.TRACK_WORKER_DIGEST||'';
@@ -55,7 +61,7 @@ async function upload(db,res,user,body){
   if(!isId(body.id))return json(res,404,{detail:'Création introuvable.'});
   const jobs=db.collection('track_jobs');
   const filter={...trackFilter(body.id,user),status:'uploading',active:true};
-  const job=await jobs.findOne(filter);
+  const job=await jobs.findOne(filter,{projection:{exports:0}});
   if(!job||job.expires_at<=new Date())return json(res,409,{detail:'Cet import est terminé ou a expiré.'});
   const chunks=db.collection('track_audio');
   if(body.action==='cancel'){
@@ -99,7 +105,7 @@ async function worker(db,res,body){
   }
   if(!isId(body.id)||typeof body.lease!=='string')return json(res,400,{detail:'Traitement invalide.'});
   const filter={_id:new ObjectId(body.id),status:'processing',active:true,lease:body.lease,lease_until:{$gt:now}};
-  const job=await jobs.findOne(filter);
+  const job=await jobs.findOne(filter,{projection:{exports:0}});
   if(!job)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   if(body.action==='read'){
     if(!Number.isInteger(body.index))return json(res,400,{detail:'Partie invalide.'});
@@ -108,14 +114,30 @@ async function worker(db,res,body){
   }
   const {duration,note_count,exports}=body;
   const completed=body.ok===true;
-  if(completed&&(!Number.isFinite(duration)||duration<0.5||duration>360||!Number.isInteger(note_count)||note_count<1||
-    !exports||typeof exports.musicxml!=='string'||typeof exports.mid!=='string'||
-    Object.entries(exports).some(([key,value])=>!Object.hasOwn(FORMATS,key)||typeof value!=='string'||!value)||
-    Object.values(exports).reduce((size,value)=>size+value.length,0)>4000000)){
+  const isPreview=body.action==='preview';
+  const hasPreview=job.downloads?.includes('mid')&&job.downloads?.includes('musicxml');
+  const finishingPreview=completed&&!isPreview&&hasPreview&&body.preview===true;
+  const fullValid=validExports(exports)&&exports.musicxml&&exports.mid&&Number.isFinite(duration)&&duration>=.5&&
+    duration<=360&&Number.isInteger(note_count)&&note_count>=1;
+  const finishValid=validExports(exports)&&Object.keys(exports).every(key=>key==='pdf')&&
+    (Boolean(exports.pdf)||body.pdf_error===true);
+  if((isPreview||completed)&&!(finishingPreview?finishValid:fullValid)){
     return json(res,400,{detail:'Exports invalides ou trop volumineux.'});
   }
-  const outcome=completed?{status:'completed',duration,note_count,exports,downloads:Object.keys(exports)}
-    :{status:'failed',error_message:typeof body.error==='string'?body.error.slice(0,300):'La transcription a échoué.'};
+  if(isPreview){
+    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports)}});
+    if(!updated.matchedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
+    return json(res,200,{ok:true});
+  }
+  let outcome;
+  if(finishingPreview){
+    outcome={status:'completed',pdf_error:!exports.pdf,downloads:[...new Set([...job.downloads,...Object.keys(exports)])]};
+    if(exports.pdf)outcome['exports.pdf']=exports.pdf;
+  }else if(completed){
+    outcome={status:'completed',duration,note_count,exports,downloads:Object.keys(exports)};
+  }else{
+    outcome={status:'failed',error_message:typeof body.error==='string'?body.error.slice(0,300):'La transcription a échoué.'};
+  }
   const updated=await jobs.updateOne(filter,{$set:{...outcome,active:false,finished_at:now},$unset:{lease:'',lease_until:''}});
   if(!updated.modifiedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   await chunks.deleteMany({job_id:job._id});
@@ -125,7 +147,8 @@ async function worker(db,res,body){
 async function download(db,req,res,user){
   const {id,download:format}=req.query;
   if(!isId(id)||!Object.hasOwn(FORMATS,format))return json(res,404,{detail:'Export introuvable.'});
-  const job=await db.collection('track_jobs').findOne({...trackFilter(id,user),status:'completed'});
+  const job=await db.collection('track_jobs').findOne({...trackFilter(id,user),status:{$in:['processing','completed']}},
+    {projection:{[`exports.${format}`]:1}});
   const data=job?.exports?.[format];
   if(!data)return json(res,404,{detail:'Export introuvable.'});
   res.setHeader('Content-Type',FORMATS[format].type);

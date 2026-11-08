@@ -8,8 +8,10 @@ import math
 import subprocess
 import sys
 import tempfile
+from functools import lru_cache
 from pathlib import Path
-from xml.etree import ElementTree as ET
+
+from guitar_tab import arrange, midi_notes, write_tab
 
 
 TRACKS = {
@@ -19,7 +21,6 @@ TRACKS = {
     "piano": ("piano", 0),
 }
 TUNINGS = {"guitare": (64, 59, 55, 50, 45, 40), "basse": (43, 38, 33, 28)}
-NOTE_NAMES = ("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")
 AUDIO_FORMATS = {".wav": "wav", ".mp3": "mp3", ".m4a": "mov", ".flac": "flac", ".ogg": "ogg", ".aac": "aac"}
 
 
@@ -43,58 +44,12 @@ def write_score(midi_path, destination, title, *, guitar=False):
     score.write("musicxml", fp=destination)
 
 
-def tab_position(pitch, tuning, previous_fret):
-    positions = [
-        (string, pitch - open_pitch)
-        for string, open_pitch in enumerate(tuning, 1)
-        if 0 <= pitch - open_pitch <= 24
-    ]
-    return min(positions, key=lambda pair: (abs(pair[1] - previous_fret), pair[1]))
+@lru_cache(maxsize=1)
+def load_note_model():
+    from basic_pitch import FilenameSuffix, build_icassp_2022_model_path
+    from basic_pitch.inference import Model
 
-
-def write_tab(score_path, destination, tuning):
-    tree = ET.parse(score_path)
-    part = tree.find("part")
-    attributes = part.find("measure/attributes")
-    clef = attributes.find("clef")
-    clef.clear()
-    ET.SubElement(clef, "sign").text = "TAB"
-    ET.SubElement(clef, "line").text = str(len(tuning) // 2)
-    staff = ET.SubElement(attributes, "staff-details")
-    ET.SubElement(staff, "staff-lines").text = str(len(tuning))
-    for line, pitch in enumerate(reversed(tuning), 1):
-        name = NOTE_NAMES[pitch % 12]
-        row = ET.SubElement(staff, "staff-tuning", line=str(line))
-        ET.SubElement(row, "tuning-step").text = name[0]
-        if name.endswith("#"):
-            ET.SubElement(row, "tuning-alter").text = "1"
-        ET.SubElement(row, "tuning-octave").text = str(pitch // 12 - 1)
-    fret = 0
-    for note in part.findall("measure/note"):
-        pitch = note.find("pitch")
-        if pitch is None:
-            continue
-        octave = int(pitch.findtext("octave"))
-        step = NOTE_NAMES.index(pitch.findtext("step"))
-        midi = (octave + 1) * 12 + step + int(float(pitch.findtext("alter", "0")))
-        string, fret = tab_position(midi, tuning, fret)
-        notations = note.find("notations")
-        if notations is None:
-            notations = ET.SubElement(note, "notations")
-        technical = ET.SubElement(notations, "technical")
-        ET.SubElement(technical, "string").text = str(string)
-        ET.SubElement(technical, "fret").text = str(fret)
-    tree.write(destination, encoding="utf-8", xml_declaration=True)
-
-
-def tab_melody(notes, tuning):
-    # One playable line. Keep the full polyphonic result in score.musicxml.
-    candidates = [n for n in notes if tuning[-1] <= n["pitch"] <= tuning[0] + 24]
-    end = 0
-    for note in sorted(candidates, key=lambda n: (n["start"], -n["velocity"])):
-        if note["start"] >= end:
-            yield note
-            end = note["end"]
+    return Model(build_icassp_2022_model_path(FilenameSuffix.onnx))
 
 
 def write_midi(notes, destination, program, instrument, bpm):
@@ -123,7 +78,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": 2 if instrument == "guitare" else 1}
+              "instrument": instrument, "bpm": bpm, "version": 3 if instrument in TUNINGS else 1}
     if title:
         config["title"] = title
     with source.open("rb") as audio:
@@ -134,7 +89,6 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     if (target / "notes.json").is_file():
         return target
 
-    from basic_pitch import FilenameSuffix, build_icassp_2022_model_path
     from basic_pitch.inference import predict
 
     with tempfile.TemporaryDirectory(dir=output) as temporary:
@@ -147,8 +101,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                  "--shifts", "0", str(wav)], timeout=900)
             wav = work / separator / "input" / f"{stem}.wav"
 
-        model = build_icassp_2022_model_path(FilenameSuffix.onnx)
-        _, midi, _ = predict(wav, model)
+        _, midi, _ = predict(wav, load_note_model())
         notes = sorted([
             {"pitch": int(note.pitch), "start": float(note.start), "end": float(note.end),
              "velocity": int(note.velocity)}
@@ -166,12 +119,11 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         write_midi(notes, result / "score.mid", program, instrument, bpm)
         write_score(result / "score.mid", result / "score.musicxml", title or source.stem, guitar=instrument == "guitare")
         tuning = TUNINGS.get(instrument)
-        melody = list(tab_melody(notes, tuning)) if tuning else []
-        if melody:
-            write_midi(melody, work / "tab.mid", program, instrument, bpm)
-            write_score(work / "tab.mid", work / "tab.musicxml", title or source.stem)
-            write_tab(work / "tab.musicxml", result / "tab.musicxml", tuning)
-        manifest = {**config, "notes": notes, "duration": duration, "tab": bool(melody)}
+        tab = arrange(notes, tuning) if tuning else []
+        if tab:
+            write_midi(midi_notes(tab), result / "tab.mid", program, instrument, bpm)
+            write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument)
+        manifest = {**config, "notes": notes, "duration": duration, "tab": bool(tab)}
         (result / "notes.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
         try:
             result.rename(target)

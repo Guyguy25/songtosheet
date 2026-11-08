@@ -63,9 +63,9 @@ python -m pip install -r requirements-transcription.txt
 python transcribe_track.py tests/melody.wav guitare ./exports-prives --isolated --authorized
 ```
 
-Pour traiter un mix, retire `--isolated` et choisis la piste à extraire. Demucs télécharge ses poids au premier usage. Utilise `--bpm` si tu connais le tempo. Le MIDI conserve les timings estimés et le MusicXML les quantifie à un tempo et une mesure fixes. La tablature guitare ou basse propose une ligne à une note à la fois, en accordage standard. Les accords détectés restent dans la partition et le MIDI.
+Pour traiter un mix, retire `--isolated` et choisis la piste à extraire. Demucs télécharge ses poids au premier usage. Utilise `--bpm` si tu connais le tempo. Le MIDI conserve les timings estimés et le MusicXML les quantifie à un tempo et une mesure fixes. En accordage standard, la tablature place les notes simultanées sur des cordes différentes quand un doigté est disponible. Le MIDI de tablature conserve les attaques originales des notes placées, tandis que la notation les arrondit sur une grille de doubles croches.
 
-Le moteur écrit `score.mid`, `score.musicxml`, `notes.json` et, lorsqu’une ligne jouable est disponible, `tab.musicxml`. Il efface les fichiers audio intermédiaires et réutilise un export complet si les octets du fichier et les paramètres correspondent. Réserve un dossier d’exports privé à chaque utilisateur si tu intègres le moteur à un service.
+Le moteur écrit `score.mid`, `score.musicxml`, `notes.json` et, lorsqu’un doigté est disponible, `tab.musicxml` et `tab.mid`. Il efface les fichiers audio intermédiaires et réutilise un export complet si les octets du fichier et les paramètres correspondent. Réserve un dossier d’exports privé à chaque utilisateur si tu intègres le moteur à un service.
 
 Le prototype exige une confirmation explicite des droits via `--authorized`. Il lit un fichier local. Les liens YouTube et Spotify restent des références pour identifier le morceau. Un catalogue partagé devra vérifier la licence de chaque partition, conserver sa provenance et respecter les conditions d’accès du fournisseur. La confirmation de l’utilisateur ne vaut pas autorisation de republier le résultat.
 

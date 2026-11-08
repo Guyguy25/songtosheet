@@ -312,7 +312,7 @@ def work_job(job_id:str,source:Path,title:str,instrument:str,track_user:str|None
         else:
             cached=transcribe(source,instrument,DATA/'track-cache'/track_user,isolated=isolated,title=title)
             folder.mkdir(exist_ok=True)
-            for filename in ('score.mid','score.musicxml','tab.musicxml'):
+            for filename in ('score.mid','score.musicxml','tab.musicxml','tab.mid'):
                 if (cached/filename).is_file():
                     shutil.copyfile(cached/filename,folder/filename)
             render_pdf(cached,title,instrument,format,folder/'score.pdf')
@@ -392,6 +392,7 @@ EXPORT_FORMATS={
     'mid':('score.mid','mid','audio/midi'),
     'musicxml':('score.musicxml','musicxml','application/vnd.recordare.musicxml+xml'),
     'tab':('tab.musicxml','musicxml','application/vnd.recordare.musicxml+xml'),
+    'tabmid':('tab.mid','mid','audio/midi'),
 }
 
 
@@ -406,7 +407,7 @@ def download(request:Request,job_id:str,format:str):
     target=EXPORTS/job_id/filename
     if not target.is_file():fail('Fichier indisponible.',404)
     slug=re.sub(r'[^a-z0-9-]','-',row['title'].lower())[:40].strip('-') or 'partition'
-    if format=='tab':slug+='-tablature'
+    if format in ('tab','tabmid'):slug+='-tablature'
     return FileResponse(target,filename=f'{slug}.{extension}',media_type=media_type)
 
 

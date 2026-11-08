@@ -30,28 +30,38 @@
     const document=new DOMParser().parseFromString(source,'application/xml');
     const pitchClass={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
     const result=[],ties=new Map();
-    let divisions=1,position=0;
-    for(const item of document.querySelectorAll('part > measure > *')){
-      if(item.tagName==='attributes'){
-        divisions=Number(item.querySelector('divisions')?.textContent)||divisions;
-        continue;
+    let divisions=1,measureStart=0,measureLength=240/bpm;
+    for(const measure of document.querySelectorAll('part > measure')){
+      let position=measureStart,onset=position;
+      for(const item of measure.children){
+        if(item.tagName==='attributes'){
+          divisions=Number(item.querySelector('divisions')?.textContent)||divisions;
+          const beats=Number(item.querySelector('time beats')?.textContent);
+          const beatType=Number(item.querySelector('time beat-type')?.textContent);
+          if(beats&&beatType)measureLength=beats*240/(beatType*bpm);
+          continue;
+        }
+        const duration=Number(item.querySelector('duration')?.textContent)*60/(divisions*bpm);
+        if(!duration)continue;
+        if(item.tagName==='backup'){position-=duration;continue;}
+        if(item.tagName!=='note'&&item.tagName!=='forward')continue;
+        const chord=Boolean(item.querySelector('chord'));
+        if(!chord)onset=position;
+        const pitch=item.querySelector('pitch');
+        if(pitch){
+          const midi=(Number(pitch.querySelector('octave').textContent)+1)*12+
+            pitchClass[pitch.querySelector('step').textContent]+Number(pitch.querySelector('alter')?.textContent||0);
+          const key=`${midi}:${item.querySelector('technical string')?.textContent||''}`;
+          const previous=item.querySelector('tie[type="stop"]')&&ties.get(key);
+          const note=previous||{time:onset,midi,duration,velocity:.7};
+          if(previous)note.duration=onset+duration-note.time;
+          else result.push(note);
+          if(item.querySelector('tie[type="start"]'))ties.set(key,note);
+          else ties.delete(key);
+        }
+        if(!chord)position+=duration;
       }
-      const duration=Number(item.querySelector('duration')?.textContent)*60/(divisions*bpm);
-      if(!duration)continue;
-      if(item.tagName==='backup'){position-=duration;continue;}
-      if(item.tagName!=='note'&&item.tagName!=='forward')continue;
-      const pitch=item.querySelector('pitch');
-      if(pitch){
-        const midi=(Number(pitch.querySelector('octave').textContent)+1)*12+
-          pitchClass[pitch.querySelector('step').textContent]+Number(pitch.querySelector('alter')?.textContent||0);
-        const previous=item.querySelector('tie[type="stop"]')&&ties.get(midi);
-        const note=previous||{time:position,midi,duration,velocity:.7};
-        if(previous)note.duration=position+duration-note.time;
-        else result.push(note);
-        if(item.querySelector('tie[type="start"]'))ties.set(midi,note);
-        else ties.delete(midi);
-      }
-      position+=duration;
+      measureStart=measure.getAttribute('implicit')==='yes'?position:measureStart+measureLength;
     }
     return result;
   }
@@ -70,7 +80,7 @@
     return new XMLSerializer().serializeToString(xml);
   }
 
-  function mount(root,{scoreUrl,tabUrl,midiUrl,instrument,sourceDuration,preferTab=false}){
+  function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,preferTab=false}){
     const controller=new AbortController();
     const {signal}=controller;
     root.innerHTML=`
@@ -293,6 +303,7 @@
     }
 
     const xml=new Map();
+    let tabMidi;
     function loadXml(url){
       if(!xml.has(url))xml.set(url,read(url,signal).catch(error=>{xml.delete(url);throw error;}));
       return xml.get(url);
@@ -303,7 +314,15 @@
       if(playing)pause();
       for(const control of [play,seek,speed,restart])control.disabled=true;
       try{
-        const track=tab?tabNotes(await loadXml(tabUrl),midi.header.tempos[0]?.bpm||120):midi.tracks.flatMap(part=>part.notes);
+        let track;
+        if(tab&&tabMidiUrl){
+          tabMidi??=read(tabMidiUrl,signal,true).then(buffer=>new window.Midi(buffer)).catch(error=>{tabMidi=undefined;throw error;});
+          track=(await tabMidi).tracks.flatMap(part=>part.notes);
+        }else if(tab){
+          track=tabNotes(await loadXml(tabUrl),midi.header.tempos[0]?.bpm||120);
+        }else{
+          track=midi.tracks.flatMap(part=>part.notes);
+        }
         if(signal.aborted||current!==audioLoadId)return;
         if(!track.length)throw new Error('Aucune note à lire.');
         notes=track.sort((a,b)=>a.time-b.time);

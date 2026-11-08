@@ -5,8 +5,8 @@
     ['piano','🎹','Piano'],['guitare','🎸','Guitare'],['basse','♫','Basse']
   ];
   const formats=[
-    ['partition','𝄞','Partition','Lis les notes sur une portée.'],
-    ['tablature','≡','Tablature','Lis les cordes et les cases à jouer.']
+    ['partition','𝄞','Partition','Garde les notes simultanées détectées sur une portée.'],
+    ['tablature','≡','Tablature','Lis les cordes et les cases d’une mélodie à une note à la fois.']
   ];
   const sources=[
     ['mixed','🎙️','Il y a une voix'],
@@ -21,7 +21,6 @@
 
   function mount(root,{onSubmit,sampleUrl}){
     const draft={instrument:'',format:'',source:'',file:null};
-    let sampleLoaded=false;
     let step=0,busy=false;
     root.innerHTML=`
       <ol class="track-steps" aria-label="Étapes de création">${steps.map(([label],i)=>
@@ -34,11 +33,12 @@
         <div class="track-upload hidden">
           <label for="track-audio-input">Ton fichier audio</label>
           <input id="track-audio-input" type="file" accept=".wav,.mp3,.m4a,.flac,.ogg,.aac,audio/*">
-          <small class="track-filename"></small>
+          <small class="track-filename" aria-live="polite"></small>
           ${sampleUrl?'<button type="button" class="btn btn-outline track-sample">Charger la mélodie de test</button>':''}
           <label for="track-title-input">Nom du relevé</label>
           <input id="track-title-input" class="field" type="text" maxlength="90" placeholder="Ex. Mon morceau">
-          <label class="track-rights"><input type="checkbox"> Je dispose des droits nécessaires pour transcrire cet audio.</label>
+          <label class="track-rights track-solo hidden"><input type="checkbox"> Ce fichier contient uniquement l’instrument choisi.</label>
+          <label class="track-rights"><input id="track-rights-input" type="checkbox"> Je dispose des droits nécessaires pour transcrire cet audio.</label>
         </div>
         <p class="track-selection hidden"></p>
         <p class="track-status" aria-live="polite"></p>
@@ -50,15 +50,36 @@
     const get=selector=>root.querySelector(selector);
     const form=get('form'),heading=get('h2'),choices=get('.track-choices'),upload=get('.track-upload');
     const back=get('.track-back'),next=get('.track-next'),title=get('#track-title-input');
-    const fileInput=get('#track-audio-input'),rights=get('.track-rights input'),status=get('.track-status');
+    const fileInput=get('#track-audio-input'),rights=get('#track-rights-input'),status=get('.track-status');
+    const soloLabel=get('.track-solo'),solo=soloLabel.querySelector('input'),filename=get('.track-filename');
     const fields=['instrument','format','source'];
     const allowsTab=()=>['guitare','basse'].includes(draft.instrument);
     const setStatus=(message,error=false)=>{status.textContent=message;status.classList.toggle('is-error',error);};
+    let releaseMetadata;
     const setFile=file=>{
+      releaseMetadata?.();
       draft.file=file;
-      sampleLoaded=false;
+      solo.checked=false;
       rights.checked=false;
-      get('.track-filename').textContent=file?file.name:'Aucun fichier sélectionné.';
+      filename.textContent=file?file.name:'Aucun fichier sélectionné.';
+      if(!file)return;
+      const media=document.createElement('audio'),url=URL.createObjectURL(file);
+      media.preload='metadata';
+      releaseMetadata=()=>{
+        media.onloadedmetadata=null;media.onerror=null;
+        media.removeAttribute('src');media.load();
+        URL.revokeObjectURL(url);
+        releaseMetadata=undefined;
+      };
+      media.onloadedmetadata=()=>{
+        if(draft.file===file&&Number.isFinite(media.duration)){
+          const seconds=Math.round(media.duration);
+          filename.textContent=`${file.name} · Durée : ${Math.floor(seconds/60)}:${String(seconds%60).padStart(2,'0')}`;
+        }
+        releaseMetadata?.();
+      };
+      media.onerror=()=>releaseMetadata?.();
+      media.src=url;
     };
 
     function render(focus=false){
@@ -76,6 +97,7 @@
       const field=fields[step];
       choices.classList.toggle('hidden',!field);
       upload.classList.toggle('hidden',Boolean(field));
+      soloLabel.classList.toggle('hidden',draft.source!=='instrumental');
       const recap=get('.track-selection');
       recap.classList.toggle('hidden',Boolean(field));
       if(!field)recap.textContent=[instruments,formats,sources]
@@ -116,7 +138,7 @@
         setFile(new File([audio],'melodie-de-test.wav',{type:'audio/wav'}));
         if(!title.value)title.value='Mélodie de test';
         draft.source='instrumental';
-        sampleLoaded=true;
+        solo.checked=true;
         render();
         setStatus('Exemple chargé. Il contient juste de la musique.');
       }catch(error){setStatus(error.message,true);}
@@ -134,7 +156,7 @@
       busy=true;
       for(const control of form.elements)control.disabled=true;
       try{
-        const source=sampleLoaded&&draft.source==='instrumental'?'instrument':draft.source;
+        const source=solo.checked&&draft.source==='instrumental'?'instrument':draft.source;
         await onSubmit({...draft,source,title:title.value.trim()||draft.file.name.replace(/\.[^.]+$/,'')},setStatus);
         fileInput.value='';title.value='';setFile(null);
         for(const field of fields)draft[field]='';

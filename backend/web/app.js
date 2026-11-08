@@ -193,7 +193,7 @@
       if($('score-player')&&window.SongToSheetPlayer){
         const exportUrl=kind=>`/api/jobs/${encodeURIComponent(id)}/download/${kind}`;
         closePlayer=window.SongToSheetPlayer.mount($('score-player'),{
-          scoreUrl:exportUrl('musicxml'),midiUrl:exportUrl('mid'),instrument:j.instrument,
+          scoreUrl:exportUrl('musicxml'),midiUrl:exportUrl('mid'),instrument:j.instrument,sourceDuration:j.duration,
           tabUrl:formats.includes('tab')?exportUrl('tab'):null
         });
       }

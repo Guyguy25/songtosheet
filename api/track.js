@@ -21,6 +21,9 @@ function workerAuthorized(req){
 async function begin(db,res,user,body){
   const {size,extension,instrument}=body;
   const title=typeof body.title==='string'?body.title.trim().slice(0,110):'';
+  const source_name=typeof body.sourceName==='string'
+    ?body.sourceName.split(/[\\/]/).at(-1).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,160)
+    :'';
   const format=body.format??'partition';
   if(body.authorized!==true)return json(res,400,{detail:'Confirme que tu disposes des droits nécessaires pour transcrire cet audio.'});
   if(!title||!INSTRUMENTS.has(instrument)||!AUDIO_TYPES.has(extension)||!Number.isInteger(size)||size<1024||size>MAX_BYTES){
@@ -36,7 +39,7 @@ async function begin(db,res,user,body){
   await jobs.updateMany({user_id:user._id,active:true,expires_at:{$lte:now}},
     {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'}});
   try{
-    const result=await jobs.insertOne({user_id:user._id,title,instrument,extension,size,format,
+    const result=await jobs.insertOne({user_id:user._id,title,instrument,extension,size,format,source_name,
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:'uploading',active:true,
       created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+UPLOAD_MS)});

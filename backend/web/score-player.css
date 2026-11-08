@@ -33,6 +33,7 @@
 .sp-instrument{font-size:12px;font-weight:750;padding:4px 7px;border-radius:6px;color:#e2cfff;background:#35284a;white-space:nowrap}
 .sp-audio-credit{color:#c5b8d6;font-size:14px}
 .sp-status{margin:0;padding:7px 13px;font-size:12px;color:#e2cfff}
+.sp-source-duration{margin:0;padding:7px 13px;background:#211a2d;color:#c5b8d6;font-size:11px}
 .sp-sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .score-player:fullscreen{margin:0;border-radius:0;display:flex;flex-direction:column}
 .score-player:fullscreen .sp-sheet,.score-player:fullscreen .sp-roll{flex:1;min-height:0}

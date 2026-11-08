@@ -70,7 +70,7 @@
     return new XMLSerializer().serializeToString(xml);
   }
 
-  function mount(root,{scoreUrl,tabUrl,midiUrl,instrument,preferTab=false}){
+  function mount(root,{scoreUrl,tabUrl,midiUrl,instrument,sourceDuration,preferTab=false}){
     const controller=new AbortController();
     const {signal}=controller;
     root.innerHTML=`
@@ -106,7 +106,7 @@
         </select></label>
         <span class="sp-audio-label">Transcription MIDI</span>
         <a class="sp-audio-credit" hidden target="_blank" rel="noopener" aria-label="Crédits audio">ⓘ</a>
-      </div><p class="sp-status" role="status" hidden></p>`;
+      </div><p class="sp-source-duration" hidden></p><p class="sp-status" role="status" hidden></p>`;
     const get=selector=>root.querySelector(selector);
     const sheet=get('.sp-sheet'),engraving=get('.sp-engraving'),sheetStatus=get('.sp-sheet p');
     const roll=get('.sp-roll'),scroll=get('.sp-roll-scroll'),play=get('.sp-play'),seek=get('.sp-seek');
@@ -308,6 +308,11 @@
         if(!track.length)throw new Error('Aucune note à lire.');
         notes=track.sort((a,b)=>a.time-b.time);
         duration=notes.reduce((end,note)=>Math.max(end,note.time+note.duration),0);
+        if(sourceDuration>0){
+          const timing=get('.sp-source-duration');
+          timing.textContent=`Audio importé : ${time(Math.round(sourceDuration))} · Dernière note du relevé : ${time(Math.round(duration))}`;
+          timing.hidden=false;
+        }
         position=Math.min(position,duration);
         seek.max=duration;
         get('.sp-audio-label').textContent=guitar?'Son de guitare acoustique':tab?'Lecture de la tablature':'Transcription MIDI';

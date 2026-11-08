@@ -15,6 +15,7 @@
   <script src="/backend/web/track-onboarding.js?v=10" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=5" />
   <script src="/backend/web/score-player.js?v=8" defer></script>
+  <script src="/assets/wait-survey.js?v=1" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.6}a{color:inherit;text-decoration:none}p,h1,h2,h3{margin-top:0}h1,h2,h3{letter-spacing:-.045em}.hidden{display:none!important}.container{max-width:1216px;width:calc(100% - 64px);margin:0 auto}.section-pad{padding:104px 0}.btn{border:1px solid transparent;display:inline-flex;justify-content:center;align-items:center;gap:14px;font-weight:750;border-radius:13px;min-height:49px;padding:13px 21px;transition:.18s transform,.18s background,.18s box-shadow;white-space:nowrap}.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(0)}.btn span:last-child{font-size:19px;font-weight:500}.btn-primary{color:#fff;background:var(--purple);box-shadow:0 8px 22px rgba(109,61,220,.16)}.btn-primary:hover{background:var(--purple-dark);box-shadow:0 11px 23px rgba(109,61,220,.24)}.btn-outline{border-color:#ded7ed;background:#fff;color:var(--ink)}.btn-outline:hover{border-color:var(--purple);background:#f9f6ff}.btn-dark{color:#fff;background:#29213e}.btn-dark:hover{background:#443363}.btn-white{background:white;color:var(--purple-dark)}.section-label{display:block;font-size:12px;letter-spacing:.14em;color:var(--purple);font-weight:850;margin-bottom:18px}.section-intro h2,.showcase-content h2,.faq-grid h2{font-size:clamp(38px,4vw,55px);line-height:1.12;margin-bottom:18px}.section-intro h2 span,.showcase-content h2 span,.faq-grid h2 span{color:var(--purple)}.section-intro>p{font-size:16px;color:var(--muted);max-width:530px;margin:0 auto;line-height:1.7}.center{text-align:center}
@@ -640,6 +641,19 @@ body.pricing-open{overflow:hidden}
 #track-audio-review label{font-size:13px;font-weight:700;margin-right:8px}
 #track-audio-review select{max-width:100%;padding:8px 10px;border:1px solid #ded7ed;border-radius:9px;background:#fff;color:var(--ink)}
 #track-audio-review audio{display:block;width:100%;margin:12px 0}
+.wait-survey{margin:16px 0 20px;padding:clamp(16px,3vw,24px);border:1px solid #e9e0f7;border-radius:16px;background:#fff;color:#32264a;text-align:left}
+.wait-survey-heading{display:flex;justify-content:space-between;gap:12px;color:#6136c1;font-size:13px}
+.wait-survey fieldset{margin:14px 0;padding:0;border:0;min-width:0}
+.wait-survey legend{font-size:17px;font-weight:800;padding:0;margin-bottom:10px}
+.wait-survey-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(145px,100%),1fr));gap:8px}
+.wait-survey-options label{display:flex;align-items:center;gap:8px;border:1px solid #e9e0f7;border-radius:10px;padding:10px;cursor:pointer;font-size:13px}
+.wait-survey-options label:has(:checked){border-color:#7549eb;background:#f5efff}
+.wait-survey-options input{accent-color:#7549eb}
+.wait-survey-actions{display:flex;align-items:center;flex-wrap:wrap;gap:12px}
+.wait-survey-actions .btn{min-height:39px;padding:8px 14px;font-size:12px}
+.wait-survey-skip{border:0;background:none;color:#5f4c7b;text-decoration:underline;font-size:12px}
+.wait-survey-note,.wait-survey-error{font-size:12px;color:#665777;margin:10px 0 0}
+.wait-survey-error:empty{display:none}
 </style>
 
 
@@ -877,6 +891,7 @@ body.pricing-open{overflow:hidden}
    <div id="flow-progressbar" class="flow-track" role="progressbar" aria-label="Progression de la simulation" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="flow-bar" class="flow-fill"></div></div>
    <ol id="flow-step-list" class="flow-step-list"><li class="flow-step current"><span>1</span>Préparation de la musique</li><li class="flow-step"><span>2</span>Construction de la maquette</li><li class="flow-step"><span>3</span><span id="flow-step-notation">Disposition des notes</span></li><li class="flow-step"><span>4</span>Finalisation de l’aperçu</li></ol>
    <p class="flow-note"><strong>Mode démo :</strong> aucune analyse musicale réelle n'est effectuée pendant cette animation.</p>
+   <section id="demo-wait-survey" class="wait-survey" aria-label="Questions facultatives" hidden></section>
   </section>
   <section id="flow-finished" class="flow-card hidden" aria-labelledby="flow-finished-title">
    <span class="flow-eyebrow">✦ Aperçu prêt</span><div class="flow-success-icon" aria-hidden="true">✓</div>
@@ -1057,6 +1072,7 @@ body.pricing-open{overflow:hidden}
     if(app){if(!state.user){go('/inscription',true);return;}showAppPage(state.activePage);}
     if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth();}
     if(window.SongToSheetFlow)window.SongToSheetFlow.render(pathname);
+    window.SongToSheetWaitSurvey?.mount($('demo-wait-survey'),state.user?.id,pathname==='/generation');
     const titles={'/':'SongToSheet.ai — Partitions et tablatures de vos musiques préférées',
       '/fonctionnalites':'Fonctionnalités — SongToSheet.ai',
       '/resultats':'Résultats et exemples — SongToSheet.ai',
@@ -1435,7 +1451,8 @@ body.pricing-open{overflow:hidden}
                 <div aria-live="polite"><h2></h2><p></p></div><strong class="track-progress-percent" aria-hidden="true"></strong></div>
               <div class="track-progress-line" role="progressbar" aria-label="Progression estimée"><span></span></div>
               <ul aria-label="Étapes terminées"></ul>
-            </section>`;
+            </section>
+            <section id="track-wait-survey" class="wait-survey" aria-label="Questions facultatives" hidden></section>`;
           $('track-result-summary').dataset.job=id;
           trackSummaryMarkup=trackProgressMarkup=undefined;
         }
@@ -1450,6 +1467,7 @@ body.pricing-open{overflow:hidden}
         }
         if(completed&&state.user?.role==='admin')addAudioReview(j);
         show('track-progress',waiting);
+        window.SongToSheetWaitSurvey?.mount($('track-wait-survey'),state.user?.id,waiting&&!ready);
         const stage=ready?'pdf':j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
         const past=(j.stages||[]).filter(item=>item!==stage&&Object.hasOwn(trackStages,item));
         const progressKey=[stage,...past].join('/');

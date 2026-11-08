@@ -187,7 +187,80 @@ def refine_mixed_guitar(path, notes, transients, tuning, strengths):
                 break
         else:
             kept.append(note)
-    return refine_picked_notes(kept, strengths, evidence)
+    # A loud partial can have its own apparent onset in the note model.
+    # Drop it only if the string model sees almost no guitar note there
+    # and a supported fundamental shares the attack.
+    attacks = {}
+    for note in kept:
+        if data := evidence.get(id(note)):
+            attacks.setdefault(data[0], []).append(note)
+    harmonics = {
+        id(note)
+        for group in attacks.values()
+        for note in group
+        if evidence[id(note)][2] < .14 and any(
+            note["pitch"] - lower["pitch"] in (12, 19, 24, 28, 31, 36)
+            and note["velocity"] <= .74 * lower["velocity"]
+            and strengths[id(lower)] >= .70 and evidence[id(lower)][2] >= .55
+            for lower in group
+        )
+    }
+    clean, hints = refine_picked_notes([note for note in kept if id(note) not in harmonics], strengths, evidence)
+    return clean, hints, evidence
+
+
+def mixed_attacks(notes, strengths, evidence):
+    """Find playable strum candidates before choosing strings."""
+    groups = attack_groups(notes, lambda note: note["start"])
+    result = []
+    index = 0
+    while index < len(groups):
+        first = groups[index]
+        candidate = list(first)
+        best = first
+        best_end = index + 1
+        anchor = evidence.get(id(first[0]), (None,))[0]
+        start = first[0]["start"]
+        next_index = index + 1
+        while anchor is not None and next_index < len(groups):
+            following = groups[next_index]
+            if following[-1]["start"] - start > .095 or len(candidate) + len(following) > 6:
+                break
+            candidate.extend(following)
+            pitches = {note["pitch"] for note in candidate}
+            support = [evidence.get(id(note)) for note in candidate]
+            if len(pitches) != len(candidate) or any(item is None or item[0] != anchor for item in support):
+                break
+            fresh = [item[1] >= 1.65 or item[2] - item[3] >= .35 for item in support]
+            compact_pair = following[-1]["start"] - start <= .055 and len({pitch % 12 for pitch in pitches}) == 2
+            supported = all(new or strengths[id(note)] >= .60 for note, new in zip(candidate, fresh))
+            if sum(fresh) >= 2 and (len(candidate) >= 3 or compact_pair) and supported:
+                best = candidate.copy()
+                best_end = next_index + 1
+            next_index += 1
+        result.append(best)
+        index = best_end
+    return result
+
+
+def mixed_guitar_tempo(drums, fallback):
+    import librosa
+    import numpy as np
+
+    audio, rate = librosa.load(drums, sr=22050, mono=True)
+    hop = 220
+    envelope = librosa.onset.onset_strength(y=audio, sr=rate, hop_length=hop)
+    if not envelope.size or float(envelope.max()) < 1:
+        return fallback
+    _, beats = librosa.beat.beat_track(onset_envelope=envelope, sr=rate, hop_length=hop,
+                                      start_bpm=fallback)
+    if len(beats) < 8:
+        return fallback
+    gaps = np.diff(beats) * hop / rate
+    pulse = np.median(gaps)
+    if not .30 <= pulse <= .95 or np.mean(abs(gaps - pulse) <= .10 * pulse) < .75:
+        return fallback
+    return round(60 / pulse)
 
 
 def descending_slides(path, notes, evidence, tuning, attack_levels, protected):

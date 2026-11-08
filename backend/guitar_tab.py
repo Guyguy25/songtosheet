@@ -1,6 +1,7 @@
 """Choose polyphonic guitar fingerings and engrave them on a fixed beat grid."""
 from dataclasses import dataclass
 from bisect import bisect_left
+from collections import deque
 from itertools import groupby
 from xml.etree import ElementTree as ET
 
@@ -103,20 +104,37 @@ def open_position_melody(notes, tuning):
     return []
 
 
-def arrange(notes, tuning, *, capo=0, simple=False, string_hints=None):
+def arrange(notes, tuning, *, capo=0, simple=False, string_hints=None, strokes=None):
     tuning = tuple(pitch + capo for pitch in tuning)
     string_hints = string_hints or {}
     if simple and notes and (compact := open_position_melody(notes, tuning)):
         return compact
     held, result, position = {}, [], 2
-    for group in attack_groups(notes, lambda note: note["start"]):
+    groups = deque(strokes if strokes is not None else attack_groups(notes, lambda note: note["start"]))
+    while groups:
+        group = groups.popleft()
         start = group[0]["start"]
         held = {key: note for key, note in held.items() if note.end > start}
         picked = choose_fingering(group, tuning, held, position, 24 - capo, string_hints)
+        strum = strokes is not None and group[-1]["start"] - start > .03
+        if strum and len(picked) < len(group):
+            # A new strum may release the old shape. If it still cannot be
+            # played with all its pitches, keep the original separate attacks.
+            open_strings = {key: note for key, note in held.items() if not note.fret}
+            replacement = choose_fingering(group, tuning, open_strings, position, 24 - capo, string_hints)
+            if len(replacement) < len(group):
+                groups.extendleft(reversed(attack_groups(group, lambda note: note["start"])))
+                continue
+            for key, note in held.items():
+                if key not in open_strings:
+                    note.end = start
+            held, picked = open_strings, replacement
         frets = [fret for _, _, fret in picked if fret]
         if frets:
             position = min(frets)
         for source, string, fret in picked:
+            if strum:
+                source = {**source, "start": start}
             if previous := held.get(string):
                 previous.end = min(previous.end, source["start"])
             note = TabNote(**source, string=string, fret=fret, attack=start)
@@ -125,10 +143,10 @@ def arrange(notes, tuning, *, capo=0, simple=False, string_hints=None):
     return result
 
 
-def arrange_with_capo(notes, tuning, *, simple=False):
+def arrange_with_capo(notes, tuning, *, simple=False, strokes=None):
     def options():
         for capo in range(1, 13):
-            yield capo, arrange(notes, tuning, capo=capo, simple=simple)
+            yield capo, arrange(notes, tuning, capo=capo, simple=simple, strokes=strokes)
 
     def rank(option):
         capo, tab = option

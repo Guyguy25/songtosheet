@@ -1,6 +1,6 @@
 from xml.etree import ElementTree
 
-from guitar_evidence import refine_mixed_guitar, refine_picked_notes
+from guitar_evidence import mixed_attacks, refine_mixed_guitar, refine_picked_notes
 from guitar_intro import open_pull_offs, repeated_open_intro
 from guitar_tab import arrange, write_tab
 from transcribe_track import TUNINGS
@@ -110,8 +110,23 @@ def test_mixed_guitar_drops_leaked_bass_but_keeps_a_doubled_chord(tmp_path, monk
     evidence = {id(doubled): (.5, 3., .92, .10, 2, .80), id(melody): (.5, 2., .91, .1, 1, .81)}
     monkeypatch.setattr("guitar_evidence.guitar_evidence", lambda *args: evidence)
     strengths = {id(bass): .40, id(doubled): .85, id(melody): .80}
-    kept, _ = refine_mixed_guitar(tmp_path / "guitar.wav", [bass, doubled, melody], [.5], TUNINGS["guitare"], strengths)
+    kept, _, _ = refine_mixed_guitar(tmp_path / "guitar.wav", [bass, doubled, melody], [.5], TUNINGS["guitare"], strengths)
     assert kept == [doubled, melody]
+
+
+def test_mixed_guitar_groups_one_strum_and_preserves_separate_picks():
+    tuning = TUNINGS["guitare"]
+    strum = [note(45, .51), note(52, .55), note(61, .58)]
+    picked = [note(45, 1.01), note(52, 1.05), note(61, 1.09)]
+    notes = strum + picked
+    evidence = {id(item): (.53, 2.5, .85, .15) for item in strum}
+    evidence.update({id(item): (item["start"], 2.5, .85, .15) for item in picked})
+    strengths = dict.fromkeys(map(id, notes), .80)
+    strokes = mixed_attacks(notes, strengths, evidence)
+    assert strokes == [strum, *[[item] for item in picked]]
+    tab = arrange(notes, tuning, strokes=strokes)
+    assert sorted(item.start for item in tab) == [.51, .51, .51, 1.01, 1.05, 1.09]
+    assert len({item.string for item in tab if item.start == .51}) == 3
 
 
 def test_musicxml_slide_requires_both_frets_on_the_same_string(tmp_path):

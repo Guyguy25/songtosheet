@@ -16,7 +16,9 @@ from pathlib import Path
 
 from guitar_tab import arrange, arrange_with_capo, attack_groups, group_for_notation, midi_notes, write_tab
 from guitar_harmony import chord_changes, clean_arpeggio, onset_strengths, tab_chord_changes
-from guitar_evidence import descending_slides, guitar_evidence, refine_mixed_guitar, refine_picked_notes
+from guitar_evidence import (
+    descending_slides, guitar_evidence, mixed_attacks, mixed_guitar_tempo, refine_mixed_guitar, refine_picked_notes,
+)
 from guitar_intro import open_pull_offs, repeated_open_intro
 from piano_score import clean_piano_notes, estimate_piano_grid, write_piano_score
 
@@ -202,7 +204,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
               "instrument": instrument, "bpm": bpm,
-              "version": {"guitare": 13, "basse": 4, "piano": 3}.get(instrument, 1)}
+              "version": {"guitare": 13 if isolated else 14, "basse": 4, "piano": 3}.get(instrument, 1)}
     if capo:
         config["capo"] = capo
     if title:
@@ -252,6 +254,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         pull_offs = []
         slides = []
         string_hints = {}
+        strokes = None
         if instrument == "guitare":
             tuning = TUNINGS[instrument]
             notes = [note for note in notes if tuning[-1] <= note["pitch"] <= tuning[0] + 24]
@@ -300,9 +303,12 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                     notes = clean
             elif notes:
                 strengths = onset_strengths(model, notes)
-                clean, string_hints = refine_mixed_guitar(wav, notes, transients, tuning, strengths)
+                clean, string_hints, evidence = refine_mixed_guitar(wav, notes, transients, tuning, strengths)
                 filtered += len(notes) - len(clean)
                 notes = clean
+                strokes = mixed_attacks(notes, strengths, evidence)
+                if bpm == 120:
+                    bpm = mixed_guitar_tempo(wav.with_name("drums.wav"), bpm)
         if not notes:
             raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre instrument.")
 
@@ -324,9 +330,11 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             write_score(result / "score.mid", result / "score.musicxml", score_title, guitar=instrument == "guitare")
         tuning = TUNINGS.get(instrument)
         if capo == "auto":
-            resolved_capo, tab = arrange_with_capo(notes, tuning, simple=simple)
+            resolved_capo, tab = arrange_with_capo(notes, tuning, simple=simple, strokes=strokes)
         else:
-            resolved_capo, tab = capo, arrange(notes, tuning, capo=capo, simple=simple, string_hints=string_hints) if tuning else []
+            resolved_capo = capo
+            tab = arrange(notes, tuning, capo=capo, simple=simple, string_hints=string_hints,
+                          strokes=strokes) if tuning else []
         if tab:
             if instrument == "guitare" and not chords and not simple:
                 chords = tab_chord_changes(tab, transients)

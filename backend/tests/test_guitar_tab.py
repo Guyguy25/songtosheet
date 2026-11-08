@@ -49,7 +49,17 @@ def test_arpeggio_does_not_print_sustaining_strings_as_new_chords(tmp_path):
     notes = [event(40, .10, .9), event(55, .14, .75), event(59, .20, .68)]
     tab = arrange(notes, TUNINGS["guitare"])
     path = tmp_path / "arpeggio.musicxml"
-    write_tab(tab, path, TUNINGS["guitare"], 120, "Arpège", "guitare")
+    write_tab(tab, path, TUNINGS["guitare"], 120, "Arpège", "guitare", transients=[.10, .14, .20])
     score = ET.parse(path)
     assert len(score.findall(".//note/pitch")) == 3
     assert score.findall(".//note/chord") == []
+
+
+def test_strum_uses_one_column_for_delayed_notes_of_the_same_transient(tmp_path):
+    notes = [event(40, 0.97, 1.3), event(55, 1.04, 1.35), event(59, 1.15, 1.4)]
+    tab = arrange(notes, TUNINGS["guitare"])
+    path = tmp_path / "strum.musicxml"
+    write_tab(tab, path, TUNINGS["guitare"], 120, "Accord", "guitare", transients=[1, 1.18])
+    pitched = [note for note in ET.parse(path).findall(".//note") if note.find("pitch") is not None]
+    assert [note.find("chord") is not None for note in pitched] == [False, True, False]
+    assert sorted(note["start"] for note in midi_notes(tab)) == [0.97, 1.04, 1.15]

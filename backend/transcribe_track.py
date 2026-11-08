@@ -52,6 +52,13 @@ def load_note_model():
     return Model(build_icassp_2022_model_path(FilenameSuffix.onnx))
 
 
+def guitar_transients(path):
+    import librosa
+
+    audio, rate = librosa.load(path, sr=22050, mono=True)
+    return librosa.onset.onset_detect(y=audio, sr=rate, hop_length=220, units="time").tolist()
+
+
 def write_midi(notes, destination, program, instrument, bpm):
     from pretty_midi import Instrument, Note, PrettyMIDI
 
@@ -78,7 +85,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": 4 if instrument in TUNINGS else 1}
+              "instrument": instrument, "bpm": bpm, "version": {"guitare": 5, "basse": 4}.get(instrument, 1)}
     if title:
         config["title"] = title
     with source.open("rb") as audio:
@@ -122,7 +129,8 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         tab = arrange(notes, tuning) if tuning else []
         if tab:
             write_midi(midi_notes(tab), result / "tab.mid", program, instrument, bpm)
-            write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument)
+            transients = guitar_transients(wav) if instrument == "guitare" else ()
+            write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument, transients=transients)
         manifest = {**config, "notes": notes, "duration": duration, "tab": bool(tab)}
         (result / "notes.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
         try:

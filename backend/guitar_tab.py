@@ -1,5 +1,6 @@
 """Choose polyphonic guitar fingerings and engrave them on a fixed beat grid."""
 from dataclasses import dataclass
+from bisect import bisect_left
 from itertools import groupby
 from xml.etree import ElementTree as ET
 
@@ -97,14 +98,42 @@ def midi_notes(notes):
             for n in notes if n.start < n.end]
 
 
-def notated_attacks(notes, bpm):
+def closest_attack(group, transients):
+    if not transients:
+        return None
+    start, end = group[0].start, group[-1].start
+    middle = (start + end) / 2
+    index = bisect_left(transients, middle)
+    anchor = min(transients[max(0, index - 1):index + 1], key=lambda time: abs(time - middle))
+    return anchor if max(abs(start - anchor), abs(end - anchor)) <= .095 else None
+
+
+def group_for_notation(notes, transients):
+    result = []
+    ordered = sorted(notes, key=lambda note: (note.attack, note.start))
+    for _, attacks in groupby(ordered, key=lambda note: note.attack):
+        group = list(attacks)
+        anchor = closest_attack(group, transients)
+        if result and anchor is not None and result[-1][0] == anchor:
+            previous = result[-1][1]
+            combined = previous + group
+            strings = {note.string for note in combined}
+            frets = [note.fret for note in combined if note.fret]
+            if (group[-1].start - previous[0].start <= .12 and len(strings) == len(combined)
+                    and (not frets or max(frets) - min(frets) <= 4)):
+                result[-1] = (anchor, combined, True)
+                continue
+        result.append((anchor, group, False))
+    return result
+
+
+def notated_attacks(notes, bpm, transients):
     grid = bpm * DIVISIONS / 60
     result = []
     previous = -1
-    for _, attacks in groupby(sorted(notes, key=lambda note: (note.attack, note.start)), key=lambda note: note.attack):
-        group = list(attacks)
+    for anchor, group, merged in group_for_notation(notes, transients):
         # Preserve separate attacks that happen to round to the same grid slot.
-        start = max(previous + 1, round(group[0].start * grid))
+        start = max(previous + 1, round((anchor if merged else group[0].start) * grid))
         ends = [(max(start + 1, round(note.end * grid)), note) for note in group]
         result.append((start, ends))
         previous = start
@@ -175,13 +204,13 @@ def write_attack(measure, start, length, events):
         add(technical, "fret", event.fret)
 
 
-def write_tab(notes, destination, tuning, bpm, title, instrument):
+def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=()):
     root = ET.Element("score-partwise", version="4.0")
     add(root, "movement-title", title)
     part_list = ET.SubElement(root, "part-list")
     add(ET.SubElement(part_list, "score-part", id="P1"), "part-name", instrument.capitalize())
     part = ET.SubElement(root, "part", id="P1")
-    attacks = notated_attacks(notes, bpm)
+    attacks = notated_attacks(notes, bpm, transients)
     end = max(stop for _, group in attacks for stop, _ in group)
     bars = (end + BAR - 1) // BAR
     index, ringing_until = 0, 0

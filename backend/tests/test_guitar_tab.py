@@ -1,7 +1,7 @@
 from xml.etree import ElementTree as ET
 
 from guitar_tab import arrange, midi_notes, write_tab
-from transcribe_track import TUNINGS
+from transcribe_track import TUNINGS, filter_guitar_echoes, guitar_diagnostic
 
 
 def event(pitch, start, end):
@@ -63,3 +63,31 @@ def test_strum_uses_one_column_for_delayed_notes_of_the_same_transient(tmp_path)
     pitched = [note for note in ET.parse(path).findall(".//note") if note.find("pitch") is not None]
     assert [note.find("chord") is not None for note in pitched] == [False, True, False]
     assert sorted(note["start"] for note in midi_notes(tab)) == [0.97, 1.04, 1.15]
+
+
+def test_capo_fret_numbers_are_relative_and_midi_uses_sounding_pitch(tmp_path):
+    tuning = TUNINGS["guitare"]
+    notes = [event(42, .10, .8), event(66, .10, .8), event(40, 1, 1.5)]
+    tab = arrange(notes, tuning, capo=2)
+    assert sorted((note.pitch, note.fret) for note in tab) == [(42, 0), (66, 0)]
+    assert {note["pitch"] for note in midi_notes(tab)} == {42, 66}
+    path = tmp_path / "capo.musicxml"
+    write_tab(tab, path, tuning, 120, "Test capo", "guitare", capo=2)
+    score = ET.parse(path)
+    assert score.findtext(".//staff-details/capo") == "2"
+    assert score.findtext(".//direction-type/words") == "Capo · case 2"
+
+
+def test_filter_preserves_the_chord_and_an_upper_note_with_its_own_attack():
+    low = event(40, .1, .8)
+    chord_note = event(55, .1, .7)
+    echo = {**event(52, .17, .33), "velocity": 35}
+    upper = {**event(59, .25, .4), "velocity": 35}
+    notes = [low, chord_note, echo, upper]
+    assert filter_guitar_echoes(notes, [.1, .25]) == [low, chord_note, upper]
+    assert filter_guitar_echoes(notes, [.1, .17, .25]) == notes
+    assert filter_guitar_echoes(notes, []) == notes
+    diagnostic = guitar_diagnostic(notes, arrange(notes, TUNINGS["guitare"]), [.1], 0)
+    assert diagnostic["matched_attacks"] == 2
+    assert diagnostic["total_attacks"] == 3
+    assert diagnostic["review_seconds"] == [0]

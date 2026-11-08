@@ -20,7 +20,7 @@
   ];
 
   function mount(root,{onSubmit,onLinkChange,sampleUrl,allowLink=false}){
-    const draft={instrument:'',format:'',source:'',file:null};
+    const draft={instrument:'',format:'',source:'',file:null,capo:0};
     let step=0,busy=false;
     root.innerHTML=`
       <ol class="track-steps" aria-label="Étapes de création">${steps.map(([label],i)=>
@@ -31,6 +31,14 @@
       ${allowLink?'<p class="track-selection track-reference hidden" aria-live="polite"></p>':''}
       <form>
         <div class="track-choices" role="radiogroup"></div>
+        <div class="track-upload track-capo hidden">
+          <label for="track-capo-input">Tu joues avec un capo ?</label>
+          <select id="track-capo-input" class="field" aria-describedby="track-capo-help">
+            <option value="0">Sans capo</option>
+            ${Array.from({length:12},(_,index)=>`<option value="${index+1}">Capo case ${index+1}</option>`).join('')}
+          </select>
+          <small id="track-capo-help">Les cases de la tablature sont comptées à partir du capo.</small>
+        </div>
         <div class="track-upload hidden">
           ${allowLink?`<div class="track-upload track-saved-link hidden">
             <p class="track-selection"></p>
@@ -63,6 +71,11 @@
     const form=get('form'),heading=get('h2'),choices=get('.track-choices'),upload=get('.track-upload');
     const back=get('.track-back'),next=get('.track-next'),title=get('#track-title-input');
     const fileInput=get('#track-audio-input'),rights=get('#track-rights-input'),status=get('.track-status');
+    const capo=get('#track-capo-input');
+    const showCapo=()=>{
+      capo.value=String(draft.capo);
+      get('.track-capo').classList.toggle('hidden',!allowLink||step!==0||draft.instrument!=='guitare');
+    };
     const linkInput=get('#track-link-input');
     const savedLink=get('.track-saved-link');
     const sourceFields=get('.track-source-fields');
@@ -146,7 +159,8 @@
       const recap=get('form > .track-selection');
       recap.classList.toggle('hidden',Boolean(field));
       if(!field)recap.textContent=[instruments,formats,sources]
-        .map((list,index)=>list.find(([value])=>value===draft[fields[index]])?.[2]).filter(Boolean).join(' · ');
+        .map((list,index)=>list.find(([value])=>value===draft[fields[index]])?.[2])
+        .concat(draft.capo?`Capo case ${draft.capo}`:null).filter(Boolean).join(' · ');
       choices.setAttribute('aria-label',label);
       choices.innerHTML=field?[instruments,formats,sources][step].map(([value,icon,name,detail])=>{
         const disabled=value==='tablature'&&!allowsTab();
@@ -159,6 +173,7 @@
       back.classList.toggle('hidden',step===0);
       next.textContent=step===3?'Générer mon relevé ↗':'Continuer ↗';
       next.disabled=Boolean(field&&!draft[field]);
+      showCapo();
       setStatus('');
       if(focus)heading.focus({preventScroll:true});
     }
@@ -166,8 +181,11 @@
     choices.addEventListener('change',event=>{
       draft[fields[step]]=event.target.value;
       if(step===0&&!allowsTab()&&draft.format==='tablature')draft.format='';
+      if(draft.instrument!=='guitare')draft.capo=0;
+      showCapo();
       next.disabled=false;
     });
+    capo.addEventListener('change',()=>{draft.capo=Number(capo.value);});
     fileInput.addEventListener('change',()=>{
       if(linkInput&&fileInput.files.length){
         linkInput.value='';
@@ -257,6 +275,7 @@
         editingSource=false;
         fileInput.value='';title.value='';setFile(null);
         for(const field of fields)draft[field]='';
+        draft.capo=0;
         step=0;
       }catch(error){setStatus(error.message,true);}
       finally{
@@ -273,6 +292,7 @@
         if(busy)return;
         if(file!==undefined||audioUrl!==undefined){
           for(const field of fields)draft[field]='';
+          draft.capo=0;
           fileInput.value='';setFile(file||null);
           title.value='';
           const source=audioSource?.parse(audioUrl);
@@ -282,6 +302,7 @@
           if(linkInput)linkInput.value=source&&!isReference?source.url.href:'';
         }
         if(instruments.some(([value])=>value===instrument))draft.instrument=instrument;
+        if(draft.instrument!=='guitare')draft.capo=0;
         if(!allowsTab()&&draft.format==='tablature')draft.format='';
         if(name)title.value=name;
         step=0;render(true);

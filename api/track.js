@@ -18,6 +18,16 @@ function validExports(exports){
     Object.values(exports).reduce((size,value)=>size+value.length,0)<=4000000;
 }
 
+function validDiagnostic(value,noteCount,duration){
+  if(!value||typeof value!=='object')return null;
+  const {total_attacks,matched_attacks,review_seconds,filtered_notes,tab_notes,tab_chords}=value;
+  const count=(n,max)=>Number.isInteger(n)&&n>=0&&n<=max;
+  if(!count(total_attacks,noteCount)||(matched_attacks!==null&&!count(matched_attacks,total_attacks))||
+    !count(tab_notes,noteCount)||!count(tab_chords,tab_notes)||!count(filtered_notes,100000)||
+    !Array.isArray(review_seconds)||review_seconds.length>5||review_seconds.some(time=>!count(time,Math.ceil(duration))))return null;
+  return {total_attacks,matched_attacks,review_seconds,filtered_notes,tab_notes,tab_chords};
+}
+
 function workerAuthorized(req){
   const expected=process.env.TRACK_WORKER_DIGEST||'';
   const token=req.headers.authorization||'';
@@ -34,6 +44,7 @@ async function begin(db,res,user,body){
     ?body.sourceName.split(/[\\/]/).at(-1).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,160)
     :'';
   const format=body.format??'partition';
+  const capo=body.capo??0;
   if(body.authorized!==true)return json(res,400,{detail:'Confirme que tu disposes des droits nécessaires pour transcrire cet audio.'});
   if(body.audioUrl!=null&&!link)return json(res,400,{detail:'Colle un lien HTTPS public vers un fichier audio.'});
   if(source?.provider&&!source.youtubeId)return json(res,400,{detail:audioSource.importHint(source.provider)});
@@ -45,6 +56,9 @@ async function begin(db,res,user,body){
     return json(res,400,{detail:'La tablature est disponible pour la guitare et la basse.'});
   }
   if(body.source!=null&&!SOURCE_TYPES.has(body.source))return json(res,400,{detail:'Choisis le contenu de ton audio.'});
+  if(!Number.isInteger(capo)||capo<0||capo>12||(capo&&instrument!=='guitare')){
+    return json(res,400,{detail:'Choisis une case de capo entre 0 et 12, pour la guitare uniquement.'});
+  }
   await prepareTracks(db);
   const jobs=db.collection('track_jobs');
   const now=new Date();
@@ -53,7 +67,7 @@ async function begin(db,res,user,body){
   try{
     const input=source?.youtubeId?{youtube_id:source.youtubeId,source_kind:'link'}:
       link?{audio_url:link.href,source_kind:'link'}:{extension,size};
-    const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,
+    const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
       created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+(link?AUDIO_RETENTION_MS:UPLOAD_MS))});
@@ -105,12 +119,13 @@ async function worker(db,res,body){
     const compatible=body.pdf===true?{}:{format:{$exists:false}};
     if(body.links!==true)compatible.audio_url={$exists:false};
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
+    if(body.capo!==true)compatible.capo={$in:[null,0]};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
       $or:[{status:'queued'},{status:'processing',lease_until:{$lte:now}}]},
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS)}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
-      isolated:job.isolated,format:job.format||'partition',...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
+      isolated:job.isolated,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
   if(!isId(body.id)||typeof body.lease!=='string')return json(res,400,{detail:'Traitement invalide.'});
@@ -135,7 +150,8 @@ async function worker(db,res,body){
     return json(res,400,{detail:'Exports invalides ou trop volumineux.'});
   }
   if(isPreview){
-    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports)}});
+    const diagnostic=job.instrument==='guitare'?validDiagnostic(body.diagnostic,note_count,duration):null;
+    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic}});
     if(!updated.matchedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
     return json(res,200,{ok:true});
   }

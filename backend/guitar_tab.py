@@ -27,7 +27,7 @@ class TabNote:
     attack: float
 
 
-def choose_fingering(group, tuning, held, position):
+def choose_fingering(group, tuning, held, position, max_fret):
     # A small beam keeps dense detector output tractable. Keep as many attacks as
     # possible, then favor an economical hand position and notes that can ring.
     candidates = [([], frozenset(), 0)]
@@ -41,7 +41,7 @@ def choose_fingering(group, tuning, held, position):
         for picked, strings, cost in candidates:
             for string, open_pitch in enumerate(tuning, 1):
                 fret = note["pitch"] - open_pitch
-                if string in strings or not 0 <= fret <= 24:
+                if string in strings or not 0 <= fret <= max_fret:
                     continue
                 if ringing.get(note["pitch"], string) != string:
                     continue
@@ -75,12 +75,13 @@ def attack_groups(notes, onset):
     return groups
 
 
-def arrange(notes, tuning):
+def arrange(notes, tuning, *, capo=0):
+    tuning = tuple(pitch + capo for pitch in tuning)
     held, result, position = {}, [], 2
     for group in attack_groups(notes, lambda note: note["start"]):
         start = group[0]["start"]
         held = {key: note for key, note in held.items() if note.end > start}
-        picked = choose_fingering(group, tuning, held, position)
+        picked = choose_fingering(group, tuning, held, position, 24 - capo)
         frets = [fret for _, _, fret in picked if fret]
         if frets:
             position = min(frets)
@@ -144,7 +145,7 @@ def add(parent, tag, text, **attributes):
     ET.SubElement(parent, tag, **attributes).text = str(text)
 
 
-def write_header(measure, tuning, bpm):
+def write_header(measure, tuning, bpm, capo):
     attributes = ET.SubElement(measure, "attributes")
     add(attributes, "divisions", DIVISIONS)
     meter = ET.SubElement(attributes, "time")
@@ -162,6 +163,10 @@ def write_header(measure, tuning, bpm):
         if name.endswith("#"):
             add(row, "tuning-alter", 1)
         add(row, "tuning-octave", pitch // 12 - 1)
+    if capo:
+        add(staff, "capo", capo)
+        instruction = ET.SubElement(measure, "direction", placement="above")
+        add(ET.SubElement(instruction, "direction-type"), "words", f"Capo · case {capo}")
     direction = ET.SubElement(measure, "direction", placement="above")
     metronome = ET.SubElement(ET.SubElement(direction, "direction-type"), "metronome")
     add(metronome, "beat-unit", "quarter")
@@ -204,7 +209,7 @@ def write_attack(measure, start, length, events):
         add(technical, "fret", event.fret)
 
 
-def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=()):
+def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=(), capo=0):
     root = ET.Element("score-partwise", version="4.0")
     add(root, "movement-title", title)
     part_list = ET.SubElement(root, "part-list")
@@ -218,7 +223,7 @@ def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=
         start, bar_end = bar * BAR, (bar + 1) * BAR
         measure = ET.SubElement(part, "measure", number=str(bar + 1))
         if not bar:
-            write_header(measure, tuning, bpm)
+            write_header(measure, tuning, bpm, capo)
         while start < bar_end:
             if index < len(attacks) and attacks[index][0] == start:
                 events = attacks[index][1]

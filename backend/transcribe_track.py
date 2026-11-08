@@ -8,10 +8,13 @@ import math
 import subprocess
 import sys
 import tempfile
+from bisect import bisect_left
+from collections import defaultdict
 from functools import lru_cache
+from itertools import takewhile
 from pathlib import Path
 
-from guitar_tab import arrange, midi_notes, write_tab
+from guitar_tab import arrange, attack_groups, group_for_notation, midi_notes, write_tab
 
 
 TRACKS = {
@@ -59,6 +62,53 @@ def guitar_transients(path):
     return librosa.onset.onset_detect(y=audio, sr=rate, hop_length=220, units="time").tolist()
 
 
+def near_attack(time, transients, tolerance):
+    index = bisect_left(transients, time - tolerance)
+    return index < len(transients) and transients[index] <= time + tolerance
+
+
+def filter_guitar_echoes(notes, transients):
+    """Remove weak, brief upper harmonics that start after a supported note."""
+    if not transients:
+        return notes
+    by_pitch = defaultdict(list)
+    kept = []
+    for note in notes:
+        start = note["start"]
+        echo = (
+            note["end"] - start <= .20
+            and not near_attack(start, transients, .045)
+            and any(
+                lower["end"] >= note["end"]
+                and note["velocity"] <= lower["velocity"] * .5
+                and near_attack(lower["start"], transients, .035)
+                for harmonic in (12, 19, 24)
+                for lower in takewhile(lambda earlier: start - earlier["start"] <= .12,
+                                       reversed(by_pitch[note["pitch"] - harmonic]))
+                if start - lower["start"] >= .025
+            )
+        )
+        if not echo:
+            by_pitch[note["pitch"]].append(note)
+            kept.append(note)
+    return kept
+
+
+def guitar_diagnostic(notes, tab, transients, filtered):
+    score_attacks = attack_groups(notes, lambda note: note["start"])
+    starts = [group[0]["start"] for group in score_attacks]
+    unconfirmed = [time for time in starts if not near_attack(time, transients, .095)] if transients else []
+    tab_attacks = group_for_notation(tab, transients)
+    return {
+        "total_attacks": len(starts),
+        "matched_attacks": len(starts) - len(unconfirmed) if transients else None,
+        "review_seconds": list(dict.fromkeys(int(time) for time in unconfirmed))[:5],
+        "filtered_notes": filtered,
+        "tab_notes": len(tab),
+        "tab_chords": sum(len(group) > 1 for _, group, _ in tab_attacks),
+    }
+
+
 def write_midi(notes, destination, program, instrument, bpm):
     from pretty_midi import Instrument, Note, PrettyMIDI
 
@@ -69,7 +119,9 @@ def write_midi(notes, destination, program, instrument, bpm):
     midi.write(str(destination))
 
 
-def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None):
+def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0):
+    if type(capo) is not int or not 0 <= capo <= 12 or (capo and instrument != "guitare"):
+        raise ValueError("Choisis une case de capo entre 0 et 12, pour la guitare uniquement.")
     source = source.resolve(strict=True)
     audio_format = AUDIO_FORMATS.get(source.suffix.lower())
     if not source.is_file() or not audio_format:
@@ -85,7 +137,9 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": {"guitare": 5, "basse": 4}.get(instrument, 1)}
+              "instrument": instrument, "bpm": bpm, "version": {"guitare": 6, "basse": 4}.get(instrument, 1)}
+    if capo:
+        config["capo"] = capo
     if title:
         config["title"] = title
     with source.open("rb") as audio:
@@ -115,9 +169,15 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             for track in midi.instruments for note in track.notes
             if note.start < note.end
         ], key=lambda note: (note["start"], note["pitch"]))
+        transients = ()
+        filtered = 0
         if instrument == "guitare":
             tuning = TUNINGS[instrument]
             notes = [note for note in notes if tuning[-1] <= note["pitch"] <= tuning[0] + 24]
+            transients = guitar_transients(wav)
+            clean = filter_guitar_echoes(notes, transients)
+            filtered = len(notes) - len(clean)
+            notes = clean
         if not notes:
             raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre instrument.")
 
@@ -126,12 +186,14 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         write_midi(notes, result / "score.mid", program, instrument, bpm)
         write_score(result / "score.mid", result / "score.musicxml", title or source.stem, guitar=instrument == "guitare")
         tuning = TUNINGS.get(instrument)
-        tab = arrange(notes, tuning) if tuning else []
+        tab = arrange(notes, tuning, capo=capo) if tuning else []
         if tab:
             write_midi(midi_notes(tab), result / "tab.mid", program, instrument, bpm)
-            transients = guitar_transients(wav) if instrument == "guitare" else ()
-            write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument, transients=transients)
+            write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument,
+                      transients=transients, capo=capo)
         manifest = {**config, "notes": notes, "duration": duration, "tab": bool(tab)}
+        if instrument == "guitare":
+            manifest["diagnostic"] = guitar_diagnostic(notes, tab, transients, filtered)
         (result / "notes.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
         try:
             result.rename(target)
@@ -148,13 +210,14 @@ def main():
     parser.add_argument("output", type=Path, help="Dossier privé où conserver les exports")
     parser.add_argument("--isolated", action="store_true", help="Le fichier contient déjà la piste voulue")
     parser.add_argument("--bpm", type=int, default=120, help="Tempo indicatif pour la notation")
+    parser.add_argument("--capo", type=int, default=0, help="Case du capo pour une tablature de guitare")
     parser.add_argument("--authorized", action="store_true", required=True,
                         help="Je dispose des droits nécessaires à cette transcription")
     args = parser.parse_args()
     if not 30 <= args.bpm <= 300:
         parser.error("Le tempo doit être compris entre 30 et 300 BPM.")
     try:
-        print(transcribe(args.audio, args.instrument, args.output, isolated=args.isolated, bpm=args.bpm))
+        print(transcribe(args.audio, args.instrument, args.output, isolated=args.isolated, bpm=args.bpm, capo=args.capo))
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
         parser.exit(1, f"{error}\n")
 

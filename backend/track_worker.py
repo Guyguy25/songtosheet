@@ -35,7 +35,8 @@ def process_job(call, job, data):
                     for index in range(job["chunks"]):
                         chunk = call("read", **identity, index=index)
                         file.write(base64.b64decode(chunk["data"], validate=True))
-            result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"])
+            capo = job.get("capo", 0)
+            result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"], capo=capo)
             exports = {
                 key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
                 for key, filename in EXPORTS.items() if (result / filename).is_file()
@@ -43,12 +44,13 @@ def process_job(call, job, data):
             meta = json.loads((result / "notes.json").read_text(encoding="utf-8"))
             if sum(map(len, exports.values())) > 4_000_000:
                 raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
-            call("preview", **identity, duration=meta["duration"], note_count=len(meta["notes"]), exports=exports)
+            call("preview", **identity, duration=meta["duration"], note_count=len(meta["notes"]),
+                 exports=exports, diagnostic=meta.get("diagnostic"))
             print(f"{job['id']}: relevé disponible", flush=True)
             pdf = Path(temporary) / "score.pdf"
             payload = {"ok": True, "preview": True, "exports": {}}
             try:
-                render_pdf(result, job["title"], job["instrument"], job.get("format", "partition"), pdf)
+                render_pdf(result, job["title"], job["instrument"], job.get("format", "partition"), pdf, capo=capo)
                 encoded_pdf = base64.b64encode(pdf.read_bytes()).decode("ascii")
                 if len(encoded_pdf) > 4_000_000:
                     raise ValueError("PDF trop volumineux.")
@@ -106,7 +108,7 @@ def main():
         print("Moteur de transcription prêt.", flush=True)
         while True:
             try:
-                job = call("claim", pdf=True, links=True, youtube=youtube)["job"]
+                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True)["job"]
                 if job:
                     process_job(call, job, args.cache)
                 if args.once:

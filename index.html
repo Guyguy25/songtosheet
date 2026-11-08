@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=4" />
   <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=8" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=9" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=3" />
   <script src="/backend/web/score-player.js?v=4" defer></script>
   <style>
@@ -1291,12 +1291,12 @@ body.pricing-open{overflow:hidden}
       reader.readAsDataURL(blob);
     });
   }
-  async function submitTrack({file,audioUrl,title,instrument,format,source},setStatus){
+  async function submitTrack({file,audioUrl,title,instrument,format,source,capo},setStatus){
     setStatus(audioUrl?'Mise en file du lien audio…':'Préparation de l’envoi…');
     let id,queued=false;
     try{
       const input=audioUrl?{audioUrl}:{extension:file.name.split('.').at(-1).toLowerCase(),size:file.size,sourceName:file.name};
-      const result=await post('/api/track',{action:'begin',title,authorized:true,instrument,format,source,...input});
+      const result=await post('/api/track',{action:'begin',title,authorized:true,instrument,format,source,capo,...input});
       id=result.id;
       if(!audioUrl){
         const count=Math.ceil(file.size/result.chunk_bytes);
@@ -1373,6 +1373,12 @@ body.pricing-open{overflow:hidden}
         const downloads=Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
           `<a class="btn ${key==='pdf'?'btn-primary':'btn-outline'}" href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}">↓ ${label}</a>`).join('');
         const tab=j.format==='tablature'&&j.downloads.includes('tab');
+        const d=ready&&state.user?.role==='admin'?j.diagnostic:null;
+        const diagnostic=d?`<details class="result-note" open><summary>Diagnostic de la transcription</summary>
+          <p>${d.matched_attacks===null?'Attaques audio non mesurables sur cet extrait.':`${d.matched_attacks} sur ${d.total_attacks} attaques de notes proches d’une attaque détectée dans l’audio.`}</p>
+          <p>${d.filtered_notes} note(s) suspecte(s) filtrée(s). ${d.tab_chords} attaque(s) de plusieurs notes en tablature. ${j.note_count-d.tab_notes} note(s) sans doigté retenu avec ce réglage.</p>
+          ${d.review_seconds.length?`<p>À écouter en priorité vers ${d.review_seconds.map(timeFmt).join(', ')}.</p>`:''}
+          <p>Ce diagnostic vérifie la cohérence des attaques. Pour mesurer la justesse des notes et des accords, il faut comparer le relevé à une référence validée.</p></details>`:'';
         const status=ready?(tab?'TABLATURE PRÊTE':'PARTITION PRÊTE'):waiting?'TRANSCRIPTION EN COURS':'TRANSCRIPTION INTERROMPUE';
         const fallback=j.format==='tablature'&&!tab?' Aucune tablature jouable n’a été détectée. La partition est disponible.':'';
         const detail=ready?`${j.note_count} notes estimées.${fallback} ${waiting?'Le PDF se prépare.':j.pdf_error?'Le PDF est indisponible pour ce relevé.':'Tu peux corriger le résultat dans un éditeur MusicXML.'}`
@@ -1381,9 +1387,9 @@ body.pricing-open{overflow:hidden}
           :j.error_message||'Importe ton fichier pour réessayer.';
         if(!$('track-result-summary'))$('result-content').innerHTML='<div id="track-result-summary" class="result-hero"></div>';
         $('track-result-summary').innerHTML=`<span class="dashboard-kicker">${status}</span>
-          <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)} · Accès admin</p>
+          <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)}${j.capo?` · Capo case ${j.capo}`:''} · Accès admin</p>
           ${j.source_name?`<p class="result-meta">Fichier importé : ${safe(j.source_name)}</p>`:''}
-          <p>${safe(detail)}</p>${ready?`<div class="result-actions">${downloads}</div>`:''}
+          <p>${safe(detail)}</p>${ready?`<div class="result-actions">${downloads}</div>`:''}${diagnostic}
           ${!waiting&&!completed&&!ready?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;
         if(ready&&!$('score-player'))$('result-content').insertAdjacentHTML('beforeend',
           '<section id="score-player" class="score-player" aria-label="Lecteur de la transcription"></section>');

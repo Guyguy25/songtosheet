@@ -24,7 +24,7 @@ def chromium_path():
     raise ValueError("Chromium est nécessaire pour le rendu PDF.")
 
 
-def render_pdf(folder: Path, title: str, instrument: str, format: str, destination: Path):
+def render_pdf(folder: Path, title: str, instrument: str, format: str, destination: Path, *, capo=0):
     import verovio
 
     tab = format == "tablature" and (folder / "tab.musicxml").is_file()
@@ -37,10 +37,11 @@ def render_pdf(folder: Path, title: str, instrument: str, format: str, destinati
         raise ValueError("La mise en page PDF a échoué.")
 
     label = "Tablature" if tab else "Partition"
+    capo_label = f" · Capo case {capo}" if tab and capo else ""
     title = html.escape(title)
     instrument = html.escape(instrument.capitalize())
     pages = [
-        f"<section><h1>{title}</h1><p>{label} · {instrument} · Relevé automatique</p>"
+        f"<section><h1>{title}</h1><p>{label} · {instrument}{capo_label} · Relevé automatique</p>"
         f"{score.renderToSVG(page)}<footer>{page} / {count}</footer></section>"
         for page in range(1, count + 1)
     ]

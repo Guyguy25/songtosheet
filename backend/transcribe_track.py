@@ -15,6 +15,7 @@ from itertools import takewhile
 from pathlib import Path
 
 from guitar_tab import arrange, arrange_with_capo, attack_groups, group_for_notation, midi_notes, write_tab
+from guitar_harmony import chord_changes, clean_arpeggio, onset_strengths
 
 
 TRACKS = {
@@ -190,7 +191,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": {"guitare": 7, "basse": 4}.get(instrument, 1)}
+              "instrument": instrument, "bpm": bpm, "version": {"guitare": 8, "basse": 4}.get(instrument, 1)}
     if capo:
         config["capo"] = capo
     if title:
@@ -228,6 +229,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         transients = ()
         filtered = 0
         simple = False
+        chords = []
         if instrument == "guitare":
             tuning = TUNINGS[instrument]
             notes = [note for note in notes if tuning[-1] <= note["pitch"] <= tuning[0] + 24]
@@ -239,6 +241,13 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                 filtered += len(notes) - len(lead)
                 notes = recover_lead_notes(lead, model)
                 simple = True
+            elif isolated:
+                strengths = onset_strengths(model, notes)
+                chords = chord_changes(notes, strengths)
+                if len(chords) >= 2:
+                    clean = clean_arpeggio(notes, strengths)
+                    filtered += len(notes) - len(clean)
+                    notes = clean
         if not notes:
             raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre instrument.")
 
@@ -255,7 +264,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         if tab:
             write_midi(midi_notes(tab), result / "tab.mid", program, instrument, bpm)
             write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument,
-                      transients=transients, capo=resolved_capo)
+                      transients=transients, capo=resolved_capo, chords=chords)
         manifest = {**config, "notes": notes, "duration": duration, "tab": bool(tab)}
         if capo == "auto":
             manifest["resolved_capo"] = resolved_capo

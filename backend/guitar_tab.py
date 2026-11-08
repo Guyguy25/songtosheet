@@ -181,8 +181,8 @@ def notated_attacks(notes, bpm, transients):
     return result
 
 
-def add(parent, tag, text, **attributes):
-    ET.SubElement(parent, tag, **attributes).text = str(text)
+def add(parent, tag, value, **attributes):
+    ET.SubElement(parent, tag, **attributes).text = str(value)
 
 
 def write_header(measure, tuning, bpm, capo):
@@ -249,13 +249,33 @@ def write_attack(measure, start, length, events):
         add(technical, "fret", event.fret)
 
 
-def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=(), capo=0):
+def write_harmony(measure, root, quality):
+    name = NOTE_NAMES[root]
+    harmony = ET.SubElement(measure, "harmony", placement="above")
+    root_element = ET.SubElement(harmony, "root")
+    add(root_element, "root-step", name[0])
+    if name.endswith("#"):
+        add(root_element, "root-alter", 1)
+    suffix = {"major": "", "minor": "m", "major-seventh": "maj7", "dominant": "7", "minor-seventh": "m7"}
+    add(harmony, "kind", quality, text=suffix[quality])
+
+
+def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=(), capo=0, chords=()):
     root = ET.Element("score-partwise", version="4.0")
     add(root, "movement-title", title)
     part_list = ET.SubElement(root, "part-list")
     add(ET.SubElement(part_list, "score-part", id="P1"), "part-name", instrument.capitalize())
     part = ET.SubElement(root, "part", id="P1")
     attacks = notated_attacks(notes, bpm, transients)
+    ticks = [start for start, _ in attacks]
+    grid = bpm * DIVISIONS / 60
+    harmony = {}
+    for time, root_pitch, quality in chords:
+        target = round(time * grid)
+        index = bisect_left(ticks, target)
+        closest = min(ticks[max(0, index - 1):index + 1], key=lambda tick: abs(tick - target))
+        if abs(closest - target) <= round(.15 * grid):
+            harmony[closest] = (root_pitch - capo) % 12, quality
     end = max(stop for _, group in attacks for stop, _ in group)
     bars = (end + BAR - 1) // BAR
     index, ringing_until = 0, 0
@@ -266,6 +286,8 @@ def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=
             write_header(measure, tuning, bpm, capo)
         while start < bar_end:
             if index < len(attacks) and attacks[index][0] == start:
+                if start in harmony:
+                    write_harmony(measure, *harmony[start])
                 events = attacks[index][1]
                 index += 1
                 group_end = max(stop for stop, _ in events)

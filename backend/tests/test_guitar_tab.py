@@ -1,5 +1,6 @@
 from xml.etree import ElementTree as ET
 
+from guitar_harmony import chord_changes, clean_arpeggio
 from guitar_tab import arrange, arrange_with_capo, midi_notes, write_tab
 from transcribe_track import TUNINGS, filter_guitar_echoes, guitar_diagnostic, guitar_lead
 
@@ -99,6 +100,33 @@ def test_simple_lead_uses_the_same_two_strings_on_each_repetition():
     )
     chord_note = event(64, notes[0]["start"], notes[0]["end"])
     assert guitar_lead(notes + echoes + [chord_note]) is None
+
+
+def test_arpeggio_labels_harmony_once_without_turning_notes_into_chords(tmp_path):
+    shapes = [(45, 57, 60, 64), (53, 57, 60, 64), (48, 55, 60, 64), (43, 55, 59, 67)]
+    notes = [event(pitch, section + i * .2, section + i * .2 + .18)
+             for section, pitches in enumerate(shapes) for i, pitch in enumerate(pitches)]
+    chords = chord_changes(notes, {id(note): .95 for note in notes})
+    assert chords == [(0, 9, "minor"), (1, 5, "major-seventh"), (2, 0, "major"), (3, 7, "major")]
+    path = tmp_path / "harmony.musicxml"
+    write_tab(arrange(notes, TUNINGS["guitare"]), path, TUNINGS["guitare"],
+              120, "Test", "guitare", chords=chords)
+    xml = ET.parse(path)
+    assert [node.findtext("kind") for node in xml.findall(".//harmony")] == [
+        "minor", "major-seventh", "major", "major"]
+    assert not xml.findall(".//note/chord")
+
+
+def test_arpeggio_cleanup_holds_ringing_note_and_keeps_strummed_chords():
+    bass = event(45, .1, .45)
+    false_attack = event(45, .43, .7)
+    pluck = event(57, .43, .61)
+    lead = [bass, false_attack, pluck, event(60, .62, .8)]
+    strengths = {id(note): .93 for note in lead}
+    strengths[id(false_attack)] = .53
+    assert clean_arpeggio(lead, strengths) == [{**bass, "end": .7}, pluck, lead[-1]]
+    strummed = [event(pitch, onset, onset + .3) for onset in (.1, .5) for pitch in (45, 57, 60)]
+    assert clean_arpeggio(strummed, {id(note): .95 for note in strummed}) == strummed
 
 
 def test_filter_preserves_the_chord_and_an_upper_note_with_its_own_attack():

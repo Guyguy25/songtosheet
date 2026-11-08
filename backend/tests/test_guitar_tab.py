@@ -1,6 +1,6 @@
 from xml.etree import ElementTree as ET
 
-from guitar_harmony import chord_changes, clean_arpeggio
+from guitar_harmony import chord_changes, clean_arpeggio, tab_chord_changes
 from guitar_tab import arrange, arrange_with_capo, midi_notes, write_tab
 from transcribe_track import TUNINGS, filter_guitar_echoes, guitar_diagnostic, guitar_lead
 
@@ -54,6 +54,29 @@ def test_arpeggio_does_not_print_sustaining_strings_as_new_chords(tmp_path):
     score = ET.parse(path)
     assert len(score.findall(".//note/pitch")) == 3
     assert score.findall(".//note/chord") == []
+
+
+def test_tab_names_strummed_and_arpeggiated_chords_without_altering_attacks(tmp_path):
+    tuning = TUNINGS["guitare"]
+    notes = [event(pitch, .10, .70) for pitch in (52, 57, 61, 64)]
+    notes += [event(45, 1., 1.85), event(60, 1.2, 1.6), event(64, 1.4, 1.7)]
+    notes += [event(pitch, 2.0, 2.5) for pitch in (40, 47, 52)]
+    notes += [event(pitch, 3.0, 3.5) for pitch in (40, 47, 52, 56)]
+    notes += [event(pitch, 4.0, 4.5) for pitch in (40, 47, 52)]
+    tab = arrange(notes, tuning)
+    chords = tab_chord_changes(tab, ())
+    assert chords == [(.10, 9, "major"), (1., 9, "minor"), (2., 4, "power"), (3., 4, "major")]
+    path = tmp_path / "mixed-chords.musicxml"
+    write_tab(tab, path, tuning, 120, "Accords", "guitare", chords=chords)
+    xml = ET.parse(path)
+    assert [kind.get("text") for kind in xml.findall(".//harmony/kind")] == ["", "m", "5", ""]
+    assert len(xml.findall(".//note/chord")) == 10
+    assert len(xml.findall(".//note/pitch")) == len(notes)
+
+
+def test_tab_does_not_infer_a_chord_from_detached_notes():
+    notes = [event(45, 1., 1.1), event(60, 1.2, 1.3), event(64, 1.4, 1.5)]
+    assert tab_chord_changes(arrange(notes, TUNINGS["guitare"]), ()) == []
 
 
 def test_strum_uses_one_column_for_delayed_notes_of_the_same_transient(tmp_path):

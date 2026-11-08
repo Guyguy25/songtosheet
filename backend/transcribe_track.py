@@ -15,7 +15,7 @@ from itertools import takewhile
 from pathlib import Path
 
 from guitar_tab import arrange, arrange_with_capo, attack_groups, group_for_notation, midi_notes, write_tab
-from guitar_harmony import chord_changes, clean_arpeggio, onset_strengths
+from guitar_harmony import chord_changes, clean_arpeggio, onset_strengths, tab_chord_changes
 from guitar_evidence import descending_slides, guitar_evidence, refine_mixed_guitar, refine_picked_notes
 from guitar_intro import open_pull_offs, repeated_open_intro
 from piano_score import clean_piano_notes, estimate_piano_grid, write_piano_score
@@ -202,7 +202,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
               "instrument": instrument, "bpm": bpm,
-              "version": {"guitare": 11 if isolated else 12, "basse": 4, "piano": 3}.get(instrument, 1)}
+              "version": {"guitare": 13, "basse": 4, "piano": 3}.get(instrument, 1)}
     if capo:
         config["capo"] = capo
     if title:
@@ -328,6 +328,8 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         else:
             resolved_capo, tab = capo, arrange(notes, tuning, capo=capo, simple=simple, string_hints=string_hints) if tuning else []
         if tab:
+            if instrument == "guitare" and not chords and not simple:
+                chords = tab_chord_changes(tab, transients)
             write_midi(midi_notes(tab), result / "tab.mid", program, instrument, bpm,
                        beats=tab_meter[0] if tab_meter != (4, 4) else None, beat_type=tab_meter[1])
             write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument,

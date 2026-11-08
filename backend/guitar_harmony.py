@@ -2,7 +2,18 @@
 from bisect import bisect_left
 from itertools import groupby
 
-from guitar_tab import attack_groups
+from guitar_tab import attack_groups, group_for_notation
+
+
+CHORD_INTERVALS = {
+    (0, 4, 7): "major",
+    (0, 3, 7): "minor",
+    (0, 2, 7): "suspended-second",
+    (0, 5, 7): "suspended-fourth",
+    (0, 4, 7, 11): "major-seventh",
+    (0, 4, 7, 10): "dominant",
+    (0, 3, 7, 10): "minor-seventh",
+}
 
 
 def onset_strengths(model, notes):
@@ -56,6 +67,39 @@ def chord_changes(notes, strengths):
     established = sum(full for _, _, _, full in result) >= 2
     changes = ((start, root, quality) for start, root, quality, full in result if full or established)
     return [next(group) for _, group in groupby(changes, key=lambda chord: chord[1:])]
+
+
+def tab_chord_changes(tab, transients):
+    """Name clear voicings without changing the attacks or making notes simultaneous."""
+    groups = [group for _, group, _ in group_for_notation(tab, transients)]
+    starts = [group[0].start for group in groups]
+    result = []
+    for index, group in enumerate(groups):
+        start = starts[index]
+        bass_note = min(group, key=lambda note: note.pitch)
+        bass = bass_note.pitch % 12
+        tones = {note.pitch % 12 for note in group}
+        matches = [
+            (root, quality) for root in sorted(tones, key=lambda pitch: (pitch != bass, pitch))
+            if (quality := CHORD_INTERVALS.get(tuple(sorted((tone - root) % 12 for tone in tones))))
+        ]
+        if not matches and len(tones) == 2 and len(group) >= 3 and tones == {bass, (bass + 7) % 12}:
+            matches = [(bass, "power")]
+        if not matches and bass_note.pitch <= 55:
+            stop = bisect_left(starts, start + .8)
+            phrase = [note for attack in groups[index:stop] for note in attack]
+            # A low note followed by a third and fifth while it rings can be
+            # an arpeggio. A detached melody with the same notes stays unlabelled.
+            if len(phrase) >= 3 and bass_note.end >= phrase[-1].start + .04:
+                intervals = tuple(sorted({(note.pitch - bass) % 12 for note in phrase}))
+                if quality := CHORD_INTERVALS.get(intervals):
+                    matches = [(bass, quality)]
+        if matches:
+            root, quality = matches[0]
+            if result and result[-1][1] == root and quality in (result[-1][2], "power"):
+                continue
+            result.append((start, root, quality))
+    return result
 
 
 def clean_arpeggio(notes, strengths):

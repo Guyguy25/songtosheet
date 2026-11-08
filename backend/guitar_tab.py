@@ -282,7 +282,8 @@ def write_harmony(measure, root, quality):
     add(root_element, "root-step", name[0])
     if name.endswith("#"):
         add(root_element, "root-alter", 1)
-    suffix = {"major": "", "minor": "m", "major-seventh": "maj7", "dominant": "7", "minor-seventh": "m7"}
+    suffix = {"major": "", "minor": "m", "major-seventh": "maj7", "dominant": "7", "minor-seventh": "m7",
+              "suspended-second": "sus2", "suspended-fourth": "sus4", "power": "5"}
     add(harmony, "kind", quality, text=suffix[quality])
 
 

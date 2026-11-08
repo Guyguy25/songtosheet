@@ -6,7 +6,7 @@
     guitare:{folder:'guitar-steel/',pitches:[40,45,50,55,59,64,69,74,79,83,88],label:'Son de guitare acoustique',volume:.5,release:.06},
     piano:{folder:'piano-grand/',pitches:[21,24,30,36,42,48,54,60,66,72,78,84,90,96,102,108],label:'Son de piano à queue',volume:.27,release:.18}
   };
-  const instrumentLabels={guitare:'Guitare acoustique',basse:'Basse',piano:'Piano',voix:'Voix'};
+  const instrumentLabels={guitare:'Guitare',basse:'Basse',piano:'Piano',voix:'Voix'};
   const loadScript=(asset,version)=>{
     if(!scripts.has(asset))scripts.set(asset,new Promise((resolve,reject)=>{
       const script=document.createElement('script');

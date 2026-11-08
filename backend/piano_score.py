@@ -1,5 +1,6 @@
 """Clean piano attacks and lay out the two hands on a grand staff."""
 from bisect import bisect_left, bisect_right
+from collections import Counter, defaultdict
 from itertools import groupby
 from math import ceil
 from statistics import median
@@ -72,16 +73,42 @@ def estimate_piano_grid(notes, default_bpm):
     return default_bpm, 4
 
 
-def piano_hands(notes):
+def alternating_bass(notes, bpm, beats):
+    """Find a repeating low note and a middle note on the intervening eighths."""
+    slots = defaultdict(set)
+    for item in notes:
+        slots[round(item["start"] * bpm / 30)].add(item["pitch"])
+    patterns = {}
+    width = beats * 2
+    for bar in {tick // width for tick in slots}:
+        start = bar * width
+        pairs = Counter(
+            (low, middle)
+            for beat in range(beats)
+            for low in slots.get(start + beat * 2, ())
+            for middle in slots.get(start + beat * 2 + 1, ())
+            if low < 60 and 60 <= middle <= 64
+        )
+        ranked = pairs.most_common(2)
+        if ranked and ranked[0][1] >= 2 and (len(ranked) == 1 or ranked[0][1] > ranked[1][1]):
+            patterns[bar] = ranked[0][0]
+    return patterns
+
+
+def piano_hands(notes, bpm, beats):
+    patterns = alternating_bass(notes, bpm, beats)
     right, left = [], []
     for group in attack_groups(notes, lambda note: note["start"]):
         low = min(note["pitch"] for note in group)
         high = max(note["pitch"] for note in group)
         for note in group:
             pitch = note["pitch"]
-            bass = pitch < 60 or (pitch == low and 60 <= pitch <= 62 and high - pitch >= 9)
+            tick = round(note["start"] * bpm / 30)
+            _, middle = patterns.get(tick // (beats * 2), (None, None))
+            bass = (pitch < 60 or (tick % 2 and pitch == middle)
+                    or (pitch == low and 60 <= pitch <= 62 and high - pitch >= 9))
             (left if bass else right).append(note)
-    return right, left
+    return right, left, patterns
 
 
 def write_piano_score(notes, destination, title, bpm, beats):
@@ -93,7 +120,10 @@ def write_piano_score(notes, destination, title, bpm, beats):
     subdivisions = 2 if beats == 3 else 4
     scale = bpm * subdivisions / 60
     end = max(item["end"] for item in notes) * bpm / 60
-    for index, hand in enumerate(piano_hands(notes)):
+    right, left, patterns = piano_hands(notes, bpm, beats)
+    bar_ticks = beats * subdivisions
+    bass_ticks = {round(item["start"] * scale) for item in left}
+    for index, hand in enumerate((right, left)):
         staff = stream.PartStaff(id=f"Piano{index + 1}")
         staff.insert(0, instrument.Piano())
         staff.insert(0, meter.TimeSignature(f"{beats}/4"))
@@ -105,17 +135,25 @@ def write_piano_score(notes, destination, title, bpm, beats):
             start = round(item["start"] * scale)
             end_time = item["end"]
             following = hand[i + 1] if i + 1 < len(hand) else None
-            if following and following["start"] - item["start"] > .08 and 0 < end_time - following["start"] <= .14:
-                end_time = following["start"]
+            if following:
+                interval = following["start"] - item["start"]
+                tail = .25 if beats == 3 and index == 0 and .18 <= interval <= .32 else .14
+                if interval > .08 and 0 < end_time - following["start"] <= tail:
+                    end_time = following["start"]
             stop = max(start + 1, round(end_time * scale))
             if beats == 3 and following:
                 following_tick = round(following["start"] * scale)
                 close_to_next = stop + 1 == following_tick
                 repeated = item["pitch"] == following["pitch"] and following_tick - start == subdivisions
-                sustained_bass = (index == 1 and start % (beats * subdivisions) == 0
-                                  and following_tick - start == beats * subdivisions
-                                  and following["start"] - end_time <= .15)
+                full_bar = start % bar_ticks == 0 and following_tick - start == bar_ticks
+                sustained_bass = index == 1 and full_bar and following["start"] - end_time <= 30 / bpm + .06
                 if close_to_next and (repeated or sustained_bass):
+                    stop = following_tick
+                if index == 0 and full_bar and stop - start >= bar_ticks - subdivisions:
+                    if all(start + beat * subdivisions in bass_ticks for beat in range(beats)):
+                        stop = max(stop, following_tick)
+                pattern = patterns.get(start // bar_ticks)
+                if index == 1 and pattern and item["pitch"] == pattern[start % 2] and following_tick == start + 1:
                     stop = following_tick
             events.append((start, stop, item["pitch"]))
         for (start, stop), values in groupby(sorted(events), key=lambda value: value[:2]):

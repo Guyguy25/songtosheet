@@ -1,6 +1,6 @@
 from xml.etree import ElementTree
 
-from piano_score import clean_piano_notes, estimate_piano_grid, write_piano_score
+from piano_score import clean_piano_notes, estimate_piano_grid, piano_hands, write_piano_score
 
 
 def event(pitch, start, duration, velocity=85):
@@ -37,3 +37,14 @@ def test_piano_exports_two_staves_and_preserves_real_octaves(tmp_path):
     assert xml.findtext(".//time/beats") == "3"
     assert [node.findtext("sign") for node in xml.findall(".//clef")] == ["G", "F"]
     assert xml.find(".//note[staff='2']/dot") is not None
+
+
+def test_middle_c_stays_with_alternating_left_hand():
+    notes = [event(60, 0, .5)]
+    for i in range(3):
+        beat = 1.5 + i * .5
+        notes.extend([event(52, beat, .30), event(72, beat, .48), event(60, beat + .25, .29)])
+    right, left, patterns = piano_hands(notes, 120, 3)
+    assert patterns == {1: (52, 60)}
+    assert [item["pitch"] for item in left] == [52, 60] * 3
+    assert [item["pitch"] for item in right] == [60, 72, 72, 72]

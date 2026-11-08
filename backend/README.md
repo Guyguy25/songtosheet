@@ -81,6 +81,16 @@ python .\track_worker.py https://songtosheet.vercel.app .\data\production-track-
 
 Les demandes passent par le site public. La machine qui exécute le moteur doit rester allumée et connectée pour les traiter. Les fichiers audio intermédiaires sont supprimés en fin de traitement. Le cache local contient les exports.
 
+### Mesurer la précision d’un relevé
+
+Avec l’environnement de transcription, utilise un MIDI de référence corrigé et aligné sur le même enregistrement :
+
+```powershell
+python .\evaluate_transcription.py .\score.mid --reference .\reference.mid --guitare
+```
+
+L’évaluation mesure la précision, le rappel et le F1 des notes. Elle compare la hauteur et l’attaque à 50 ms près, puis évalue aussi la fin de note dans une seconde mesure. Sans référence, le script liste les notes hors tessiture en accordage standard sur une guitare à 24 cases.
+
 ## Paiement Stripe
 
 Les packs de crédits sont définis côté serveur dans `PACKS` dans `app.py` :

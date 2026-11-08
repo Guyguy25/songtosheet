@@ -30,11 +30,16 @@ def run(command, timeout):
     return result.stdout.strip()
 
 
-def write_score(midi_path, destination, title):
-    from music21 import converter, metadata
+def write_score(midi_path, destination, title, *, guitar=False):
+    from music21 import clef, converter, metadata
 
     score = converter.parse(midi_path, quarterLengthDivisors=(4, 3))
     score.metadata = metadata.Metadata(title=title)
+    if guitar:
+        for part in score.parts:
+            for existing in list(part.recurse().getElementsByClass(clef.Clef)):
+                existing.activeSite.remove(existing)
+            part.getElementsByClass("Measure").first().insert(0, clef.Treble8vbClef())
     score.write("musicxml", fp=destination)
 
 
@@ -118,7 +123,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": 1}
+              "instrument": instrument, "bpm": bpm, "version": 2 if instrument == "guitare" else 1}
     if title:
         config["title"] = title
     with source.open("rb") as audio:
@@ -150,13 +155,16 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             for track in midi.instruments for note in track.notes
             if note.start < note.end
         ], key=lambda note: (note["start"], note["pitch"]))
+        if instrument == "guitare":
+            tuning = TUNINGS[instrument]
+            notes = [note for note in notes if tuning[-1] <= note["pitch"] <= tuning[0] + 24]
         if not notes:
             raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre instrument.")
 
         result = work / "result"
         result.mkdir()
         write_midi(notes, result / "score.mid", program, instrument, bpm)
-        write_score(result / "score.mid", result / "score.musicxml", title or source.stem)
+        write_score(result / "score.mid", result / "score.musicxml", title or source.stem, guitar=instrument == "guitare")
         tuning = TUNINGS.get(instrument)
         melody = list(tab_melody(notes, tuning)) if tuning else []
         if melody:

@@ -12,8 +12,8 @@
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=2" />
   <script src="/backend/web/track-onboarding.js?v=2" defer></script>
-  <link rel="stylesheet" href="/backend/web/score-player.css?v=1" />
-  <script src="/backend/web/score-player.js?v=1" defer></script>
+  <link rel="stylesheet" href="/backend/web/score-player.css?v=2" />
+  <script src="/backend/web/score-player.js?v=2" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
 *{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--canvas);font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);-webkit-font-smoothing:antialiased}button,input,select{font:inherit}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.6}a{color:inherit;text-decoration:none}p,h1,h2,h3{margin-top:0}h1,h2,h3{letter-spacing:-.045em}.hidden{display:none!important}.container{max-width:1216px;width:calc(100% - 64px);margin:0 auto}.section-pad{padding:104px 0}.btn{border:1px solid transparent;display:inline-flex;justify-content:center;align-items:center;gap:14px;font-weight:750;border-radius:13px;min-height:49px;padding:13px 21px;transition:.18s transform,.18s background,.18s box-shadow;white-space:nowrap}.btn:hover{transform:translateY(-2px)}.btn:active{transform:translateY(0)}.btn span:last-child{font-size:19px;font-weight:500}.btn-primary{color:#fff;background:var(--purple);box-shadow:0 8px 22px rgba(109,61,220,.16)}.btn-primary:hover{background:var(--purple-dark);box-shadow:0 11px 23px rgba(109,61,220,.24)}.btn-outline{border-color:#ded7ed;background:#fff;color:var(--ink)}.btn-outline:hover{border-color:var(--purple);background:#f9f6ff}.btn-dark{color:#fff;background:#29213e}.btn-dark:hover{background:#443363}.btn-white{background:white;color:var(--purple-dark)}.section-label{display:block;font-size:12px;letter-spacing:.14em;color:var(--purple);font-weight:850;margin-bottom:18px}.section-intro h2,.showcase-content h2,.faq-grid h2{font-size:clamp(38px,4vw,55px);line-height:1.12;margin-bottom:18px}.section-intro h2 span,.showcase-content h2 span,.faq-grid h2 span{color:var(--purple)}.section-intro>p{font-size:16px;color:var(--muted);max-width:530px;margin:0 auto;line-height:1.7}.center{text-align:center}
@@ -1355,7 +1355,7 @@ body.pricing-open{overflow:hidden}
         if($('score-player')&&window.SongToSheetPlayer){
           const exportUrl=kind=>`/api/track?id=${encodeURIComponent(id)}&download=${kind}`;
           closePlayer=window.SongToSheetPlayer.mount($('score-player'),{
-            scoreUrl:exportUrl('musicxml'),midiUrl:exportUrl('mid'),
+            scoreUrl:exportUrl('musicxml'),midiUrl:exportUrl('mid'),instrument:j.instrument,
             tabUrl:j.downloads.includes('tab')?exportUrl('tab'):null,preferTab:tab
           });
         }

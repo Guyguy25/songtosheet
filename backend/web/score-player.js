@@ -1,6 +1,9 @@
 (() => {
   'use strict';
   const scripts=new Map();
+  const guitarSamples=new URL('sounds/guitar-steel/',document.currentScript.src);
+  const guitarPitches=[40,45,50,55,59,64,69,74,79,83,88];
+  const instrumentLabels={guitare:'Guitare acoustique',basse:'Basse',piano:'Piano',voix:'Voix'};
   const loadScript=(asset,version)=>{
     if(!scripts.has(asset))scripts.set(asset,new Promise((resolve,reject)=>{
       const script=document.createElement('script');
@@ -53,7 +56,21 @@
     return result;
   }
 
-  function mount(root,{scoreUrl,tabUrl,midiUrl,preferTab=false}){
+  function guitarNotation(source){
+    const xml=new DOMParser().parseFromString(source,'application/xml');
+    for(const clef of xml.querySelectorAll('clef')){
+      const sign=clef.querySelector('sign'),line=clef.querySelector('line');
+      if(sign?.textContent!=='F'||!line)continue;
+      sign.textContent='G';
+      line.textContent='2';
+      let octave=clef.querySelector('clef-octave-change');
+      if(!octave){octave=xml.createElement('clef-octave-change');clef.append(octave);}
+      octave.textContent='-1';
+    }
+    return new XMLSerializer().serializeToString(xml);
+  }
+
+  function mount(root,{scoreUrl,tabUrl,midiUrl,instrument,preferTab=false}){
     const controller=new AbortController();
     const {signal}=controller;
     root.innerHTML=`
@@ -64,6 +81,7 @@
           <button type="button" data-view="roll" aria-pressed="false">Piano roll</button>
         </div>
         <div class="sp-tools">
+          <span class="sp-instrument" hidden></span>
           ${tabUrl?'<label class="sp-kind"><span class="sp-sr">Notation</span><select><option value="score">Partition</option><option value="tab">Tablature</option></select></label>':''}
           <div class="sp-zoom" role="group" aria-label="Zoom de la partition">
             <button type="button" data-zoom="-1" aria-label="Réduire la partition">−</button>
@@ -87,13 +105,21 @@
           <option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option>
         </select></label>
         <span class="sp-audio-label">Transcription MIDI</span>
-      </div><p class="sp-status sp-sr" role="status"></p>`;
+        <a class="sp-audio-credit" hidden target="_blank" rel="noopener" aria-label="Crédits audio">ⓘ</a>
+      </div><p class="sp-status" role="status" hidden></p>`;
     const get=selector=>root.querySelector(selector);
     const sheet=get('.sp-sheet'),engraving=get('.sp-engraving'),sheetStatus=get('.sp-sheet p');
     const roll=get('.sp-roll'),scroll=get('.sp-roll-scroll'),play=get('.sp-play'),seek=get('.sp-seek');
     const speed=get('.sp-speed select'),restart=get('.sp-restart'),kind=get('.sp-kind select');
     const zoomButtons=[...root.querySelectorAll('[data-zoom]')];
     const full=get('.sp-full');
+    const guitar=instrument==='guitare',instrumentBadge=get('.sp-instrument'),audioCredit=get('.sp-audio-credit');
+    instrumentBadge.textContent=instrumentLabels[instrument]||'';
+    instrumentBadge.hidden=!instrumentBadge.textContent;
+    if(guitar){
+      audioCredit.href=new URL('ATTRIBUTION.txt',guitarSamples);
+      audioCredit.hidden=false;
+    }
     full.hidden=!root.requestFullscreen;
     if(kind&&preferTab)kind.value='tab';
 
@@ -101,27 +127,44 @@
     let score,cursorTimes=[],cursorIndex=0,zoom=1,loadId=0,audioLoadId=0,resizeTimer;
     let chart,playhead,pixelsPerSecond=1;
     const sounds=new Set();
+    let guitarBuffers;
     const now=()=>playing?Math.min(duration,Math.max(0,(context.currentTime-anchor)*rate)):position;
 
     function stopSounds(){
       for(const sound of sounds)sound.stop();
       sounds.clear();
     }
-    function tone(note,offset){
+    function scheduleNote(note,offset){
       const from=Math.max(context.currentTime,anchor+Math.max(offset,note.time)/rate);
       const length=(note.time+note.duration-Math.max(offset,note.time))/rate;
       if(length<=0)return;
-      const oscillator=context.createOscillator(),gain=context.createGain();
-      const volume=.055*note.velocity;
-      oscillator.type='triangle';
-      oscillator.frequency.value=440*2**((note.midi-69)/12);
+      const gain=context.createGain();
+      let sound,startAt=0;
       gain.gain.setValueAtTime(0,from);
-      gain.gain.linearRampToValueAtTime(volume,from+Math.min(.018,length/2));
-      gain.gain.exponentialRampToValueAtTime(.0001,from+length+.035);
-      oscillator.connect(gain).connect(context.destination);
-      oscillator.onended=()=>{sounds.delete(oscillator);oscillator.disconnect();gain.disconnect();};
-      sounds.add(oscillator);
-      oscillator.start(from);oscillator.stop(from+length+.04);
+      if(guitarBuffers){
+        const pitch=guitarPitches.reduce((closest,key)=>Math.abs(key-note.midi)<Math.abs(closest-note.midi)?key:closest);
+        const ratio=2**((note.midi-pitch)/12);
+        const buffer=guitarBuffers.get(pitch);
+        startAt=Math.max(0,offset-note.time)*ratio/rate;
+        if(startAt>=buffer.duration)return;
+        sound=context.createBufferSource();
+        sound.buffer=buffer;
+        sound.playbackRate.value=ratio;
+        const volume=.5*note.velocity;
+        gain.gain.linearRampToValueAtTime(volume,from+Math.min(.005,length/2));
+        gain.gain.setValueAtTime(volume,from+length);
+      }else{
+        sound=context.createOscillator();
+        sound.type='triangle';
+        sound.frequency.value=440*2**((note.midi-69)/12);
+        gain.gain.linearRampToValueAtTime(.055*note.velocity,from+Math.min(.018,length/2));
+      }
+      gain.gain.exponentialRampToValueAtTime(.0001,from+length+.055);
+      sound.connect(gain).connect(context.destination);
+      sound.onended=()=>{sounds.delete(sound);sound.disconnect();gain.disconnect();};
+      sounds.add(sound);
+      if(guitarBuffers)sound.start(from,startAt);else sound.start(from);
+      sound.stop(from+length+.06);
     }
 
     function syncScore(value,follow){
@@ -161,7 +204,7 @@
     function tick(){
       if(!playing)return;
       const value=now();
-      while(next<notes.length&&notes[next].time<=value+.16*rate)tone(notes[next++],value);
+      while(next<notes.length&&notes[next].time<=value+.16*rate)scheduleNote(notes[next++],value);
       update(value,true);
       if(value>=duration){pause();return;}
       frame=requestAnimationFrame(tick);
@@ -171,7 +214,7 @@
       anchor=context.currentTime+.025-position/rate;
       next=notes.findIndex(note=>note.time>=position);
       if(next<0)next=notes.length;
-      for(let i=0;i<next;i++)if(notes[i].time+notes[i].duration>position)tone(notes[i],position);
+      for(let i=0;i<next;i++)if(notes[i].time+notes[i].duration>position)scheduleNote(notes[i],position);
       cancelAnimationFrame(frame);tick();
     }
     function jump(value){
@@ -187,12 +230,28 @@
         const Audio=window.AudioContext||window.webkitAudioContext;
         if(!context)context=new Audio();
         await context.resume();
+        if(guitar&&!guitarBuffers&&!signal.aborted){
+          const status=get('.sp-status');
+          status.hidden=false;
+          status.textContent='Chargement du son de guitare…';
+          guitarBuffers=new Map(await Promise.all(guitarPitches.map(async pitch=>{
+            const data=await read(new URL(`${pitch}.mp3`,guitarSamples),signal,true);
+            return [pitch,await context.decodeAudioData(data)];
+          })));
+          status.hidden=true;
+        }
         if(signal.aborted)return;
         if(position>=duration)position=0;
         playing=true;
         play.textContent='❚❚';play.setAttribute('aria-label','Mettre en pause');
         schedule();
-      }catch{get('.sp-status').textContent='La lecture audio est indisponible dans ce navigateur.';}
+      }catch{
+        if(!signal.aborted){
+          const status=get('.sp-status');
+          status.hidden=false;
+          status.textContent=guitar?'Le son de guitare n’a pas pu charger. Relance la lecture.':'La lecture audio est indisponible dans ce navigateur.';
+        }
+      }
       finally{starting=false;}
     };
     seek.oninput=()=>jump(Number(seek.value));
@@ -251,7 +310,7 @@
         duration=notes.reduce((end,note)=>Math.max(end,note.time+note.duration),0);
         position=Math.min(position,duration);
         seek.max=duration;
-        get('.sp-audio-label').textContent=tab?'Lecture de la tablature':'Transcription MIDI';
+        get('.sp-audio-label').textContent=guitar?'Son de guitare acoustique':tab?'Lecture de la tablature':'Transcription MIDI';
         for(const control of [play,seek,speed,restart])control.disabled=false;
         drawRoll();
       }catch{
@@ -269,7 +328,7 @@
           backend:'svg',autoResize:false,drawTitle:false,drawSubtitle:false,drawComposer:false,drawCredits:false,
           cursorsOptions:[{type:0,color:'#7549eb',alpha:.48,follow:false}]
         });
-        await display.load(source);
+        await display.load(guitar&&url===scoreUrl?guitarNotation(source):source);
         if(current!==loadId||signal.aborted||sheet.hidden)return;
         score=display;score.Zoom=zoom;score.render();score.cursor.show();
         cursorTimes=[];cursorIndex=0;

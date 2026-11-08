@@ -30,6 +30,9 @@
 .sp-time{font:11px ui-monospace,monospace;white-space:nowrap}
 .sp-seek{flex:1;min-width:35px;accent-color:#a874ff;cursor:pointer}
 .sp-audio-label{font-size:11px;color:#c5b8d6;white-space:nowrap}
+.sp-instrument{font-size:12px;font-weight:750;padding:4px 7px;border-radius:6px;color:#e2cfff;background:#35284a;white-space:nowrap}
+.sp-audio-credit{color:#c5b8d6;font-size:14px}
+.sp-status{margin:0;padding:7px 13px;font-size:12px;color:#e2cfff}
 .sp-sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .score-player:fullscreen{margin:0;border-radius:0;display:flex;flex-direction:column}
 .score-player:fullscreen .sp-sheet,.score-player:fullscreen .sp-roll{flex:1;min-height:0}
@@ -39,5 +42,6 @@
   .sp-toolbar,.sp-controls{padding:8px;gap:5px}
   .sp-roll-heading small,.sp-audio-label{display:none}
   .sp-tools{margin-left:auto}
+  .sp-instrument{font-size:11px}
   .sp-controls .sp-play{width:36px;height:36px;flex-basis:36px}
 }

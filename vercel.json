@@ -1,6 +1,11 @@
 {
   "version": 2,
   "framework": null,
+  "functions": {
+    "api/player-assets.js": {
+      "includeFiles": "node_modules/{opensheetmusicdisplay/{LICENSE,build/opensheetmusicdisplay.min.js},@tonejs/midi/{LICENSE.md,build/Midi.js}}"
+    }
+  },
   "rewrites": [
     {
       "source": "/app",

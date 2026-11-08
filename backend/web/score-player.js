@@ -1,0 +1,321 @@
+(() => {
+  'use strict';
+  const scripts=new Map();
+  const loadScript=(asset,version)=>{
+    if(!scripts.has(asset))scripts.set(asset,new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src=`/api/player-assets?asset=${asset}&v=${version}`;
+      script.onload=resolve;
+      script.onerror=()=>{scripts.delete(asset);script.remove();reject(new Error('Lecteur indisponible.'));};
+      document.head.append(script);
+    }));
+    return scripts.get(asset);
+  };
+  const time=value=>`${Math.floor(value/60)}:${String(Math.floor(value%60)).padStart(2,'0')}`;
+  const svg=(name,attributes)=>{
+    const node=document.createElementNS('http://www.w3.org/2000/svg',name);
+    for(const [key,value] of Object.entries(attributes))node.setAttribute(key,value);
+    return node;
+  };
+  async function read(url,signal,binary=false){
+    const response=await fetch(url,{signal,credentials:'same-origin'});
+    if(!response.ok)throw new Error('Export indisponible.');
+    return binary?response.arrayBuffer():response.text();
+  }
+
+  function tabNotes(source,bpm){
+    const document=new DOMParser().parseFromString(source,'application/xml');
+    const pitchClass={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+    const result=[],ties=new Map();
+    let divisions=1,position=0;
+    for(const item of document.querySelectorAll('part > measure > *')){
+      if(item.tagName==='attributes'){
+        divisions=Number(item.querySelector('divisions')?.textContent)||divisions;
+        continue;
+      }
+      const duration=Number(item.querySelector('duration')?.textContent)*60/(divisions*bpm);
+      if(!duration)continue;
+      if(item.tagName==='backup'){position-=duration;continue;}
+      if(item.tagName!=='note'&&item.tagName!=='forward')continue;
+      const pitch=item.querySelector('pitch');
+      if(pitch){
+        const midi=(Number(pitch.querySelector('octave').textContent)+1)*12+
+          pitchClass[pitch.querySelector('step').textContent]+Number(pitch.querySelector('alter')?.textContent||0);
+        const previous=item.querySelector('tie[type="stop"]')&&ties.get(midi);
+        const note=previous||{time:position,midi,duration,velocity:.7};
+        if(previous)note.duration=position+duration-note.time;
+        else result.push(note);
+        if(item.querySelector('tie[type="start"]'))ties.set(midi,note);
+        else ties.delete(midi);
+      }
+      position+=duration;
+    }
+    return result;
+  }
+
+  function mount(root,{scoreUrl,tabUrl,midiUrl,preferTab=false}){
+    const controller=new AbortController();
+    const {signal}=controller;
+    root.innerHTML=`
+      <div class="sp-toolbar">
+        <div class="sp-tabs" role="group" aria-label="Affichage">
+          <button type="button" data-view="both" aria-pressed="true">Les deux</button>
+          <button type="button" data-view="score" aria-pressed="false">Partition</button>
+          <button type="button" data-view="roll" aria-pressed="false">Piano roll</button>
+        </div>
+        <div class="sp-tools">
+          ${tabUrl?'<label class="sp-kind"><span class="sp-sr">Notation</span><select><option value="score">Partition</option><option value="tab">Tablature</option></select></label>':''}
+          <div class="sp-zoom" role="group" aria-label="Zoom de la partition">
+            <button type="button" data-zoom="-1" aria-label="Réduire la partition">−</button>
+            <button type="button" data-zoom="1" aria-label="Agrandir la partition">+</button>
+          </div>
+          <button type="button" class="sp-full" aria-label="Plein écran" title="Plein écran">⛶</button>
+        </div>
+      </div>
+      <div class="sp-sheet" tabindex="0" aria-label="Notation musicale"><p>Chargement de la partition…</p><div class="sp-engraving"></div></div>
+      <div class="sp-roll">
+        <div class="sp-roll-heading"><span aria-hidden="true">●</span> Piano roll <small>Clique dans la grille pour te déplacer</small></div>
+        <div class="sp-roll-scroll" tabindex="0" aria-label="Grille des notes"><p>Chargement des notes…</p></div>
+      </div>
+      <div class="sp-controls">
+        <button type="button" class="sp-restart" aria-label="Revenir au début" disabled>↶</button>
+        <button type="button" class="sp-play" aria-label="Lire la transcription" disabled>▶</button>
+        <span class="sp-time">0:00 / 0:00</span>
+        <input class="sp-seek" type="range" min="0" max="1" step="0.01" value="0" aria-label="Position de lecture" disabled>
+        <label class="sp-speed"><span class="sp-sr">Vitesse de lecture</span><select disabled>
+          <option value="0.5">0,5×</option><option value="0.75">0,75×</option>
+          <option value="1" selected>1×</option><option value="1.25">1,25×</option><option value="1.5">1,5×</option>
+        </select></label>
+        <span class="sp-audio-label">Transcription MIDI</span>
+      </div><p class="sp-status sp-sr" role="status"></p>`;
+    const get=selector=>root.querySelector(selector);
+    const sheet=get('.sp-sheet'),engraving=get('.sp-engraving'),sheetStatus=get('.sp-sheet p');
+    const roll=get('.sp-roll'),scroll=get('.sp-roll-scroll'),play=get('.sp-play'),seek=get('.sp-seek');
+    const speed=get('.sp-speed select'),restart=get('.sp-restart'),kind=get('.sp-kind select');
+    const zoomButtons=[...root.querySelectorAll('[data-zoom]')];
+    const full=get('.sp-full');
+    full.hidden=!root.requestFullscreen;
+    if(kind&&preferTab)kind.value='tab';
+
+    let notes=[],duration=0,midi,position=0,rate=1,context,playing=false,starting=false,anchor=0,next=0,frame;
+    let score,cursorTimes=[],cursorIndex=0,zoom=1,loadId=0,audioLoadId=0,resizeTimer;
+    let chart,playhead,pixelsPerSecond=1;
+    const sounds=new Set();
+    const now=()=>playing?Math.min(duration,Math.max(0,(context.currentTime-anchor)*rate)):position;
+
+    function stopSounds(){
+      for(const sound of sounds)sound.stop();
+      sounds.clear();
+    }
+    function tone(note,offset){
+      const from=Math.max(context.currentTime,anchor+Math.max(offset,note.time)/rate);
+      const length=(note.time+note.duration-Math.max(offset,note.time))/rate;
+      if(length<=0)return;
+      const oscillator=context.createOscillator(),gain=context.createGain();
+      const volume=.055*note.velocity;
+      oscillator.type='triangle';
+      oscillator.frequency.value=440*2**((note.midi-69)/12);
+      gain.gain.setValueAtTime(0,from);
+      gain.gain.linearRampToValueAtTime(volume,from+Math.min(.018,length/2));
+      gain.gain.exponentialRampToValueAtTime(.0001,from+length+.035);
+      oscillator.connect(gain).connect(context.destination);
+      oscillator.onended=()=>{sounds.delete(oscillator);oscillator.disconnect();gain.disconnect();};
+      sounds.add(oscillator);
+      oscillator.start(from);oscillator.stop(from+length+.04);
+    }
+
+    function syncScore(value,follow){
+      if(!score||sheet.hidden||!cursorTimes.length)return;
+      let low=0,high=cursorTimes.length;
+      while(low+1<high){
+        const middle=Math.floor((low+high)/2);
+        if(cursorTimes[middle]<=value+.035)low=middle;else high=middle;
+      }
+      if(low===cursorIndex)return;
+      const cursor=score.cursor;
+      if(low<cursorIndex){cursor.resetIterator();cursorIndex=0;}
+      while(cursorIndex<low){cursor.Iterator.moveToNext();cursorIndex++;}
+      cursor.update();
+      if(follow){
+        const y=cursor.cursorElement.getBoundingClientRect().top-sheet.getBoundingClientRect().top;
+        if(y<0||y>sheet.clientHeight-55)sheet.scrollTop+=y-25;
+      }
+    }
+    function update(value,follow=false){
+      seek.value=value;
+      get('.sp-time').textContent=`${time(value)} / ${time(duration)}`;
+      if(playhead){
+        const x=value*pixelsPerSecond+43;
+        playhead.setAttribute('x1',x);playhead.setAttribute('x2',x);
+        if(follow&&(x>scroll.scrollLeft+scroll.clientWidth-40||x<scroll.scrollLeft)){
+          scroll.scrollLeft=Math.max(0,x-80);
+        }
+      }
+      syncScore(value,follow);
+    }
+    function pause(){
+      position=now();playing=false;
+      cancelAnimationFrame(frame);stopSounds();
+      play.textContent='▶';play.setAttribute('aria-label','Lire la transcription');
+    }
+    function tick(){
+      if(!playing)return;
+      const value=now();
+      while(next<notes.length&&notes[next].time<=value+.16*rate)tone(notes[next++],value);
+      update(value,true);
+      if(value>=duration){pause();return;}
+      frame=requestAnimationFrame(tick);
+    }
+    function schedule(){
+      stopSounds();
+      anchor=context.currentTime+.025-position/rate;
+      next=notes.findIndex(note=>note.time>=position);
+      if(next<0)next=notes.length;
+      for(let i=0;i<next;i++)if(notes[i].time+notes[i].duration>position)tone(notes[i],position);
+      cancelAnimationFrame(frame);tick();
+    }
+    function jump(value){
+      position=Math.max(0,Math.min(duration,value));
+      if(playing)schedule();
+      update(position,true);
+    }
+    play.onclick=async()=>{
+      if(playing){pause();return;}
+      if(starting)return;
+      starting=true;
+      try{
+        const Audio=window.AudioContext||window.webkitAudioContext;
+        if(!context)context=new Audio();
+        await context.resume();
+        if(signal.aborted)return;
+        if(position>=duration)position=0;
+        playing=true;
+        play.textContent='❚❚';play.setAttribute('aria-label','Mettre en pause');
+        schedule();
+      }catch{get('.sp-status').textContent='La lecture audio est indisponible dans ce navigateur.';}
+      finally{starting=false;}
+    };
+    seek.oninput=()=>jump(Number(seek.value));
+    restart.onclick=()=>{sheet.scrollTop=0;scroll.scrollLeft=0;jump(0);};
+    speed.onchange=()=>{position=now();rate=Number(speed.value);if(playing)schedule();};
+
+    function drawRoll(){
+      const high=Math.min(127,Math.max(...notes.map(note=>note.midi))+2);
+      const low=Math.max(0,Math.min(Math.min(...notes.map(note=>note.midi))-2,high-14));
+      const rows=high-low+1;
+      const row=Math.max(6,Math.min(13,Math.floor((scroll.clientHeight-27)/rows)));
+      const height=rows*row+26;
+      pixelsPerSecond=Math.max(75,(scroll.clientWidth-43)/duration);
+      const rollWidth=Math.ceil(duration*pixelsPerSecond)+44;
+      chart=svg('svg',{width:rollWidth,height,role:'img','aria-label':'Hauteur et durée des notes MIDI'});
+      for(let pitch=high;pitch>=low;pitch--){
+        const y=26+(high-pitch)*row;
+        const dark=[1,3,6,8,10].includes(pitch%12);
+        chart.append(svg('rect',{x:0,y,width:rollWidth,height:row,class:dark?'sp-grid-dark':'sp-grid-light'}));
+        if(pitch%12===0){
+          const label=svg('text',{x:8,y:y+10,class:'sp-grid-label'});
+          label.textContent=`Do${Math.floor(pitch/12)-1}`;chart.append(label);
+        }
+      }
+      const unit=duration>90?4:duration>24?2:1;
+      for(let second=0;second<duration;second+=unit){
+        const x=43+second*pixelsPerSecond,label=svg('text',{x:x+5,y:17,class:'sp-grid-label'});
+        label.textContent=time(second);
+        chart.append(svg('line',{x1:x,y1:0,x2:x,y2:height,class:'sp-grid-line'}),label);
+      }
+      for(const note of notes)chart.append(svg('rect',{
+        x:43+note.time*pixelsPerSecond,y:27+(high-note.midi)*row,
+        width:Math.max(3,note.duration*pixelsPerSecond-1),height:row-2,rx:2,class:'sp-note'
+      }));
+      playhead=svg('line',{x1:43,y1:25,x2:43,y2:height,class:'sp-playhead'});
+      chart.append(playhead);scroll.replaceChildren(chart);
+      chart.addEventListener('click',event=>jump((event.clientX-chart.getBoundingClientRect().left-43)/pixelsPerSecond));
+      update(now());
+    }
+
+    const xml=new Map();
+    function loadXml(url){
+      if(!xml.has(url))xml.set(url,read(url,signal).catch(error=>{xml.delete(url);throw error;}));
+      return xml.get(url);
+    }
+    async function selectSound(){
+      if(!midi||signal.aborted)return;
+      const current=++audioLoadId,tab=kind?.value==='tab';
+      if(playing)pause();
+      for(const control of [play,seek,speed,restart])control.disabled=true;
+      try{
+        const track=tab?tabNotes(await loadXml(tabUrl),midi.header.tempos[0]?.bpm||120):midi.tracks.flatMap(part=>part.notes);
+        if(signal.aborted||current!==audioLoadId)return;
+        if(!track.length)throw new Error('Aucune note à lire.');
+        notes=track.sort((a,b)=>a.time-b.time);
+        duration=notes.reduce((end,note)=>Math.max(end,note.time+note.duration),0);
+        position=Math.min(position,duration);
+        seek.max=duration;
+        get('.sp-audio-label').textContent=tab?'Lecture de la tablature':'Transcription MIDI';
+        for(const control of [play,seek,speed,restart])control.disabled=false;
+        drawRoll();
+      }catch{
+        if(!signal.aborted&&current===audioLoadId)scroll.textContent='Le piano roll est indisponible pour ce relevé.';
+      }
+    }
+    async function drawSheet(){
+      if(sheet.hidden||signal.aborted)return;
+      const current=++loadId,url=kind?.value==='tab'?tabUrl:scoreUrl;
+      try{
+        const [,source]=await Promise.all([loadScript('score','2.3.0'),loadXml(url)]);
+        if(current!==loadId||signal.aborted||sheet.hidden)return;
+        engraving.replaceChildren();
+        const display=new window.opensheetmusicdisplay.OpenSheetMusicDisplay(engraving,{
+          backend:'svg',autoResize:false,drawTitle:false,drawSubtitle:false,drawComposer:false,drawCredits:false,
+          cursorsOptions:[{type:0,color:'#7549eb',alpha:.48,follow:false}]
+        });
+        await display.load(source);
+        if(current!==loadId||signal.aborted||sheet.hidden)return;
+        score=display;score.Zoom=zoom;score.render();score.cursor.show();
+        cursorTimes=[];cursorIndex=0;
+        const iterator=score.cursor.Iterator.clone();
+        const bpm=midi?.header.tempos[0]?.bpm||120;
+        while(!iterator.EndReached&&cursorTimes.length<20000){
+          cursorTimes.push(iterator.CurrentEnrolledTimestamp.RealValue*240/bpm);
+          iterator.moveToNext();
+        }
+        sheetStatus.hidden=true;syncScore(now(),playing);
+      }catch{
+        if(current!==loadId||signal.aborted)return;
+        sheetStatus.hidden=false;sheetStatus.textContent='La notation ne s’affiche pas. Tu peux utiliser le PDF ou le MusicXML.';
+      }
+    }
+    const buttons=[...root.querySelectorAll('[data-view]')];
+    for(const button of buttons)button.onclick=()=>{
+      const view=button.dataset.view;
+      sheet.hidden=view==='roll';roll.hidden=view==='score';
+      for(const item of buttons)item.setAttribute('aria-pressed',String(item===button));
+      if(!sheet.hidden){if(score)syncScore(now(),false);else drawSheet();}
+    };
+    for(const button of zoomButtons)button.onclick=()=>{
+      zoom=Math.min(1.7,Math.max(.65,zoom+Number(button.dataset.zoom)*.15));
+      drawSheet();
+    };
+    if(kind)kind.onchange=()=>{drawSheet();selectSound();};
+    full.onclick=()=>{const action=document.fullscreenElement===root?document.exitFullscreen():root.requestFullscreen();action.catch(()=>{});};
+    let width=0;
+    const observer=new ResizeObserver(()=>{
+      const available=sheet.clientWidth;
+      if(!available||Math.abs(available-width)<2)return;
+      width=available;
+      clearTimeout(resizeTimer);resizeTimer=setTimeout(drawSheet,140);
+    });
+    observer.observe(sheet);
+    Promise.all([loadScript('midi','2.0.28'),read(midiUrl,signal,true)]).then(([,buffer])=>{
+      if(signal.aborted)return;
+      midi=new window.Midi(buffer);
+      selectSound();
+      if(score)drawSheet();
+    }).catch(()=>{if(!signal.aborted)scroll.textContent='Le piano roll est indisponible pour ce relevé.';});
+    return ()=>{
+      controller.abort();pause();observer.disconnect();clearTimeout(resizeTimer);
+      if(context&&context.state!=='closed')context.close().catch(()=>{});
+    };
+  }
+  window.SongToSheetPlayer={mount};
+})();

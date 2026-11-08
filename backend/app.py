@@ -56,6 +56,22 @@ app=FastAPI(title='SongToSheet',version='0.1.0',docs_url='/api/docs' if DEV else
 app.mount('/static',StaticFiles(directory=str(ROOT/'web')),name='static')
 
 
+@app.get('/api/player-assets')
+def player_asset(asset:str):
+    files={
+        'score':('opensheetmusicdisplay/build/opensheetmusicdisplay.min.js','opensheetmusicdisplay/LICENSE'),
+        'midi':('@tonejs/midi/build/Midi.js','@tonejs/midi/LICENSE.md'),
+    }
+    if asset not in files:
+        raise HTTPException(status_code=404,detail='Ressource du lecteur indisponible.')
+    target,license=(ROOT.parent/'node_modules'/name for name in files[asset])
+    if not target.is_file() or not license.is_file():
+        raise HTTPException(status_code=404,detail='Ressource du lecteur indisponible.')
+    notice=license.read_text(encoding='utf-8').replace('*/','* /')
+    return Response(f'/*!\n{notice}\n*/\n{target.read_text(encoding="utf-8")}',media_type='application/javascript',
+                    headers={'Cache-Control':'public, max-age=31536000, immutable'})
+
+
 def db():
     con=sqlite3.connect(DB,timeout=30)
     con.row_factory=sqlite3.Row

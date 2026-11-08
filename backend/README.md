@@ -40,6 +40,8 @@ Le moteur `transcribe_track.py` utilise Demucs pour estimer une piste de voix, b
 
 ### Tester dans SongToSheet
 
+Depuis la racine du dépôt, lance `npm ci` pour installer les bibliothèques du lecteur de partition et du piano roll.
+
 Dans le dossier `backend`, utilise Python 3.11, FFmpeg et un navigateur Chromium (Chrome ou Edge sous Windows). Sous PowerShell :
 
 ```powershell

@@ -24,6 +24,7 @@
     const pathname=location.pathname;
     const landing=pathname==='/' || pathname==='';
     const app=pathname==='/app';
+    if(!app)stopPlayer();
     const authPage=pathname==='/connexion'||pathname==='/inscription';
     show('public-header',landing);show('landing',landing);show('public-footer',landing);
     show('workspace',app);show('auth-view',authPage);show('legal-view',pathname==='/legal');
@@ -60,7 +61,10 @@
     box.innerHTML=jobs.map(j=>`<button class="job-row" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${safe(j.instrument)} · ${timeFmt(j.duration)} · ${dateFmt(j.created_at)}</small></span><span class="job-status ${safe(j.status)}">${statusText[j.status]||'Inconnu'}</span><span class="job-chevron">›</span></button>`).join('');
   }
   let trackWizard;
+  let closePlayer;
+  function stopPlayer(){closePlayer?.();closePlayer=undefined;}
   function showAppPage(page){if(!state.user)return go('/inscription');
+    if(page!=='result')stopPlayer();
     state.activePage=page;
     for(const p of ['dashboard','create','library','result','billing'])show(p+'-page',page===p);
     const side=page==='dashboard'?'menu-dashboard':page==='library'||page==='result'?'menu-library':'menu-create';
@@ -142,7 +146,7 @@
     await refresh();
     openResult(job.id);
   }
-  function openResult(id){state.resultId=id;startApp('result');}
+  function openResult(id){stopPlayer();state.resultId=id;startApp('result');}
   function notesSvg(notes){
     const notesToDraw=notes.slice(0,48),perLine=12,lineCount=Math.max(1,Math.ceil(notesToDraw.length/perLine)),height=150*lineCount+12;
     let svg=`<svg viewBox="0 0 720 ${height}" role="img" aria-label="Aperçu des premières notes transcrites" xmlns="http://www.w3.org/2000/svg">`;
@@ -183,7 +187,15 @@
       $('result-content').innerHTML=`
         <div class="result-hero"><span class="dashboard-kicker">${completed?'TA PARTITION EST PRÊTE ✦':processing?'GÉNÉRATION EN COURS':'TRANSCRIPTION IMPOSSIBLE'}</span>
         <h1>${safe(j.title)}</h1><p class="result-meta">${details}</p>${completed?`<div class="result-actions">${links}</div>`:''}</div>
+        ${completed&&trackTest&&formats.includes('mid')?'<section id="score-player" class="score-player" aria-label="Lecteur de la transcription"></section>':''}
         <div class="note-notation">${body}</div>`;
+      stopPlayer();
+      if($('score-player')&&window.SongToSheetPlayer){
+        const exportUrl=kind=>`/api/jobs/${encodeURIComponent(id)}/download/${kind}`;
+        closePlayer=window.SongToSheetPlayer.mount($('score-player'),{
+          scoreUrl:exportUrl('musicxml'),midiUrl:exportUrl('mid'),tabUrl:formats.includes('tab')?exportUrl('tab'):null
+        });
+      }
       if(processing){clearInterval(state.poll);state.poll=setInterval(async()=>{if(state.activePage==='result'&&state.resultId===id){await loadResult(id);}else clearInterval(state.poll);},4500);}
       else{clearInterval(state.poll);state.poll=null;await refresh();}
     }catch(e){toast(e.message,true);}

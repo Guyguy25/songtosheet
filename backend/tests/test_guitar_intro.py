@@ -50,6 +50,34 @@ def test_pull_off_requires_acoustic_and_same_string_evidence(tmp_path):
     assert [n.text for n in xml.findall(".//fret")] == ["7", "0"]
 
 
+def test_repeated_open_picking_survives_a_quieter_competing_pitch():
+    tuning = TUNINGS["guitare"]
+    pitches = [40, 55, 59, 64, 59, 55] * 3 + [40, 55, 59, 64, 59, 71]
+    times = [2.8 + index * .43 for index in range(len(pitches))]
+    notes = [note(pitch, start, 87) for pitch, start in zip(pitches, times)]
+    competing = note(52, times[21], 67)
+    strengths = {id(item): .89 for item in notes} | {id(competing): .82}
+    raw = sorted(notes + [competing], key=lambda item: item["start"])
+    result, _, _, _, _, count = repeated_open_intro(raw, strengths, times, set(tuning))
+    assert count == len(pitches)
+    assert [item["pitch"] for item in result] == pitches
+
+
+def test_pull_off_ignores_an_already_ringing_companion_when_acoustically_confirmed():
+    tuning = TUNINGS["guitare"]
+    first, ringing, second = note(71, 1.50, 74), note(52, 1.68, 64), note(64, 1.68, 77)
+    strengths = {id(first): .70, id(ringing): .63, id(second): .85}
+    evidence = {
+        id(first): (1.50, 3.89, .89, .0, 1, .89),
+        id(ringing): (1.68, .71, .84, .38, 4, .62),
+        id(second): (1.68, 10.64, .88, .14, 1, .81),
+    }
+    args = [first, ringing, second], strengths, [1.50, 1.68], [5.61, 2.89], 1., .43, tuning
+    assert open_pull_offs(*args, evidence=evidence) == ([(first, second, 1)], {id(ringing)})
+    evidence[id(ringing)] = (1.68, 3.5, .84, .38, 4, .62)
+    assert open_pull_offs(*args, evidence=evidence) == ([], set())
+
+
 def test_acoustic_evidence_keeps_a_real_double_stop_and_filters_a_ringing_harmonic():
     bass, harmonic, melody = note(40, 1.50), note(52, 1.51, 49), note(71, 1.52, 85)
     strengths = {id(bass): .85, id(harmonic): .58, id(melody): .78}

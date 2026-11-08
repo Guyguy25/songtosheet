@@ -106,12 +106,12 @@ def refine_picked_notes(notes, strengths, evidence, protected=()):
                     or (note["velocity"] <= other["velocity"] * .65
                         and strengths[id(other)] >= .72
                         and strengths[id(other)] - strengths[id(note)] >= .10)
-                    or (confidence < .2 and strengths[id(other)] - strengths[id(note)] >= .32
+                    or (confidence < .2 and strengths[id(other)] - strengths[id(note)] >= .29
                         and evidence[id(other)][1] >= 3 * rise)
                 )
                 for other in neighbors
             )
-            ringing = rise < 1.23 and strengths[id(note)] < .68 and (
+            ringing = rise < 1.30 and strengths[id(note)] < .68 and (
                 confidence - previous < .25 or any(evidence[id(other)][1] > 2 for other in neighbors)
             )
             weak = confidence < .10 and strengths[id(note)] < .55 and any(

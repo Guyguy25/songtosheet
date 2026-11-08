@@ -330,8 +330,8 @@ async def create_job(request:Request,background:BackgroundTasks,
     if TRACK_TEST and format!='partition' and (format!='tablature' or instrument not in ('guitare','basse')):
         fail('La tablature est disponible pour la guitare et la basse.')
     if TRACK_TEST and source_content:
-        if source_content not in ('mixed','voice','instrument'):fail('Choisis le contenu de ton audio.')
-        isolated=source_content!='mixed'
+        if source_content not in ('mixed','instrumental','voice','instrument'):fail('Choisis le contenu de ton audio.')
+        isolated=source_content in ('voice','instrument')
     title=title.strip()[:90] or 'Ma partition'
     filename=(audio.filename or '').lower()
     suffix=Path(filename).suffix

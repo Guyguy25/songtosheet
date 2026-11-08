@@ -50,7 +50,7 @@ $env:DATA_DIR = './data/track-test'
 python -m uvicorn app:app --host 127.0.0.1 --port 8765
 ```
 
-Ouvre http://127.0.0.1:8765/inscription, crée un compte local et sélectionne **Nouvelle partition**. Choisis la piste, le format puis le contenu de l’audio. À la dernière étape, charge la mélodie de test ou importe un fichier et confirme les droits. Le PDF suit le format choisi. Si aucune tablature jouable ne peut être générée, le moteur fournit le PDF de la partition. Les exports restent dans ta bibliothèque locale. Le mode de test fonctionne sans crédits ni paiement et traite un fichier à la fois.
+Ouvre http://127.0.0.1:8765/inscription, crée un compte local et sélectionne **Nouvelle partition**. Choisis l’instrument que tu veux jouer, le format puis indique si le morceau contient une voix. À la dernière étape, charge la mélodie de test ou importe un fichier et confirme les droits. Le PDF suit le format choisi. Si aucune tablature jouable ne peut être générée, le moteur fournit le PDF de la partition. Les exports restent dans ta bibliothèque locale. Le mode de test fonctionne sans crédits ni paiement et traite un fichier à la fois.
 
 ### Tester en ligne de commande
 

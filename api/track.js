@@ -37,7 +37,8 @@ async function begin(db,res,user,body){
     {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'}});
   try{
     const result=await jobs.insertOne({user_id:user._id,title,instrument,extension,size,format,
-      isolated:body.source==null?body.isolated===true:body.source!=='mixed',status:'uploading',active:true,
+      source_content:body.source||null,
+      isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:'uploading',active:true,
       created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+UPLOAD_MS)});
     return json(res,201,{id:String(result.insertedId),chunk_bytes:CHUNK_BYTES});
   }catch(error){

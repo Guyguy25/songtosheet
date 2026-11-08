@@ -2,26 +2,26 @@
   'use strict';
 
   const instruments=[
-    ['piano','🎹','Piano'],['guitare','🎸','Guitare'],['basse','♫','Basse'],['voix','🎙️','Voix']
+    ['piano','🎹','Piano'],['guitare','🎸','Guitare'],['basse','♫','Basse']
   ];
   const formats=[
     ['partition','𝄞','Partition','Lis les notes sur une portée.'],
     ['tablature','≡','Tablature','Lis les cordes et les cases à jouer.']
   ];
   const sources=[
-    ['mixed','◉','Voix + instrument','Le moteur isole la piste que tu as choisie.'],
-    ['voice','🎙️','Voix seule','Le moteur relève les notes du chant directement.'],
-    ['instrument','♫','Instrument seul','Le moteur relève les notes de la piste directement.']
+    ['mixed','🎙️','Il y a une voix'],
+    ['instrumental','♫','Il y a juste la musique']
   ];
   const steps=[
-    ['Instrument','Quelle piste veux-tu transcrire ?','Choisis l’instrument ou la voix que tu veux retrouver dans le relevé.'],
-    ['Format','Comment veux-tu lire les notes ?','Tu pourras télécharger le résultat en PDF.'],
-    ['Audio','Qu’est-ce qu’on entend dans ton fichier ?','Ce choix permet au moteur de savoir s’il doit isoler une piste.'],
+    ['Instrument','Quel instrument veux-tu jouer ?',''],
+    ['Format','Partition ou tablature ?','Tu pourras télécharger le résultat en PDF.'],
+    ['Audio','Y a-t-il une voix dans ton morceau ?',''],
     ['Import','Ajoute ton fichier audio','Formats WAV, MP3, M4A, FLAC, OGG ou AAC. Jusqu’à 25 Mo et 6 minutes.']
   ];
 
   function mount(root,{onSubmit,sampleUrl}){
     const draft={instrument:'',format:'',source:'',file:null};
+    let sampleLoaded=false;
     let step=0,busy=false;
     root.innerHTML=`
       <ol class="track-steps" aria-label="Étapes de création">${steps.map(([label],i)=>
@@ -56,6 +56,7 @@
     const setStatus=(message,error=false)=>{status.textContent=message;status.classList.toggle('is-error',error);};
     const setFile=file=>{
       draft.file=file;
+      sampleLoaded=false;
       rights.checked=false;
       get('.track-filename').textContent=file?file.name:'Aucun fichier sélectionné.';
     };
@@ -64,7 +65,9 @@
       const [label,question,description]=steps[step];
       get('.track-step-count').textContent=`Étape ${step+1} sur ${steps.length}`;
       heading.textContent=question;
-      get('.track-step-heading p').textContent=description;
+      const intro=get('.track-step-heading p');
+      intro.textContent=description;
+      intro.hidden=!description;
       root.querySelectorAll('.track-steps li').forEach((item,index)=>{
         item.classList.toggle('is-done',index<step);
         if(index===step)item.setAttribute('aria-current','step');
@@ -112,9 +115,10 @@
         fileInput.value='';
         setFile(new File([audio],'melodie-de-test.wav',{type:'audio/wav'}));
         if(!title.value)title.value='Mélodie de test';
-        draft.source='instrument';
+        draft.source='instrumental';
+        sampleLoaded=true;
         render();
-        setStatus('Exemple chargé. Il contient une seule piste.');
+        setStatus('Exemple chargé. Il contient juste de la musique.');
       }catch(error){setStatus(error.message,true);}
       finally{sample.disabled=false;}
     });
@@ -130,7 +134,8 @@
       busy=true;
       for(const control of form.elements)control.disabled=true;
       try{
-        await onSubmit({...draft,title:title.value.trim()||draft.file.name.replace(/\.[^.]+$/,'')},setStatus);
+        const source=sampleLoaded&&draft.source==='instrumental'?'instrument':draft.source;
+        await onSubmit({...draft,source,title:title.value.trim()||draft.file.name.replace(/\.[^.]+$/,'')},setStatus);
         fileInput.value='';title.value='';setFile(null);
         for(const field of fields)draft[field]='';
         step=0;

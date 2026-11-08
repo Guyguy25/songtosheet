@@ -1,8 +1,11 @@
 (() => {
   'use strict';
   const scripts=new Map();
-  const guitarSamples=new URL('sounds/guitar-steel/',document.currentScript.src);
-  const guitarPitches=[40,45,50,55,59,64,69,74,79,83,88];
+  const samples=new URL('sounds/',document.currentScript.src);
+  const soundProfiles={
+    guitare:{folder:'guitar-steel/',pitches:[40,45,50,55,59,64,69,74,79,83,88],label:'Son de guitare acoustique',volume:.5,release:.06},
+    piano:{folder:'piano-grand/',pitches:[21,24,30,36,42,48,54,60,66,72,78,84,90,96,102,108],label:'Son de piano à queue',volume:.27,release:.18}
+  };
   const instrumentLabels={guitare:'Guitare acoustique',basse:'Basse',piano:'Piano',voix:'Voix'};
   const loadScript=(asset,version)=>{
     if(!scripts.has(asset))scripts.set(asset,new Promise((resolve,reject)=>{
@@ -127,10 +130,12 @@
     const zoomButtons=[...root.querySelectorAll('[data-zoom]')];
     const full=get('.sp-full');
     const guitar=instrument==='guitare',instrumentBadge=get('.sp-instrument'),audioCredit=get('.sp-audio-credit');
+    const profile=soundProfiles[instrument];
+    const sampleFolder=profile?new URL(profile.folder,samples):null;
     instrumentBadge.textContent=instrumentLabels[instrument]||'';
     instrumentBadge.hidden=!instrumentBadge.textContent;
-    if(guitar){
-      audioCredit.href=new URL('ATTRIBUTION.txt',guitarSamples);
+    if(profile){
+      audioCredit.href=new URL('ATTRIBUTION.txt',sampleFolder);
       audioCredit.hidden=false;
     }
     full.hidden=!root.requestFullscreen;
@@ -140,7 +145,7 @@
     let score,cursorTimes=[],cursorIndex=0,zoom=1,loadId=0,audioLoadId=0,resizeTimer;
     let chart,playhead,pixelsPerSecond=1;
     const sounds=new Set();
-    let guitarBuffers;
+    let sampleBuffers;
     const now=()=>playing?Math.min(duration,Math.max(0,(context.currentTime-anchor)*rate)):position;
 
     function stopSounds(){
@@ -154,16 +159,17 @@
       const gain=context.createGain();
       let sound,startAt=0;
       gain.gain.setValueAtTime(0,from);
-      if(guitarBuffers){
-        const pitch=guitarPitches.reduce((closest,key)=>Math.abs(key-note.midi)<Math.abs(closest-note.midi)?key:closest);
+      const release=profile?.release??.06;
+      if(sampleBuffers){
+        const pitch=profile.pitches.reduce((closest,key)=>Math.abs(key-note.midi)<Math.abs(closest-note.midi)?key:closest);
         const ratio=2**((note.midi-pitch)/12);
-        const buffer=guitarBuffers.get(pitch);
+        const buffer=sampleBuffers.get(pitch);
         startAt=Math.max(0,offset-note.time)*ratio/rate;
         if(startAt>=buffer.duration)return;
         sound=context.createBufferSource();
         sound.buffer=buffer;
         sound.playbackRate.value=ratio;
-        const volume=.5*note.velocity;
+        const volume=profile.volume*note.velocity;
         gain.gain.linearRampToValueAtTime(volume,from+Math.min(.005,length/2));
         gain.gain.setValueAtTime(volume,from+length);
       }else{
@@ -172,12 +178,12 @@
         sound.frequency.value=440*2**((note.midi-69)/12);
         gain.gain.linearRampToValueAtTime(.055*note.velocity,from+Math.min(.018,length/2));
       }
-      gain.gain.exponentialRampToValueAtTime(.0001,from+length+.055);
+      gain.gain.exponentialRampToValueAtTime(.0001,from+length+release-.005);
       sound.connect(gain).connect(context.destination);
       sound.onended=()=>{sounds.delete(sound);sound.disconnect();gain.disconnect();};
       sounds.add(sound);
-      if(guitarBuffers)sound.start(from,startAt);else sound.start(from);
-      sound.stop(from+length+.06);
+      if(sampleBuffers)sound.start(from,startAt);else sound.start(from);
+      sound.stop(from+length+release);
     }
 
     function syncScore(value,follow){
@@ -251,12 +257,12 @@
         const Audio=window.AudioContext||window.webkitAudioContext;
         if(!context)context=new Audio();
         await context.resume();
-        if(guitar&&!guitarBuffers&&!signal.aborted){
+        if(profile&&!sampleBuffers&&!signal.aborted){
           const status=get('.sp-status');
           status.hidden=false;
-          status.textContent='Chargement du son de guitare…';
-          guitarBuffers=new Map(await Promise.all(guitarPitches.map(async pitch=>{
-            const data=await read(new URL(`${pitch}.mp3`,guitarSamples),signal,true);
+          status.textContent=`Chargement du ${profile.label.toLowerCase()}…`;
+          sampleBuffers=new Map(await Promise.all(profile.pitches.map(async pitch=>{
+            const data=await read(new URL(`${pitch}.mp3`,sampleFolder),signal,true);
             return [pitch,await context.decodeAudioData(data)];
           })));
           status.hidden=true;
@@ -270,7 +276,7 @@
         if(!signal.aborted){
           const status=get('.sp-status');
           status.hidden=false;
-          status.textContent=guitar?'Le son de guitare n’a pas pu charger. Relance la lecture.':'La lecture audio est indisponible dans ce navigateur.';
+          status.textContent=profile?'Le son de l’instrument n’a pas pu charger. Relance la lecture.':'La lecture audio est indisponible dans ce navigateur.';
         }
       }
       finally{starting=false;}
@@ -345,7 +351,7 @@
         }
         position=Math.min(position,duration);
         seek.max=duration;
-        get('.sp-audio-label').textContent=guitar?'Son de guitare acoustique':tab?'Lecture de la tablature':'Transcription MIDI';
+        get('.sp-audio-label').textContent=profile?.label??(tab?'Lecture de la tablature':'Transcription MIDI');
         for(const control of [play,seek,speed,restart])control.disabled=false;
         drawRoll();
       }catch{

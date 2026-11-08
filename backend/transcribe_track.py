@@ -16,6 +16,7 @@ from pathlib import Path
 
 from guitar_tab import arrange, arrange_with_capo, attack_groups, group_for_notation, midi_notes, write_tab
 from guitar_harmony import chord_changes, clean_arpeggio, onset_strengths
+from piano_score import clean_piano_notes, estimate_piano_grid, write_piano_score
 
 
 TRACKS = {
@@ -161,10 +162,12 @@ def guitar_diagnostic(notes, tab, transients, filtered):
     }
 
 
-def write_midi(notes, destination, program, instrument, bpm):
-    from pretty_midi import Instrument, Note, PrettyMIDI
+def write_midi(notes, destination, program, instrument, bpm, *, beats=None):
+    from pretty_midi import Instrument, Note, PrettyMIDI, TimeSignature
 
     midi = PrettyMIDI(initial_tempo=bpm)
+    if beats is not None:
+        midi.time_signature_changes.append(TimeSignature(beats, 4, 0))
     track = Instrument(program, name=instrument.capitalize())
     track.notes.extend(Note(**note) for note in notes)
     midi.instruments.append(track)
@@ -191,7 +194,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": {"guitare": 8, "basse": 4}.get(instrument, 1)}
+              "instrument": instrument, "bpm": bpm, "version": {"guitare": 8, "basse": 4, "piano": 2}.get(instrument, 1)}
     if capo:
         config["capo"] = capo
     if title:
@@ -254,8 +257,18 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         report("arrange")
         result = work / "result"
         result.mkdir()
-        write_midi(notes, result / "score.mid", program, instrument, bpm)
-        write_score(result / "score.mid", result / "score.musicxml", title or source.stem, guitar=instrument == "guitare")
+        score_title = title or source.stem
+        if instrument == "piano":
+            if isolated:
+                notes = clean_piano_notes(notes, onset_strengths(model, notes))
+            detected_bpm, beats = estimate_piano_grid(notes, bpm)
+            intro = notes[0]["start"]
+            notes = [{**note, "start": note["start"] - intro, "end": note["end"] - intro} for note in notes]
+            write_midi(notes, result / "score.mid", program, instrument, detected_bpm, beats=beats)
+            write_piano_score(notes, result / "score.musicxml", score_title, detected_bpm, beats)
+        else:
+            write_midi(notes, result / "score.mid", program, instrument, bpm)
+            write_score(result / "score.mid", result / "score.musicxml", score_title, guitar=instrument == "guitare")
         tuning = TUNINGS.get(instrument)
         if capo == "auto":
             resolved_capo, tab = arrange_with_capo(notes, tuning, simple=simple)
@@ -266,6 +279,8 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument,
                       transients=transients, capo=resolved_capo, chords=chords)
         manifest = {**config, "notes": notes, "duration": duration, "tab": bool(tab)}
+        if instrument == "piano":
+            manifest.update(bpm=detected_bpm, meter=f"{beats}/4", intro=intro)
         if capo == "auto":
             manifest["resolved_capo"] = resolved_capo
         if instrument == "guitare":

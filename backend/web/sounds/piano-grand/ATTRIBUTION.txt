@@ -1,0 +1,9 @@
+Salamander Grand Piano V3 — Alexander Holm.
+License: Creative Commons Attribution 3.0 Unported.
+https://creativecommons.org/licenses/by/3.0/
+
+Original: https://github.com/sfzinstruments/SalamanderGrandPiano
+MP3 source: https://github.com/Tonejs/audio/tree/master/salamander
+
+SongToSheet uses sixteen notes, converted to mono and trimmed to six seconds
+with a short fade. The player resamples nearby pitches and applies playback envelopes.

@@ -14,7 +14,7 @@ from functools import lru_cache
 from itertools import takewhile
 from pathlib import Path
 
-from guitar_tab import arrange, attack_groups, group_for_notation, midi_notes, write_tab
+from guitar_tab import arrange, arrange_with_capo, attack_groups, group_for_notation, midi_notes, write_tab
 
 
 TRACKS = {
@@ -120,8 +120,8 @@ def write_midi(notes, destination, program, instrument, bpm):
 
 
 def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0):
-    if type(capo) is not int or not 0 <= capo <= 12 or (capo and instrument != "guitare"):
-        raise ValueError("Choisis une case de capo entre 0 et 12, pour la guitare uniquement.")
+    if (capo != "auto" and (type(capo) is not int or not 0 <= capo <= 12)) or (capo and instrument != "guitare"):
+        raise ValueError("Le capo est disponible pour la guitare uniquement, en mode automatique ou avec une case de 0 à 12.")
     source = source.resolve(strict=True)
     audio_format = AUDIO_FORMATS.get(source.suffix.lower())
     if not source.is_file() or not audio_format:
@@ -186,12 +186,17 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         write_midi(notes, result / "score.mid", program, instrument, bpm)
         write_score(result / "score.mid", result / "score.musicxml", title or source.stem, guitar=instrument == "guitare")
         tuning = TUNINGS.get(instrument)
-        tab = arrange(notes, tuning, capo=capo) if tuning else []
+        if capo == "auto":
+            resolved_capo, tab = arrange_with_capo(notes, tuning)
+        else:
+            resolved_capo, tab = capo, arrange(notes, tuning, capo=capo) if tuning else []
         if tab:
             write_midi(midi_notes(tab), result / "tab.mid", program, instrument, bpm)
             write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument,
-                      transients=transients, capo=capo)
+                      transients=transients, capo=resolved_capo)
         manifest = {**config, "notes": notes, "duration": duration, "tab": bool(tab)}
+        if capo == "auto":
+            manifest["resolved_capo"] = resolved_capo
         if instrument == "guitare":
             manifest["diagnostic"] = guitar_diagnostic(notes, tab, transients, filtered)
         (result / "notes.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")

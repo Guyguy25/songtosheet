@@ -1,6 +1,6 @@
 from xml.etree import ElementTree as ET
 
-from guitar_tab import arrange, midi_notes, write_tab
+from guitar_tab import arrange, arrange_with_capo, midi_notes, write_tab
 from transcribe_track import TUNINGS, filter_guitar_echoes, guitar_diagnostic
 
 
@@ -76,6 +76,15 @@ def test_capo_fret_numbers_are_relative_and_midi_uses_sounding_pitch(tmp_path):
     score = ET.parse(path)
     assert score.findtext(".//staff-details/capo") == "2"
     assert score.findtext(".//direction-type/words") == "Capo · case 2"
+
+
+def test_automatic_capo_prefers_playable_open_strings():
+    tuning = TUNINGS["guitare"]
+    notes = [event(pitch + 2, .1, .9) for pitch in tuning]
+    capo, tab = arrange_with_capo(notes, tuning)
+    assert capo == 2
+    assert len(tab) == 6 and all(note.fret == 0 for note in tab)
+    assert {note["pitch"] for note in midi_notes(tab)} == {note["pitch"] for note in notes}
 
 
 def test_filter_preserves_the_chord_and_an_upper_note_with_its_own_attack():

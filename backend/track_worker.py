@@ -42,15 +42,16 @@ def process_job(call, job, data):
                 for key, filename in EXPORTS.items() if (result / filename).is_file()
             }
             meta = json.loads((result / "notes.json").read_text(encoding="utf-8"))
+            resolved_capo = meta.get("resolved_capo", capo)
             if sum(map(len, exports.values())) > 4_000_000:
                 raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
             call("preview", **identity, duration=meta["duration"], note_count=len(meta["notes"]),
-                 exports=exports, diagnostic=meta.get("diagnostic"))
+                 exports=exports, diagnostic=meta.get("diagnostic"), resolved_capo=resolved_capo)
             print(f"{job['id']}: relevé disponible", flush=True)
             pdf = Path(temporary) / "score.pdf"
             payload = {"ok": True, "preview": True, "exports": {}}
             try:
-                render_pdf(result, job["title"], job["instrument"], job.get("format", "partition"), pdf, capo=capo)
+                render_pdf(result, job["title"], job["instrument"], job.get("format", "partition"), pdf, capo=resolved_capo)
                 encoded_pdf = base64.b64encode(pdf.read_bytes()).decode("ascii")
                 if len(encoded_pdf) > 4_000_000:
                     raise ValueError("PDF trop volumineux.")
@@ -108,7 +109,7 @@ def main():
         print("Moteur de transcription prêt.", flush=True)
         while True:
             try:
-                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True)["job"]
+                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True)["job"]
                 if job:
                     process_job(call, job, args.cache)
                 if args.once:

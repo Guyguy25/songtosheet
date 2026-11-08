@@ -12,33 +12,30 @@
     ['mixed','🎙️','Il y a une voix'],
     ['instrumental','♫','Il y a juste la musique']
   ];
-  const steps=[
-    ['Instrument','Quel instrument veux-tu jouer ?',''],
-    ['Format','Partition ou tablature ?','Tu pourras télécharger le résultat en PDF.'],
-    ['Audio','Y a-t-il une voix dans ton morceau ?',''],
-    ['Import','Ajoute ton fichier audio','Formats WAV, MP3, M4A, FLAC, OGG ou AAC. Jusqu’à 25 Mo et 6 minutes.']
+  const capos=[
+    [0,'♪','Sans capo','Joue avec l’accordage habituel.'],
+    ['auto','♯','Avec capo','On te propose une case sur la tablature.']
+  ];
+  const allSteps=[
+    ['instrument','Instrument','Quel instrument veux-tu jouer ?','',instruments],
+    ['capo','Capo','Tu joues avec un capo ?','',capos],
+    ['format','Format','Partition ou tablature ?','Tu pourras télécharger le résultat en PDF.',formats],
+    ['source','Audio','Y a-t-il une voix dans ton morceau ?','',sources],
+    [null,'Import','Ajoute ton fichier audio','Formats WAV, MP3, M4A, FLAC, OGG ou AAC. Jusqu’à 25 Mo et 6 minutes.']
   ];
 
   function mount(root,{onSubmit,onLinkChange,sampleUrl,allowLink=false}){
-    const draft={instrument:'',format:'',source:'',file:null,capo:0};
+    const draft={instrument:'',format:'',source:'',file:null,capo:null};
+    const activeSteps=()=>allSteps.filter(([field])=>field!=='capo'||(allowLink&&draft.instrument==='guitare'));
     let step=0,busy=false;
     root.innerHTML=`
-      <ol class="track-steps" aria-label="Étapes de création">${steps.map(([label],i)=>
-        `<li><span>${i+1}</span><b>${label}</b></li>`).join('')}</ol>
+      <ol class="track-steps" aria-label="Étapes de création"></ol>
       <div class="track-step-heading">
-        <span class="track-step-count"></span><h2 tabindex="-1"></h2><p></p>
+        <span class="track-step-count"></span><h2 id="track-question" tabindex="-1"></h2><p></p>
       </div>
       ${allowLink?'<p class="track-selection track-reference hidden" aria-live="polite"></p>':''}
       <form>
-        <div class="track-choices" role="radiogroup"></div>
-        <div class="track-upload track-capo hidden">
-          <label for="track-capo-input">Tu joues avec un capo ?</label>
-          <select id="track-capo-input" class="field" aria-describedby="track-capo-help">
-            <option value="0">Sans capo</option>
-            ${Array.from({length:12},(_,index)=>`<option value="${index+1}">Capo case ${index+1}</option>`).join('')}
-          </select>
-          <small id="track-capo-help">Les cases de la tablature sont comptées à partir du capo.</small>
-        </div>
+        <div class="track-choices" role="group" aria-labelledby="track-question"></div>
         <div class="track-upload hidden">
           ${allowLink?`<div class="track-upload track-saved-link hidden">
             <p class="track-selection"></p>
@@ -64,18 +61,13 @@
         <p class="track-status" aria-live="polite"></p>
         <div class="track-actions">
           <button type="button" class="btn btn-outline track-back">← Retour</button>
-          <button type="submit" class="btn btn-primary track-next">Continuer ↗</button>
+          <button type="submit" class="btn btn-primary track-next">Générer mon relevé ↗</button>
         </div>
       </form>`;
     const get=selector=>root.querySelector(selector);
     const form=get('form'),heading=get('h2'),choices=get('.track-choices'),upload=get('.track-upload');
     const back=get('.track-back'),next=get('.track-next'),title=get('#track-title-input');
     const fileInput=get('#track-audio-input'),rights=get('#track-rights-input'),status=get('.track-status');
-    const capo=get('#track-capo-input');
-    const showCapo=()=>{
-      capo.value=String(draft.capo);
-      get('.track-capo').classList.toggle('hidden',!allowLink||step!==0||draft.instrument!=='guitare');
-    };
     const linkInput=get('#track-link-input');
     const savedLink=get('.track-saved-link');
     const sourceFields=get('.track-source-fields');
@@ -88,7 +80,6 @@
     };
     const soloLabel=get('.track-solo'),solo=soloLabel.querySelector('input'),filename=get('.track-filename');
     const media=get('.track-audio-preview');
-    const fields=['instrument','format','source'];
     const allowsTab=()=>['guitare','basse'].includes(draft.instrument);
     const setStatus=(message,error=false)=>{status.textContent=message;status.classList.toggle('is-error',error);};
     let reference,editingSource=false;
@@ -132,7 +123,8 @@
     };
 
     function render(focus=false){
-      const [label,question,description]=steps[step];
+      const steps=activeSteps();
+      const [field,,question,description,options]=steps[step];
       get('.track-step-count').textContent=`Étape ${step+1} sur ${steps.length}`;
       const link=audioSource?.parse(linkInput?.value);
       const useSavedLink=Boolean(link&&(!link.provider||link.youtubeId)&&!editingSource);
@@ -142,50 +134,45 @@
         if(useSavedLink)savedLink.querySelector('p').textContent=`Lien conservé · ${link.youtubeId?'YouTube':link.url.hostname}`;
       }
       updateRights(link);
-      heading.textContent=step===3&&allowLink?(useSavedLink?'Confirme ton relevé':'Ajoute ton audio'):question;
+      heading.textContent=!field&&allowLink?(useSavedLink?'Confirme ton relevé':'Ajoute ton audio'):question;
       const intro=get('.track-step-heading p');
-      intro.textContent=step===3&&useSavedLink?'Ton lien est déjà prêt. Confirme les droits pour lancer la génération.':description;
+      intro.textContent=!field&&useSavedLink?'Ton lien est déjà prêt. Confirme les droits pour lancer la génération.':description;
       intro.hidden=!intro.textContent;
-      root.querySelectorAll('.track-steps li').forEach((item,index)=>{
-        item.classList.toggle('is-done',index<step);
-        if(index===step)item.setAttribute('aria-current','step');
-        else item.removeAttribute('aria-current');
-      });
-      const field=fields[step];
+      get('.track-steps').innerHTML=steps.map(([,name],index)=>
+        `<li${index<step?' class="is-done"':index===step?' aria-current="step"':''}><span>${index+1}</span><b>${name}</b></li>`).join('');
       choices.classList.toggle('hidden',!field);
       upload.classList.toggle('hidden',Boolean(field));
       if(field)media.pause();
       soloLabel.classList.toggle('hidden',draft.source!=='instrumental');
       const recap=get('form > .track-selection');
       recap.classList.toggle('hidden',Boolean(field));
-      if(!field)recap.textContent=[instruments,formats,sources]
-        .map((list,index)=>list.find(([value])=>value===draft[fields[index]])?.[2])
-        .concat(draft.capo?`Capo case ${draft.capo}`:null).filter(Boolean).join(' · ');
-      choices.setAttribute('aria-label',label);
-      choices.innerHTML=field?[instruments,formats,sources][step].map(([value,icon,name,detail])=>{
+      if(!field)recap.textContent=steps
+        .map(([key,,,,list])=>list?.find(([value])=>value===draft[key])?.[2]).filter(Boolean).join(' · ');
+      choices.dataset.field=field||'';
+      choices.innerHTML=options?options.map(([value,icon,name,detail])=>{
         const disabled=value==='tablature'&&!allowsTab();
         const description=disabled?'Disponible pour la guitare et la basse.':detail;
-        return `<label class="track-choice"><input type="radio" name="track-choice" value="${value}"
-          ${draft[field]===value?'checked':''} ${disabled?'disabled':''}>
-          <span><span class="track-choice-icon" aria-hidden="true">${icon}</span>
-          <strong>${name}</strong>${description?`<small>${description}</small>`:''}</span></label>`;
+        return `<button type="button" class="track-choice" value="${value}" aria-pressed="${draft[field]===value}" ${disabled?'disabled':''}>
+          <span class="track-choice-icon" aria-hidden="true">${icon}</span>
+          <span><strong>${name}</strong>${description?`<small>${description}</small>`:''}</span>
+          <span class="track-choice-arrow" aria-hidden="true">→</span></button>`;
       }).join(''):'';
       back.classList.toggle('hidden',step===0);
-      next.textContent=step===3?'Générer mon relevé ↗':'Continuer ↗';
-      next.disabled=Boolean(field&&!draft[field]);
-      showCapo();
+      next.classList.toggle('hidden',Boolean(field));
       setStatus('');
       if(focus)heading.focus({preventScroll:true});
     }
 
-    choices.addEventListener('change',event=>{
-      draft[fields[step]]=event.target.value;
+    choices.addEventListener('click',event=>{
+      const button=event.target.closest('.track-choice');
+      if(!button||button.disabled||busy)return;
+      const [field,,,,options]=activeSteps()[step];
+      draft[field]=options.find(([value])=>String(value)===button.value)[0];
       if(step===0&&!allowsTab()&&draft.format==='tablature')draft.format='';
-      if(draft.instrument!=='guitare')draft.capo=0;
-      showCapo();
-      next.disabled=false;
+      if(draft.instrument!=='guitare')draft.capo=null;
+      step++;
+      render(true);
     });
-    capo.addEventListener('change',()=>{draft.capo=Number(capo.value);});
     fileInput.addEventListener('change',()=>{
       if(linkInput&&fileInput.files.length){
         linkInput.value='';
@@ -237,11 +224,7 @@
     });
     form.addEventListener('submit',async event=>{
       event.preventDefault();
-      if(busy)return;
-      if(step<3){
-        if(draft[fields[step]]){step++;render(true);}
-        return;
-      }
+      if(busy||activeSteps()[step][0])return;
       const audioUrl=linkInput?.value.trim()||'';
       let link=null,youtubeId;
       if(audioUrl){
@@ -269,13 +252,12 @@
       try{
         const source=solo.checked&&draft.source==='instrumental'?'instrument':draft.source;
         const fallback=youtubeId?`Vidéo YouTube · ${youtubeId}`:draft.file?.name||link?.pathname.split('/').filter(Boolean).at(-1)||'Audio importé';
-        await onSubmit({...draft,source,audioUrl:link?.href,title:title.value.trim()||fallback.replace(/\.(wav|mp3|m4a|flac|ogg|aac)$/i,'')},setStatus);
+        await onSubmit({...draft,capo:draft.capo??0,source,audioUrl:link?.href,title:title.value.trim()||fallback.replace(/\.(wav|mp3|m4a|flac|ogg|aac)$/i,'')},setStatus);
         if(linkInput)linkInput.value='';
         setReference(null);
         editingSource=false;
         fileInput.value='';title.value='';setFile(null);
-        for(const field of fields)draft[field]='';
-        draft.capo=0;
+        Object.assign(draft,{instrument:'',format:'',source:'',capo:null});
         step=0;
       }catch(error){setStatus(error.message,true);}
       finally{
@@ -291,8 +273,7 @@
       prefill({instrument,file,name,audioUrl}){
         if(busy)return;
         if(file!==undefined||audioUrl!==undefined){
-          for(const field of fields)draft[field]='';
-          draft.capo=0;
+          Object.assign(draft,{instrument:'',format:'',source:'',capo:null});
           fileInput.value='';setFile(file||null);
           title.value='';
           const source=audioSource?.parse(audioUrl);
@@ -302,7 +283,7 @@
           if(linkInput)linkInput.value=source&&!isReference?source.url.href:'';
         }
         if(instruments.some(([value])=>value===instrument))draft.instrument=instrument;
-        if(draft.instrument!=='guitare')draft.capo=0;
+        if(draft.instrument!=='guitare')draft.capo=null;
         if(!allowsTab()&&draft.format==='tablature')draft.format='';
         if(name)title.value=name;
         step=0;render(true);

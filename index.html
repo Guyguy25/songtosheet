@@ -10,9 +10,9 @@
   <script>document.documentElement.classList.toggle('is-landing', location.pathname === '/');</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=4" />
+  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=5" />
   <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=9" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=10" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=3" />
   <script src="/backend/web/score-player.js?v=4" defer></script>
   <style>
@@ -1387,7 +1387,7 @@ body.pricing-open{overflow:hidden}
           :j.error_message||'Importe ton fichier pour réessayer.';
         if(!$('track-result-summary'))$('result-content').innerHTML='<div id="track-result-summary" class="result-hero"></div>';
         $('track-result-summary').innerHTML=`<span class="dashboard-kicker">${status}</span>
-          <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)}${j.capo?` · Capo case ${j.capo}`:''} · Accès admin</p>
+          <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · Accès admin</p>
           ${j.source_name?`<p class="result-meta">Fichier importé : ${safe(j.source_name)}</p>`:''}
           <p>${safe(detail)}</p>${ready?`<div class="result-actions">${downloads}</div>`:''}${diagnostic}
           ${!waiting&&!completed&&!ready?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;

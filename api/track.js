@@ -56,8 +56,8 @@ async function begin(db,res,user,body){
     return json(res,400,{detail:'La tablature est disponible pour la guitare et la basse.'});
   }
   if(body.source!=null&&!SOURCE_TYPES.has(body.source))return json(res,400,{detail:'Choisis le contenu de ton audio.'});
-  if(!Number.isInteger(capo)||capo<0||capo>12||(capo&&instrument!=='guitare')){
-    return json(res,400,{detail:'Choisis une case de capo entre 0 et 12, pour la guitare uniquement.'});
+  if((capo!=='auto'&&(!Number.isInteger(capo)||capo<0||capo>12))||(capo&&instrument!=='guitare')){
+    return json(res,400,{detail:'Le capo est disponible pour la guitare uniquement.'});
   }
   await prepareTracks(db);
   const jobs=db.collection('track_jobs');
@@ -120,6 +120,7 @@ async function worker(db,res,body){
     if(body.links!==true)compatible.audio_url={$exists:false};
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
     if(body.capo!==true)compatible.capo={$in:[null,0]};
+    else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
       $or:[{status:'queued'},{status:'processing',lease_until:{$lte:now}}]},
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS)}},
@@ -151,7 +152,12 @@ async function worker(db,res,body){
   }
   if(isPreview){
     const diagnostic=job.instrument==='guitare'?validDiagnostic(body.diagnostic,note_count,duration):null;
-    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic}});
+    const resolved=body.resolved_capo;
+    if(job.capo==='auto'&&(!Number.isInteger(resolved)||resolved<1||resolved>12)){
+      return json(res,400,{detail:'Case du capo invalide.'});
+    }
+    const capo=job.capo==='auto'?{resolved_capo:resolved}:{};
+    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,...capo}});
     if(!updated.matchedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
     return json(res,200,{ok:true});
   }

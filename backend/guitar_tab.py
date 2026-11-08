@@ -94,6 +94,18 @@ def arrange(notes, tuning, *, capo=0):
     return result
 
 
+def arrange_with_capo(notes, tuning):
+    def options():
+        for capo in range(1, 13):
+            yield capo, arrange(notes, tuning, capo=capo)
+
+    def rank(option):
+        capo, tab = option
+        return len(tab), -sum(note.fret for note in tab), -capo
+
+    return max(options(), key=rank)
+
+
 def midi_notes(notes):
     return [{"pitch": n.pitch, "start": n.start, "end": n.end, "velocity": n.velocity}
             for n in notes if n.start < n.end]

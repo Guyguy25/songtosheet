@@ -3,8 +3,10 @@ import argparse
 import base64
 import json
 import os
+import shutil
 import tempfile
 import time
+from importlib.util import find_spec
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -12,7 +14,7 @@ import requests
 
 from transcribe_track import load_note_model, transcribe
 from score_pdf import render_pdf
-from track_link import TrackLinkError, download_track
+from track_link import TrackLinkError, download_track, download_youtube
 
 
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
@@ -23,7 +25,9 @@ def process_job(call, job, data):
     try:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
-            if job.get("audio_url"):
+            if job.get("youtube_id"):
+                audio = download_youtube(job["youtube_id"], directory)
+            elif job.get("audio_url"):
                 audio = download_track(job["audio_url"], directory)
             else:
                 audio = directory / f"input.{job['extension']}"
@@ -98,10 +102,11 @@ def main():
 
         if not args.once:
             load_note_model()
+        youtube = find_spec("yt_dlp") is not None and find_spec("yt_dlp_ejs") is not None and shutil.which("node") is not None
         print("Moteur de transcription prêt.", flush=True)
         while True:
             try:
-                job = call("claim", pdf=True, links=True)["job"]
+                job = call("claim", pdf=True, links=True, youtube=youtube)["job"]
                 if job:
                     process_job(call, job, args.cache)
                 if args.once:

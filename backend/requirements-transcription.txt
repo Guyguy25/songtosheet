@@ -3,3 +3,5 @@ basic-pitch[onnx]==0.4.0
 music21==9.9.1
 numpy<2
 verovio==6.4.1
+yt-dlp==2026.10.26
+yt-dlp-ejs==0.8.0

@@ -1,7 +1,11 @@
 """Download a public HTTPS audio file for a transcription job."""
 import ipaddress
+import os
+import re
 import socket
 import ssl
+import subprocess
+import sys
 import time
 from http.client import HTTPException, HTTPSConnection
 from urllib.parse import quote, urljoin, urlsplit
@@ -104,3 +108,28 @@ def download_track(url, directory):
     except (HTTPException, OSError, ValueError):
         pass
     raise TrackLinkError("Impossible de récupérer l’audio. Vérifie que le fichier est accessible sans connexion.")
+
+
+def download_youtube(video_id, directory):
+    if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+        raise TrackLinkError("Colle un lien vers une vidéo ou un Short YouTube.")
+    command = [
+        sys.executable, "-m", "yt_dlp", "--ignore-config", "--no-plugin-dirs", "--no-cache-dir",
+        "--no-playlist", "--js-runtimes", "node", "--socket-timeout", "12",
+        "--extractor-retries", "0", "--retries", "0", "--fragment-retries", "0",
+        "--max-filesize", "25M", "--match-filter", "!is_live & duration <= 360 & duration >= 1",
+        "--format", "bestaudio[ext=m4a]/bestaudio", "--extract-audio", "--audio-format", "m4a",
+        "--no-progress", "-o", str(directory / "input.%(ext)s"),
+        "--", "https://www.youtube.com/watch?v=" + video_id,
+    ]
+    environment = {key: value for key, value in os.environ.items() if key != "TRACK_WORKER_TOKEN"}
+    try:
+        result = subprocess.run(command, capture_output=True, timeout=120, check=False, env=environment)
+    except (OSError, subprocess.TimeoutExpired) as error:
+        raise TrackLinkError("La récupération de l’audio YouTube a échoué. Réessaie dans un instant.") from error
+    audio = directory / "input.m4a"
+    if result.returncode or not audio.is_file():
+        raise TrackLinkError("Impossible de récupérer cette vidéo YouTube. Utilise une vidéo publique de 6 minutes maximum.")
+    if not 1024 <= audio.stat().st_size <= MAX_BYTES:
+        raise TrackLinkError("La taille de l’audio YouTube doit être comprise entre 1 Ko et 25 Mo.")
+    return audio

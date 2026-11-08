@@ -30,13 +30,13 @@ async function begin(db,res,user,body){
   const title=typeof body.title==='string'?body.title.trim().slice(0,110):'';
   const source=audioSource.parse(body.audioUrl);
   const link=source?.url;
-  const source_name=link?link.hostname:typeof body.sourceName==='string'
+  const source_name=link?(source.youtubeId?'YouTube':link.hostname):typeof body.sourceName==='string'
     ?body.sourceName.split(/[\\/]/).at(-1).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,160)
     :'';
   const format=body.format??'partition';
   if(body.authorized!==true)return json(res,400,{detail:'Confirme que tu disposes des droits nécessaires pour transcrire cet audio.'});
   if(body.audioUrl!=null&&!link)return json(res,400,{detail:'Colle un lien HTTPS public vers un fichier audio.'});
-  if(source?.provider)return json(res,400,{detail:audioSource.importHint(source.provider)});
+  if(source?.provider&&!source.youtubeId)return json(res,400,{detail:audioSource.importHint(source.provider)});
   if(!source_name)return json(res,409,{detail:'Actualise la page, puis sélectionne à nouveau ton fichier audio.'});
   if(!title||!INSTRUMENTS.has(instrument)||(!link&&(!AUDIO_TYPES.has(extension)||!Number.isInteger(size)||size<1024||size>MAX_BYTES))){
     return json(res,400,{detail:'Choisis un titre, une piste et un fichier audio de 25 Mo maximum.'});
@@ -51,7 +51,8 @@ async function begin(db,res,user,body){
   await jobs.updateMany({user_id:user._id,active:true,expires_at:{$lte:now}},
     {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'},$unset:{audio_url:''}});
   try{
-    const input=link?{audio_url:link.href,source_kind:'link'}:{extension,size};
+    const input=source?.youtubeId?{youtube_id:source.youtubeId,source_kind:'link'}:
+      link?{audio_url:link.href,source_kind:'link'}:{extension,size};
     const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
@@ -103,12 +104,13 @@ async function worker(db,res,body){
     const lease=randomUUID();
     const compatible=body.pdf===true?{}:{format:{$exists:false}};
     if(body.links!==true)compatible.audio_url={$exists:false};
+    if(body.youtube!==true)compatible.youtube_id={$exists:false};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
       $or:[{status:'queued'},{status:'processing',lease_until:{$lte:now}}]},
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS)}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
-      isolated:job.isolated,format:job.format||'partition',...(job.audio_url?{audio_url:job.audio_url}:
+      isolated:job.isolated,format:job.format||'partition',...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
   if(!isId(body.id)||typeof body.lease!=='string')return json(res,400,{detail:'Traitement invalide.'});

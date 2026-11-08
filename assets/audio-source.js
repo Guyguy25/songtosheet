@@ -15,8 +15,15 @@
     if(url.protocol!=='https:'||url.username||url.password||url.port)return null;
     const host=url.hostname.replace(/\.$/,'');
     const provider=providers.find(([,domains])=>domains.some(domain=>host===domain||host.endsWith('.'+domain)))?.[0];
+    let youtubeId;
+    if(provider==='YouTube'){
+      const [,first,second]=url.pathname.split('/');
+      const id=host==='youtu.be'?first:first==='watch'?url.searchParams.get('v'):
+        ['shorts','embed','live'].includes(first)?second:null;
+      if(/^[\w-]{11}$/.test(id||''))youtubeId=id;
+    }
     url.hash='';
-    return {url,provider};
+    return {url,provider,youtubeId};
   }
 
   function importHint(provider){

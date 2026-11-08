@@ -11,8 +11,8 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=4" />
-  <script src="/assets/audio-source.js?v=1" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=7" defer></script>
+  <script src="/assets/audio-source.js?v=2" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=8" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=3" />
   <script src="/backend/web/score-player.js?v=4" defer></script>
   <style>
@@ -1124,6 +1124,19 @@ body.pricing-open{overflow:hidden}
     }).join('');
   }
   let trackWizard;
+  const trackLinkKey='songtosheet:track-link';
+  function rememberTrackLink(value){
+    try{
+      if(value&&state.user?.id)sessionStorage.setItem(trackLinkKey,JSON.stringify({userId:state.user.id,value}));
+      else sessionStorage.removeItem(trackLinkKey);
+    }catch{}
+  }
+  function rememberedTrackLink(){
+    try{
+      const saved=JSON.parse(sessionStorage.getItem(trackLinkKey));
+      if(state.user?.role==='admin'&&saved?.userId===state.user.id)return window.SongToSheetAudioSource.parse(saved.value)?.url.href;
+    }catch{}
+  }
   let closePlayer;
   function stopPlayer(){closePlayer?.();closePlayer=undefined;}
   function showAppPage(page){if(!state.user)return go('/inscription');
@@ -1142,7 +1155,11 @@ body.pricing-open{overflow:hidden}
       const admin=state.user.role==='admin';
       $('create-page').classList.toggle('track-guided',admin);
       show('track-onboarding',admin);
-      if(admin&&!trackWizard)trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{onSubmit:submitTrack,allowLink:true});
+      if(admin&&!trackWizard){
+        trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{onSubmit:submitTrack,onLinkChange:rememberTrackLink,allowLink:true});
+        const audioUrl=rememberedTrackLink();
+        if(audioUrl)trackWizard.prefill({audioUrl});
+      }
     }
     if(page==='billing')renderAppPricing();
     if(page==='result'&&state.resultId)loadResult(state.resultId);
@@ -1238,9 +1255,11 @@ body.pricing-open{overflow:hidden}
       if(state.heroMode==='link'){
         const value=$('hero-link').value.trim();if(!value)throw new Error('Colle un lien musical ou importe un audio.');
         if(state.user?.role==='admin'){
-          if(!window.SongToSheetAudioSource.parse(value))throw new Error('Colle un lien HTTPS valide.');
+          const source=window.SongToSheetAudioSource.parse(value);
+          if(!source)throw new Error('Colle un lien HTTPS valide.');
           startApp('create');
-          trackWizard.prefill({audioUrl:value});
+          trackWizard.prefill({audioUrl:source.url.href});
+          rememberTrackLink(source.url.href);
         }else{
           state.link=value;await window.SongToSheetFlow.start({kind:'link',value,instrument});
         }
@@ -1251,6 +1270,7 @@ body.pricing-open{overflow:hidden}
         if(state.user?.role==='admin'){
           startApp('create');
           trackWizard.prefill({file});
+          rememberTrackLink();
         }
         else await window.SongToSheetFlow.start({kind:'file',file,instrument});
       }
@@ -1289,6 +1309,7 @@ body.pricing-open{overflow:hidden}
         await post('/api/track',{action:'queue',id});
       }
       queued=true;
+      rememberTrackLink();
       state.file=null;$('workspace-file').value='';
       $('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
       await refresh();
@@ -1309,6 +1330,7 @@ body.pricing-open{overflow:hidden}
         $('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
         startApp('create');
         trackWizard.prefill({instrument:job.instrument,name:job.title,file:null});
+        rememberTrackLink();
         toast('Importe l’audio original pour lancer la transcription réelle.');
         return;
       }
@@ -1416,7 +1438,7 @@ body.pricing-open{overflow:hidden}
     }catch(err){$('auth-error').textContent=err.message;show('auth-error',true);}
     finally{btn.disabled=false;renderAuth();}
   }
-  async function logout(){try{await post('/api/auth/logout',{});}catch(e){toast(e.message,true);return;}window.SongToSheetFlow?.clearPending();setCurrentUser(null);state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
+  async function logout(){try{await post('/api/auth/logout',{});}catch(e){toast(e.message,true);return;}window.SongToSheetFlow?.clearPending();rememberTrackLink();trackWizard?.pause();trackWizard=null;setCurrentUser(null);state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
   function wire(){
     document.addEventListener('click',async(e)=>{
       const nav=e.target.closest('[data-nav]');if(nav){
@@ -1516,7 +1538,11 @@ body.pricing-open{overflow:hidden}
     $('footer-year').textContent=new Date().getFullYear();
   }
   const sessionReady=loadUser();
-  async function init(){wire();syncPricing();howShowStep(1);await Promise.all([sessionReady,loadPackages()]);renderRoute();if(state.user){await refresh();if(location.search.includes('checkout=success')){
+  async function init(){wire();syncPricing();howShowStep(1);await Promise.all([sessionReady,loadPackages()]);
+    const audioUrl=rememberedTrackLink();
+    if(audioUrl&&location.pathname==='/app')state.activePage='create';
+    if(audioUrl&&location.pathname==='/'&&!$('hero-link').value)$('hero-link').value=audioUrl;
+    renderRoute();if(state.user){await refresh();if(location.search.includes('checkout=success')){
       toast('Paiement confirmé : les crédits apparaîtront dès que Stripe aura envoyé sa confirmation.');history.replaceState({},'',location.pathname);showAppPage('billing');
       let count=0;const timer=setInterval(async()=>{await refresh();if(++count>=8)clearInterval(timer);},2000);
     }}else if(location.pathname==='/app'){go('/inscription',true);}}

@@ -5,12 +5,13 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {CHUNK_BYTES,MAX_BYTES,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,FORMATS,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
+const {CHUNK_BYTES,MAX_BYTES,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
 const LEASE_MS=25*60*1000;
-const WORKER_ACTIONS=new Set(['claim','read','progress','preview','finish']);
+const REVIEW_MS=24*60*60*1000;
+const WORKER_ACTIONS=new Set(['claim','read','progress','preview','review_audio','finish']);
 const PROGRESS_STAGES=new Set(['decode','isolate','detect','arrange','cached']);
 
 function validExports(exports){
@@ -127,7 +128,7 @@ async function worker(db,res,body){
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS),stage:'audio',stages:['audio']}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
-      isolated:job.isolated,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
+      isolated:job.isolated,review_audio:!job.isolated,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
   if(!isId(body.id)||typeof body.lease!=='string')return json(res,400,{detail:'Traitement invalide.'});
@@ -143,6 +144,16 @@ async function worker(db,res,body){
     if(!Number.isInteger(body.index))return json(res,400,{detail:'Partie invalide.'});
     const chunk=await chunks.findOne({_id:`${job._id}:${body.index}`});
     return chunk?json(res,200,{data:chunk.data}):json(res,404,{detail:'Audio expiré.'});
+  }
+  if(body.action==='review_audio'){
+    const {kind,data}=body;
+    if(job.isolated||!REVIEW_TRACKS.has(kind)||typeof data!=='string'||!data||data.length>3900000||
+      Buffer.from(data,'base64').toString('base64')!==data)return json(res,400,{detail:'Piste audio invalide.'});
+    const expires_at=new Date(job.created_at.getTime()+REVIEW_MS);
+    await db.collection('track_review_audio').updateOne({_id:`${job._id}:${kind}`},
+      {$set:{data,expires_at}},{upsert:true});
+    const updated=await jobs.updateOne(filter,{$addToSet:{review_audio:kind},$set:{review_audio_expires_at:expires_at}});
+    return updated.matchedCount?json(res,200,{ok:true}):json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   }
   const {duration,note_count,exports}=body;
   const completed=body.ok===true;
@@ -196,6 +207,35 @@ async function download(db,req,res,user){
   return res.status(200).send(Buffer.from(data,'base64'));
 }
 
+async function reviewAudio(db,req,res,user){
+  const {id,audio:kind,save}=req.query;
+  if(!isId(id)||!REVIEW_TRACKS.has(kind))return json(res,404,{detail:'Piste introuvable.'});
+  const job=await db.collection('track_jobs').findOne({
+    ...trackFilter(id,user),review_audio:kind,review_audio_expires_at:{$gt:new Date()}
+  },{projection:{_id:1}});
+  const track=job&&await db.collection('track_review_audio').findOne({
+    _id:`${job._id}:${kind}`,expires_at:{$gt:new Date()}
+  });
+  if(!track)return json(res,404,{detail:'Piste introuvable ou expirée.'});
+  const bytes=Buffer.from(track.data,'base64');
+  res.setHeader('Cache-Control','private, no-store');
+  res.setHeader('Accept-Ranges','bytes');
+  res.setHeader('Content-Type','audio/mpeg');
+  res.setHeader('Content-Disposition',`${save==='1'?'attachment':'inline'}; filename="songtosheet-${kind}.mp3"`);
+  if(!req.headers.range)return res.status(200).send(bytes);
+  const range=/^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
+  if(range&&(range[1]||range[2])){
+    const first=range[1]?Number(range[1]):Math.max(0,bytes.length-Number(range[2]));
+    const last=range[1]&&range[2]?Math.min(Number(range[2]),bytes.length-1):bytes.length-1;
+    if(first<=last&&first<bytes.length){
+      res.setHeader('Content-Range',`bytes ${first}-${last}/${bytes.length}`);
+      return res.status(206).send(bytes.subarray(first,last+1));
+    }
+  }
+  res.setHeader('Content-Range',`bytes */${bytes.length}`);
+  return res.status(416).end();
+}
+
 module.exports=async(req,res)=>{
   if(req.method!=='GET'&&req.method!=='POST'){
     res.setHeader('Allow','GET, POST');
@@ -211,7 +251,8 @@ module.exports=async(req,res)=>{
     const user=await authenticated(req);
     if(!user)return json(res,401,{detail:'Connexion requise.'});
     if(user.role!=='admin')return json(res,403,{detail:'La transcription réelle est réservée au compte administrateur.'});
-    if(req.method==='GET')return await download(await database(),req,res,user);
+    if(req.method==='GET')return req.query.audio===undefined
+      ?await download(await database(),req,res,user):await reviewAudio(await database(),req,res,user);
     if(!process.env.TRACK_WORKER_DIGEST)return json(res,503,{detail:'Le moteur de transcription est indisponible.'});
     if(body.action==='begin')return await begin(await database(),res,user,body);
     if(['chunk','queue','cancel'].includes(body.action))return await upload(await database(),res,user,body);

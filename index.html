@@ -636,6 +636,10 @@ body.pricing-open{overflow:hidden}
 .auth-demo-hint{font-size:12px;line-height:1.55;margin:6px 0 15px;color:#6c6481}.auth-demo-flag{display:inline-block;background:#efe9ff;color:#6c46cf;border-radius:30px;padding:2px 7px;margin-left:5px;font-size:10px;font-weight:800}
 #public-header[data-session-pending] .nav-actions,
 #public-header[data-session-pending] .mobile-menu button{visibility:hidden}
+#track-audio-review summary{cursor:pointer;font-weight:750}
+#track-audio-review label{font-size:13px;font-weight:700;margin-right:8px}
+#track-audio-review select{max-width:100%;padding:8px 10px;border:1px solid #ded7ed;border-radius:9px;background:#fff;color:var(--ink)}
+#track-audio-review audio{display:block;width:100%;margin:12px 0}
 </style>
 
 
@@ -1375,6 +1379,35 @@ body.pricing-open{overflow:hidden}
     processing:['Analyse en cours','Cette page se met à jour automatiquement.',null]
   };
   let trackSummaryMarkup,trackProgressMarkup;
+  function addAudioReview(job){
+    const labels={original:'Mix original',guitar:'Guitare isolée',vocals:'Voix isolée',bass:'Basse isolée',
+      drums:'Batterie isolée',piano:'Piano isolé',other:'Autres instruments'};
+    const analyzed={guitare:'guitar',voix:'vocals',basse:'bass',piano:'piano'}[job.instrument];
+    const tracks=Object.keys(labels).filter(key=>job.review_audio?.includes(key));
+    if(!tracks.length||$('track-audio-review'))return;
+    const root=document.createElement('details');
+    root.id='track-audio-review';
+    root.className='result-hero';
+    root.innerHTML=`<summary>Écouter les pistes séparées · Admin</summary>
+      <p class="result-note">Compare le mix à la piste analysée au même moment. Les MP3 restent disponibles pendant 24 h.</p>
+      <label for="track-review-source">Piste</label>
+      <select id="track-review-source">${tracks.map(key=>`<option value="${key}"${key===analyzed?' selected':''}>${
+        labels[key]}${key===analyzed?' · analysée':''}</option>`).join('')}</select>
+      <audio controls preload="none" aria-label="Écoute des pistes séparées"></audio>
+      <a class="btn btn-outline">Télécharger le MP3</a>`;
+    $('track-result-summary').after(root);
+    const select=root.querySelector('select'), player=root.querySelector('audio'), save=root.querySelector('a');
+    let position=0;
+    function switchTrack(){
+      if(player.readyState>0)position=player.currentTime;
+      const url=`/api/track?id=${encodeURIComponent(job.id)}&audio=${select.value}`;
+      player.onloadedmetadata=()=>{player.currentTime=Math.min(position,player.duration);};
+      player.src=url;
+      save.href=url+'&save=1';
+    }
+    select.addEventListener('change',switchTrack);
+    switchTrack();
+  }
   async function loadResult(id){
     try{const j=await api(`/api/jobs/${encodeURIComponent(id)}`);if(state.activePage!=='result'||state.resultId!==id)return;
       if(j.track){
@@ -1415,6 +1448,7 @@ body.pricing-open{overflow:hidden}
           $('track-result-summary').innerHTML=summary;
           trackSummaryMarkup=summary;
         }
+        if(completed&&state.user?.role==='admin')addAudioReview(j);
         show('track-progress',waiting);
         const stage=ready?'pdf':j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
         const past=(j.stages||[]).filter(item=>item!==stage&&Object.hasOwn(trackStages,item));

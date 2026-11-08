@@ -4,6 +4,7 @@ import base64
 import json
 import os
 import shutil
+import subprocess
 import tempfile
 import time
 from importlib.util import find_spec
@@ -12,12 +13,28 @@ from urllib.parse import urlparse
 
 import requests
 
-from transcribe_track import load_note_model, transcribe
+from transcribe_track import load_note_model, run, transcribe
 from score_pdf import render_pdf
 from track_link import TrackLinkError, download_track, download_youtube
 
 
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
+REVIEW_TRACKS = ("original", "guitar", "vocals", "bass", "drums", "piano", "other")
+
+
+def encode_review_audio(original, stems, destination):
+    destination.mkdir(exist_ok=True)
+    for kind in REVIEW_TRACKS:
+        source = original if kind == "original" else stems / f"{kind}.wav"
+        if not source.is_file():
+            continue
+        output = destination / f"{kind}.mp3"
+        try:
+            run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(source),
+                 "-map_metadata", "-1", "-ar", "32000", "-b:a", "64k", str(output)], timeout=60)
+        except (OSError, ValueError, subprocess.TimeoutExpired) as error:
+            output.unlink(missing_ok=True)
+            print(f"Piste de diagnostic {kind} indisponible : {type(error).__name__}", flush=True)
 
 
 def process_job(call, job, data):
@@ -43,8 +60,11 @@ def process_job(call, job, data):
                         chunk = call("read", **identity, index=index)
                         file.write(base64.b64decode(chunk["data"], validate=True))
             capo = job.get("capo", 0)
+            review = directory / "review"
             result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"],
-                                capo=capo, progress=report)
+                                capo=capo, progress=report,
+                                review_audio=(lambda original, stems: encode_review_audio(original, stems, review))
+                                if job.get("review_audio") else None)
             exports = {
                 key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
                 for key, filename in EXPORTS.items() if (result / filename).is_file()
@@ -67,6 +87,12 @@ def process_job(call, job, data):
             except Exception as error:
                 print(f"{job['id']}: PDF : {error}", flush=True)
                 payload["pdf_error"] = True
+            for path in review.glob("*.mp3"):
+                data64 = base64.b64encode(path.read_bytes()).decode("ascii")
+                try:
+                    call("review_audio", **identity, kind=path.stem, data=data64)
+                except requests.RequestException:
+                    print(f"{job['id']}: piste de diagnostic {path.stem} non publiée", flush=True)
     except requests.RequestException:
         raise  # The lease lets another attempt recover after a connection failure.
     except Exception as error:

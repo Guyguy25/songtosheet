@@ -180,7 +180,8 @@ def write_midi(notes, destination, program, instrument, bpm, *, beats=None, beat
     midi.write(str(destination))
 
 
-def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0, progress=None):
+def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0, progress=None,
+               review_audio=None):
     if (capo != "auto" and (type(capo) is not int or not 0 <= capo <= 12)) or (capo and instrument != "guitare"):
         raise ValueError("Le capo est disponible pour la guitare uniquement, en mode automatique ou avec une case de 0 à 12.")
     source = source.resolve(strict=True)
@@ -211,7 +212,8 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     key = hashlib.sha256(f"{audio_hash}:{json.dumps(config, sort_keys=True)}".encode()).hexdigest()
     output.mkdir(parents=True, exist_ok=True)
     target = output / key
-    if (target / "notes.json").is_file():
+    cached = (target / "notes.json").is_file()
+    if cached and (isolated or review_audio is None):
         report("cached")
         return target
 
@@ -219,7 +221,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
 
     with tempfile.TemporaryDirectory(dir=output) as temporary:
         work = Path(temporary)
-        wav = work / "input.wav"
+        original = wav = work / "input.wav"
         run(["ffmpeg", "-nostdin", "-v", "error", *input_options, "-map", "0:a:0",
              "-t", "360", "-ar", "44100", "-ac", "2", str(wav)], timeout=90)
         if not isolated:
@@ -227,6 +229,11 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             run([sys.executable, "-m", "demucs", "-n", separator, "-o", str(work),
                  "--shifts", "0", str(wav)], timeout=900)
             wav = work / separator / "input" / f"{stem}.wav"
+            if review_audio is not None:
+                review_audio(original, wav.parent)
+        if cached:
+            report("cached")
+            return target
 
         report("detect")
         model, midi, _ = predict(wav, load_note_model())

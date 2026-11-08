@@ -4,22 +4,13 @@ const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
+const audioSource=require('../assets/audio-source');
 const {CHUNK_BYTES,MAX_BYTES,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,FORMATS,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
 const LEASE_MS=25*60*1000;
 const WORKER_ACTIONS=new Set(['claim','read','preview','finish']);
-
-function publicAudioUrl(value){
-  if(typeof value!=='string'||value.length>4096)return null;
-  try{
-    const url=new URL(value);
-    if(url.protocol!=='https:'||url.username||url.password||url.port)return null;
-    url.hash='';
-    return url;
-  }catch{return null;}
-}
 
 function validExports(exports){
   return exports&&typeof exports==='object'&&!Array.isArray(exports)&&
@@ -37,13 +28,15 @@ function workerAuthorized(req){
 async function begin(db,res,user,body){
   const {size,extension,instrument}=body;
   const title=typeof body.title==='string'?body.title.trim().slice(0,110):'';
-  const link=body.audioUrl==null?null:publicAudioUrl(body.audioUrl);
+  const source=audioSource.parse(body.audioUrl);
+  const link=source?.url;
   const source_name=link?link.hostname:typeof body.sourceName==='string'
     ?body.sourceName.split(/[\\/]/).at(-1).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,160)
     :'';
   const format=body.format??'partition';
   if(body.authorized!==true)return json(res,400,{detail:'Confirme que tu disposes des droits nécessaires pour transcrire cet audio.'});
   if(body.audioUrl!=null&&!link)return json(res,400,{detail:'Colle un lien HTTPS public vers un fichier audio.'});
+  if(source?.provider)return json(res,400,{detail:audioSource.importHint(source.provider)});
   if(!source_name)return json(res,409,{detail:'Actualise la page, puis sélectionne à nouveau ton fichier audio.'});
   if(!title||!INSTRUMENTS.has(instrument)||(!link&&(!AUDIO_TYPES.has(extension)||!Number.isInteger(size)||size<1024||size>MAX_BYTES))){
     return json(res,400,{detail:'Choisis un titre, une piste et un fichier audio de 25 Mo maximum.'});

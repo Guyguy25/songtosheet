@@ -28,6 +28,7 @@
       <div class="track-step-heading">
         <span class="track-step-count"></span><h2 tabindex="-1"></h2><p></p>
       </div>
+      ${allowLink?'<p class="track-selection track-reference hidden" aria-live="polite"></p>':''}
       <form>
         <div class="track-choices" role="radiogroup"></div>
         <div class="track-upload hidden">
@@ -57,11 +58,29 @@
     const back=get('.track-back'),next=get('.track-next'),title=get('#track-title-input');
     const fileInput=get('#track-audio-input'),rights=get('#track-rights-input'),status=get('.track-status');
     const linkInput=get('#track-link-input');
+    const referenceNote=get('.track-reference');
+    const audioSource=allowLink?window.SongToSheetAudioSource:null;
     const soloLabel=get('.track-solo'),solo=soloLabel.querySelector('input'),filename=get('.track-filename');
     const media=get('.track-audio-preview');
     const fields=['instrument','format','source'];
     const allowsTab=()=>['guitare','basse'].includes(draft.instrument);
     const setStatus=(message,error=false)=>{status.textContent=message;status.classList.toggle('is-error',error);};
+    let reference;
+    const setReference=source=>{
+      reference=source;
+      if(!referenceNote)return;
+      referenceNote.classList.toggle('hidden',!source);
+      referenceNote.textContent=source?audioSource.importHint(source.provider):'';
+      if(source){
+        const link=document.createElement('a');
+        link.href=source.url.href;
+        link.target='_blank';
+        link.rel='noopener noreferrer';
+        link.textContent='↗';
+        link.setAttribute('aria-label',`Ouvrir la référence sur ${source.provider}`);
+        referenceNote.append(' ',link);
+      }
+    };
     let previewUrl;
     const setFile=file=>{
       media.pause();
@@ -103,7 +122,7 @@
       upload.classList.toggle('hidden',Boolean(field));
       if(field)media.pause();
       soloLabel.classList.toggle('hidden',draft.source!=='instrumental');
-      const recap=get('.track-selection');
+      const recap=get('form .track-selection');
       recap.classList.toggle('hidden',Boolean(field));
       if(!field)recap.textContent=[instruments,formats,sources]
         .map((list,index)=>list.find(([value])=>value===draft[fields[index]])?.[2]).filter(Boolean).join(' · ');
@@ -133,8 +152,17 @@
       setFile(fileInput.files[0]||null);
     });
     linkInput?.addEventListener('input',()=>{
-      if(linkInput.value.trim()&&draft.file){fileInput.value='';setFile(null);}
       rights.checked=false;
+    });
+    linkInput?.addEventListener('change',()=>{
+      const source=audioSource.parse(linkInput.value.trim());
+      if(source?.provider){
+        setReference(source);
+        linkInput.value='';
+      }else if(source&&draft.file){
+        fileInput.value='';
+        setFile(null);
+      }
     });
     back.addEventListener('click',()=>{if(!busy&&step>0){step--;render(true);}});
     const sample=get('.track-sample');
@@ -164,13 +192,20 @@
         return;
       }
       const audioUrl=linkInput?.value.trim()||'';
-      if(!draft.file&&!audioUrl){setStatus(allowLink?'Ajoute un fichier audio ou colle un lien direct.':'Ajoute un fichier audio pour continuer.',true);fileInput.focus();return;}
-      let link;
+      let link=null;
       if(audioUrl){
-        try{link=new URL(audioUrl);}catch{}
-        if(link?.protocol!=='https:'||link.username||link.password||link.port){
+        const source=audioSource.parse(audioUrl);
+        if(!source){
           setStatus('Colle un lien HTTPS public vers un fichier audio.',true);linkInput.focus();return;
         }
+        if(source.provider){
+          setReference(source);
+          linkInput.value='';
+        }else link=source.url;
+      }
+      if(!draft.file&&!link){
+        setStatus(reference?audioSource.importHint(reference.provider):allowLink?'Ajoute un fichier audio ou colle un lien direct.':'Ajoute un fichier audio pour continuer.',true);
+        fileInput.focus();return;
       }
       if(!rights.checked){setStatus('Confirme que tu disposes des droits nécessaires.',true);rights.focus();return;}
       busy=true;
@@ -181,6 +216,7 @@
         const fallback=draft.file?.name||link?.pathname.split('/').filter(Boolean).at(-1)||'Audio importé';
         await onSubmit({...draft,source,audioUrl:link?.href,title:title.value.trim()||fallback.replace(/\.(wav|mp3|m4a|flac|ogg|aac)$/i,'')},setStatus);
         if(linkInput)linkInput.value='';
+        setReference(null);
         fileInput.value='';title.value='';setFile(null);
         for(const field of fields)draft[field]='';
         step=0;
@@ -197,14 +233,18 @@
       pause(){media.pause();},
       prefill({instrument,file,name,audioUrl}){
         if(busy)return;
+        if(file!==undefined||audioUrl!==undefined){
+          for(const field of fields)draft[field]='';
+          fileInput.value='';setFile(file||null);
+          title.value='';
+          const source=audioSource?.parse(audioUrl);
+          setReference(source?.provider?source:null);
+          if(linkInput)linkInput.value=source&&!source.provider?source.url.href:'';
+        }
         if(instruments.some(([value])=>value===instrument))draft.instrument=instrument;
         if(!allowsTab()&&draft.format==='tablature')draft.format='';
-        if(file!==undefined||audioUrl!==undefined){
-          fileInput.value='';setFile(file||null);
-          if(linkInput)linkInput.value=audioUrl||'';
-        }
         if(name)title.value=name;
-        step=0;render();
+        step=0;render(true);
       }
     };
   }

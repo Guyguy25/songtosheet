@@ -11,7 +11,8 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=4" />
-  <script src="/backend/web/track-onboarding.js?v=6" defer></script>
+  <script src="/assets/audio-source.js?v=1" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=7" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=3" />
   <script src="/backend/web/score-player.js?v=4" defer></script>
   <style>
@@ -1233,9 +1234,11 @@ body.pricing-open{overflow:hidden}
     const instrument=$('hero-instrument').value;$('workspace-instrument').value=instrument;
     const button=$('hero-generate');if(button.disabled)return;button.disabled=true;
     try{
+      await sessionReady;
       if(state.heroMode==='link'){
         const value=$('hero-link').value.trim();if(!value)throw new Error('Colle un lien musical ou importe un audio.');
-        if(state.user?.role==='admin'&&/^https:\/\/[^?#]+\.(mp3|wav|m4a|flac|ogg|aac)(?:[?#]|$)/i.test(value)){
+        if(state.user?.role==='admin'){
+          if(!window.SongToSheetAudioSource.parse(value))throw new Error('Colle un lien HTTPS valide.');
           startApp('create');
           trackWizard.prefill({audioUrl:value});
         }else{
@@ -1512,7 +1515,8 @@ body.pricing-open{overflow:hidden}
     $('learn-more').onclick=(e)=>{e.preventDefault();go('/#comment-ca-marche');document.querySelector('#comment-ca-marche')?.scrollIntoView({behavior:'smooth'});};
     $('footer-year').textContent=new Date().getFullYear();
   }
-  async function init(){wire();syncPricing();howShowStep(1);await Promise.all([loadUser(),loadPackages()]);renderRoute();if(state.user){await refresh();if(location.search.includes('checkout=success')){
+  const sessionReady=loadUser();
+  async function init(){wire();syncPricing();howShowStep(1);await Promise.all([sessionReady,loadPackages()]);renderRoute();if(state.user){await refresh();if(location.search.includes('checkout=success')){
       toast('Paiement confirmé : les crédits apparaîtront dès que Stripe aura envoyé sa confirmation.');history.replaceState({},'',location.pathname);showAppPage('billing');
       let count=0;const timer=setInterval(async()=>{await refresh();if(++count>=8)clearInterval(timer);},2000);
     }}else if(location.pathname==='/app'){go('/inscription',true);}}

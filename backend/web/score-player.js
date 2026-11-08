@@ -100,10 +100,12 @@
           <button type="button" class="sp-full" aria-label="Plein écran" title="Plein écran">⛶</button>
         </div>
       </div>
-      <div class="sp-sheet" tabindex="0" aria-label="Notation musicale"><p>Chargement de la partition…</p><div class="sp-engraving"></div></div>
-      <div class="sp-roll">
-        <div class="sp-roll-heading"><span aria-hidden="true">●</span> Piano roll <small>Clique dans la grille pour te déplacer</small></div>
-        <div class="sp-roll-scroll" tabindex="0" aria-label="Grille des notes"><p>Chargement des notes…</p></div>
+      <div class="sp-body">
+        <div class="sp-sheet" tabindex="0" aria-label="Notation musicale"><p>Chargement de la partition…</p><div class="sp-engraving"></div></div>
+        <div class="sp-roll">
+          <div class="sp-roll-heading"><span aria-hidden="true">●</span> Piano roll <small>Clique dans la grille pour te déplacer</small></div>
+          <div class="sp-roll-scroll" tabindex="0" aria-label="Grille des notes"><p>Chargement des notes…</p></div>
+        </div>
       </div>
       <div class="sp-controls">
         <button type="button" class="sp-restart" aria-label="Revenir au début" disabled>↶</button>
@@ -118,6 +120,7 @@
         <a class="sp-audio-credit" hidden target="_blank" rel="noopener" aria-label="Crédits audio">ⓘ</a>
       </div><p class="sp-source-duration" hidden></p><p class="sp-status" role="status" hidden></p>`;
     const get=selector=>root.querySelector(selector);
+    const body=get('.sp-body'),pageScroll=root.closest('.app-scroll'),controls=get('.sp-controls');
     const sheet=get('.sp-sheet'),engraving=get('.sp-engraving'),sheetStatus=get('.sp-sheet p');
     const roll=get('.sp-roll'),scroll=get('.sp-roll-scroll'),play=get('.sp-play'),seek=get('.sp-seek');
     const speed=get('.sp-speed select'),restart=get('.sp-restart'),kind=get('.sp-kind select');
@@ -190,8 +193,16 @@
       while(cursorIndex<low){cursor.Iterator.moveToNext();cursorIndex++;}
       cursor.update();
       if(follow){
-        const y=cursor.cursorElement.getBoundingClientRect().top-sheet.getBoundingClientRect().top;
-        if(y<0||y>sheet.clientHeight-55)sheet.scrollTop+=y-25;
+        const viewport=document.fullscreenElement===root?body:pageScroll;
+        const bounds=viewport?.getBoundingClientRect();
+        const top=bounds?.top??0;
+        const bottom=Math.min(bounds?.bottom??window.innerHeight,controls.getBoundingClientRect().top);
+        const sheetBounds=sheet.getBoundingClientRect();
+        if(sheetBounds.bottom<=top||sheetBounds.top>=bottom)return;
+        const cursorBounds=cursor.cursorElement.getBoundingClientRect();
+        if(cursorBounds.top<top||cursorBounds.bottom>bottom){
+          (viewport||window).scrollBy({top:cursorBounds.top-top-24,behavior:'instant'});
+        }
       }
     }
     function update(value,follow=false){
@@ -265,14 +276,14 @@
       finally{starting=false;}
     };
     seek.oninput=()=>jump(Number(seek.value));
-    restart.onclick=()=>{sheet.scrollTop=0;scroll.scrollLeft=0;jump(0);};
+    restart.onclick=()=>{sheet.scrollLeft=0;scroll.scrollLeft=0;jump(0);};
     speed.onchange=()=>{position=now();rate=Number(speed.value);if(playing)schedule();};
 
     function drawRoll(){
       const high=Math.min(127,Math.max(...notes.map(note=>note.midi))+2);
       const low=Math.max(0,Math.min(Math.min(...notes.map(note=>note.midi))-2,high-14));
       const rows=high-low+1;
-      const row=Math.max(6,Math.min(13,Math.floor((scroll.clientHeight-27)/rows)));
+      const row=Math.max(6,Math.min(13,Math.floor((Math.min(255,window.innerHeight*.25)-27)/rows)));
       const height=rows*row+26;
       pixelsPerSecond=Math.max(75,(scroll.clientWidth-43)/duration);
       const rollWidth=Math.ceil(duration*pixelsPerSecond)+44;
@@ -381,14 +392,19 @@
     };
     if(kind)kind.onchange=()=>{drawSheet();selectSound();};
     full.onclick=()=>{const action=document.fullscreenElement===root?document.exitFullscreen():root.requestFullscreen();action.catch(()=>{});};
-    let width=0;
+    let width=0,rollWidth=0;
     const observer=new ResizeObserver(()=>{
+      if(scroll.clientWidth&&scroll.clientWidth!==rollWidth){
+        rollWidth=scroll.clientWidth;
+        if(notes.length)drawRoll();
+      }
       const available=sheet.clientWidth;
       if(!available||Math.abs(available-width)<2)return;
       width=available;
       clearTimeout(resizeTimer);resizeTimer=setTimeout(drawSheet,140);
     });
     observer.observe(sheet);
+    observer.observe(scroll);
     Promise.all([loadScript('midi','2.0.28'),read(midiUrl,signal,true)]).then(([,buffer])=>{
       if(signal.aborted)return;
       midi=new window.Midi(buffer);

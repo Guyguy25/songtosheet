@@ -22,6 +22,13 @@ EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mi
 
 def process_job(call, job, data):
     identity = {"id": job["id"], "lease": job["lease"]}
+
+    def report(stage):
+        try:
+            call("progress", **identity, stage=stage)
+        except requests.RequestException:
+            print(f"{job['id']}: étape {stage} non publiée", flush=True)
+
     try:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
@@ -36,7 +43,8 @@ def process_job(call, job, data):
                         chunk = call("read", **identity, index=index)
                         file.write(base64.b64decode(chunk["data"], validate=True))
             capo = job.get("capo", 0)
-            result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"], capo=capo)
+            result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"],
+                                capo=capo, progress=report)
             exports = {
                 key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
                 for key, filename in EXPORTS.items() if (result / filename).is_file()

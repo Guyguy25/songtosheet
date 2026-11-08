@@ -119,13 +119,15 @@ def write_midi(notes, destination, program, instrument, bpm):
     midi.write(str(destination))
 
 
-def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0):
+def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0, progress=None):
     if (capo != "auto" and (type(capo) is not int or not 0 <= capo <= 12)) or (capo and instrument != "guitare"):
         raise ValueError("Le capo est disponible pour la guitare uniquement, en mode automatique ou avec une case de 0 à 12.")
     source = source.resolve(strict=True)
     audio_format = AUDIO_FORMATS.get(source.suffix.lower())
     if not source.is_file() or not audio_format:
         raise ValueError("Choisis un fichier local WAV, MP3, M4A, FLAC, OGG ou AAC.")
+    report = progress or (lambda stage: None)
+    report("decode")
     input_options = ["-protocol_whitelist", "file", "-f", audio_format, "-i", str(source)]
     duration = float(run([
         "ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -148,6 +150,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     output.mkdir(parents=True, exist_ok=True)
     target = output / key
     if (target / "notes.json").is_file():
+        report("cached")
         return target
 
     from basic_pitch.inference import predict
@@ -158,10 +161,12 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         run(["ffmpeg", "-nostdin", "-v", "error", *input_options, "-map", "0:a:0",
              "-t", "360", "-ar", "44100", "-ac", "2", str(wav)], timeout=90)
         if not isolated:
+            report("isolate")
             run([sys.executable, "-m", "demucs", "-n", separator, "-o", str(work),
                  "--shifts", "0", str(wav)], timeout=900)
             wav = work / separator / "input" / f"{stem}.wav"
 
+        report("detect")
         _, midi, _ = predict(wav, load_note_model())
         notes = sorted([
             {"pitch": int(note.pitch), "start": float(note.start), "end": float(note.end),
@@ -181,6 +186,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         if not notes:
             raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre instrument.")
 
+        report("arrange")
         result = work / "result"
         result.mkdir()
         write_midi(notes, result / "score.mid", program, instrument, bpm)

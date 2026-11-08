@@ -1,4 +1,4 @@
-.score-player{margin:20px 0;border:1px solid #2d253e;border-radius:16px;overflow:hidden;background:#181420;color:#f2edf9;min-width:0}
+.score-player{margin:20px 0;border:1px solid #2d253e;border-radius:16px;overflow:clip;background:#181420;color:#f2edf9;min-width:0}
 .score-player [hidden]{display:none!important}
 .sp-toolbar,.sp-controls{display:flex;align-items:center;gap:10px;padding:10px 13px;background:#211a2d}
 .sp-toolbar{justify-content:space-between;flex-wrap:wrap}
@@ -10,14 +10,14 @@
 .sp-tabs button[aria-pressed="true"]{background:#f5efff;color:#211531}
 .score-player select option{background:#211a2d;color:#f5efff}
 .sp-zoom button,.score-player .sp-full{font-size:16px;padding-inline:8px}
-.sp-sheet{height:clamp(235px,37vh,470px);overflow:auto;background:#fff;color:#221b2b;position:relative;overscroll-behavior:contain}
+.sp-sheet{min-height:160px;overflow-x:auto;background:#fff;color:#221b2b;position:relative;overscroll-behavior-inline:contain}
 .sp-sheet>p,.sp-roll-scroll>p{margin:0;padding:18px;font-size:13px}
 .sp-engraving{position:relative;min-width:0;padding:10px 8px}
 .sp-roll{border-top:1px solid #35294c;background:#0d101b}
 .sp-roll-heading{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#151725;border-bottom:1px solid #25293e;font-size:12px;font-weight:750}
 .sp-roll-heading>span{color:#9f65ff}
 .sp-roll-heading small{margin-left:auto;color:#b6afc8;font-weight:500}
-.sp-roll-scroll{height:clamp(130px,25vh,255px);overflow:auto;overscroll-behavior:contain;scrollbar-color:#504068 #151725}
+.sp-roll-scroll{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-color:#504068 #151725}
 .sp-roll-scroll svg{display:block;cursor:crosshair;max-width:none}
 .sp-grid-dark{fill:#101322}
 .sp-grid-light{fill:#181e31;stroke:#20263a;stroke-width:.5}
@@ -25,6 +25,7 @@
 .sp-grid-line{stroke:#363650;stroke-width:1}
 .sp-note{fill:#9b66fa;stroke:#bc98ff;stroke-width:.7}
 .sp-playhead{stroke:#ff779d;stroke-width:2;pointer-events:none}
+.sp-controls{position:sticky;bottom:0;z-index:2}
 .sp-controls .sp-play{background:#783ee7;color:#fff;border-radius:50%;width:40px;height:40px;flex:0 0 40px;font-size:15px}
 .sp-controls .sp-restart{font-size:19px}
 .sp-time{font:11px ui-monospace,monospace;white-space:nowrap}
@@ -36,9 +37,20 @@
 .sp-source-duration{margin:0;padding:7px 13px;background:#211a2d;color:#c5b8d6;font-size:11px}
 .sp-sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .score-player:fullscreen{margin:0;border-radius:0;display:flex;flex-direction:column}
-.score-player:fullscreen .sp-sheet,.score-player:fullscreen .sp-roll{flex:1;min-height:0}
-.score-player:fullscreen .sp-roll{display:flex;flex-direction:column}
-.score-player:fullscreen .sp-roll-scroll{flex:1;height:auto}
+.score-player:fullscreen .sp-body{flex:1;min-height:0;overflow-y:auto}
+.score-player:fullscreen .sp-controls{position:static}
+.track-progress{margin:16px 0 20px;padding:clamp(16px,3vw,24px);border:1px solid #e9e0f7;border-radius:16px;background:#faf7ff;color:#32264a}
+.track-progress-head{display:flex;align-items:center;gap:13px}
+.track-progress h2{margin:0 0 4px;font-size:clamp(17px,2vw,21px)}
+.track-progress p{margin:0;color:#665777;font-size:13px;line-height:1.5}
+.track-progress-spinner{width:24px;height:24px;flex:0 0 24px;border:2px solid #e9dcff;border-top-color:#7549eb;border-radius:50%;animation:track-spin .85s linear infinite}
+.track-progress-line{height:4px;margin-top:16px;overflow:hidden;border-radius:999px;background:#eadfff}
+.track-progress-line::after{display:block;width:35%;height:100%;border-radius:inherit;background:#7549eb;content:"";animation:track-sweep 1.8s ease-in-out infinite}
+.track-progress ul{display:flex;flex-wrap:wrap;gap:6px 14px;margin:13px 0 0;padding:0;list-style:none;color:#665777;font-size:12px}
+.track-progress li span{color:#6338ce;font-weight:800}
+@keyframes track-spin{to{transform:rotate(360deg)}}
+@keyframes track-sweep{from{transform:translateX(-100%)}to{transform:translateX(286%)}}
+@media(prefers-reduced-motion:reduce){.track-progress-spinner,.track-progress-line::after{animation:none}}
 @media(max-width:600px){
   .sp-toolbar,.sp-controls{padding:8px;gap:5px}
   .sp-roll-heading small,.sp-audio-label{display:none}

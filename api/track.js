@@ -10,7 +10,8 @@ const {CHUNK_BYTES,MAX_BYTES,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,FORMATS,isId,t
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
 const LEASE_MS=25*60*1000;
-const WORKER_ACTIONS=new Set(['claim','read','preview','finish']);
+const WORKER_ACTIONS=new Set(['claim','read','progress','preview','finish']);
+const PROGRESS_STAGES=new Set(['decode','isolate','detect','arrange','cached']);
 
 function validExports(exports){
   return exports&&typeof exports==='object'&&!Array.isArray(exports)&&
@@ -123,7 +124,7 @@ async function worker(db,res,body){
     else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
       $or:[{status:'queued'},{status:'processing',lease_until:{$lte:now}}]},
-      {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS)}},
+      {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS),stage:'audio',stages:['audio']}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
       isolated:job.isolated,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
@@ -131,6 +132,11 @@ async function worker(db,res,body){
   }
   if(!isId(body.id)||typeof body.lease!=='string')return json(res,400,{detail:'Traitement invalide.'});
   const filter={_id:new ObjectId(body.id),status:'processing',active:true,lease:body.lease,lease_until:{$gt:now}};
+  if(body.action==='progress'){
+    if(!PROGRESS_STAGES.has(body.stage))return json(res,400,{detail:'Étape invalide.'});
+    const updated=await jobs.updateOne(filter,{$set:{stage:body.stage},$addToSet:{stages:body.stage}});
+    return updated.matchedCount?json(res,200,{ok:true}):json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
+  }
   const job=await jobs.findOne(filter,{projection:{exports:0}});
   if(!job)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   if(body.action==='read'){
@@ -157,7 +163,8 @@ async function worker(db,res,body){
       return json(res,400,{detail:'Case du capo invalide.'});
     }
     const capo=job.capo==='auto'?{resolved_capo:resolved}:{};
-    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,...capo}});
+    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo},
+      $addToSet:{stages:'pdf'}});
     if(!updated.matchedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
     return json(res,200,{ok:true});
   }

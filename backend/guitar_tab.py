@@ -75,8 +75,36 @@ def attack_groups(notes, onset):
     return groups
 
 
-def arrange(notes, tuning, *, capo=0):
+def open_position_melody(notes, tuning):
+    """Look for one compact position before assigning notes one by one."""
+    if any(left["end"] - right["start"] > .08 or right["start"] - left["start"] <= .03
+           for left, right in zip(notes, notes[1:])):
+        return []
+    pitches = {note["pitch"] for note in notes}
+    for width in range(1, len(tuning) + 1):
+        positions = []
+        for first in range(len(tuning) - width + 1):
+            strings = range(first, first + width)
+            fingering = {}
+            for pitch in pitches:
+                options = [(pitch - tuning[i], i + 1) for i in strings if 0 <= pitch - tuning[i] <= 4]
+                if not options:
+                    break
+                fingering[pitch] = min(options)
+            else:
+                positions.append(fingering)
+        if positions:
+            best = min(positions, key=lambda pos: sum(pos[note["pitch"]][0] for note in notes))
+            return [TabNote(**{**note, "end": min(note["end"], notes[i+1]["start"]) if i+1 < len(notes) else note["end"]},
+                            string=best[note["pitch"]][1], fret=best[note["pitch"]][0], attack=note["start"])
+                    for i, note in enumerate(notes)]
+    return []
+
+
+def arrange(notes, tuning, *, capo=0, simple=False):
     tuning = tuple(pitch + capo for pitch in tuning)
+    if simple and notes and (compact := open_position_melody(notes, tuning)):
+        return compact
     held, result, position = {}, [], 2
     for group in attack_groups(notes, lambda note: note["start"]):
         start = group[0]["start"]
@@ -94,10 +122,10 @@ def arrange(notes, tuning, *, capo=0):
     return result
 
 
-def arrange_with_capo(notes, tuning):
+def arrange_with_capo(notes, tuning, *, simple=False):
     def options():
         for capo in range(1, 13):
-            yield capo, arrange(notes, tuning, capo=capo)
+            yield capo, arrange(notes, tuning, capo=capo, simple=simple)
 
     def rank(option):
         capo, tab = option

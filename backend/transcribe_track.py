@@ -9,7 +9,7 @@ import subprocess
 import sys
 import tempfile
 from bisect import bisect_left
-from collections import defaultdict
+from collections import Counter, defaultdict
 from functools import lru_cache
 from itertools import takewhile
 from pathlib import Path
@@ -94,6 +94,57 @@ def filter_guitar_echoes(notes, transients):
     return kept
 
 
+def guitar_lead(notes):
+    """Recognize a single-line lead, allowing only weak octave doubles."""
+    groups = attack_groups(notes, lambda note: note["start"])
+    single_pitches = Counter(group[0]["pitch"] for group in groups if len(group) == 1)
+    doubles = [group for group in groups if len(group) > 1]
+    if doubles and (len(groups) < 8 or len(doubles) * 5 > len(groups)):
+        return None
+    for group in doubles:
+        if len(group) != 2:
+            return None
+        low, high = sorted(group, key=lambda note: note["pitch"])
+        if (high["pitch"] - low["pitch"] != 12 or high["velocity"] > .62 * low["velocity"]
+                or high["end"] > low["end"] + .025 or single_pitches[low["pitch"]] < 2
+                or single_pitches[high["pitch"]]):
+            return None
+    lead = [min(group, key=lambda note: note["pitch"]) for group in groups]
+    if any(left["end"] - right["start"] > .08 for left, right in zip(lead, lead[1:])):
+        return None
+    return lead
+
+
+def recover_lead_notes(lead, model):
+    """Restore short model detections when the same five-note figure recurs."""
+    if len(lead) < 10:
+        return lead
+    from basic_pitch.note_creation import model_output_to_notes
+
+    _, candidates = model_output_to_notes(
+        model, onset_thresh=.5, frame_thresh=.3, min_note_len=8, min_freq=None, max_freq=None,
+        multiple_pitch_bends=False, melodia_trick=False,
+    )
+    starts = [note["start"] for note in lead]
+    pitches = [note["pitch"] for note in lead]
+    motifs = Counter(tuple(pitches[i:i + 5]) for i in range(len(pitches) - 4))
+    additions = {}
+    for start, end, pitch, amplitude, _ in candidates:
+        if not .075 <= end - start < .125 or amplitude < .34:
+            continue
+        index = bisect_left(starts, start)
+        if not 2 <= index <= len(lead) - 2:
+            continue
+        if (min(start - starts[index - 1], starts[index] - start) < .055
+                or lead[index - 1]["end"] - start > .08 or end - starts[index] > .035):
+            continue
+        motif = tuple(pitches[index - 2:index] + [pitch] + pitches[index:index + 2])
+        if motifs[motif] >= 2 and (index not in additions or amplitude * 127 > additions[index]["velocity"]):
+            additions[index] = {"pitch": int(pitch), "start": float(start), "end": float(end),
+                                "velocity": round(float(amplitude) * 127)}
+    return sorted(lead + list(additions.values()), key=lambda note: note["start"])
+
+
 def guitar_diagnostic(notes, tab, transients, filtered):
     score_attacks = attack_groups(notes, lambda note: note["start"])
     starts = [group[0]["start"] for group in score_attacks]
@@ -139,7 +190,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
-              "instrument": instrument, "bpm": bpm, "version": {"guitare": 6, "basse": 4}.get(instrument, 1)}
+              "instrument": instrument, "bpm": bpm, "version": {"guitare": 7, "basse": 4}.get(instrument, 1)}
     if capo:
         config["capo"] = capo
     if title:
@@ -167,7 +218,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             wav = work / separator / "input" / f"{stem}.wav"
 
         report("detect")
-        _, midi, _ = predict(wav, load_note_model())
+        model, midi, _ = predict(wav, load_note_model())
         notes = sorted([
             {"pitch": int(note.pitch), "start": float(note.start), "end": float(note.end),
              "velocity": int(note.velocity)}
@@ -176,6 +227,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         ], key=lambda note: (note["start"], note["pitch"]))
         transients = ()
         filtered = 0
+        simple = False
         if instrument == "guitare":
             tuning = TUNINGS[instrument]
             notes = [note for note in notes if tuning[-1] <= note["pitch"] <= tuning[0] + 24]
@@ -183,6 +235,10 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             clean = filter_guitar_echoes(notes, transients)
             filtered = len(notes) - len(clean)
             notes = clean
+            if isolated and (lead := guitar_lead(notes)):
+                filtered += len(notes) - len(lead)
+                notes = recover_lead_notes(lead, model)
+                simple = True
         if not notes:
             raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre instrument.")
 
@@ -193,9 +249,9 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         write_score(result / "score.mid", result / "score.musicxml", title or source.stem, guitar=instrument == "guitare")
         tuning = TUNINGS.get(instrument)
         if capo == "auto":
-            resolved_capo, tab = arrange_with_capo(notes, tuning)
+            resolved_capo, tab = arrange_with_capo(notes, tuning, simple=simple)
         else:
-            resolved_capo, tab = capo, arrange(notes, tuning, capo=capo) if tuning else []
+            resolved_capo, tab = capo, arrange(notes, tuning, capo=capo, simple=simple) if tuning else []
         if tab:
             write_midi(midi_notes(tab), result / "tab.mid", program, instrument, bpm)
             write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument,

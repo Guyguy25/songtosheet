@@ -1,7 +1,7 @@
 from xml.etree import ElementTree as ET
 
 from guitar_tab import arrange, arrange_with_capo, midi_notes, write_tab
-from transcribe_track import TUNINGS, filter_guitar_echoes, guitar_diagnostic
+from transcribe_track import TUNINGS, filter_guitar_echoes, guitar_diagnostic, guitar_lead
 
 
 def event(pitch, start, end):
@@ -85,6 +85,20 @@ def test_automatic_capo_prefers_playable_open_strings():
     assert capo == 2
     assert len(tab) == 6 and all(note.fret == 0 for note in tab)
     assert {note["pitch"] for note in midi_notes(tab)} == {note["pitch"] for note in notes}
+
+
+def test_simple_lead_uses_the_same_two_strings_on_each_repetition():
+    phrase = [61, 61, 59, 57, 55, 55, 57, 59, 57]
+    notes = [event(pitch, i * .2, i * .2 + .23) for i, pitch in enumerate(phrase * 3)]
+    echoes = [{**note, "pitch": 69, "velocity": 48} for i, note in enumerate(notes) if i % 9 == 8]
+    lead = guitar_lead(notes + echoes)
+    assert lead == notes
+    tab = arrange(lead, TUNINGS["guitare"], simple=True)
+    assert [(note.string, note.fret) for note in tab] == (
+        [(2, 2), (2, 2), (2, 0), (3, 2), (3, 0), (3, 0), (3, 2), (2, 0), (3, 2)] * 3
+    )
+    chord_note = event(64, notes[0]["start"], notes[0]["end"])
+    assert guitar_lead(notes + echoes + [chord_note]) is None
 
 
 def test_filter_preserves_the_chord_and_an_upper_note_with_its_own_attack():

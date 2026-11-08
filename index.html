@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=5" />
   <script src="/assets/audio-source.js?v=2" defer></script>
   <script src="/backend/web/track-onboarding.js?v=10" defer></script>
-  <link rel="stylesheet" href="/backend/web/score-player.css?v=4" />
+  <link rel="stylesheet" href="/backend/web/score-player.css?v=5" />
   <script src="/backend/web/score-player.js?v=5" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
@@ -1364,15 +1364,15 @@ body.pricing-open{overflow:hidden}
     svg+='</svg>';return svg;
   }
   const trackStages={
-    queue:['En file d’attente','Le moteur prendra ton morceau dès qu’il sera disponible.'],
-    audio:['Récupération de l’audio','Le moteur charge ton fichier ou récupère le son du lien.'],
-    decode:['Préparation de l’audio','Le moteur vérifie la durée et décode le son pour l’analyse.'],
-    isolate:['Séparation des pistes','Le moteur isole l’instrument demandé dans le morceau.'],
-    detect:['Détection des notes','Le moteur repère les hauteurs, les attaques et les durées.'],
-    arrange:['Écriture du relevé','Le moteur met les notes en mesure et calcule les doigtés si une tablature est disponible.'],
-    cached:['Relevé déjà calculé','Le moteur réutilise l’analyse pour ce morceau et ces réglages.'],
-    pdf:['Préparation du PDF','Le relevé est déjà disponible à l’écoute. La version imprimable arrive.'],
-    processing:['Analyse en cours','Cette page se met à jour automatiquement.']
+    queue:['En file d’attente','Le moteur prendra ton morceau dès qu’il sera disponible.',0],
+    audio:['Récupération de l’audio','Le moteur charge ton fichier ou récupère le son du lien.',8],
+    decode:['Préparation de l’audio','Le moteur vérifie la durée et décode le son pour l’analyse.',20],
+    isolate:['Séparation des pistes','Le moteur isole l’instrument demandé dans le morceau.',32],
+    detect:['Détection des notes','Le moteur repère les hauteurs, les attaques et les durées.',58],
+    arrange:['Écriture du relevé','Le moteur met les notes en mesure et calcule les doigtés si une tablature est disponible.',78],
+    cached:['Relevé déjà calculé','Le moteur réutilise l’analyse pour ce morceau et ces réglages.',88],
+    pdf:['Préparation du PDF','Le relevé est déjà disponible à l’écoute. La version imprimable arrive.',94],
+    processing:['Analyse en cours','Cette page se met à jour automatiquement.',null]
   };
   let trackSummaryMarkup,trackProgressMarkup;
   async function loadResult(id){
@@ -1396,11 +1396,17 @@ body.pricing-open{overflow:hidden}
         const detail=ready?`${j.note_count} notes estimées.${fallback}${waiting?'':j.pdf_error?' Le PDF est indisponible pour ce relevé.':' Tu peux corriger le résultat dans un éditeur MusicXML.'}`
           :waiting?'':j.error_message||'Importe ton fichier pour réessayer.';
         if($('track-result-summary')?.dataset.job!==id){
-          $('result-content').innerHTML='<div id="track-result-summary" class="result-hero"></div><section id="track-progress" class="track-progress hidden" aria-label="Progression du relevé" aria-live="polite"></section>';
+          $('result-content').innerHTML=`<div id="track-result-summary" class="result-hero"></div>
+            <section id="track-progress" class="track-progress hidden" aria-label="Progression du relevé">
+              <div class="track-progress-head"><span class="track-progress-spinner" aria-hidden="true"></span>
+                <div aria-live="polite"><h2></h2><p></p></div><strong class="track-progress-percent" aria-hidden="true"></strong></div>
+              <div class="track-progress-line" role="progressbar" aria-label="Progression estimée"><span></span></div>
+              <ul aria-label="Étapes terminées"></ul>
+            </section>`;
           $('track-result-summary').dataset.job=id;
           trackSummaryMarkup=trackProgressMarkup=undefined;
         }
-        const summary=`<span class="dashboard-kicker">${status}</span>
+        const summary=`<span class="dashboard-kicker">${completed&&ready?'100 % · ':''}${status}</span>
           <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · Accès admin</p>
           ${j.source_name?`<p class="result-meta">Source · ${safe(j.source_name)}</p>`:''}
           ${detail?`<p>${safe(detail)}</p>`:''}${ready?`<div class="result-actions">${downloads}</div>`:''}${diagnostic}
@@ -1409,19 +1415,24 @@ body.pricing-open{overflow:hidden}
           $('track-result-summary').innerHTML=summary;
           trackSummaryMarkup=summary;
         }
-        let progress='';
-        if(waiting){
-          const stage=ready?'pdf':j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
-          const [label,description]=trackStages[stage];
-          const past=(j.stages||[]).filter(item=>item!==stage&&Object.hasOwn(trackStages,item));
-          progress=`<div class="track-progress-head"><span class="track-progress-spinner" aria-hidden="true"></span><div>
-            <h2>${label}</h2><p>${description}</p></div></div><div class="track-progress-line" aria-hidden="true"></div>
-            ${past.length?`<ul aria-label="Étapes terminées">${past.map(item=>`<li><span aria-hidden="true">✓</span> ${trackStages[item][0]}</li>`).join('')}</ul>`:''}`;
-        }
-        if(trackProgressMarkup!==progress){
-          show('track-progress',waiting);
-          $('track-progress').innerHTML=progress;
-          trackProgressMarkup=progress;
+        show('track-progress',waiting);
+        const stage=ready?'pdf':j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
+        const past=(j.stages||[]).filter(item=>item!==stage&&Object.hasOwn(trackStages,item));
+        const progressKey=[stage,...past].join('/');
+        if(waiting&&trackProgressMarkup!==progressKey){
+          const progress=$('track-progress');
+          const [label,description,percent]=trackStages[stage];
+          const bar=progress.querySelector('.track-progress-line');
+          progress.querySelector('h2').textContent=label;
+          progress.querySelector('p').textContent=description;
+          progress.querySelector('.track-progress-percent').textContent=percent===null?'':`${percent} %`;
+          if(percent===null)bar.removeAttribute('aria-valuenow');
+          else bar.setAttribute('aria-valuenow',String(percent));
+          bar.firstElementChild.style.width=`${percent??0}%`;
+          const milestones=progress.querySelector('ul');
+          milestones.hidden=!past.length;
+          milestones.innerHTML=past.map(item=>`<li><span aria-hidden="true">✓</span> ${trackStages[item][0]}</li>`).join('');
+          trackProgressMarkup=progressKey;
         }
         if(ready&&!$('score-player'))$('result-content').insertAdjacentHTML('beforeend',
           '<section id="score-player" class="score-player" aria-label="Lecteur de la transcription"></section>');

@@ -44,13 +44,14 @@
 .track-progress h2{margin:0 0 4px;font-size:clamp(17px,2vw,21px)}
 .track-progress p{margin:0;color:#665777;font-size:13px;line-height:1.5}
 .track-progress-spinner{width:24px;height:24px;flex:0 0 24px;border:2px solid #e9dcff;border-top-color:#7549eb;border-radius:50%;animation:track-spin .85s linear infinite}
+.track-progress-percent{margin-left:auto;color:#6136c1;font-size:clamp(17px,3vw,23px);font-variant-numeric:tabular-nums;white-space:nowrap}
 .track-progress-line{height:4px;margin-top:16px;overflow:hidden;border-radius:999px;background:#eadfff}
-.track-progress-line::after{display:block;width:35%;height:100%;border-radius:inherit;background:#7549eb;content:"";animation:track-sweep 1.8s ease-in-out infinite}
+.track-progress-line>span{display:block;width:0;height:100%;border-radius:inherit;background:#7549eb;transition:width .4s ease}
 .track-progress ul{display:flex;flex-wrap:wrap;gap:6px 14px;margin:13px 0 0;padding:0;list-style:none;color:#665777;font-size:12px}
+.track-progress ul[hidden]{display:none}
 .track-progress li span{color:#6338ce;font-weight:800}
 @keyframes track-spin{to{transform:rotate(360deg)}}
-@keyframes track-sweep{from{transform:translateX(-100%)}to{transform:translateX(286%)}}
-@media(prefers-reduced-motion:reduce){.track-progress-spinner,.track-progress-line::after{animation:none}}
+@media(prefers-reduced-motion:reduce){.track-progress-spinner{animation:none}.track-progress-line>span{transition:none}}
 @media(max-width:600px){
   .sp-toolbar,.sp-controls{padding:8px;gap:5px}
   .sp-roll-heading small,.sp-audio-label{display:none}

@@ -1,0 +1,13 @@
+GuitarProFX TabCNN weights — Hegel Pedroza et al., DAFx 2024.
+Weights: https://zenodo.org/records/11406378
+ONNX conversion: https://huggingface.co/cstr/tabcnn-onnx
+License: Creative Commons Attribution 4.0 International.
+https://creativecommons.org/licenses/by/4.0/
+
+Related credits:
+TabCNN — Andrew Wiggins and Youngmoo Kim, ISMIR 2019.
+GuitarSet — Qingyang Xi, Rachel M. Bittner, Johan Pauwels, Xuzhou Ye
+and Juan Pablo Bello, ISMIR 2018, CC BY 4.0.
+
+The bundled file is the unmodified GuitarProFX ONNX conversion.
+SHA-256: 8d9ce59157bdab37fb4816d32d7f29f3da0cdbf3c7876707c819af4d1f88e6b7

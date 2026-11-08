@@ -63,17 +63,18 @@ def repeated_open_intro(notes, strengths, transients, open_pitches):
     return None
 
 
-def open_pull_offs(notes, strengths, transients, levels, cutoff, pulse, tuning):
+def open_pull_offs(notes, strengths, transients, levels, cutoff, pulse, tuning, evidence=None):
     starts = [note["start"] for note in notes]
     result = []
     echoes = set()
     for index in range(max(1, bisect_left(transients, cutoff)), len(transients)):
         first, second = transients[index - 1:index + 1]
-        if second - cutoff > 12 * pulse:
+        if not evidence and second - cutoff > 12 * pulse:
             break
         if first < cutoff or not .28 * pulse <= second - first <= .60 * pulse:
             continue
-        if levels[index - 1] < 2 or levels[index] > .57 * levels[index - 1]:
+        ratio = levels[index] / max(levels[index - 1], .01)
+        if levels[index - 1] < 2 or ratio > .70:
             continue
         groups = [notes[bisect_left(starts, time - .07):bisect_right(starts, time + .07)]
                   for time in (first, second)]
@@ -82,12 +83,21 @@ def open_pull_offs(notes, strengths, transients, levels, cutoff, pulse, tuning):
         before, after = [max(group, key=lambda note: note["velocity"]) for group in groups]
         if after["pitch"] not in tuning or not 2 <= before["pitch"] - after["pitch"] <= 8:
             continue
-        if strengths[id(before)] < .23 or strengths[id(after)] < .55:
+        start_data = (evidence or {}).get(id(before))
+        end_data = (evidence or {}).get(id(after))
+        corroborated = (start_data and end_data and start_data[1] >= 2.3
+                        and end_data[2] >= .82 and end_data[2] - end_data[3] >= .45)
+        familiar = (second - cutoff <= 12 * pulse and ratio <= .57
+                    and strengths[id(before)] >= .23 and strengths[id(after)] >= .55)
+        if not (corroborated or familiar):
             continue
-        if any(note["velocity"] > chosen["velocity"] * .83 or strengths[id(note)] >= .55
-               for group, chosen in zip(groups, (before, after)) for note in group if note is not chosen):
+        companions = [note for group, chosen in zip(groups, (before, after)) for note in group if note is not chosen]
+        if any(strengths[id(note)] >= .55 or (
+            note["velocity"] > max(before["velocity"], after["velocity"]) * .83
+            and (evidence or {}).get(id(note), (0, 2))[1] >= 1.42
+        ) for note in companions):
             continue
         string = tuning.index(after["pitch"]) + 1
         result.append((before, after, string))
-        echoes.update(id(note) for group, chosen in zip(groups, (before, after)) for note in group if note is not chosen)
+        echoes.update(map(id, companions))
     return result, echoes

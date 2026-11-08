@@ -1,5 +1,6 @@
 from xml.etree import ElementTree
 
+from guitar_evidence import refine_picked_notes
 from guitar_intro import open_pull_offs, repeated_open_intro
 from guitar_tab import arrange, write_tab
 from transcribe_track import TUNINGS
@@ -47,3 +48,32 @@ def test_pull_off_requires_acoustic_and_same_string_evidence(tmp_path):
     assert [n.get("type") for n in xml.findall(".//pull-off")] == ["start", "stop"]
     assert xml.findtext(".//direction-type/words") == "P"
     assert [n.text for n in xml.findall(".//fret")] == ["7", "0"]
+
+
+def test_acoustic_evidence_keeps_a_real_double_stop_and_filters_a_ringing_harmonic():
+    bass, harmonic, melody = note(40, 1.50), note(52, 1.51, 49), note(71, 1.52, 85)
+    strengths = {id(bass): .85, id(harmonic): .58, id(melody): .78}
+    evidence = {
+        id(bass): (1.50, 3.5, .95, .10, 6, .95),
+        id(harmonic): (1.50, 1.15, .25, .22, 5, .15),
+        id(melody): (1.50, 3.2, .92, .09, 1, .77),
+    }
+    clean, strings = refine_picked_notes([bass, harmonic, melody], strengths, evidence)
+    assert clean == [bass, melody]
+    assert strings == {(1.50, 40): 6, (1.52, 71): 1}
+
+
+def test_musicxml_slide_requires_both_frets_on_the_same_string(tmp_path):
+    tuning = TUNINGS["guitare"]
+    keys = ((1.0, 69), (1.3, 67))
+    notes = [note(pitch, start) for start, pitch in keys]
+    path = tmp_path / "slide.musicxml"
+    tab = arrange(notes, tuning, string_hints=dict.fromkeys(keys, 1))
+    write_tab(tab, path, tuning, 70, "Slide", "guitare", slides=[keys])
+    xml = ElementTree.parse(path)
+    assert [n.get("type") for n in xml.findall(".//slide")] == ["start", "stop"]
+    assert xml.findtext(".//direction-type/words") == "sl."
+    assert [n.text for n in xml.findall(".//fret")] == ["5", "3"]
+    tab = arrange(notes, tuning, string_hints={keys[0]: 1, keys[1]: 2})
+    write_tab(tab, path, tuning, 70, "Slide", "guitare", slides=[keys])
+    assert ElementTree.parse(path).findall(".//slide") == []

@@ -11,6 +11,16 @@ const AUDIO_RETENTION_MS=2*60*60*1000;
 const LEASE_MS=25*60*1000;
 const WORKER_ACTIONS=new Set(['claim','read','preview','finish']);
 
+function publicAudioUrl(value){
+  if(typeof value!=='string'||value.length>4096)return null;
+  try{
+    const url=new URL(value);
+    if(url.protocol!=='https:'||url.username||url.password||url.port)return null;
+    url.hash='';
+    return url;
+  }catch{return null;}
+}
+
 function validExports(exports){
   return exports&&typeof exports==='object'&&!Array.isArray(exports)&&
     Object.entries(exports).every(([key,value])=>Object.hasOwn(FORMATS,key)&&typeof value==='string'&&value)&&
@@ -27,13 +37,15 @@ function workerAuthorized(req){
 async function begin(db,res,user,body){
   const {size,extension,instrument}=body;
   const title=typeof body.title==='string'?body.title.trim().slice(0,110):'';
-  const source_name=typeof body.sourceName==='string'
+  const link=body.audioUrl==null?null:publicAudioUrl(body.audioUrl);
+  const source_name=link?link.hostname:typeof body.sourceName==='string'
     ?body.sourceName.split(/[\\/]/).at(-1).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,160)
     :'';
   const format=body.format??'partition';
-  if(!source_name)return json(res,409,{detail:'Actualise la page, puis sélectionne à nouveau ton fichier audio.'});
   if(body.authorized!==true)return json(res,400,{detail:'Confirme que tu disposes des droits nécessaires pour transcrire cet audio.'});
-  if(!title||!INSTRUMENTS.has(instrument)||!AUDIO_TYPES.has(extension)||!Number.isInteger(size)||size<1024||size>MAX_BYTES){
+  if(body.audioUrl!=null&&!link)return json(res,400,{detail:'Colle un lien HTTPS public vers un fichier audio.'});
+  if(!source_name)return json(res,409,{detail:'Actualise la page, puis sélectionne à nouveau ton fichier audio.'});
+  if(!title||!INSTRUMENTS.has(instrument)||(!link&&(!AUDIO_TYPES.has(extension)||!Number.isInteger(size)||size<1024||size>MAX_BYTES))){
     return json(res,400,{detail:'Choisis un titre, une piste et un fichier audio de 25 Mo maximum.'});
   }
   if(format!=='partition'&&(format!=='tablature'||!['guitare','basse'].includes(instrument))){
@@ -44,12 +56,13 @@ async function begin(db,res,user,body){
   const jobs=db.collection('track_jobs');
   const now=new Date();
   await jobs.updateMany({user_id:user._id,active:true,expires_at:{$lte:now}},
-    {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'}});
+    {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'},$unset:{audio_url:''}});
   try{
-    const result=await jobs.insertOne({user_id:user._id,title,instrument,extension,size,format,source_name,
+    const input=link?{audio_url:link.href,source_kind:'link'}:{extension,size};
+    const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,
       source_content:body.source||null,
-      isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:'uploading',active:true,
-      created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+UPLOAD_MS)});
+      isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
+      created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+(link?AUDIO_RETENTION_MS:UPLOAD_MS))});
     return json(res,201,{id:String(result.insertedId),chunk_bytes:CHUNK_BYTES});
   }catch(error){
     if(error.code===11000)return json(res,409,{detail:'Une transcription est déjà en cours. Retrouve-la dans ta bibliothèque.'});
@@ -96,12 +109,14 @@ async function worker(db,res,body){
   if(body.action==='claim'){
     const lease=randomUUID();
     const compatible=body.pdf===true?{}:{format:{$exists:false}};
+    if(body.links!==true)compatible.audio_url={$exists:false};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
       $or:[{status:'queued'},{status:'processing',lease_until:{$lte:now}}]},
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS)}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
-      extension:job.extension,isolated:job.isolated,format:job.format||'partition',chunks:Math.ceil(job.size/CHUNK_BYTES)}:null});
+      isolated:job.isolated,format:job.format||'partition',...(job.audio_url?{audio_url:job.audio_url}:
+        {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
   if(!isId(body.id)||typeof body.lease!=='string')return json(res,400,{detail:'Traitement invalide.'});
   const filter={_id:new ObjectId(body.id),status:'processing',active:true,lease:body.lease,lease_until:{$gt:now}};
@@ -138,7 +153,7 @@ async function worker(db,res,body){
   }else{
     outcome={status:'failed',error_message:typeof body.error==='string'?body.error.slice(0,300):'La transcription a échoué.'};
   }
-  const updated=await jobs.updateOne(filter,{$set:{...outcome,active:false,finished_at:now},$unset:{lease:'',lease_until:''}});
+  const updated=await jobs.updateOne(filter,{$set:{...outcome,active:false,finished_at:now},$unset:{lease:'',lease_until:'',audio_url:''}});
   if(!updated.modifiedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   await chunks.deleteMany({job_id:job._id});
   return json(res,200,{ok:true});

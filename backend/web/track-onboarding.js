@@ -19,7 +19,7 @@
     ['Import','Ajoute ton fichier audio','Formats WAV, MP3, M4A, FLAC, OGG ou AAC. Jusqu’à 25 Mo et 6 minutes.']
   ];
 
-  function mount(root,{onSubmit,sampleUrl}){
+  function mount(root,{onSubmit,sampleUrl,allowLink=false}){
     const draft={instrument:'',format:'',source:'',file:null};
     let step=0,busy=false;
     root.innerHTML=`
@@ -33,6 +33,10 @@
         <div class="track-upload hidden">
           <label for="track-audio-input">Ton fichier audio</label>
           <input id="track-audio-input" type="file" accept=".wav,.mp3,.m4a,.flac,.ogg,.aac,audio/*">
+          ${allowLink?`<label for="track-link-input">Ou colle un lien direct vers l’audio</label>
+          <input id="track-link-input" class="field" type="text" inputmode="url" autocomplete="off" maxlength="4096"
+            placeholder="https://exemple.fr/morceau.mp3" aria-describedby="track-link-help">
+          <small id="track-link-help">Utilise un lien public de téléchargement. Les pages YouTube et Spotify servent de références.</small>`:''}
           <small class="track-filename" aria-live="polite"></small>
           <audio class="track-audio-preview hidden" controls preload="metadata" aria-label="Écouter le fichier sélectionné"></audio>
           ${sampleUrl?'<button type="button" class="btn btn-outline track-sample">Charger la mélodie de test</button>':''}
@@ -52,6 +56,7 @@
     const form=get('form'),heading=get('h2'),choices=get('.track-choices'),upload=get('.track-upload');
     const back=get('.track-back'),next=get('.track-next'),title=get('#track-title-input');
     const fileInput=get('#track-audio-input'),rights=get('#track-rights-input'),status=get('.track-status');
+    const linkInput=get('#track-link-input');
     const soloLabel=get('.track-solo'),solo=soloLabel.querySelector('input'),filename=get('.track-filename');
     const media=get('.track-audio-preview');
     const fields=['instrument','format','source'];
@@ -84,7 +89,7 @@
     function render(focus=false){
       const [label,question,description]=steps[step];
       get('.track-step-count').textContent=`Étape ${step+1} sur ${steps.length}`;
-      heading.textContent=question;
+      heading.textContent=step===3&&allowLink?'Ajoute ton audio':question;
       const intro=get('.track-step-heading p');
       intro.textContent=description;
       intro.hidden=!description;
@@ -123,7 +128,14 @@
       if(step===0&&!allowsTab()&&draft.format==='tablature')draft.format='';
       next.disabled=false;
     });
-    fileInput.addEventListener('change',()=>setFile(fileInput.files[0]||null));
+    fileInput.addEventListener('change',()=>{
+      if(linkInput&&fileInput.files.length)linkInput.value='';
+      setFile(fileInput.files[0]||null);
+    });
+    linkInput?.addEventListener('input',()=>{
+      if(linkInput.value.trim()&&draft.file){fileInput.value='';setFile(null);}
+      rights.checked=false;
+    });
     back.addEventListener('click',()=>{if(!busy&&step>0){step--;render(true);}});
     const sample=get('.track-sample');
     if(sample)sample.addEventListener('click',async()=>{
@@ -151,14 +163,24 @@
         if(draft[fields[step]]){step++;render(true);}
         return;
       }
-      if(!draft.file){setStatus('Ajoute un fichier audio pour continuer.',true);fileInput.focus();return;}
+      const audioUrl=linkInput?.value.trim()||'';
+      if(!draft.file&&!audioUrl){setStatus(allowLink?'Ajoute un fichier audio ou colle un lien direct.':'Ajoute un fichier audio pour continuer.',true);fileInput.focus();return;}
+      let link;
+      if(audioUrl){
+        try{link=new URL(audioUrl);}catch{}
+        if(link?.protocol!=='https:'||link.username||link.password||link.port){
+          setStatus('Colle un lien HTTPS public vers un fichier audio.',true);linkInput.focus();return;
+        }
+      }
       if(!rights.checked){setStatus('Confirme que tu disposes des droits nécessaires.',true);rights.focus();return;}
       busy=true;
       media.pause();
       for(const control of form.elements)control.disabled=true;
       try{
         const source=solo.checked&&draft.source==='instrumental'?'instrument':draft.source;
-        await onSubmit({...draft,source,title:title.value.trim()||draft.file.name.replace(/\.[^.]+$/,'')},setStatus);
+        const fallback=draft.file?.name||link?.pathname.split('/').filter(Boolean).at(-1)||'Audio importé';
+        await onSubmit({...draft,source,audioUrl:link?.href,title:title.value.trim()||fallback.replace(/\.(wav|mp3|m4a|flac|ogg|aac)$/i,'')},setStatus);
+        if(linkInput)linkInput.value='';
         fileInput.value='';title.value='';setFile(null);
         for(const field of fields)draft[field]='';
         step=0;
@@ -173,11 +195,14 @@
     render();
     return {
       pause(){media.pause();},
-      prefill({instrument,file,name}){
+      prefill({instrument,file,name,audioUrl}){
         if(busy)return;
         if(instruments.some(([value])=>value===instrument))draft.instrument=instrument;
         if(!allowsTab()&&draft.format==='tablature')draft.format='';
-        if(file!==undefined){fileInput.value='';setFile(file);}
+        if(file!==undefined||audioUrl!==undefined){
+          fileInput.value='';setFile(file||null);
+          if(linkInput)linkInput.value=audioUrl||'';
+        }
         if(name)title.value=name;
         step=0;render();
       }

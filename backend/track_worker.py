@@ -12,6 +12,7 @@ import requests
 
 from transcribe_track import load_note_model, transcribe
 from score_pdf import render_pdf
+from track_link import TrackLinkError, download_track
 
 
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
@@ -21,11 +22,15 @@ def process_job(call, job, data):
     identity = {"id": job["id"], "lease": job["lease"]}
     try:
         with tempfile.TemporaryDirectory() as temporary:
-            audio = Path(temporary) / f"input.{job['extension']}"
-            with audio.open("wb") as file:
-                for index in range(job["chunks"]):
-                    chunk = call("read", **identity, index=index)
-                    file.write(base64.b64decode(chunk["data"], validate=True))
+            directory = Path(temporary)
+            if job.get("audio_url"):
+                audio = download_track(job["audio_url"], directory)
+            else:
+                audio = directory / f"input.{job['extension']}"
+                with audio.open("wb") as file:
+                    for index in range(job["chunks"]):
+                        chunk = call("read", **identity, index=index)
+                        file.write(base64.b64decode(chunk["data"], validate=True))
             result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"])
             exports = {
                 key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
@@ -52,7 +57,7 @@ def process_job(call, job, data):
     except Exception as error:
         print(f"{job['id']}: {error}", flush=True)
         message = "La transcription a échoué. Essaie un audio valide ou une piste plus claire."
-        if str(error).startswith(("L’audio doit durer", "Aucune note exploitable", "Les exports dépassent")):
+        if isinstance(error, TrackLinkError) or str(error).startswith(("L’audio doit durer", "Aucune note exploitable", "Les exports dépassent")):
             message = str(error)
         payload = {"ok": False, "error": message}
     for attempt in range(3):
@@ -96,7 +101,7 @@ def main():
         print("Moteur de transcription prêt.", flush=True)
         while True:
             try:
-                job = call("claim", pdf=True)["job"]
+                job = call("claim", pdf=True, links=True)["job"]
                 if job:
                     process_job(call, job, args.cache)
                 if args.once:

@@ -11,7 +11,7 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=4" />
-  <script src="/backend/web/track-onboarding.js?v=5" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=6" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=3" />
   <script src="/backend/web/score-player.js?v=4" defer></script>
   <style>
@@ -1141,7 +1141,7 @@ body.pricing-open{overflow:hidden}
       const admin=state.user.role==='admin';
       $('create-page').classList.toggle('track-guided',admin);
       show('track-onboarding',admin);
-      if(admin&&!trackWizard)trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{onSubmit:submitTrack});
+      if(admin&&!trackWizard)trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{onSubmit:submitTrack,allowLink:true});
     }
     if(page==='billing')renderAppPricing();
     if(page==='result'&&state.resultId)loadResult(state.resultId);
@@ -1235,7 +1235,12 @@ body.pricing-open{overflow:hidden}
     try{
       if(state.heroMode==='link'){
         const value=$('hero-link').value.trim();if(!value)throw new Error('Colle un lien musical ou importe un audio.');
-        state.link=value;await window.SongToSheetFlow.start({kind:'link',value,instrument});
+        if(state.user?.role==='admin'&&/^https:\/\/[^?#]+\.(mp3|wav|m4a|flac|ogg|aac)(?:[?#]|$)/i.test(value)){
+          startApp('create');
+          trackWizard.prefill({audioUrl:value});
+        }else{
+          state.link=value;await window.SongToSheetFlow.start({kind:'link',value,instrument});
+        }
       }else{
         const file=$('hero-file').files[0]||state.file;
         if(!file)throw new Error('Ajoute un fichier audio pour commencer.');
@@ -1263,22 +1268,23 @@ body.pricing-open{overflow:hidden}
       reader.readAsDataURL(blob);
     });
   }
-  async function submitTrack({file,title,instrument,format,source},setStatus){
-    setStatus('Préparation de l’envoi…');
+  async function submitTrack({file,audioUrl,title,instrument,format,source},setStatus){
+    setStatus(audioUrl?'Mise en file du lien audio…':'Préparation de l’envoi…');
     let id,queued=false;
     try{
-      const extension=file.name.split('.').at(-1).toLowerCase();
-      const result=await post('/api/track',{action:'begin',title,extension,size:file.size,authorized:true,
-        instrument,format,source,sourceName:file.name});
+      const input=audioUrl?{audioUrl}:{extension:file.name.split('.').at(-1).toLowerCase(),size:file.size,sourceName:file.name};
+      const result=await post('/api/track',{action:'begin',title,authorized:true,instrument,format,source,...input});
       id=result.id;
-      const count=Math.ceil(file.size/result.chunk_bytes);
-      for(let index=0;index<count;index++){
-        setStatus(`Envoi de l’audio (${index+1}/${count})…`);
-        const start=index*result.chunk_bytes;
-        const data=await encodeChunk(file.slice(start,start+result.chunk_bytes));
-        await post('/api/track',{action:'chunk',id,index,data});
+      if(!audioUrl){
+        const count=Math.ceil(file.size/result.chunk_bytes);
+        for(let index=0;index<count;index++){
+          setStatus(`Envoi de l’audio (${index+1}/${count})…`);
+          const start=index*result.chunk_bytes;
+          const data=await encodeChunk(file.slice(start,start+result.chunk_bytes));
+          await post('/api/track',{action:'chunk',id,index,data});
+        }
+        await post('/api/track',{action:'queue',id});
       }
-      await post('/api/track',{action:'queue',id});
       queued=true;
       state.file=null;$('workspace-file').value='';
       $('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';

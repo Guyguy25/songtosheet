@@ -6,8 +6,10 @@
   const player = get('comparison');
   const play = get('play');
   const seek = get('seek');
-  const versionButtons = [...document.querySelectorAll('[data-version]')];
-  const pdfLinks = [...document.querySelectorAll('[data-pdf]')];
+  const versions = get('comparison-versions');
+  const scores = get('comparison-scores');
+  const versionButtons = [];
+  const pdfLinks = [];
   let context;
   let buffers, sources = [], gains = [], pdfUrls = [];
   let selected = 0, duration = 0, position = 0, startedAt = 0, frame, starting = false;
@@ -70,7 +72,34 @@
     }
   }
 
-  for (const [index, button] of versionButtons.entries()) button.onclick = () => select(index);
+  function addVersion(index, name, pdf) {
+    const title = `${String.fromCharCode(65 + index)} · ${name}`;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = title;
+    button.onclick = () => select(index);
+    versionButtons.push(button);
+    versions.append(button);
+
+    const card = document.createElement('article');
+    const heading = document.createElement('h2');
+    heading.textContent = title;
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(new Blob([pdf], {type:'application/pdf'}));
+    pdfUrls.push(url);
+    link.href = url;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = `Ouvrir le PDF ${name}`;
+    pdfLinks.push(link);
+    const preview = document.createElement('object');
+    preview.type = 'application/pdf';
+    preview.data = url;
+    preview.setAttribute('aria-label', link.textContent);
+    preview.textContent = 'Utilise le lien ci-dessus pour lire la tablature.';
+    card.append(heading, link, preview);
+    scores.append(card);
+  }
   play.onclick = async () => {
     if (sources.length) return stop();
     if (starting || !buffers) return;
@@ -100,16 +129,18 @@
     stop();
     player.hidden = true;
     buffers = undefined;
-    for (const link of pdfLinks) {
-      link.removeAttribute('href');
-      link.parentElement.querySelector('object')?.remove();
-    }
+    versions.replaceChildren();
+    scores.replaceChildren();
+    versionButtons.length = 0;
+    pdfLinks.length = 0;
     for (const url of pdfUrls.splice(0)) URL.revokeObjectURL(url);
-    status.textContent = 'Chargement des deux versions…';
+    status.textContent = 'Chargement des versions…';
     try {
-      if (file.size > 15 * 1024 * 1024) throw new Error();
+      if (file.size > 24 * 1024 * 1024) throw new Error();
       const {version, title, tracks} = JSON.parse(await file.text());
-      if (version !== 1 || typeof title !== 'string' || !title || !Array.isArray(tracks) || tracks.length !== 2) throw new Error();
+      if (version !== 1 || typeof title !== 'string' || !title || !Array.isArray(tracks) || tracks.length < 2 || tracks.length > 4) throw new Error();
+      const names = tracks.map((track, index) => track.name ?? ['SongToSheet','MuScriptor'][index]);
+      if (names.some(name => typeof name !== 'string' || !name.trim() || name.length > 80)) throw new Error();
       const pdfs = tracks.map(track => bytes(track.pdf));
       if (pdfs.some(pdf => new TextDecoder().decode(pdf.subarray(0, 5)) !== '%PDF-')) throw new Error();
       context ??= new (window.AudioContext || window.webkitAudioContext)();
@@ -118,21 +149,11 @@
       position = 0;
       seek.max = duration;
       get('comparison-title').textContent = title;
-      for (const [index, link] of pdfLinks.entries()) {
-        const url = URL.createObjectURL(new Blob([pdfs[index]], {type:'application/pdf'}));
-        pdfUrls.push(url);
-        link.href = url;
-        const preview = document.createElement('object');
-        preview.type = 'application/pdf';
-        preview.data = url;
-        preview.setAttribute('aria-label', link.textContent);
-        preview.textContent = 'Utilise le lien ci-dessus pour lire la tablature.';
-        link.after(preview);
-      }
+      for (const [index, name] of names.entries()) addVersion(index, name, pdfs[index]);
       select(0);
       update(0);
       player.hidden = false;
-      status.textContent = 'Les deux versions sont prêtes.';
+      status.textContent = `${tracks.length} versions prêtes à écouter.`;
     } catch {
       status.textContent = 'Ce fichier de comparaison est illisible. Sélectionne le fichier JSON fourni par SongToSheet.';
     } finally {

@@ -117,7 +117,7 @@ def download_youtube(video_id, directory):
         sys.executable, "-m", "yt_dlp", "--ignore-config", "--no-plugin-dirs", "--no-cache-dir",
         "--no-playlist", "--js-runtimes", "node", "--socket-timeout", "12",
         "--extractor-retries", "0", "--retries", "0", "--fragment-retries", "0",
-        "--max-filesize", "25M", "--match-filter", "!is_live & duration <= 360 & duration >= 1",
+        "--max-filesize", "25M", "--match-filter", "!is_live",
         "--format", "bestaudio[ext=m4a]/bestaudio", "--extract-audio", "--audio-format", "m4a",
         "--no-progress", "-o", str(directory / "input.%(ext)s"),
         "--", "https://www.youtube.com/watch?v=" + video_id,
@@ -129,7 +129,7 @@ def download_youtube(video_id, directory):
         raise TrackLinkError("La récupération de l’audio YouTube a échoué. Réessaie dans un instant.") from error
     audio = directory / "input.m4a"
     if result.returncode or not audio.is_file():
-        raise TrackLinkError("Impossible de récupérer cette vidéo YouTube. Utilise une vidéo publique de 6 minutes maximum.")
+        raise TrackLinkError("Impossible de récupérer cette vidéo YouTube. Utilise une vidéo publique accessible.")
     if not 1024 <= audio.stat().st_size <= MAX_BYTES:
         raise TrackLinkError("La taille de l’audio YouTube doit être comprise entre 1 Ko et 25 Mo.")
     return audio

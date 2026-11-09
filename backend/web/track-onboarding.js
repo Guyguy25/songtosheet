@@ -21,7 +21,7 @@
     ['capo','Capo','Tu joues avec un capo ?','',capos],
     ['format','Format','Partition ou tablature ?','Tu pourras télécharger le résultat en PDF.',formats],
     ['source','Audio','Y a-t-il une voix dans ton morceau ?','',sources],
-    [null,'Import','Ajoute ton fichier audio','Formats WAV, MP3, M4A, FLAC, OGG ou AAC. Jusqu’à 25 Mo et 6 minutes.']
+    [null,'Import','Ajoute ton fichier audio','Formats WAV, MP3, M4A, FLAC, OGG ou AAC. Jusqu’à 25 Mo.']
   ];
 
   function mount(root,{onSubmit,onLinkChange,sampleUrl,allowLink=false}){

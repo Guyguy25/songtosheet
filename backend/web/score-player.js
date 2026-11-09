@@ -83,7 +83,7 @@
     return new XMLSerializer().serializeToString(xml);
   }
 
-  function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,preferTab=false}){
+  function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,preferTab=false,startAt=0}){
     const controller=new AbortController();
     const {signal}=controller;
     root.innerHTML=`
@@ -143,7 +143,7 @@
     full.hidden=!root.requestFullscreen;
     if(kind&&preferTab)kind.value='tab';
 
-    let notes=[],duration=0,midi,position=0,rate=1,context,playing=false,starting=false,anchor=0,next=0,frame;
+    let notes=[],duration=0,midi,position=startAt,rate=1,context,playing=false,starting=false,anchor=0,next=0,frame;
     let score,cursorTimes=[],cursorIndex=0,zoom=1,loadId=0,audioLoadId=0,resizeTimer;
     let chart,playhead,pixelsPerSecond=1;
     const sounds=new Set();
@@ -420,10 +420,12 @@
       selectSound();
       if(score)drawSheet();
     }).catch(()=>{if(!signal.aborted)scroll.textContent='Le piano roll est indisponible pour ce relevé.';});
-    return ()=>{
+    const dispose=()=>{
       controller.abort();pause();observer.disconnect();clearTimeout(resizeTimer);
       if(context&&context.state!=='closed')context.close().catch(()=>{});
     };
+    dispose.position=now;
+    return dispose;
   }
   window.SongToSheetPlayer={mount};
 })();

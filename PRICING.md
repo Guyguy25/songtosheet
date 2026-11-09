@@ -24,7 +24,7 @@
 2. Mettre en place Stripe Checkout (mode subscription pour mensuel/annuel ; payment pour vie), Customer Portal, signature des webhooks et idempotence.
 3. Ne jamais accorder l'accès au retour de la page succès ; attendre une confirmation Stripe signée.
 4. Essentiel : compteur atomique pour un enregistrement réussi maximum dans une fenêtre glissante de 7 jours ; les échecs ne consomment pas le quota ; pas de report.
-5. Illimité/À vie : limite de 6 minutes par morceau en V1, quotas d'usage raisonnable publiés avant lancement, limite de tâches simultanées pour prévenir l'abus.
+5. Illimité/À vie : quotas d'usage raisonnable publiés avant lancement, limite de tâches simultanées pour prévenir l'abus.
 6. En cas de résiliation, maintenir l'accès jusqu'à la fin de la période payée ; en cas de remboursement/chargeback, révoquer l'entitlement correspondant.
 7. Prévoir TVA, factures, conditions de rétractation, politique de remboursement et politique d'utilisation raisonnable compatibles avec les clients français.
 8. Remplacer l'ancien backend à crédits dans `backend/` avant toute activation des paiements d'abonnement.

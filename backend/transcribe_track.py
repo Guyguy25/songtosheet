@@ -198,8 +198,13 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         "ffprobe", "-v", "error", "-show_entries", "format=duration",
         "-of", "default=noprint_wrappers=1:nokey=1", *input_options,
     ], timeout=20))
-    if not math.isfinite(duration) or not 0.5 <= duration <= 360:
-        raise ValueError("L’audio doit durer entre 0,5 seconde et 6 minutes.")
+    if not math.isfinite(duration) or duration < 0.5:
+        raise ValueError("L’audio doit durer au moins 0,5 seconde.")
+    # Bound decoded stereo PCM and the separator's working set even for highly compressed inputs.
+    max_pcm_bytes = 256 * 1024**2
+    capacity_error = "L’audio dépasse la capacité de traitement. Essaie un extrait plus court."
+    if duration * 44100 * 2 * 2 > max_pcm_bytes:
+        raise ValueError(capacity_error)
 
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
@@ -226,7 +231,9 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         work = Path(temporary)
         original = wav = work / "input.wav"
         run(["ffmpeg", "-nostdin", "-v", "error", *input_options, "-map", "0:a:0",
-             "-t", "360", "-ar", "44100", "-ac", "2", str(wav)], timeout=90)
+             "-ar", "44100", "-ac", "2", "-fs", str(max_pcm_bytes), str(wav)], timeout=90)
+        if wav.stat().st_size >= max_pcm_bytes:
+            raise ValueError(capacity_error)
         if not isolated:
             report("isolate")
             run([sys.executable, "-m", "demucs", "-n", separator, "-o", str(work),

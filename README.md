@@ -33,15 +33,15 @@ Les plans ne sont **pas** affichés sur l'accueil. L'espace studio présente les
 Parcours : lien ou fichier → instrument → partition/tablature → animation fictive (~18 s) → inscription ou connexion → compte et bibliothèque → « Générer mon aperçu » → aperçu de démonstration limité à 30 secondes, suite floutée et bouton d'accès aux offres.
 
 - **Aucune transcription réelle n'est produite.** Le relevé visible est une mélodie originale illustrative qui ne provient pas de la vidéo ou du fichier. Les achats et exports réels restent désactivés.
-- Les fichiers audio sont limités à 25 Mo et 6 minutes ; la durée est lue dans le navigateur. Les liens YouTube sont contrôlés dans la mesure où les plateformes fournissent leurs métadonnées ; une vidéo à la durée inconnue peut accéder au parcours de démonstration sans que la limite puisse être garantie.
+- Les fichiers audio sont limités à 25 Mo. La durée est lue dans le navigateur quand les métadonnées sont disponibles.
 - Les routes `/generation`, `/apercu`, `/inscription`, `/connexion` et `/app` sont rechargeables grâce aux rewrites Vercel. Les sessions sont stockées en cookies signés et les générations réelles dans MongoDB.
 - Code front-end : `index.html`, `assets/conversion-flow.js` et `assets/conversion-flow.css`.
 
 ### Parcours de sélection et métadonnées (novembre 2026)
 
 - Clic sur « Continuer » depuis la landing → lecture des métadonnées publiques via `api/media-info.js` (titre, auteur, miniature et durée **si disponible**) → `/choisir-instrument` → **`/choisir-format` : partition ou tablature** → simulation progressive de **18 secondes** → écran prêt sans révéler la durée limitée → inscription réelle → bibliothèque → clic « Générer mon aperçu » → aperçu illustratif limité de 30 secondes. Le choix du format est conservé dans le `sessionStorage`, présenté dans la progression et l'écran prêt ; l'aperçu utilise une portée pour la partition et un exemple original à cordes/cases pour la tablature.
-- Pour les **fichiers**, vérification de 25 Mo et 6 minutes dès l'import, avec erreur sous le champ sur la landing.
-- Pour les **liens**, la limite V1 est de **6 minutes (360 secondes)**. Les fichiers audio importés sont contrôlés directement dans le navigateur. Pour YouTube, le serveur essaie la page vidéo, l'embed et éventuellement l'API officielle si `YOUTUBE_DATA_API_KEY` est configurée. Si la durée est introuvable côté serveur, le navigateur tente une vérification via le lecteur YouTube officiel. **Si YouTube refuse également de fournir sa durée, le parcours de démonstration reste accessible** avec le statut explicite « Durée non vérifiée » : il est donc impossible de garantir le filtrage des vidéos longues sans la clé officielle. En revanche, toute durée *confirmée* supérieure à 360 secondes bloque le parcours avec « La durée maximale autorisée est de 6 min. ». Pour les autres plateformes, les durées ne sont pas toujours accessibles et certains liens restent bloqués. Aucun morceau distant n'est transcrit en V1.
+- Pour les **fichiers**, vérification de 25 Mo dès l’import, avec erreur sous le champ sur la landing.
+- Pour les **liens**, la durée et les autres métadonnées sont affichées quand elles sont disponibles. L’aperçu public reste accessible sans durée vérifiée. Le moteur de transcription de la bêta administrateur accepte les vidéos YouTube accessibles et les liens HTTPS directs vers un audio.
 - Les miniatures et titres proviennent de métadonnées publiques, mais l'aperçu reste **une partition illustrative non liée au morceau**, le traitement audio réel n'étant pas activé. Aucun achat ni compte durable n'est créé.
 
 ## Déploiement

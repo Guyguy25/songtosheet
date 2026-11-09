@@ -182,12 +182,10 @@
     try{response=await fetch('/api/media-info?url='+encodeURIComponent(value),{headers:{Accept:'application/json'},signal:AbortSignal.timeout(8500)});}
     catch(e){
       // La récupération des métadonnées est parfois bloquée par YouTube.
-      // Ce n'est pas une preuve que la vidéo dépasse les 6 minutes.
       if(provider!=='YouTube')throw new Error('Impossible de récupérer les informations de ce morceau.');
     }
     var data={};
     if(response)try{data=await response.json();}catch(e){}
-    if(response&&response.status===422)throw new Error('La durée maximale autorisée est de 6 min.');
     if(response&&response.status===400)throw new Error(data.error||'Ce lien ne pointe pas vers un morceau accepté.');
     var duration=response&&data.duration_verified===true&&Number.isFinite(data.duration_seconds)&&data.duration_seconds>0?data.duration_seconds:null;
     if(provider==='YouTube'&&duration===null){
@@ -198,8 +196,6 @@
     }else if(!response||!response.ok){
       throw new Error('Impossible de récupérer les informations de ce morceau.');
     }
-    // Seule une durée réellement connue peut déclencher l'erreur 6 min.
-    if(duration!==null&&duration>360)throw new Error('La durée maximale autorisée est de 6 min.');
     var result={
       provider:provider,name:typeof data.title==='string'&&data.title.trim()?data.title.trim().slice(0,110):'Morceau '+provider,
       artist:typeof data.artist==='string'?data.artist.slice(0,80):null,
@@ -273,7 +269,6 @@
     if(file.size<=0)throw new Error('Le fichier sélectionné est vide.');
     if(file.size>25*1024*1024)throw new Error('Ton fichier dépasse 25 Mo. Choisis un fichier plus léger.');
     var duration=await audioDuration(file);
-    if(duration>360)throw new Error('La durée maximale autorisée est de 6 min.');
     return duration;
   }
   function navigate(path){
@@ -388,11 +383,6 @@
       navigate(window.SongToSheetCurrentUser?'/app':'/inscription');
       return;
     }
-    if(request.kind==='link'&&request.durationVerified===true&&Number.isFinite(request.duration)&&request.duration>360){
-      navigate('/');
-      sourceError('La durée maximale autorisée est de 6 min.');
-      return;
-    }
     if((path==='/generation'||path==='/apercu')&&!formatNames[request.format]){navigate('/choisir-format');return;}
     if(path==='/apercu'&&!request.completed){navigate('/generation');return;}
     view.classList.remove('hidden');
@@ -435,11 +425,6 @@
   function chooseInstrument(instrument){
     var request=readRequest();
     if(!request){navigate('/');return;}
-    if(request.kind==='link'&&request.durationVerified===true&&Number.isFinite(request.duration)&&request.duration>360){
-      navigate('/');
-      sourceError('La durée maximale autorisée est de 6 min.');
-      return;
-    }
     var selectedInstrument=instrumentNames[instrument]?instrument:'piano';
     if(request.instrument!==selectedInstrument)request.format=null;
     request.instrument=selectedInstrument;

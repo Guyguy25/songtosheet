@@ -11,7 +11,7 @@ const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
 const LEASE_MS=25*60*1000;
 const REVIEW_MS=24*60*60*1000;
-const WORKER_ACTIONS=new Set(['claim','read','progress','preview','review_audio','finish']);
+const WORKER_ACTIONS=new Set(['claim','read','progress','preview','solo','review_audio','finish']);
 const PROGRESS_STAGES=new Set(['decode','isolate','detect','arrange','cached']);
 
 function validExports(exports){
@@ -159,10 +159,17 @@ async function worker(db,res,body){
   const completed=body.ok===true;
   const isPreview=body.action==='preview';
   const hasPreview=job.downloads?.includes('mid')&&job.downloads?.includes('musicxml');
+  if(body.action==='solo'){
+    if(job.instrument!=='guitare'||!hasPreview||!validExports(exports)||!exports.solotab||!exports.solomid||
+      Object.keys(exports).length!==2)return json(res,400,{detail:'Arrangement invalide.'});
+    const updated=await jobs.updateOne(filter,{$set:{'exports.solotab':exports.solotab,'exports.solomid':exports.solomid},
+      $addToSet:{downloads:{$each:['solotab','solomid']}}});
+    return updated.matchedCount?json(res,200,{ok:true}):json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
+  }
   const finishingPreview=completed&&!isPreview&&hasPreview&&body.preview===true;
   const fullValid=validExports(exports)&&exports.musicxml&&exports.mid&&Number.isFinite(duration)&&duration>=.5&&
-    duration<=360&&Number.isInteger(note_count)&&note_count>=1;
-  const finishValid=validExports(exports)&&Object.keys(exports).every(key=>key==='pdf')&&
+    Number.isInteger(note_count)&&note_count>=1;
+  const finishValid=validExports(exports)&&Object.keys(exports).every(key=>key==='pdf'||(key==='solopdf'&&job.downloads.includes('solotab')))&&
     (Boolean(exports.pdf)||body.pdf_error===true);
   if((isPreview||completed)&&!(finishingPreview?finishValid:fullValid)){
     return json(res,400,{detail:'Exports invalides ou trop volumineux.'});
@@ -183,6 +190,7 @@ async function worker(db,res,body){
   if(finishingPreview){
     outcome={status:'completed',pdf_error:!exports.pdf,downloads:[...new Set([...job.downloads,...Object.keys(exports)])]};
     if(exports.pdf)outcome['exports.pdf']=exports.pdf;
+    if(exports.solopdf)outcome['exports.solopdf']=exports.solopdf;
   }else if(completed){
     outcome={status:'completed',duration,note_count,exports,downloads:Object.keys(exports)};
   }else{

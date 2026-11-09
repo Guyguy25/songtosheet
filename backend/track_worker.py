@@ -16,10 +16,32 @@ import requests
 from transcribe_track import load_note_model, run, transcribe
 from score_pdf import render_pdf
 from track_link import TrackLinkError, download_track, download_youtube
+from guitar_solo import write_solo
 
 
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
 REVIEW_TRACKS = ("original", "guitar", "vocals", "bass", "drums", "piano", "other")
+
+
+def publish_solo(call, identity, directory, result, job, meta, capo):
+    source = result / "tab.mid"
+    if job["instrument"] != "guitare" or not source.is_file():
+        return
+    folder = directory / "solo"
+    title = f"{job['title']} – Arrangement solo"
+    try:
+        meter = tuple(map(int, meta.get("meter", "4/4").split("/")))
+        if not write_solo(source, folder, title, meta["bpm"], meter, capo):
+            return
+        exports = {kind: base64.b64encode((folder / filename).read_bytes()).decode("ascii")
+                   for kind, filename in (("solotab", "tab.musicxml"), ("solomid", "tab.mid"))}
+        if sum(map(len, exports.values())) > 4_000_000:
+            raise ValueError("Tablature solo trop volumineuse.")
+    except Exception as error:
+        print(f"{job['id']}: arrangement solo indisponible : {error}", flush=True)
+        return
+    call("solo", **identity, exports=exports)
+    return folder, title
 
 
 def encode_review_audio(original, stems, destination):
@@ -76,17 +98,23 @@ def process_job(call, job, data):
             call("preview", **identity, duration=meta["duration"], note_count=len(meta["notes"]),
                  exports=exports, diagnostic=meta.get("diagnostic"), resolved_capo=resolved_capo)
             print(f"{job['id']}: relevé disponible", flush=True)
-            pdf = Path(temporary) / "score.pdf"
+            solo = publish_solo(call, identity, directory, result, job, meta, resolved_capo)
             payload = {"ok": True, "preview": True, "exports": {}}
-            try:
-                render_pdf(result, job["title"], job["instrument"], job.get("format", "partition"), pdf, capo=resolved_capo)
-                encoded_pdf = base64.b64encode(pdf.read_bytes()).decode("ascii")
-                if len(encoded_pdf) > 4_000_000:
-                    raise ValueError("PDF trop volumineux.")
-                payload["exports"]["pdf"] = encoded_pdf
-            except Exception as error:
-                print(f"{job['id']}: PDF : {error}", flush=True)
-                payload["pdf_error"] = True
+            pdfs = [("pdf", result, job["title"], job.get("format", "partition"))]
+            if solo:
+                pdfs.append(("solopdf", *solo, "tablature"))
+            for kind, folder, title, format_ in pdfs:
+                pdf = directory / f"{kind}.pdf"
+                try:
+                    render_pdf(folder, title, job["instrument"], format_, pdf, capo=resolved_capo)
+                    encoded = base64.b64encode(pdf.read_bytes()).decode("ascii")
+                    if sum(map(len, payload["exports"].values())) + len(encoded) > 4_000_000:
+                        raise ValueError("PDF trop volumineux.")
+                    payload["exports"][kind] = encoded
+                except Exception as error:
+                    print(f"{job['id']}: {kind} : {error}", flush=True)
+                    if kind == "pdf":
+                        payload["pdf_error"] = True
             for path in review.glob("*.mp3"):
                 data64 = base64.b64encode(path.read_bytes()).decode("ascii")
                 try:
@@ -98,7 +126,7 @@ def process_job(call, job, data):
     except Exception as error:
         print(f"{job['id']}: {error}", flush=True)
         message = "La transcription a échoué. Essaie un audio valide ou une piste plus claire."
-        if isinstance(error, TrackLinkError) or str(error).startswith(("L’audio doit durer", "Aucune note exploitable", "Les exports dépassent")):
+        if isinstance(error, TrackLinkError) or str(error).startswith(("L’audio doit durer", "L’audio dépasse", "Aucune note exploitable", "Les exports dépassent")):
             message = str(error)
         payload = {"ok": False, "error": message}
     for attempt in range(3):

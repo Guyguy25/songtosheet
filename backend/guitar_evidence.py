@@ -200,8 +200,11 @@ def refine_mixed_guitar(path, notes, transients, tuning, strengths):
         for note in group
         if evidence[id(note)][2] < .14 and any(
             note["pitch"] - lower["pitch"] in (12, 19, 24, 28, 31, 36)
-            and note["velocity"] <= .74 * lower["velocity"]
             and strengths[id(lower)] >= .70 and evidence[id(lower)][2] >= .55
+            and (note["velocity"] <= .74 * lower["velocity"]
+                 or (note["pitch"] >= tuning[0] + 12 and evidence[id(note)][2] < .05
+                     and strengths[id(note)] < .62 and strengths[id(lower)] - strengths[id(note)] >= .12
+                     and note["velocity"] <= lower["velocity"]))
             for lower in group
         )
     }
@@ -211,6 +214,23 @@ def refine_mixed_guitar(path, notes, transients, tuning, strengths):
 
 def mixed_attacks(notes, strengths, evidence):
     """Find playable strum candidates before choosing strings."""
+    by_anchor = {}
+    for note in notes:
+        if data := evidence.get(id(note)):
+            by_anchor.setdefault(data[0], []).append(note)
+
+    def fresh(item):
+        return item[1] >= 1.65 or item[2] - item[3] >= .35
+
+    voicings = {}
+    for anchor, played in by_anchor.items():
+        pitches = frozenset(note["pitch"] for note in played)
+        if (3 <= len(played) == len(pitches) <= 6 and played[-1]["start"] - played[0]["start"] <= .095
+                and sum(fresh(evidence[id(note)]) for note in played) >= 2):
+            voicings.setdefault(pitches, []).append(anchor)
+    for times in voicings.values():
+        times.sort()
+
     groups = attack_groups(notes, lambda note: note["start"])
     result = []
     index = 0
@@ -231,10 +251,18 @@ def mixed_attacks(notes, strengths, evidence):
             support = [evidence.get(id(note)) for note in candidate]
             if len(pitches) != len(candidate) or any(item is None or item[0] != anchor for item in support):
                 break
-            fresh = [item[1] >= 1.65 or item[2] - item[3] >= .35 for item in support]
+            new_attacks = [fresh(item) for item in support]
             compact_pair = following[-1]["start"] - start <= .055 and len({pitch % 12 for pitch in pitches}) == 2
-            supported = all(new or strengths[id(note)] >= .60 for note, new in zip(candidate, fresh))
-            if sum(fresh) >= 2 and (len(candidate) >= 3 or compact_pair) and supported:
+            supported = all(new or strengths[id(note)] >= .60 for note, new in zip(candidate, new_attacks))
+            repeats = voicings.get(frozenset(pitches), ())
+            nearby = bisect_right(repeats, anchor + 1.25) - bisect_left(repeats, anchor - 1.25)
+            if anchor in repeats:
+                nearby -= 1
+            repeated = (nearby >= 2 and any(new_attacks) and all(
+                new or data[2] >= .48 or strengths[id(note)] >= .52
+                for note, data, new in zip(candidate, support, new_attacks)
+            ))
+            if (sum(new_attacks) >= 2 and (len(candidate) >= 3 or compact_pair) and supported) or repeated:
                 best = candidate.copy()
                 best_end = next_index + 1
             next_index += 1

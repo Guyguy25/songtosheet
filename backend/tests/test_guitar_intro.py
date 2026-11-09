@@ -129,6 +129,29 @@ def test_mixed_guitar_groups_one_strum_and_preserves_separate_picks():
     assert len({item.string for item in tab if item.start == .51}) == 3
 
 
+def test_mixed_guitar_uses_repeated_voicing_to_confirm_a_partial_reattack():
+    notes = [note(pitch, start + offset) for start in (.5, .9, 1.3)
+             for offset, pitch in zip((0, .04, .075), (45, 52, 61))]
+    strengths = dict.fromkeys(map(id, notes), .55)
+    evidence = {id(item): (anchor, 2.5 if i % 3 == 0 or anchor != .9 else 1.1, .7, .65)
+                for i, (item, anchor) in enumerate(zip(notes, [.5] * 3 + [.9] * 3 + [1.3] * 3))}
+    assert [len(group) for group in mixed_attacks(notes, strengths, evidence)] == [3, 3, 3]
+    evidence[id(notes[4])] = (.94, 1.1, .7, .65)
+    assert [len(group) for group in mixed_attacks(notes, strengths, evidence)] == [3, 1, 1, 1, 3]
+
+
+def test_mixed_guitar_reuses_a_fingering_during_repeated_chords():
+    notes = [dict(note(pitch, start), end=start + .14) for start in (.2, .6, 2.)
+             for pitch in (52, 57, 61)]
+    strokes = [notes[index:index+3] for index in (0, 3, 6)]
+    hints = {(start, pitch): string for start in (.6, 2.)
+             for pitch, string in ((52, 5), (57, 4), (61, 3))}
+    tab = arrange(notes, TUNINGS["guitare"], strokes=strokes, string_hints=hints)
+    positions = [{item.pitch: item.string for item in tab if item.start == start} for start in (.2, .6, 2.)]
+    assert positions[0] == positions[1]
+    assert positions[2][57] == 4
+
+
 def test_musicxml_slide_requires_both_frets_on_the_same_string(tmp_path):
     tuning = TUNINGS["guitare"]
     keys = ((1.0, 69), (1.3, 67))

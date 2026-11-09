@@ -205,7 +205,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
               "instrument": instrument, "bpm": bpm,
-              "version": {"guitare": 15, "basse": 4, "piano": 3}.get(instrument, 1)}
+              "version": {"guitare": 15 if isolated else 16, "basse": 4, "piano": 3}.get(instrument, 1)}
     if capo:
         config["capo"] = capo
     if title:

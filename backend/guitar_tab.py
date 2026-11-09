@@ -27,7 +27,7 @@ class TabNote:
     attack: float
 
 
-def choose_fingering(group, tuning, held, position, max_fret, string_hints):
+def choose_fingering(group, tuning, held, position, max_fret, string_hints, shape=None):
     # A small beam keeps dense detector output tractable. Keep as many attacks as
     # possible, then favor an economical hand position and notes that can ring.
     candidates = [([], frozenset(), 0)]
@@ -38,6 +38,7 @@ def choose_fingering(group, tuning, held, position, max_fret, string_hints):
             continue
         seen_pitches.add(note["pitch"])
         preferred = string_hints.get((note["start"], note["pitch"]))
+        previous_string = shape.get(note["pitch"]) if shape else None
         next_candidates = list(candidates)
         for picked, strings, cost in candidates:
             for string, open_pitch in enumerate(tuning, 1):
@@ -61,6 +62,8 @@ def choose_fingering(group, tuning, held, position, max_fret, string_hints):
                 penalty = movement + fret * .12 + (6 if prior else 0)
                 if preferred is not None and string != preferred:
                     penalty += 15
+                if previous_string is not None and string != previous_string:
+                    penalty += 19
                 next_candidates.append((picked + [(note, string, fret)], remaining, cost + penalty))
         candidates = sorted(next_candidates, key=lambda item: (-len(item[0]), item[2]))[:BEAM_SIZE]
     return candidates[0][0]
@@ -110,18 +113,21 @@ def arrange(notes, tuning, *, capo=0, simple=False, string_hints=None, strokes=N
     if simple and notes and (compact := open_position_melody(notes, tuning)):
         return compact
     held, result, position = {}, [], 2
+    shape, shape_at = {}, 0.
     groups = deque(strokes if strokes is not None else attack_groups(notes, lambda note: note["start"]))
     while groups:
         group = groups.popleft()
         start = group[0]["start"]
+        if start - shape_at > .95:
+            shape = {}
         held = {key: note for key, note in held.items() if note.end > start}
-        picked = choose_fingering(group, tuning, held, position, 24 - capo, string_hints)
+        picked = choose_fingering(group, tuning, held, position, 24 - capo, string_hints, shape)
         strum = strokes is not None and group[-1]["start"] - start > .03
         if strum and len(picked) < len(group):
             # A new strum may release the old shape. If it still cannot be
             # played with all its pitches, keep the original separate attacks.
             open_strings = {key: note for key, note in held.items() if not note.fret}
-            replacement = choose_fingering(group, tuning, open_strings, position, 24 - capo, string_hints)
+            replacement = choose_fingering(group, tuning, open_strings, position, 24 - capo, string_hints, shape)
             if len(replacement) < len(group):
                 groups.extendleft(reversed(attack_groups(group, lambda note: note["start"])))
                 continue
@@ -130,7 +136,18 @@ def arrange(notes, tuning, *, capo=0, simple=False, string_hints=None, strokes=N
                     note.end = start
             held, picked = open_strings, replacement
         frets = [fret for _, _, fret in picked if fret]
-        if frets:
+        new_shape = False
+        if strokes is not None and len(picked) >= 2:
+            current = {source["pitch"]: string for source, string, _ in picked}
+            new_shape = len(current) >= 3 and all(
+                max(open_pitch for open_pitch in tuning if open_pitch <= source["pitch"]) - tuning[string-1] <= 5
+                for source, string, _ in picked
+            )
+            if new_shape:
+                shape, shape_at = current, start
+            elif current.items() <= shape.items():
+                shape_at = start
+        if frets and (not shape or new_shape):
             position = min(frets)
         for source, string, fret in picked:
             if strum:

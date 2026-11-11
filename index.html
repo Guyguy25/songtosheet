@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=7" />
   <script src="/assets/audio-source.js?v=2" defer></script>
   <script src="/backend/web/track-onboarding.js?v=17" defer></script>
-  <link rel="stylesheet" href="/backend/web/score-player.css?v=8" />
+  <link rel="stylesheet" href="/backend/web/score-player.css?v=9" />
   <script src="/backend/web/score-player.js?v=10" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
   <style>
@@ -1365,7 +1365,39 @@
     processing:['Analyse en cours','Cette page se met à jour automatiquement.',1,null]
   };
   const trackMilestones=['Source','Audio','Notes','Relevé'];
-  let trackSummaryMarkup,trackProgressMarkup;
+  let trackSummaryMarkup,trackProgressMarkup,trackProgressFrame;
+  function animateTrackProgress(progress,target){
+    cancelAnimationFrame(trackProgressFrame);
+    const bar=progress.querySelector('[role="progressbar"]');
+    const fill=bar.firstElementChild;
+    const counter=progress.querySelector('.track-progress-percent');
+    counter.hidden=target===null;
+    if(target===null){
+      bar.removeAttribute('aria-valuenow');
+      return;
+    }
+    bar.setAttribute('aria-valuenow',String(target));
+    const from=parseFloat(fill.style.width)||0;
+    function draw(value){
+      fill.style.width=value+'%';
+      counter.textContent=Math.round(value)+' %';
+    }
+    if(from===target||matchMedia('(prefers-reduced-motion: reduce)').matches){
+      draw(target);
+      return;
+    }
+    draw(from);
+    const started=performance.now();
+    const duration=Math.min(1100,350+Math.abs(target-from)*18);
+    function frame(now){
+      if(!progress.isConnected||progress.classList.contains('hidden'))return;
+      const elapsed=Math.min(1,(now-started)/duration);
+      const eased=elapsed*(2-elapsed);
+      draw(from+(target-from)*eased);
+      if(elapsed<1)trackProgressFrame=requestAnimationFrame(frame);
+    }
+    trackProgressFrame=requestAnimationFrame(frame);
+  }
   function addAudioReview(job){
     const labels={original:'Mix original',guitar:'Guitare isolée',vocals:'Voix isolée',bass:'Basse isolée',
       drums:'Batterie isolée',piano:'Piano isolé',other:'Autres instruments'};
@@ -1418,9 +1450,18 @@
         if($('track-result-summary')?.dataset.job!==id){
           $('result-content').innerHTML=`<div id="track-result-summary" class="result-hero"></div>
             <section id="track-progress" class="track-progress hidden" aria-label="Progression du relevé">
-              <div aria-live="polite"><h2></h2><p hidden></p></div>
-              <span class="track-progress-percent" role="progressbar" aria-label="Progression estimée" hidden></span>
-              <ol class="track-progress-steps" aria-label="Étapes du traitement"></ol>
+              <div class="track-progress-heading">
+                <span class="track-progress-spinner" aria-hidden="true"></span>
+                <h2 aria-live="polite"></h2>
+                <span class="track-progress-percent" aria-hidden="true" hidden></span>
+              </div>
+              <p hidden></p>
+              <div class="track-progress-timeline">
+                <div class="track-progress-line" role="progressbar" aria-label="Progression estimée" aria-valuemin="0" aria-valuemax="100"><span></span></div>
+                <ol class="track-progress-steps" aria-label="Étapes du traitement">
+                  ${trackMilestones.map(item=>`<li><span aria-hidden="true">·</span>${item}</li>`).join('')}
+                </ol>
+              </div>
             </section>
             <section id="track-wait-survey" class="wait-survey" aria-label="Questions facultatives" hidden></section>`;
           $('track-result-summary').dataset.job=id;
@@ -1438,6 +1479,7 @@
         $('track-result-summary').classList.toggle('track-result-waiting',waiting&&!ready);
         if(completed&&state.user?.role==='admin')addAudioReview(j);
         show('track-progress',waiting);
+        if(!waiting)cancelAnimationFrame(trackProgressFrame);
         window.SongToSheetWaitSurvey?.mount($('track-wait-survey'),state.user?.id,waiting&&!ready);
         const stage=ready?(j.preview_limit?(j.instrument==='guitare'?'solo':'finalize'):'pdf'):
           j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
@@ -1448,14 +1490,13 @@
           const descriptionNode=progress.querySelector('p');
           descriptionNode.textContent=description;
           descriptionNode.hidden=!description;
-          const progressPercent=progress.querySelector('.track-progress-percent');
-          progressPercent.hidden=percent===null;
-          if(percent!==null){
-            progressPercent.textContent=percent+' %';
-            progressPercent.setAttribute('aria-valuenow',String(percent));
-          }
-          progress.querySelector('ol').innerHTML=trackMilestones.map((item,index)=>
-            `<li${index<current?' class="is-done"':index===current?' aria-current="step"':''}><span aria-hidden="true">${index<current?'✓':index===current?'…':'·'}</span>${item}</li>`).join('');
+          animateTrackProgress(progress,percent);
+          progress.querySelectorAll('li').forEach((step,index)=>{
+            step.classList.toggle('is-done',index<current);
+            if(index===current)step.setAttribute('aria-current','step');
+            else step.removeAttribute('aria-current');
+            step.firstElementChild.textContent=index<current?'✓':index===current?'…':'·';
+          });
           trackProgressMarkup=stage;
         }
         if(ready&&!$('score-player'))$('result-content').insertAdjacentHTML('beforeend',

@@ -46,18 +46,26 @@
 .score-player:fullscreen .sp-body{flex:1;min-height:0;overflow-y:auto}
 .score-player:fullscreen .sp-controls{position:static}
 .track-progress,.track-result-waiting{width:min(100%,540px);margin-inline:auto}
-.track-progress{position:relative;margin-block:12px 22px;padding:18px clamp(12px,3vw,23px);border:1px solid #e9e0f7;border-radius:16px;background:#fff;color:#32264a;text-align:center}
-.track-progress h2{margin:0 0 4px;padding-inline:30px;font-size:17px}
-.track-progress-percent{position:absolute;top:18px;right:clamp(12px,3vw,23px);color:#6039bd;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums}
+.track-progress{margin-block:12px 22px;padding:18px clamp(12px,3vw,23px);border:1px solid #e9e0f7;border-radius:16px;background:#fff;color:#32264a;text-align:center}
+.track-progress-heading{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;align-items:center;gap:6px}
+.track-progress h2{margin:0;font-size:17px}
+.track-progress-percent{justify-self:end;color:#6039bd;font-size:11px;font-weight:750;font-variant-numeric:tabular-nums;white-space:nowrap}
+.track-progress-spinner{width:15px;height:15px;justify-self:start;border:2px solid #e9def9;border-top-color:#7549eb;border-radius:50%;animation:track-progress-spin .85s linear infinite}
+@keyframes track-progress-spin{to{transform:rotate(1turn)}}
 .track-progress p{margin:0;color:#665777;font-size:12px;line-height:1.45}
-.track-progress-steps{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:0;margin:18px 0 0;padding:0;list-style:none}
-.track-progress-steps li{position:relative;min-width:0;display:grid;justify-items:center;align-content:start;gap:6px;padding:0 2px;color:#625a71;font-size:11px;line-height:1.3}
-.track-progress-steps li:not(:last-child)::after{content:'';position:absolute;top:11px;left:calc(50% + 15px);width:calc(100% - 30px);height:2px;background:#eee7f5}
-.track-progress-steps li>span{width:24px;height:24px;display:grid;place-items:center;border:1px solid #d9cbea;border-radius:50%;font-weight:750}
+.track-progress-timeline{position:relative;margin-top:18px}
+.track-progress-line{position:absolute;inset:11px 12.5% auto;height:2px;background:#eee7f5}
+.track-progress-line>span{display:block;width:0;height:100%;background:#8b60ed}
+.track-progress-steps{position:relative;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));margin:0;padding:0;list-style:none}
+.track-progress-steps li{min-width:0;display:grid;justify-items:center;align-content:start;gap:6px;padding:0 2px;color:#625a71;font-size:11px;line-height:1.3}
+.track-progress-steps li>span{width:24px;height:24px;display:grid;place-items:center;border:1px solid #d9cbea;border-radius:50%;background:#fff;font-weight:750;transition:background-color .35s ease,border-color .35s ease,color .35s ease}
 .track-progress-steps li.is-done,.track-progress-steps li[aria-current]{color:#5d36b9;font-weight:750}
 .track-progress-steps li.is-done>span{border-color:#7549eb;background:#7549eb;color:#fff}
-.track-progress-steps li.is-done::after{background:#bda1f6}
-.track-progress-steps li[aria-current]>span{border:2px solid #7549eb;background:#f4edff}
+.track-progress-steps li[aria-current]>span{border-color:#7549eb;background:#f4edff}
+@media(prefers-reduced-motion:reduce){
+  .track-progress-spinner{animation:none}
+  .track-progress-steps li>span{transition:none}
+}
 @media(max-width:600px){
   .sp-toolbar,.sp-controls{padding:8px;gap:5px}
   .sp-roll-heading small,.sp-audio-label{display:none}

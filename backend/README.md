@@ -91,6 +91,38 @@ python .\evaluate_transcription.py .\score.mid --reference .\reference.mid --gui
 
 L’évaluation mesure la précision, le rappel et le F1 des notes. Elle compare la hauteur et l’attaque à 50 ms près, puis évalue aussi la fin de note dans une seconde mesure. Sans référence, le script liste les notes hors tessiture en accordage standard sur une guitare à 24 cases.
 
+## Bêta guitare sur le worker de transcription
+
+Le worker utilise **Tsumugi Guitar v1.5** pour le relevé guitare et **GuitarArranger** pour la version Solo. Demucs sépare les pistes du mix. Pour l’arrangement, le worker prépare une ligne mélodique à partir de la voix et du riff, puis réutilise l’harmonie du mix. Le relevé est publié dès qu’il est prêt. Le Solo arrive ensuite dans le même résultat.
+
+Prépare un environnement séparé pour Tsumugi avec les dépendances officielles. Ce modèle et les poids guitare sont publiés sous MIT. Utilise l’inférence de base sans l’option SheetSage2.
+
+```bash
+git clone https://github.com/anime-song/tsumugi.git /opt/tsumugi
+git -C /opt/tsumugi checkout eba1c7d05e4d6a53cc4e8916d742d9623a3fdc38
+(cd /opt/tsumugi && uv sync --locked --no-dev)
+curl -fL https://huggingface.co/anime-song/instrument_agnostic_amt/resolve/main/best_model_guitar_v1_5.pth \
+  -o /opt/tsumugi/best_model_guitar_v1_5.pth
+export TRACK_TSUMUGI_ROOT=/opt/tsumugi
+export TRACK_TSUMUGI_CHECKPOINT=/opt/tsumugi/best_model_guitar_v1_5.pth
+export TRACK_TSUMUGI_PYTHON=/opt/tsumugi/.venv/bin/python
+export TRACK_TSUMUGI_DEVICE=auto
+```
+
+Ajoute GuitarArranger et REMI-z à la machine de calcul. Les commits ci-dessous correspondent à la version testée.
+
+```bash
+git clone https://github.com/Sonata165/GuitarArranger.git /opt/guitararranger
+git -C /opt/guitararranger checkout cd54d5b268d67404853b5aeb0b40eb7f6c0a27a4
+git clone https://github.com/Sonata165/REMI-z.git /opt/remi-z
+git -C /opt/remi-z checkout 832b96a0f990cdc3b67998836f3c067290632f6b
+python -m pip install miditoolkit==1.0.1 'PyYAML>=6.0.2'
+export TRACK_GUITARARRANGER_ROOT=/opt/guitararranger
+export TRACK_REMI_ROOT=/opt/remi-z
+```
+
+Redémarre le worker avec les deux moteurs configurés. Les nouveaux aperçus requièrent ce worker et limitent l’inférence à 30 secondes. Le serveur renvoie les fichiers de cet extrait. La suite floutée est dessinée par le lecteur à partir d’une notation illustrative. Piano et basse utilisent Basic Pitch. Les licences MIT sont conservées dans les dépôts amont.
+
 ## Paiement Stripe
 
 Les packs de crédits sont définis côté serveur dans `PACKS` dans `app.py` :

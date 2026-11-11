@@ -22,6 +22,7 @@ from guitar_evidence import (
 )
 from guitar_intro import open_pull_offs, repeated_open_intro
 from piano_score import clean_piano_notes, estimate_piano_grid, write_piano_score
+from tsumugi_engine import ENGINE as TSUMUGI_ENGINE, Tsumugi
 
 
 TRACKS = {
@@ -183,8 +184,20 @@ def write_midi(notes, destination, program, instrument, bpm, *, beats=None, beat
     midi.write(str(destination))
 
 
+def midi_events(midi, duration, *, guitar_only=False):
+    return sorted([
+        {"pitch": note.pitch, "start": note.start, "end": min(note.end, duration),
+         "velocity": note.velocity}
+        for track in midi.instruments
+        if not track.is_drum and (not guitar_only or 24 <= track.program <= 31)
+        for note in track.notes
+        if 0 <= note.start < min(note.end, duration)
+    ], key=lambda note: (note["start"], note["pitch"]))
+
+
 def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0, progress=None,
-               review_audio=None):
+               review_audio=None, guitar_engine=None, guitar_solo=False, has_voice=True, solo_engine=None,
+               on_direct=None):
     if (capo != "auto" and (type(capo) is not int or not 0 <= capo <= 12)) or (capo and instrument != "guitare"):
         raise ValueError("Le capo est disponible pour la guitare uniquement, en mode automatique ou avec une case de 0 à 12.")
     source = source.resolve(strict=True)
@@ -208,9 +221,15 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
 
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
-    config = {"engine": "basic-pitch-0.4.0", "separator": None if isolated else f"demucs-4.1.0:{separator}",
+    guitar_engine = guitar_engine if instrument == "guitare" else None
+    guitar_solo = guitar_solo and instrument == "guitare"
+    config = {"engine": TSUMUGI_ENGINE if guitar_engine else "basic-pitch-0.4.0",
+              "separator": None if isolated else f"demucs-4.1.0:{separator}",
               "instrument": instrument, "bpm": bpm,
               "version": {"guitare": 15 if isolated else 16, "basse": 4, "piano": 3}.get(instrument, 1)}
+    if guitar_solo:
+        config["solo"] = {"version": 7, "voice": has_voice and not isolated,
+                          "engine": "guitararranger-v1" if solo_engine else "mix-melody-v1"}
     if capo:
         config["capo"] = capo
     if title:
@@ -223,9 +242,12 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     cached = (target / "notes.json").is_file()
     if cached and (isolated or review_audio is None):
         report("cached")
+        if on_direct:
+            on_direct(target, json.loads((target / "notes.json").read_text(encoding="utf-8")))
         return target
 
-    from basic_pitch.inference import predict
+    if not guitar_engine or (guitar_solo and has_voice and not isolated):
+        from basic_pitch.inference import predict
 
     with tempfile.TemporaryDirectory(dir=output) as temporary:
         work = Path(temporary)
@@ -243,16 +265,17 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                 review_audio(original, wav.parent)
         if cached:
             report("cached")
+            if on_direct:
+                on_direct(target, json.loads((target / "notes.json").read_text(encoding="utf-8")))
             return target
 
         report("detect")
-        model, midi, _ = predict(wav, load_note_model())
-        notes = sorted([
-            {"pitch": int(note.pitch), "start": float(note.start), "end": float(note.end),
-             "velocity": int(note.velocity)}
-            for track in midi.instruments for note in track.notes
-            if note.start < note.end
-        ], key=lambda note: (note["start"], note["pitch"]))
+        if guitar_engine:
+            midi = guitar_engine.transcribe(wav, work / "guitar.mid")
+            notes = midi_events(midi, duration, guitar_only=True)
+        else:
+            model, midi, _ = predict(wav, load_note_model())
+            notes = midi_events(midi, math.inf)
         transients = ()
         filtered = 0
         simple = False
@@ -268,10 +291,14 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             tuning = TUNINGS[instrument]
             notes = [note for note in notes if tuning[-1] <= note["pitch"] <= tuning[0] + 24]
             transients, attack_levels = guitar_attacks(wav)
-            clean = filter_guitar_echoes(notes, transients)
-            filtered = len(notes) - len(clean)
-            notes = clean
-            if isolated and (lead := guitar_lead(notes)):
+            if not guitar_engine:
+                clean = filter_guitar_echoes(notes, transients)
+                filtered = len(notes) - len(clean)
+                notes = clean
+            if guitar_engine:
+                if bpm == 120 and not isolated:
+                    bpm = mixed_guitar_tempo(wav.with_name("drums.wav"), bpm)
+            elif isolated and (lead := guitar_lead(notes)):
                 filtered += len(notes) - len(lead)
                 notes = recover_lead_notes(lead, model)
                 simple = True
@@ -368,6 +395,37 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         if instrument == "guitare":
             manifest.update(bpm=bpm, meter=f"{tab_meter[0]}/{tab_meter[1]}")
             manifest["diagnostic"] = guitar_diagnostic(notes, tab, transients, filtered)
+        if on_direct:
+            on_direct(result, manifest)
+        if guitar_solo:
+            from guitar_solo import write_solo
+
+            mix_notes, mix_attacks = [], []
+            if guitar_engine and not isolated:
+                try:
+                    mix = guitar_engine.transcribe(original, work / "mix-guitar.mid")
+                    mix_notes = midi_events(mix, duration, guitar_only=True)
+                    mix_attacks, _ = guitar_attacks(original)
+                except (ValueError, OSError, subprocess.TimeoutExpired) as error:
+                    print(f"Relevé guitare du mix indisponible : {error}", file=sys.stderr, flush=True)
+            vocals = []
+            if has_voice and not isolated:
+                try:
+                    _, voice, _ = predict(wav.with_name("vocals.wav"), load_note_model(),
+                                          minimum_frequency=100, maximum_frequency=1000)
+                    vocals = midi_events(voice, duration)
+                except Exception as error:
+                    print(f"Mélodie vocale indisponible : {error}", file=sys.stderr, flush=True)
+            try:
+                solo_result = work / "solo"
+                arrange_solo = solo_engine.write if solo_engine else write_solo
+                if arrange_solo(original, None if isolated else wav.with_name("bass.wav"), notes, vocals,
+                              duration, solo_result, f"{score_title} – Guitare solo",
+                              bpm, tab_meter, resolved_capo, mix=mix_notes, mix_attacks=mix_attacks):
+                    solo_result.rename(result / "solo")
+                    manifest["solo_engine"] = config["solo"]["engine"]
+            except Exception as error:
+                print(f"Arrangement solo indisponible : {error}", file=sys.stderr, flush=True)
         (result / "notes.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
         try:
             result.rename(target)
@@ -391,7 +449,9 @@ def main():
     if not 30 <= args.bpm <= 300:
         parser.error("Le tempo doit être compris entre 30 et 300 BPM.")
     try:
-        print(transcribe(args.audio, args.instrument, args.output, isolated=args.isolated, bpm=args.bpm, capo=args.capo))
+        print(transcribe(args.audio, args.instrument, args.output, isolated=args.isolated, bpm=args.bpm,
+                         capo=args.capo, guitar_engine=Tsumugi.from_env() if args.instrument == "guitare" else None,
+                         guitar_solo=args.instrument == "guitare"))
     except (OSError, ValueError, subprocess.TimeoutExpired) as error:
         parser.exit(1, f"{error}\n")
 

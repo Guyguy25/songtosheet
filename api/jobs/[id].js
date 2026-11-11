@@ -4,7 +4,7 @@ const {database}=require('../../lib/mongodb');
 const {authenticated,json}=require('../../lib/session');
 const {method,fail}=require('../../lib/authorization');
 const {serial}=require('../../lib/generations');
-const {serialTrack,JOB_FIELDS}=require('../../lib/track-jobs');
+const {serialTrack,JOB_FIELDS,PREVIEW_SECONDS}=require('../../lib/track-jobs');
 module.exports=async(req,res)=>{
   if(req.method!=='GET'&&req.method!=='POST'){res.setHeader('Allow','GET, POST');return json(res,405,{detail:'Méthode non autorisée.'});}
   if(!method(req,res,req.method))return;
@@ -17,8 +17,9 @@ module.exports=async(req,res)=>{
     const collection=db.collection('generations');
     const filter={_id:new ObjectId(id),user_id:user._id};
     let job=await collection.findOne(filter);
-    if(!job&&req.method==='GET'&&user.role==='admin'){
-      const track=await db.collection('track_jobs').findOne(filter,{projection:JOB_FIELDS});
+    if(!job&&req.method==='GET'){
+      const access=user.role==='admin'?{}:{preview_limit:PREVIEW_SECONDS};
+      const track=await db.collection('track_jobs').findOne({...filter,...access},{projection:JOB_FIELDS});
       if(track)return json(res,200,serialTrack(track));
     }
     if(!job)return json(res,404,{detail:'Création introuvable.'});

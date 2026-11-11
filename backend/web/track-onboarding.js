@@ -17,14 +17,15 @@
     ['auto','♯','Avec capo','On te propose une case sur la tablature.']
   ];
   const allSteps=[
+    ['import','Source','Quel morceau veux-tu jouer ?','Formats WAV, MP3, M4A, FLAC, OGG ou AAC. Jusqu’à 25 Mo.'],
     ['instrument','Instrument','Quel instrument veux-tu jouer ?','',instruments],
     ['capo','Capo','Tu joues avec un capo ?','',capos],
     ['format','Format','Partition ou tablature ?','Tu pourras télécharger le résultat en PDF.',formats],
-    ['source','Audio','Y a-t-il une voix dans ton morceau ?','',sources],
-    [null,'Import','Ajoute ton fichier audio','Formats WAV, MP3, M4A, FLAC, OGG ou AAC. Jusqu’à 25 Mo.']
+    ['source','Voix','Y a-t-il une voix dans ton morceau ?','',sources],
+    ['confirm','Créer','Tout est prêt pour le relevé','']
   ];
 
-  function mount(root,{onSubmit,onLinkChange,sampleUrl,allowLink=false}){
+  function mount(root,{onSubmit,onLinkChange,sampleUrl,allowLink=false,freemium=false}){
     const draft={instrument:'',format:'',source:'',file:null,capo:null};
     const activeSteps=()=>allSteps.filter(([field])=>field!=='capo'||(allowLink&&draft.instrument==='guitare'));
     let step=0,busy=false;
@@ -52,7 +53,9 @@
           <audio class="track-audio-preview hidden" controls preload="metadata" aria-label="Écouter le fichier sélectionné"></audio>
           ${sampleUrl?'<button type="button" class="btn btn-outline track-sample">Charger la mélodie de test</button>':''}
           </div>
-          <label for="track-title-input">Nom du relevé</label>
+        </div>
+        <div class="track-upload track-confirm hidden">
+          <label for="track-title-input">Nom du relevé (facultatif)</label>
           <input id="track-title-input" class="field" type="text" maxlength="90" placeholder="Ex. Mon morceau">
           <label class="track-rights track-solo hidden"><input type="checkbox"> Ce fichier contient uniquement l’instrument choisi.</label>
           <label class="track-rights"><input id="track-rights-input" type="checkbox"> <span class="track-rights-text">Je dispose des droits nécessaires pour transcrire cet audio.</span></label>
@@ -66,6 +69,7 @@
       </form>`;
     const get=selector=>root.querySelector(selector);
     const form=get('form'),heading=get('h2'),choices=get('.track-choices'),upload=get('.track-upload');
+    const confirmation=get('.track-confirm');
     const back=get('.track-back'),next=get('.track-next'),title=get('#track-title-input');
     const fileInput=get('#track-audio-input'),rights=get('#track-rights-input'),status=get('.track-status');
     const linkInput=get('#track-link-input');
@@ -125,6 +129,7 @@
     function render(focus=false){
       const steps=activeSteps();
       const [field,,question,description,options]=steps[step];
+      const importing=field==='import', confirming=field==='confirm';
       get('.track-step-count').textContent=`Étape ${step+1} sur ${steps.length}`;
       const link=audioSource?.parse(linkInput?.value);
       const useSavedLink=Boolean(link&&(!link.provider||link.youtubeId)&&!editingSource);
@@ -134,21 +139,28 @@
         if(useSavedLink)savedLink.querySelector('p').textContent=`Lien conservé · ${link.youtubeId?'YouTube':link.url.hostname}`;
       }
       updateRights(link);
-      heading.textContent=!field&&allowLink?(useSavedLink?'Confirme ton relevé':'Ajoute ton audio'):question;
+      heading.textContent=question;
       const intro=get('.track-step-heading p');
-      intro.textContent=!field&&useSavedLink?'Ton lien est déjà prêt. Confirme les droits pour lancer la génération.':description;
+      intro.textContent=importing&&useSavedLink?'Ton lien est prêt. Tu peux choisir l’instrument.':
+        confirming&&freemium
+          ?draft.instrument==='guitare'?'Écoute jusqu’à 30 secondes du relevé guitare et du Solo.':'Écoute jusqu’à 30 secondes du relevé.'
+          :field==='format'&&freemium?'Choisis la notation affichée dans l’aperçu.':
+          confirming&&allowLink&&draft.instrument==='guitare'?'Tu pourras écouter la guitare originale et une version pour guitare solo.':description;
       intro.hidden=!intro.textContent;
       get('.track-steps').innerHTML=steps.map(([,name],index)=>
         `<li${index<step?' class="is-done"':index===step?' aria-current="step"':''}><span>${index+1}</span><b>${name}</b></li>`).join('');
-      choices.classList.toggle('hidden',!field);
-      upload.classList.toggle('hidden',Boolean(field));
-      if(field)media.pause();
+      choices.classList.toggle('hidden',!options);
+      upload.classList.toggle('hidden',!importing);
+      confirmation.classList.toggle('hidden',!confirming);
+      if(!importing)media.pause();
       soloLabel.classList.toggle('hidden',draft.source!=='instrumental');
       const recap=get('form > .track-selection');
-      recap.classList.toggle('hidden',Boolean(field));
-      if(!field)recap.textContent=steps
-        .map(([key,,,,list])=>list?.find(([value])=>value===draft[key])?.[2]).filter(Boolean).join(' · ');
-      choices.dataset.field=field||'';
+      recap.classList.toggle('hidden',!confirming);
+      if(confirming)recap.textContent=[
+        draft.file?.name||(link?.youtubeId?'Lien YouTube':link?.url.hostname),
+        ...steps.map(([key,,,,list])=>list?.find(([value])=>value===draft[key])?.[2])
+      ].filter(Boolean).join(' · ');
+      choices.dataset.field=field;
       choices.innerHTML=options?options.map(([value,icon,name,detail])=>{
         const disabled=value==='tablature'&&!allowsTab();
         const description=disabled?'Disponible pour la guitare et la basse.':detail;
@@ -158,7 +170,8 @@
           <span class="track-choice-arrow" aria-hidden="true">→</span></button>`;
       }).join(''):'';
       back.classList.toggle('hidden',step===0);
-      next.classList.toggle('hidden',Boolean(field));
+      next.classList.toggle('hidden',Boolean(options));
+      next.textContent=importing?'Continuer →':freemium?'Générer mon aperçu gratuit ↗':'Générer mon relevé ↗';
       setStatus('');
       if(focus)heading.focus({preventScroll:true});
     }
@@ -168,7 +181,7 @@
       if(!button||button.disabled||busy)return;
       const [field,,,,options]=activeSteps()[step];
       draft[field]=options.find(([value])=>String(value)===button.value)[0];
-      if(step===0&&!allowsTab()&&draft.format==='tablature')draft.format='';
+      if(field==='instrument'&&!allowsTab()&&draft.format==='tablature')draft.format='';
       if(draft.instrument!=='guitare')draft.capo=null;
       step++;
       render(true);
@@ -195,9 +208,12 @@
       if(source?.provider&&!source.youtubeId){
         setReference(source);
         linkInput.value='';
-      }else if(source&&draft.file){
-        fileInput.value='';
-        setFile(null);
+      }else if(source){
+        setReference(null);
+        if(draft.file){
+          fileInput.value='';
+          setFile(null);
+        }
       }
       updateRights(audioSource.parse(linkInput.value.trim()));
       onLinkChange?.(source?.url.href||reference?.url.href);
@@ -224,7 +240,8 @@
     });
     form.addEventListener('submit',async event=>{
       event.preventDefault();
-      if(busy||activeSteps()[step][0])return;
+      const [field]=activeSteps()[step];
+      if(busy||!['import','confirm'].includes(field))return;
       const audioUrl=linkInput?.value.trim()||'';
       let link=null,youtubeId;
       if(audioUrl){
@@ -244,6 +261,15 @@
       if(!draft.file&&!link){
         setStatus(reference?audioSource.importHint(reference.provider):allowLink?'Ajoute un fichier audio ou colle un lien YouTube.':'Ajoute un fichier audio pour continuer.',true);
         fileInput.focus();return;
+      }
+      if(draft.file&&draft.file.size>25*1024*1024){
+        setStatus('Choisis un fichier audio de 25 Mo maximum.',true);fileInput.focus();return;
+      }
+      if(field==='import'){
+        editingSource=false;
+        step++;
+        render(true);
+        return;
       }
       if(!rights.checked){setStatus('Confirme que tu disposes des droits nécessaires.',true);rights.focus();return;}
       busy=true;

@@ -12,9 +12,9 @@
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=5" />
   <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=11" defer></script>
-  <link rel="stylesheet" href="/backend/web/score-player.css?v=5" />
-  <script src="/backend/web/score-player.js?v=9" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=13" defer></script>
+  <link rel="stylesheet" href="/backend/web/score-player.css?v=6" />
+  <script src="/backend/web/score-player.js?v=10" defer></script>
   <script src="/assets/wait-survey.js?v=1" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
@@ -1119,7 +1119,7 @@ body.pricing-open{overflow:hidden}
   async function refresh(){if(!state.user)return;
     try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);setCurrentUser(user.user);state.jobs=jobs.jobs||[];
       if(!state.user){go('/inscription');return;}
-      const access=state.user.role==='admin'?'Admin':'Démo';
+      const access=state.user.role==='admin'?'Admin':'Freemium';
       $('sidebar-credits').textContent=access;$('top-credits').textContent=access;$('metric-credits').textContent=access;
       $('create-balance').textContent='Démo';$('billing-balance').textContent='Démo';
       $('metric-total').textContent=state.jobs.length;
@@ -1155,7 +1155,7 @@ body.pricing-open{overflow:hidden}
   function rememberedTrackLink(){
     try{
       const saved=JSON.parse(sessionStorage.getItem(trackLinkKey));
-      if(state.user?.role==='admin'&&saved?.userId===state.user.id)return window.SongToSheetAudioSource.parse(saved.value)?.url.href;
+      if(state.user&&saved?.userId===state.user.id)return window.SongToSheetAudioSource.parse(saved.value)?.url.href;
     }catch{}
   }
   let closePlayer;
@@ -1173,11 +1173,10 @@ body.pricing-open{overflow:hidden}
     if(page==='create'){
       if(state.link)$('workspace-url').value=state.link;
       if(state.file)$('workspace-file-name').textContent=state.file.name;
-      const admin=state.user.role==='admin';
-      $('create-page').classList.toggle('track-guided',admin);
-      show('track-onboarding',admin);
-      if(admin&&!trackWizard){
-        trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{onSubmit:submitTrack,onLinkChange:rememberTrackLink,allowLink:true});
+      $('create-page').classList.add('track-guided');
+      show('track-onboarding',true);
+      if(!trackWizard){
+        trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{onSubmit:submitTrack,onLinkChange:rememberTrackLink,allowLink:true,freemium:true});
         const audioUrl=rememberedTrackLink();
         if(audioUrl)trackWizard.prefill({audioUrl});
       }
@@ -1275,25 +1274,14 @@ body.pricing-open{overflow:hidden}
       await sessionReady;
       if(state.heroMode==='link'){
         const value=$('hero-link').value.trim();if(!value)throw new Error('Colle un lien musical ou importe un audio.');
-        if(state.user?.role==='admin'){
-          const source=window.SongToSheetAudioSource.parse(value);
-          if(!source)throw new Error('Colle un lien HTTPS valide.');
-          startApp('create');
-          trackWizard.prefill({audioUrl:source.url.href});
-          rememberTrackLink(source.url.href);
-        }else{
-          state.link=value;await window.SongToSheetFlow.start({kind:'link',value,instrument});
-        }
+        const source=window.SongToSheetAudioSource.parse(value);
+        if(!source)throw new Error('Colle un lien HTTPS valide.');
+        openTrackDraft({audioUrl:source.url.href,instrument});
       }else{
         const file=$('hero-file').files[0]||state.file;
         if(!file)throw new Error('Ajoute un fichier audio pour commencer.');
         state.file=file;
-        if(state.user?.role==='admin'){
-          startApp('create');
-          trackWizard.prefill({file});
-          rememberTrackLink();
-        }
-        else await window.SongToSheetFlow.start({kind:'file',file,instrument});
+        openTrackDraft({file,instrument});
       }
     }catch(e){window.SongToSheetFlow.sourceError(e.message||'Source non prise en charge.');}
     finally{button.disabled=false;}
@@ -1303,6 +1291,16 @@ body.pricing-open{overflow:hidden}
     if(!file){toast('Ajoute un fichier audio pour continuer.',true);return;}
     try{await window.SongToSheetFlow.start({kind:'file',file,instrument:$('workspace-instrument').value});}
     catch(e){toast(e.message||'Import impossible.',true);}
+  }
+  function openTrackDraft(draft){
+    if(!state.user){
+      state.pendingTrack=draft;
+      go('/inscription');
+      return;
+    }
+    startApp('create');
+    trackWizard.prefill(draft);
+    rememberTrackLink(draft.audioUrl);
   }
   function encodeChunk(blob){
     return new Promise((resolve,reject)=>{
@@ -1393,6 +1391,7 @@ body.pricing-open{overflow:hidden}
     arrange:['Écriture du relevé','Le moteur met les notes en mesure et calcule les doigtés si une tablature est disponible.',78],
     cached:['Relevé déjà calculé','Le moteur réutilise l’analyse pour ce morceau et ces réglages.',88],
     pdf:['Préparation du PDF','Le relevé est déjà disponible à l’écoute. La version imprimable arrive.',94],
+    solo:['Préparation de l’arrangement','Le relevé est déjà disponible à l’écoute.',94],
     processing:['Analyse en cours','Cette page se met à jour automatiquement.',null]
   };
   let trackSummaryMarkup,trackProgressMarkup;
@@ -1432,7 +1431,7 @@ body.pricing-open{overflow:hidden}
         const completed=j.status==='completed';
         const waiting=['queued','processing'].includes(j.status);
         const ready=j.downloads.includes('mid')&&j.downloads.includes('musicxml');
-        const downloads=Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
+        const downloads=Object.entries(links).filter(([key])=>!j.preview_limit&&j.downloads.includes(key)).map(([key,label])=>
           `<a class="btn ${key==='pdf'?'btn-primary':'btn-outline'}" href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}">↓ ${label}</a>`).join('');
         const tab=j.format==='tablature'&&j.downloads.includes('tab');
         const d=ready&&state.user?.role==='admin'?j.diagnostic:null;
@@ -1443,8 +1442,9 @@ body.pricing-open{overflow:hidden}
           <p>Ce diagnostic vérifie la cohérence des attaques. Pour mesurer la justesse des notes et des accords, il faut comparer le relevé à une référence validée.</p></details>`:'';
         const status=ready?(tab?'TABLATURE PRÊTE':'PARTITION PRÊTE'):waiting?'TRANSCRIPTION EN COURS':'TRANSCRIPTION INTERROMPUE';
         const fallback=j.format==='tablature'&&!tab?' Aucune tablature jouable n’a été détectée. La partition est disponible.':'';
-        const detail=ready?`${j.note_count} notes estimées.${fallback}${waiting?'':j.pdf_error?' Le PDF est indisponible pour ce relevé.':' Tu peux corriger le résultat dans un éditeur MusicXML.'}`
+        const detail=ready?`${j.note_count} notes estimées.${fallback}${j.preview_limit?'':waiting?'':j.pdf_error?' Le PDF est indisponible pour ce relevé.':' Tu peux corriger le résultat dans un éditeur MusicXML.'}`
           :waiting?'':j.error_message||'Importe ton fichier pour réessayer.';
+        const soloUnavailable=completed&&ready&&j.preview_limit&&j.instrument==='guitare'&&!j.downloads.includes('solotab');
         if($('track-result-summary')?.dataset.job!==id){
           $('result-content').innerHTML=`<div id="track-result-summary" class="result-hero"></div>
             <section id="track-progress" class="track-progress hidden" aria-label="Progression du relevé">
@@ -1458,9 +1458,10 @@ body.pricing-open{overflow:hidden}
           trackSummaryMarkup=trackProgressMarkup=undefined;
         }
         const summary=`<span class="dashboard-kicker">${completed&&ready?'100 % · ':''}${status}</span>
-          <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · Accès admin</p>
+          <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · ${j.preview_limit?'Aperçu gratuit · jusqu’à 30 s':'Accès admin'}</p>
           ${j.source_name?`<p class="result-meta">Source · ${safe(j.source_name)}</p>`:''}
-          ${detail?`<p>${safe(detail)}</p>`:''}${ready?`<div class="result-actions">${downloads}</div>`:''}${diagnostic}
+          ${detail?`<p>${safe(detail)}</p>`:''}${downloads?`<div class="result-actions">${downloads}</div>`:''}${diagnostic}
+          ${soloUnavailable?'<p class="result-note">L’arrangement solo n’a pas pu être généré pour cet extrait.</p>':''}
           ${!waiting&&!completed&&!ready?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;
         if(trackSummaryMarkup!==summary){
           $('track-result-summary').innerHTML=summary;
@@ -1469,7 +1470,7 @@ body.pricing-open{overflow:hidden}
         if(completed&&state.user?.role==='admin')addAudioReview(j);
         show('track-progress',waiting);
         window.SongToSheetWaitSurvey?.mount($('track-wait-survey'),state.user?.id,waiting&&!ready);
-        const stage=ready?'pdf':j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
+        const stage=ready?(j.preview_limit?'solo':'pdf'):j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
         const past=(j.stages||[]).filter(item=>item!==stage&&Object.hasOwn(trackStages,item));
         const progressKey=[stage,...past].join('/');
         if(waiting&&trackProgressMarkup!==progressKey){
@@ -1497,9 +1498,9 @@ body.pricing-open{overflow:hidden}
             const tabUrl=solo?exportUrl('solotab'):j.downloads.includes('tab')?exportUrl('tab'):null;
             closePlayer=window.SongToSheetPlayer.mount(root,{
               scoreUrl:solo?tabUrl:exportUrl('musicxml'),midiUrl:exportUrl(solo?'solomid':'mid'),
-              instrument:j.instrument,sourceDuration:j.duration,startAt,tabUrl:solo?null:tabUrl,
+              instrument:j.instrument,sourceDuration:j.duration,previewDuration:j.preview_duration,startAt,tabUrl:solo?null:tabUrl,
               tabMidiUrl:!solo&&j.downloads.includes('tabmid')?exportUrl('tabmid'):null,
-              preferTab:tab||Boolean(tabUrl&&j.downloads.includes('solotab'))
+              preferTab:solo||tab
             });
             $('guitar-versions')?.querySelectorAll('[data-version]').forEach(button=>{
               const active=(button.dataset.version==='solo')===solo;
@@ -1507,15 +1508,17 @@ body.pricing-open{overflow:hidden}
               button.classList.toggle('btn-primary',active);
               button.classList.toggle('btn-outline',!active);
             });
-            if($('guitar-solo-exports'))$('guitar-solo-exports').hidden=!solo;
+            if($('guitar-solo-exports'))$('guitar-solo-exports').hidden=!solo||Boolean(j.preview_limit);
           };
           if(j.downloads.includes('solotab')&&j.downloads.includes('solomid')&&!$('guitar-versions')){
             root.insertAdjacentHTML('beforebegin',`
               <div id="guitar-versions" class="result-actions" role="group" aria-label="Version de la tablature">
-                <button class="btn btn-primary" type="button" data-version="direct" aria-pressed="true">Transcription directe</button>
-                <button class="btn btn-outline" type="button" data-version="solo" aria-pressed="false">Arrangement solo</button>
+                <button class="btn btn-primary" type="button" data-version="direct" aria-pressed="true">Guitare originale${j.engine==='tsumugi-guitar-v1.5'?' · Tsumugi':''}</button>
+                <button class="btn btn-outline" type="button" data-version="solo" aria-pressed="false">Guitare solo${j.solo_engine==='guitararranger-v1'?' · GuitarArranger':''}</button>
               </div>
-              <p class="result-note">Le relevé direct conserve les attaques détectées. Le solo répartit certains accords et garde la ligne principale.</p>
+              <p class="result-note">${['mix-melody-v1','guitararranger-v1'].includes(j.solo_engine)
+                ?'Le relevé suit la piste guitare. La version solo adapte le morceau pour une seule guitare, avec la mélodie et une basse issue des accords.'
+                :'Le relevé direct conserve les attaques détectées. Le solo répartit certains accords et garde la ligne principale.'}</p>
               <div id="guitar-solo-exports" class="result-actions" hidden>
                 <a class="btn btn-outline" href="${exportUrl('solotab')}">↓ MusicXML solo</a>
                 <a class="btn btn-outline" href="${exportUrl('solomid')}">↓ MIDI solo</a>
@@ -1569,7 +1572,8 @@ body.pricing-open{overflow:hidden}
       $('auth-password').value='';
       if(pending&&pending.completed===true)window.SongToSheetFlow.clearPending();
       await refresh();
-      if(state.pendingPack){const pack=state.pendingPack;state.pendingPack=null;startApp('billing');await buy(pack);}
+      if(state.pendingTrack){const draft=state.pendingTrack;state.pendingTrack=null;openTrackDraft(draft);}
+      else if(state.pendingPack){const pack=state.pendingPack;state.pendingPack=null;startApp('billing');await buy(pack);}
       else{state.activePage='library';startApp('library');}
     }catch(err){$('auth-error').textContent=err.message;show('auth-error',true);}
     finally{btn.disabled=false;renderAuth();}
@@ -1694,7 +1698,7 @@ const type={pdf:'application/pdf',mid:'audio/midi',musicxml:'application/vnd.rec
 const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='songtosheet-demo.'+ext;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);},true);
 })();
 </script>
-<script src="/assets/conversion-flow.js?v=15" defer></script>
+<script src="/assets/conversion-flow.js?v=16" defer></script>
 
 <script>
 /* Hero typewriter: partition <-> tablature. */

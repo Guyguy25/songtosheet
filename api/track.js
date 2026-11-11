@@ -5,7 +5,7 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {CHUNK_BYTES,MAX_BYTES,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
+const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
@@ -69,7 +69,7 @@ async function begin(db,res,user,body){
   try{
     const input=source?.youtubeId?{youtube_id:source.youtubeId,source_kind:'link'}:
       link?{audio_url:link.href,source_kind:'link'}:{extension,size};
-    const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,
+    const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
       created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+(link?AUDIO_RETENTION_MS:UPLOAD_MS))});
@@ -121,6 +121,7 @@ async function worker(db,res,body){
     const compatible=body.pdf===true?{}:{format:{$exists:false}};
     if(body.links!==true)compatible.audio_url={$exists:false};
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
+    if(body.preview!==true)compatible.preview_limit={$exists:false};
     if(body.capo!==true)compatible.capo={$in:[null,0]};
     else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
@@ -128,7 +129,8 @@ async function worker(db,res,body){
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS),stage:'audio',stages:['audio']}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
-      isolated:job.isolated,review_audio:!job.isolated,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
+      isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,
+      review_audio:!job.isolated&&!job.preview_limit,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
   if(!isId(body.id)||typeof body.lease!=='string')return json(res,400,{detail:'Traitement invalide.'});
@@ -147,7 +149,7 @@ async function worker(db,res,body){
   }
   if(body.action==='review_audio'){
     const {kind,data}=body;
-    if(job.isolated||!REVIEW_TRACKS.has(kind)||typeof data!=='string'||!data||data.length>3900000||
+    if(job.isolated||job.preview_limit||!REVIEW_TRACKS.has(kind)||typeof data!=='string'||!data||data.length>3900000||
       Buffer.from(data,'base64').toString('base64')!==data)return json(res,400,{detail:'Piste audio invalide.'});
     const expires_at=new Date(job.created_at.getTime()+REVIEW_MS);
     await db.collection('track_review_audio').updateOne({_id:`${job._id}:${kind}`},
@@ -162,7 +164,9 @@ async function worker(db,res,body){
   if(body.action==='solo'){
     if(job.instrument!=='guitare'||!hasPreview||!validExports(exports)||!exports.solotab||!exports.solomid||
       Object.keys(exports).length!==2)return json(res,400,{detail:'Arrangement invalide.'});
-    const updated=await jobs.updateOne(filter,{$set:{'exports.solotab':exports.solotab,'exports.solomid':exports.solomid},
+    if(job.preview_limit&&body.solo_engine!=='guitararranger-v1')return json(res,400,{detail:'Moteur d’arrangement invalide.'});
+    const solo=['mix-melody-v1','guitararranger-v1'].includes(body.solo_engine)?{solo_engine:body.solo_engine}:{};
+    const updated=await jobs.updateOne(filter,{$set:{'exports.solotab':exports.solotab,'exports.solomid':exports.solomid,...solo},
       $addToSet:{downloads:{$each:['solotab','solomid']}}});
     return updated.matchedCount?json(res,200,{ok:true}):json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   }
@@ -170,25 +174,34 @@ async function worker(db,res,body){
   const fullValid=validExports(exports)&&exports.musicxml&&exports.mid&&Number.isFinite(duration)&&duration>=.5&&
     Number.isInteger(note_count)&&note_count>=1;
   const finishValid=validExports(exports)&&Object.keys(exports).every(key=>key==='pdf'||(key==='solopdf'&&job.downloads.includes('solotab')))&&
-    (Boolean(exports.pdf)||body.pdf_error===true);
+    (job.preview_limit?Object.keys(exports).length===0:Boolean(exports.pdf)||body.pdf_error===true);
   if((isPreview||completed)&&!(finishingPreview?finishValid:fullValid)){
     return json(res,400,{detail:'Exports invalides ou trop volumineux.'});
   }
   if(isPreview){
+    const previewDuration=body.preview_duration;
+    if(job.preview_limit&&(!Number.isFinite(previewDuration)||previewDuration<.5||
+      previewDuration>Math.min(job.preview_limit,duration)+.05||
+      (job.instrument==='guitare'&&body.engine!=='tsumugi-guitar-v1.5'))){
+      return json(res,400,{detail:'Aperçu ou moteur de transcription invalide.'});
+    }
     const diagnostic=job.instrument==='guitare'?validDiagnostic(body.diagnostic,note_count,duration):null;
     const resolved=body.resolved_capo;
     if(job.capo==='auto'&&(!Number.isInteger(resolved)||resolved<1||resolved>12)){
       return json(res,400,{detail:'Case du capo invalide.'});
     }
     const capo=job.capo==='auto'?{resolved_capo:resolved}:{};
-    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo},
+    const engine=body.engine==='tsumugi-guitar-v1.5'&&job.instrument==='guitare'?{engine:body.engine}:{};
+    const preview=job.preview_limit?{preview_duration:Math.min(previewDuration,job.preview_limit)}:{};
+    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo,...engine,...preview},
+      $unset:{solo_engine:'',...(!engine.engine?{engine:''}:{})},
       $addToSet:{stages:'pdf'}});
     if(!updated.matchedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
     return json(res,200,{ok:true});
   }
   let outcome;
   if(finishingPreview){
-    outcome={status:'completed',pdf_error:!exports.pdf,downloads:[...new Set([...job.downloads,...Object.keys(exports)])]};
+    outcome={status:'completed',pdf_error:!job.preview_limit&&!exports.pdf,downloads:[...new Set([...job.downloads,...Object.keys(exports)])]};
     if(exports.pdf)outcome['exports.pdf']=exports.pdf;
     if(exports.solopdf)outcome['exports.solopdf']=exports.solopdf;
   }else if(completed){
@@ -205,7 +218,8 @@ async function worker(db,res,body){
 async function download(db,req,res,user){
   const {id,download:format}=req.query;
   if(!isId(id)||!Object.hasOwn(FORMATS,format))return json(res,404,{detail:'Export introuvable.'});
-  const job=await db.collection('track_jobs').findOne({...trackFilter(id,user),status:{$in:['processing','completed']}},
+  const access=user.role==='admin'?{}:{preview_limit:PREVIEW_SECONDS};
+  const job=await db.collection('track_jobs').findOne({...trackFilter(id,user),...access,status:{$in:['processing','completed']}},
     {projection:{[`exports.${format}`]:1}});
   const data=job?.exports?.[format];
   if(!data)return json(res,404,{detail:'Export introuvable.'});
@@ -258,7 +272,7 @@ module.exports=async(req,res)=>{
     }
     const user=await authenticated(req);
     if(!user)return json(res,401,{detail:'Connexion requise.'});
-    if(user.role!=='admin')return json(res,403,{detail:'La transcription réelle est réservée au compte administrateur.'});
+    if(req.method==='GET'&&req.query.audio!==undefined&&user.role!=='admin')return json(res,403,{detail:'Accès refusé.'});
     if(req.method==='GET')return req.query.audio===undefined
       ?await download(await database(),req,res,user):await reviewAudio(await database(),req,res,user);
     if(!process.env.TRACK_WORKER_DIGEST)return json(res,503,{detail:'Le moteur de transcription est indisponible.'});

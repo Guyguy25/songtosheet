@@ -556,6 +556,9 @@
     if(blurred)blurred.innerHTML=svg+svg;
     if(mini)mini.innerHTML=svg;
   }
+  function placeholderNotation(instrument,isTab){
+    return isTab?tabSvg(instrument):staffSvg();
+  }
   function init(){
     var anchor=$('flow-score');if(anchor)anchor.innerHTML=staffSvg();
     var miniature=$('flow-ready-score');if(miniature)miniature.innerHTML=staffSvg();
@@ -589,7 +592,7 @@
     window.addEventListener('popstate',function(){render(location.pathname);});
     render(location.pathname);
   }
-  window.SongToSheetFlow={start:start,prepareSource:prepareSource,chooseInstrument:chooseInstrument,chooseFormat:chooseFormat,openSavedDemo:openSavedDemo,clearPending:clearPending,pendingData:pendingData,inspectLink:inspectLink,validateFile:validateFile,onHeroFile:onHeroFile,sourceError:sourceError,showHeroMetadata:showHeroMetadata,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview};
+  window.SongToSheetFlow={start:start,prepareSource:prepareSource,chooseInstrument:chooseInstrument,chooseFormat:chooseFormat,openSavedDemo:openSavedDemo,clearPending:clearPending,pendingData:pendingData,inspectLink:inspectLink,validateFile:validateFile,onHeroFile:onHeroFile,sourceError:sourceError,showHeroMetadata:showHeroMetadata,pending:pending,render:render,configureAuth:configureAuth,openPreview:openPreview,placeholderNotation:placeholderNotation};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
 })();

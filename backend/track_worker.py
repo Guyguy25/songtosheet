@@ -2,6 +2,7 @@
 import argparse
 import base64
 import json
+import math
 import os
 import shutil
 import subprocess
@@ -13,26 +14,23 @@ from urllib.parse import urlparse
 
 import requests
 
-from transcribe_track import load_note_model, run, transcribe
+from transcribe_track import AUDIO_FORMATS, load_note_model, run, transcribe
 from score_pdf import render_pdf
 from track_link import TrackLinkError, download_track, download_youtube
-from guitar_solo import write_solo
+from tsumugi_engine import Tsumugi
+from guitararranger_engine import GuitarArranger
 
 
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
 REVIEW_TRACKS = ("original", "guitar", "vocals", "bass", "drums", "piano", "other")
 
 
-def publish_solo(call, identity, directory, result, job, meta, capo):
-    source = result / "tab.mid"
-    if job["instrument"] != "guitare" or not source.is_file():
+def publish_solo(call, identity, result, job, engine):
+    folder = result / "solo"
+    if not all((folder / filename).is_file() for filename in ("tab.musicxml", "tab.mid")):
         return
-    folder = directory / "solo"
-    title = f"{job['title']} – Arrangement solo"
+    title = f"{job['title']} – Guitare solo"
     try:
-        meter = tuple(map(int, meta.get("meter", "4/4").split("/")))
-        if not write_solo(source, folder, title, meta["bpm"], meter, capo):
-            return
         exports = {kind: base64.b64encode((folder / filename).read_bytes()).decode("ascii")
                    for kind, filename in (("solotab", "tab.musicxml"), ("solomid", "tab.mid"))}
         if sum(map(len, exports.values())) > 4_000_000:
@@ -40,7 +38,7 @@ def publish_solo(call, identity, directory, result, job, meta, capo):
     except Exception as error:
         print(f"{job['id']}: arrangement solo indisponible : {error}", flush=True)
         return
-    call("solo", **identity, exports=exports)
+    call("solo", **identity, exports=exports, solo_engine=engine)
     return folder, title
 
 
@@ -59,7 +57,21 @@ def encode_review_audio(original, stems, destination):
             print(f"Piste de diagnostic {kind} indisponible : {type(error).__name__}", flush=True)
 
 
-def process_job(call, job, data):
+def prepare_preview(audio, directory, limit):
+    input_options = ["-protocol_whitelist", "file", "-f", AUDIO_FORMATS[audio.suffix.lower()], "-i", str(audio)]
+    duration = float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
+                          "-of", "default=noprint_wrappers=1:nokey=1", *input_options], timeout=20))
+    if not math.isfinite(duration) or duration < .5:
+        raise ValueError("L’audio doit durer au moins 0,5 seconde.")
+    if duration > 361:
+        raise ValueError("L’audio dépasse 6 minutes. Importe un extrait plus court.")
+    preview = directory / "preview.wav"
+    run(["ffmpeg", "-nostdin", "-v", "error", *input_options, "-map", "0:a:0", "-t", str(limit),
+         "-ar", "44100", "-ac", "2", str(preview)], timeout=45)
+    return preview, duration
+
+
+def process_job(call, job, data, guitar_engine=None, solo_engine=None):
     identity = {"id": job["id"], "lease": job["lease"]}
 
     def report(stage):
@@ -83,25 +95,38 @@ def process_job(call, job, data):
                         file.write(base64.b64decode(chunk["data"], validate=True))
             capo = job.get("capo", 0)
             review = directory / "review"
+            source_duration = None
+            if job.get("preview_limit"):
+                audio, source_duration = prepare_preview(audio, directory, job["preview_limit"])
+
+            def publish_direct(result, meta):
+                exports = {
+                    key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
+                    for key, filename in EXPORTS.items() if (result / filename).is_file()
+                }
+                if sum(map(len, exports.values())) > 4_000_000:
+                    raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
+                call("preview", **identity, duration=source_duration or meta["duration"],
+                     preview_duration=meta["duration"], note_count=len(meta["notes"]), exports=exports,
+                     diagnostic=meta.get("diagnostic"), resolved_capo=meta.get("resolved_capo", capo),
+                     engine=meta.get("engine"))
+                print(f"{job['id']}: relevé disponible", flush=True)
+
+            started = time.monotonic()
             result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"],
                                 capo=capo, progress=report,
+                                guitar_engine=guitar_engine, guitar_solo=True,
+                                solo_engine=solo_engine, on_direct=publish_direct,
+                                has_voice=job.get("source_content") != "instrumental",
                                 review_audio=(lambda original, stems: encode_review_audio(original, stems, review))
                                 if job.get("review_audio") else None)
-            exports = {
-                key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
-                for key, filename in EXPORTS.items() if (result / filename).is_file()
-            }
             meta = json.loads((result / "notes.json").read_text(encoding="utf-8"))
             resolved_capo = meta.get("resolved_capo", capo)
-            if sum(map(len, exports.values())) > 4_000_000:
-                raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
-            call("preview", **identity, duration=meta["duration"], note_count=len(meta["notes"]),
-                 exports=exports, diagnostic=meta.get("diagnostic"), resolved_capo=resolved_capo)
-            print(f"{job['id']}: relevé disponible", flush=True)
-            solo = publish_solo(call, identity, directory, result, job, meta, resolved_capo)
+            solo = publish_solo(call, identity, result, job, meta.get("solo_engine"))
+            print(f"{job['id']}: calcul {time.monotonic() - started:.2f}s pour {meta['duration']:.2f}s audio", flush=True)
             payload = {"ok": True, "preview": True, "exports": {}}
-            pdfs = [("pdf", result, job["title"], job.get("format", "partition"))]
-            if solo:
+            pdfs = [] if job.get("preview_limit") else [("pdf", result, job["title"], job.get("format", "partition"))]
+            if solo and pdfs:
                 pdfs.append(("solopdf", *solo, "tablature"))
             for kind, folder, title, format_ in pdfs:
                 pdf = directory / f"{kind}.pdf"
@@ -156,6 +181,8 @@ def main():
     if not token or not (url.scheme == "https" or (url.scheme == "http" and url.hostname in ("127.0.0.1", "localhost"))):
         parser.error("Configure TRACK_WORKER_TOKEN et une URL HTTPS ou locale.")
 
+    guitar_engine = Tsumugi.from_env()
+    solo_engine = GuitarArranger.from_env()
     with requests.Session() as session:
         session.headers["Authorization"] = f"Bearer {token}"
 
@@ -171,9 +198,10 @@ def main():
         print("Moteur de transcription prêt.", flush=True)
         while True:
             try:
-                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True)["job"]
+                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True,
+                           preview=guitar_engine is not None and solo_engine is not None)["job"]
                 if job:
-                    process_job(call, job, args.cache)
+                    process_job(call, job, args.cache, guitar_engine, solo_engine)
                 if args.once:
                     return
                 if not job:

@@ -3,7 +3,7 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const {serial,addGeneration}=require('../lib/generations');
-const {serialTrack,JOB_FIELDS}=require('../lib/track-jobs');
+const {serialTrack,JOB_FIELDS,PREVIEW_SECONDS}=require('../lib/track-jobs');
 module.exports=async(req,res)=>{
   if(req.method!=='GET'&&req.method!=='POST'){res.setHeader('Allow','GET, POST');return json(res,405,{detail:'Méthode non autorisée.'});}
   if(!method(req,res,req.method))return;
@@ -14,9 +14,9 @@ module.exports=async(req,res)=>{
     if(req.method==='GET'){
       const query={user_id:user._id};
       const demos=db.collection('generations').find(query).sort({created_at:-1}).limit(100).toArray();
-      const tracks=user.role==='admin'
-        ?db.collection('track_jobs').find({...query,status:{$ne:'uploading'}},{projection:JOB_FIELDS}).sort({created_at:-1}).limit(100).toArray()
-        :[];
+      const access=user.role==='admin'?{}:{preview_limit:PREVIEW_SECONDS};
+      const tracks=db.collection('track_jobs').find({...query,...access,status:{$ne:'uploading'}},
+        {projection:JOB_FIELDS}).sort({created_at:-1}).limit(100).toArray();
       const [demoJobs,trackJobs]=await Promise.all([demos,tracks]);
       const jobs=[...demoJobs.map(serial),...trackJobs.map(serialTrack)].sort((a,b)=>b.created_at-a.created_at);
       return json(res,200,{jobs:jobs.slice(0,100)});

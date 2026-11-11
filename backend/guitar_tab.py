@@ -27,7 +27,7 @@ class TabNote:
     attack: float
 
 
-def choose_fingering(group, tuning, held, position, max_fret, string_hints, shape=None):
+def choose_fingering(group, tuning, held, position, max_fret, string_hints, shape=None, *, compact=False):
     # A small beam keeps dense detector output tractable. Keep as many attacks as
     # possible, then favor an economical hand position and notes that can ring.
     candidates = [([], frozenset(), 0)]
@@ -59,13 +59,15 @@ def choose_fingering(group, tuning, held, position, max_fret, string_hints, shap
                 if len(frets) > 4 or (frets and max(frets) - min(frets) > 4):
                     continue
                 movement = abs(fret - position) if fret else 0
-                penalty = movement + fret * .12 + (6 if prior else 0)
+                penalty = movement + fret * (.75 if compact else .12) + (6 if prior else 0)
                 if preferred is not None and string != preferred:
                     penalty += 15
                 if previous_string is not None and string != previous_string:
                     penalty += 19
                 next_candidates.append((picked + [(note, string, fret)], remaining, cost + penalty))
-        candidates = sorted(next_candidates, key=lambda item: (-len(item[0]), item[2]))[:BEAM_SIZE]
+        candidates = sorted(next_candidates, key=lambda item: (
+            -len(item[0]), -sum(n["velocity"] >= 75 for n, _, _ in item[0]) if compact else 0, item[2],
+        ))[:BEAM_SIZE]
     return candidates[0][0]
 
 
@@ -107,7 +109,7 @@ def open_position_melody(notes, tuning):
     return []
 
 
-def arrange(notes, tuning, *, capo=0, simple=False, string_hints=None, strokes=None):
+def arrange(notes, tuning, *, capo=0, simple=False, string_hints=None, strokes=None, compact=False):
     tuning = tuple(pitch + capo for pitch in tuning)
     string_hints = string_hints or {}
     if simple and notes and (compact := open_position_melody(notes, tuning)):
@@ -121,7 +123,17 @@ def arrange(notes, tuning, *, capo=0, simple=False, string_hints=None, strokes=N
         if start - shape_at > .95:
             shape = {}
         held = {key: note for key, note in held.items() if note.end > start}
-        picked = choose_fingering(group, tuning, held, position, 24 - capo, string_hints, shape)
+        max_fret = min(12, 24 - capo) if compact else 24 - capo
+        picked = choose_fingering(group, tuning, held, position, max_fret, string_hints, shape, compact=compact)
+        if compact and len(picked) < len({note["pitch"] for note in group}):
+            # A ringing accompaniment may be released to fit the next phrase.
+            retained = {key: note for key, note in held.items() if not note.fret or note.velocity >= 75}
+            retry = choose_fingering(group, tuning, retained, position, max_fret, string_hints, shape, compact=True)
+            if len(retry) > len(picked):
+                for key, note in held.items():
+                    if key not in retained:
+                        note.end = start
+                held, picked = retained, retry
         strum = strokes is not None and group[-1]["start"] - start > .03
         if strum and len(picked) < len(group):
             # A new strum may release the old shape. If it still cannot be
@@ -327,7 +339,7 @@ def write_harmony(measure, root, quality):
 
 
 def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=(), capo=0, chords=(),
-              meter=(4, 4), intro_count=0, pull_offs=(), slides=(), strummed=()):
+              meter=(4, 4), intro_count=0, pull_offs=(), slides=(), strummed=(), grouped_rhythm=False):
     root = ET.Element("score-partwise", version="4.0")
     add(root, "movement-title", title)
     part_list = ET.SubElement(root, "part-list")
@@ -355,6 +367,22 @@ def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=
             harmony[closest] = (root_pitch - capo) % 12, quality
     end = max(stop for _, group in attacks for stop, _ in group)
     bar_ticks = meter[0] * DIVISIONS * 4 // meter[1]
+    beat_ticks = DIVISIONS * 4 // meter[1]
+    if meter[1] == 8 and meter[0] % 3 == 0:
+        beat_ticks *= 3
+    connected = set()
+    if grouped_rhythm:
+        for i in range(len(attacks) - 1):
+            tick, events = attacks[i]
+            next_tick, next_events = attacks[i + 1]
+            after = attacks[i + 2][0] if i + 2 < len(attacks) else end
+            length = next_tick - tick
+            next_length = min(after, max(stop for stop, _ in next_events)) - next_tick
+            if (tick % bar_ticks // beat_ticks == next_tick % bar_ticks // beat_ticks
+                    and tick // bar_ticks == next_tick // bar_ticks
+                    and length in (1, 2, 3, 4) and 0 < next_length <= 4
+                    and max(stop for stop, _ in events) >= next_tick):
+                connected.add(i)
     bars = (end + bar_ticks - 1) // bar_ticks
     index, ringing_until = 0, 0
     for bar in range(bars):
@@ -368,6 +396,10 @@ def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=
                     write_harmony(measure, *harmony[start])
                 events = attacks[index][1]
                 beam = ("begin", "continue", "end")[index % 3] if index + 3 - index % 3 <= intro_count else None
+                if index in connected:
+                    beam = "continue" if index - 1 in connected else "begin"
+                elif index - 1 in connected:
+                    beam = "end"
                 index += 1
                 group_end = max(stop for stop, _ in events)
                 ringing_until = max(ringing_until, group_end)

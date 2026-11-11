@@ -83,7 +83,7 @@
     return new XMLSerializer().serializeToString(xml);
   }
 
-  function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,preferTab=false,startAt=0}){
+  function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,preferTab=false,startAt=0}){
     const controller=new AbortController();
     const {signal}=controller;
     root.innerHTML=`
@@ -104,7 +104,10 @@
         </div>
       </div>
       <div class="sp-body">
-        <div class="sp-sheet" tabindex="0" aria-label="Notation musicale"><p>Chargement de la partition…</p><div class="sp-engraving"></div></div>
+        <div class="sp-sheet" tabindex="0" aria-label="Notation musicale"><p>Chargement de la partition…</p><div class="sp-engraving"></div>
+          <div class="sp-continuation" hidden><div class="sp-continuation-notation" aria-hidden="true"></div>
+          <div class="sp-continuation-label"><strong>Suite verrouillée</strong><span>Les 30 premières secondes sont gratuites. La suite floutée est illustrative.</span></div></div>
+        </div>
         <div class="sp-roll">
           <div class="sp-roll-heading"><span aria-hidden="true">●</span> Piano roll <small>Clique dans la grille pour te déplacer</small></div>
           <div class="sp-roll-scroll" tabindex="0" aria-label="Grille des notes"><p>Chargement des notes…</p></div>
@@ -344,7 +347,10 @@
         }
         if(signal.aborted||current!==audioLoadId)return;
         if(!track.length)throw new Error('Aucune note à lire.');
-        notes=track.sort((a,b)=>a.time-b.time);
+        notes=track.filter(note=>!previewDuration||note.time<previewDuration).map(note=>previewDuration
+          ?{...note,midi:note.midi,velocity:note.velocity,time:note.time,duration:Math.min(note.duration,previewDuration-note.time)}
+          :note).sort((a,b)=>a.time-b.time);
+        if(!notes.length)throw new Error('Aucune note dans cet aperçu.');
         duration=notes.reduce((end,note)=>Math.max(end,note.time+note.duration),0);
         if(sourceDuration>0){
           const timing=get('.sp-source-duration');
@@ -362,6 +368,12 @@
     }
     async function drawSheet(){
       get('.sp-technique-key').hidden=!guitar||kind?.value!=='tab';
+      const continuation=get('.sp-continuation');
+      continuation.hidden=!(previewDuration&&sourceDuration>previewDuration+.05);
+      if(!continuation.hidden){
+        get('.sp-continuation-notation').innerHTML=window.SongToSheetFlow?.placeholderNotation(
+          instrument,kind?kind.value==='tab':preferTab)||'';
+      }
       if(sheet.hidden||signal.aborted)return;
       const current=++loadId,url=kind?.value==='tab'?tabUrl:scoreUrl;
       try{

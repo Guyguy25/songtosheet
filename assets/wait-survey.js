@@ -28,14 +28,16 @@
       if(states.get(root)!==state)return;
       const question=state.questions[0];
       if(!question){root.hidden=true;root.replaceChildren();return;}
+      const heading=document.createElement('div');
+      heading.className='wait-survey-heading';
+      heading.innerHTML='<h2>Quelques questions pendant l’attente</h2><span></span>';
+      heading.querySelector('span').textContent=(state.total-state.questions.length+1)+' sur '+state.total;
       const form=document.createElement('form');
-      form.innerHTML=`<div class="wait-survey-heading"><strong>Pendant l’attente</strong><span></span></div>
-        <fieldset><legend></legend><div class="wait-survey-options"></div></fieldset>
+      form.innerHTML=`<fieldset><legend></legend><div class="wait-survey-options"></div></fieldset>
         <div class="wait-survey-actions"><button class="btn btn-primary" type="submit" disabled>Envoyer</button>
         <button class="wait-survey-skip" type="button">Passer la question</button></div>
         <p class="wait-survey-note">Facultatif. Tes réponses sont associées à ton compte pour nous aider à améliorer SongToSheet.</p>
         <p class="wait-survey-error" role="status"></p>`;
-      form.querySelector('.wait-survey-heading span').textContent=`${state.total-state.questions.length+1} / ${state.total}`;
       form.querySelector('legend').textContent=question.text;
       const options=form.querySelector('.wait-survey-options');
       const submit=form.querySelector('[type="submit"]'),skip=form.querySelector('.wait-survey-skip');
@@ -69,7 +71,7 @@
           form.querySelector('.wait-survey-error').textContent='Impossible d’enregistrer pour l’instant.';
         }
       }
-      root.replaceChildren(form);
+      root.replaceChildren(heading,form);
     }
     request().then(({questions})=>{
       if(states.get(root)!==state)return;

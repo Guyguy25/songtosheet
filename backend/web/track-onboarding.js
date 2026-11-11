@@ -27,7 +27,10 @@
 
   function mount(root,{onSubmit,onLinkChange,sampleUrl,allowLink=false,freemium=false}){
     const draft={instrument:'',format:'',source:'',file:null,capo:null};
-    const activeSteps=()=>allSteps.filter(([field])=>field!=='capo'||(allowLink&&draft.instrument==='guitare'));
+    const maxFileSize=25*1024*1024;
+    let prefilledSource=false;
+    const activeSteps=()=>allSteps.filter(([field])=>
+      (field!=='import'||!prefilledSource)&&(field!=='capo'||(allowLink&&draft.instrument==='guitare')));
     let step=0,busy=false;
     root.innerHTML=`
       <ol class="track-steps" aria-label="Étapes de création"></ol>
@@ -38,11 +41,6 @@
       <form>
         <div class="track-choices" role="group" aria-labelledby="track-question"></div>
         <div class="track-upload hidden">
-          ${allowLink?`<div class="track-upload track-saved-link hidden">
-            <p class="track-selection"></p>
-            <button type="button" class="btn btn-outline track-change-source">Changer de source</button>
-          </div>`:''}
-          <div class="track-upload track-source-fields">
           <label for="track-audio-input">Ton fichier audio</label>
           <input id="track-audio-input" type="file" accept=".wav,.mp3,.m4a,.flac,.ogg,.aac,audio/*">
           ${allowLink?`<label for="track-link-input">Ou colle un lien audio ou YouTube</label>
@@ -52,7 +50,6 @@
           <small class="track-filename" aria-live="polite"></small>
           <audio class="track-audio-preview hidden" controls preload="metadata" aria-label="Écouter le fichier sélectionné"></audio>
           ${sampleUrl?'<button type="button" class="btn btn-outline track-sample">Charger la mélodie de test</button>':''}
-          </div>
         </div>
         <div class="track-upload track-confirm hidden">
           <label for="track-title-input">Nom du relevé (facultatif)</label>
@@ -73,8 +70,6 @@
     const back=get('.track-back'),next=get('.track-next'),title=get('#track-title-input');
     const fileInput=get('#track-audio-input'),rights=get('#track-rights-input'),status=get('.track-status');
     const linkInput=get('#track-link-input');
-    const savedLink=get('.track-saved-link');
-    const sourceFields=get('.track-source-fields');
     const referenceNote=get('.track-reference');
     const audioSource=allowLink?window.SongToSheetAudioSource:null;
     const updateRights=source=>{
@@ -86,7 +81,7 @@
     const media=get('.track-audio-preview');
     const allowsTab=()=>['guitare','basse'].includes(draft.instrument);
     const setStatus=(message,error=false)=>{status.textContent=message;status.classList.toggle('is-error',error);};
-    let reference,editingSource=false;
+    let reference;
     const setReference=source=>{
       reference=source;
       if(!referenceNote)return;
@@ -132,17 +127,10 @@
       const importing=field==='import', confirming=field==='confirm';
       get('.track-step-count').textContent=`Étape ${step+1} sur ${steps.length}`;
       const link=audioSource?.parse(linkInput?.value);
-      const useSavedLink=Boolean(link&&(!link.provider||link.youtubeId)&&!editingSource);
-      sourceFields.classList.toggle('hidden',useSavedLink);
-      if(savedLink){
-        savedLink.classList.toggle('hidden',!useSavedLink);
-        if(useSavedLink)savedLink.querySelector('p').textContent=`Lien conservé · ${link.youtubeId?'YouTube':link.url.hostname}`;
-      }
       updateRights(link);
       heading.textContent=question;
       const intro=get('.track-step-heading p');
-      intro.textContent=importing&&useSavedLink?'Ton lien est prêt. Tu peux choisir l’instrument.':
-        confirming&&freemium
+      intro.textContent=confirming&&freemium
           ?draft.instrument==='guitare'?'Écoute jusqu’à 30 secondes du relevé guitare et du Solo.':'Écoute jusqu’à 30 secondes du relevé.'
           :field==='format'&&freemium?'Choisis la notation affichée dans l’aperçu.':
           confirming&&allowLink&&draft.instrument==='guitare'?'Tu pourras écouter la guitare originale et une version pour guitare solo.':description;
@@ -193,11 +181,6 @@
         updateRights(null);
       }
       setFile(fileInput.files[0]||null);
-    });
-    get('.track-change-source')?.addEventListener('click',()=>{
-      editingSource=true;
-      render();
-      linkInput.focus();
     });
     linkInput?.addEventListener('input',()=>{
       rights.checked=false;
@@ -262,11 +245,10 @@
         setStatus(reference?audioSource.importHint(reference.provider):allowLink?'Ajoute un fichier audio ou colle un lien YouTube.':'Ajoute un fichier audio pour continuer.',true);
         fileInput.focus();return;
       }
-      if(draft.file&&draft.file.size>25*1024*1024){
+      if(draft.file&&draft.file.size>maxFileSize){
         setStatus('Choisis un fichier audio de 25 Mo maximum.',true);fileInput.focus();return;
       }
       if(field==='import'){
-        editingSource=false;
         step++;
         render(true);
         return;
@@ -281,7 +263,7 @@
         await onSubmit({...draft,capo:draft.capo??0,source,audioUrl:link?.href,title:title.value.trim()||fallback.replace(/\.(wav|mp3|m4a|flac|ogg|aac)$/i,'')},setStatus);
         if(linkInput)linkInput.value='';
         setReference(null);
-        editingSource=false;
+        prefilledSource=false;
         fileInput.value='';title.value='';setFile(null);
         Object.assign(draft,{instrument:'',format:'',source:'',capo:null});
         step=0;
@@ -305,8 +287,9 @@
           const source=audioSource?.parse(audioUrl);
           const isReference=source?.provider&&!source.youtubeId;
           setReference(isReference?source:null);
-          editingSource=false;
           if(linkInput)linkInput.value=source&&!isReference?source.url.href:'';
+          prefilledSource=Boolean((source&&!isReference)||
+            (file&&file.size>=1024&&file.size<=maxFileSize&&/\.(wav|mp3|m4a|flac|ogg|aac)$/i.test(file.name)));
         }
         if(instruments.some(([value])=>value===instrument))draft.instrument=instrument;
         if(draft.instrument!=='guitare')draft.capo=null;

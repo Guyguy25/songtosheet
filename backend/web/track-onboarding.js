@@ -131,7 +131,7 @@
       heading.textContent=question;
       const intro=get('.track-step-heading p');
       intro.textContent=confirming&&freemium
-          ?draft.instrument==='guitare'?'Écoute jusqu’à 30 secondes du relevé guitare et du Solo.':'Écoute jusqu’à 30 secondes du relevé.'
+          ?'Écoute jusqu’à 30 secondes du relevé.'
           :field==='format'&&freemium?'Choisis la notation affichée dans l’aperçu.':
           confirming&&allowLink&&draft.instrument==='guitare'?'Tu pourras écouter la guitare originale et une version pour guitare solo.':description;
       intro.hidden=!intro.textContent;

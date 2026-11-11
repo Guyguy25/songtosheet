@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=5" />
   <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=14" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=15" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=6" />
   <script src="/backend/web/score-player.js?v=10" defer></script>
   <script src="/assets/wait-survey.js?v=1" defer></script>
@@ -1444,7 +1444,6 @@ body.pricing-open{overflow:hidden}
         const fallback=j.format==='tablature'&&!tab?' Aucune tablature jouable n’a été détectée. La partition est disponible.':'';
         const detail=ready?`${j.note_count} notes estimées.${fallback}${j.preview_limit?'':waiting?'':j.pdf_error?' Le PDF est indisponible pour ce relevé.':' Tu peux corriger le résultat dans un éditeur MusicXML.'}`
           :waiting?'':j.error_message||'Importe ton fichier pour réessayer.';
-        const soloUnavailable=completed&&ready&&j.preview_limit&&j.instrument==='guitare'&&!j.downloads.includes('solotab');
         if($('track-result-summary')?.dataset.job!==id){
           $('result-content').innerHTML=`<div id="track-result-summary" class="result-hero"></div>
             <section id="track-progress" class="track-progress hidden" aria-label="Progression du relevé">
@@ -1461,7 +1460,6 @@ body.pricing-open{overflow:hidden}
           <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · ${j.preview_limit?'Aperçu gratuit · jusqu’à 30 s':'Accès admin'}</p>
           ${j.source_name?`<p class="result-meta">Source · ${safe(j.source_name)}</p>`:''}
           ${detail?`<p>${safe(detail)}</p>`:''}${downloads?`<div class="result-actions">${downloads}</div>`:''}${diagnostic}
-          ${soloUnavailable?'<p class="result-note">L’arrangement solo n’a pas pu être généré pour cet extrait.</p>':''}
           ${!waiting&&!completed&&!ready?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;
         if(trackSummaryMarkup!==summary){
           $('track-result-summary').innerHTML=summary;
@@ -1514,9 +1512,9 @@ body.pricing-open{overflow:hidden}
             root.insertAdjacentHTML('beforebegin',`
               <div id="guitar-versions" class="result-actions" role="group" aria-label="Version de la tablature">
                 <button class="btn btn-primary" type="button" data-version="direct" aria-pressed="true">Guitare originale${j.engine==='tsumugi-guitar-v1.5'?' · Tsumugi':''}</button>
-                <button class="btn btn-outline" type="button" data-version="solo" aria-pressed="false">Guitare solo${j.solo_engine==='guitararranger-v1'?' · GuitarArranger':''}</button>
+                <button class="btn btn-outline" type="button" data-version="solo" aria-pressed="false">Guitare solo${j.solo_engine==='guitararranger-v2'?' · GuitarArranger':''}</button>
               </div>
-              <p class="result-note">${['mix-melody-v1','guitararranger-v1'].includes(j.solo_engine)
+              <p class="result-note">${['mix-melody-v1','guitararranger-v2'].includes(j.solo_engine)
                 ?'Le relevé suit la piste guitare. La version solo adapte le morceau pour une seule guitare, avec la mélodie et une basse issue des accords.'
                 :'Le relevé direct conserve les attaques détectées. Le solo répartit certains accords et garde la ligne principale.'}</p>
               <div id="guitar-solo-exports" class="result-actions" hidden>

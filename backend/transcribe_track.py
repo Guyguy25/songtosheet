@@ -228,8 +228,11 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
               "instrument": instrument, "bpm": bpm,
               "version": {"guitare": 15 if isolated else 16, "basse": 4, "piano": 3}.get(instrument, 1)}
     if guitar_solo:
-        config["solo"] = {"version": 7, "voice": has_voice and not isolated,
-                          "engine": "guitararranger-v1" if solo_engine else "mix-melody-v1"}
+        if solo_engine:
+            from guitararranger_engine import ENGINE as solo_engine_id
+        else:
+            solo_engine_id = "mix-melody-v1"
+        config["solo"] = {"version": 8, "voice": has_voice and not isolated, "engine": solo_engine_id}
     if capo:
         config["capo"] = capo
     if title:
@@ -397,7 +400,21 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             manifest["diagnostic"] = guitar_diagnostic(notes, tab, transients, filtered)
         if on_direct:
             on_direct(result, manifest)
-        if guitar_solo:
+        vocals = []
+        if guitar_solo and has_voice and not isolated:
+            try:
+                _, voice, _ = predict(wav.with_name("vocals.wav"), load_note_model(),
+                                      minimum_frequency=100, maximum_frequency=1000)
+                vocals = midi_events(voice, duration)
+            except Exception as error:
+                print(f"Mélodie vocale indisponible : {error}", file=sys.stderr, flush=True)
+        offer_solo = guitar_solo
+        if offer_solo and solo_engine and tab:
+            from guitar_solo import vocal_melody
+            from solo_quality import has_complete_opening
+
+            offer_solo = not has_complete_opening(notes, vocal_melody(vocals))
+        if offer_solo:
             from guitar_solo import write_solo
 
             mix_notes, mix_attacks = [], []
@@ -408,14 +425,6 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                     mix_attacks, _ = guitar_attacks(original)
                 except (ValueError, OSError, subprocess.TimeoutExpired) as error:
                     print(f"Relevé guitare du mix indisponible : {error}", file=sys.stderr, flush=True)
-            vocals = []
-            if has_voice and not isolated:
-                try:
-                    _, voice, _ = predict(wav.with_name("vocals.wav"), load_note_model(),
-                                          minimum_frequency=100, maximum_frequency=1000)
-                    vocals = midi_events(voice, duration)
-                except Exception as error:
-                    print(f"Mélodie vocale indisponible : {error}", file=sys.stderr, flush=True)
             try:
                 solo_result = work / "solo"
                 arrange_solo = solo_engine.write if solo_engine else write_solo

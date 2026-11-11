@@ -5,7 +5,7 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
+const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
@@ -164,8 +164,9 @@ async function worker(db,res,body){
   if(body.action==='solo'){
     if(job.instrument!=='guitare'||!hasPreview||!validExports(exports)||!exports.solotab||!exports.solomid||
       Object.keys(exports).length!==2)return json(res,400,{detail:'Arrangement invalide.'});
-    if(job.preview_limit&&body.solo_engine!=='guitararranger-v1')return json(res,400,{detail:'Moteur d’arrangement invalide.'});
-    const solo=['mix-melody-v1','guitararranger-v1'].includes(body.solo_engine)?{solo_engine:body.solo_engine}:{};
+    const engines=['guitararranger-v1',APPROVED_SOLO_ENGINE];
+    if(job.preview_limit&&!engines.includes(body.solo_engine))return json(res,400,{detail:'Moteur d’arrangement invalide.'});
+    const solo=[...engines,'mix-melody-v1'].includes(body.solo_engine)?{solo_engine:body.solo_engine}:{};
     const updated=await jobs.updateOne(filter,{$set:{'exports.solotab':exports.solotab,'exports.solomid':exports.solomid,...solo},
       $addToSet:{downloads:{$each:['solotab','solomid']}}});
     return updated.matchedCount?json(res,200,{ok:true}):json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
@@ -220,7 +221,8 @@ async function download(db,req,res,user){
   if(!isId(id)||!Object.hasOwn(FORMATS,format))return json(res,404,{detail:'Export introuvable.'});
   const access=user.role==='admin'?{}:{preview_limit:PREVIEW_SECONDS};
   const job=await db.collection('track_jobs').findOne({...trackFilter(id,user),...access,status:{$in:['processing','completed']}},
-    {projection:{[`exports.${format}`]:1}});
+    {projection:{[`exports.${format}`]:1,preview_limit:1,solo_engine:1}});
+  if(job&&SOLO_FORMATS.has(format)&&!showSolo(job))return json(res,404,{detail:'Export introuvable.'});
   const data=job?.exports?.[format];
   if(!data)return json(res,404,{detail:'Export introuvable.'});
   res.setHeader('Content-Type',FORMATS[format].type);

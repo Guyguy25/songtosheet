@@ -5,9 +5,10 @@ import sys
 
 from guitar_solo import harmony, solo_notes
 from guitar_tab import TabNote, midi_notes, write_tab
+from solo_quality import publishable_solo
 
 
-ENGINE = "guitararranger-v1"
+ENGINE = "guitararranger-v2"
 TUNING = (64, 59, 55, 50, 45, 40)
 
 
@@ -95,6 +96,7 @@ class GuitarArranger:
                         end=min(duration, start + 45 / bpm), velocity=60)
                    for start, root, _ in chords if start < duration]
         midi = PrettyMIDI(initial_tempo=bpm)
+        reference = []
         for program, events in ((24, guitar), (53, lead), (33, anchors)):
             track = Instrument(program)
             for event in events:
@@ -106,6 +108,7 @@ class GuitarArranger:
                             pitch += 12
                         while pitch > 81:
                             pitch -= 12
+                        reference.append({"pitch": pitch + capo, "start": event["start"]})
                     track.notes.append(Note(event["velocity"], pitch, event["start"], end))
             if track.notes:
                 midi.instruments.append(track)
@@ -138,6 +141,8 @@ class GuitarArranger:
         if not arranged:
             return False
         arranged.sort(key=lambda note: (note.start, note.string))
+        if not publishable_solo(reference, arranged, TUNING, capo, step):
+            return False
         output.mkdir()
         write_midi(midi_notes(arranged), output / "tab.mid", 24, "guitare", bpm,
                    beats=meter[0], beat_type=meter[1])

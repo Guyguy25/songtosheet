@@ -1,0 +1,123 @@
+.upgrade-pricing {
+  background: radial-gradient(ellipse at 50% 0, #312052, transparent 64%), #15111f;
+  color: #fff;
+  padding: 34px 24px 46px;
+}
+
+.upgrade-inner { max-width: 1100px; margin: 0 auto; }
+.upgrade-back {
+  display: inline-block;
+  margin-bottom: 16px;
+  color: #ded2fa;
+  font-size: 14px;
+  font-weight: 650;
+  text-decoration: none;
+}
+.upgrade-back:hover { text-decoration: underline; }
+.upgrade-heading { text-align: center; margin: 12px 0 26px; }
+.upgrade-heading h1 {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(32px, 5.8vw, 62px);
+  letter-spacing: -.06em;
+  line-height: 1.08;
+}
+.upgrade-heading h1:focus { outline: none; }
+.upgrade-heading p { margin: 12px 0 0; color: #d6cce5; font-size: 15px; }
+
+.upgrade-cycle {
+  display: flex;
+  gap: 4px;
+  width: max-content;
+  max-width: 100%;
+  margin: 0 auto 30px;
+  padding: 4px;
+  border: 1px solid #594970;
+  border-radius: 999px;
+  background: #221a30;
+}
+.upgrade-cycle button {
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: #eee5fb;
+  padding: 10px 15px;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+.upgrade-cycle button[aria-pressed="true"] { background: #7548e8; color: #fff; }
+.upgrade-cycle span {
+  margin-left: 4px;
+  border-radius: 999px;
+  padding: 3px 6px;
+  background: #e8dbff;
+  color: #4e288e;
+  white-space: nowrap;
+}
+.upgrade-cycle button:focus-visible, .upgrade-back:focus-visible {
+  outline: 2px solid #e3d1ff;
+  outline-offset: 3px;
+}
+
+.upgrade-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.upgrade-card {
+  --upgrade-muted: #d2c9df;
+  --upgrade-rule: #544365;
+  --upgrade-mark: #cfb7ff;
+  border: 1px solid #564567;
+  border-radius: 20px;
+  padding: clamp(18px, 2.2vw, 28px);
+  background: #211a2d;
+}
+.upgrade-featured {
+  --upgrade-muted: #594965;
+  --upgrade-rule: #ddcde9;
+  --upgrade-mark: #6540b4;
+  background: #f6efff;
+  color: #251736;
+  border-color: #c7a8ff;
+  box-shadow: 0 10px 34px #0e081d55;
+}
+.upgrade-plan-heading { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.upgrade-plan-heading h2 { font-size: 24px; letter-spacing: -.04em; margin: 0; color: inherit; }
+.upgrade-recommended {
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #e7d9ff;
+  color: #523184;
+  font-size: 11px;
+  font-weight: 800;
+}
+.upgrade-description { min-height: 3em; margin: 6px 0 12px; color: var(--upgrade-muted); font-size: 13px; line-height: 1.5; }
+.upgrade-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.upgrade-price strong { font-size: clamp(34px, 4vw, 50px); line-height: 1.15; letter-spacing: -.055em; }
+.upgrade-price span { font-size: 14px; font-weight: 650; }
+.upgrade-charge, .upgrade-saving { margin: 5px 0 0; font-size: 13px; color: var(--upgrade-muted); }
+.upgrade-saving { color: var(--upgrade-mark); font-weight: 750; }
+.upgrade-grid:has([data-plan-saved]:not([hidden])) .upgrade-card:last-child .upgrade-charge { margin-bottom: 38px; }
+.upgrade-limit {
+  border-top: 1px solid var(--upgrade-rule);
+  margin: 18px 0 12px;
+  padding-top: 16px;
+  font-size: 14px;
+  font-weight: 800;
+}
+.upgrade-features { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.upgrade-features li { display: flex; gap: 9px; align-items: baseline; font-size: 13px; line-height: 1.4; }
+.upgrade-feature-mark { flex: 0 0 13px; color: var(--upgrade-mark); font-weight: 800; }
+.upgrade-unavailable { color: var(--upgrade-muted); }
+.upgrade-unavailable .upgrade-feature-mark { color: inherit; }
+.upgrade-unavailable span:last-child { text-decoration: line-through; }
+.upgrade-availability, .upgrade-note { text-align: center; }
+.upgrade-availability { margin: 25px 0 7px; color: #eee5fb; font-size: 14px; font-weight: 700; }
+.upgrade-note { margin: 0; color: #c9bfd8; font-size: 12px; line-height: 1.6; }
+.upgrade-sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+
+@media (max-width: 760px) {
+  .upgrade-pricing { padding: 24px 16px 36px; }
+  .upgrade-grid { grid-template-columns: 1fr; max-width: 460px; margin: 0 auto; }
+  .upgrade-description { min-height: 0; }
+  .upgrade-grid:has([data-plan-saved]:not([hidden])) .upgrade-card:last-child .upgrade-charge { margin-bottom: 0; }
+}

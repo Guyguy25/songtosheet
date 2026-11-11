@@ -1,6 +1,6 @@
 # SongToSheet.ai — Spécification des abonnements (V1)
 
-**Statut :** Tarifs accessibles dans l'espace abonnements et dans le modal déclenché après intention de génération, non commercialisables tant que l'entitlement backend et le paiement n'ont pas été intégrés et testés.
+**Statut :** Les pages `/tarifs` et `/upgrade` affichent les offres. Les abonnements ne sont pas encore ouverts à l’achat.
 
 | Plan | Période | Prix total | Prix mensuel affiché | Usage |
 |---|---|---:|---:|---|
@@ -12,11 +12,9 @@
 
 ## UX
 
-- Aucune période d'essai gratuite ni génération de transcription offerte.
-- La landing **ne présente pas de tarifs** et se concentre sur la promesse, la saisie d'un lien ou d'un audio et l'aperçu d'une partition. L'espace Abonnements contient la grille ; l'offre **Illimité** est recommandée dans le modal déclenché après intention de génération.
-- Choix mensuel/annuel synchronisé entre la page Abonnements et le modal ; l'accès à vie reste à 99 € quel que soit le choix.
-- Le prix annuel **réellement débité** doit figurer avant paiement : 78,00 € ou 148,20 €.
-- Le clic sur le CTA du modal dans la version publique n'ouvre aucun checkout ; un message informe clairement que les paiements ne sont pas actifs.
+- Le parcours propose un aperçu gratuit de 30 secondes.
+- Le lien « Voir les abonnements » dans le studio ouvre `/upgrade`. Les deux pages partagent la même comparaison et mettent en avant l’offre **Illimité**.
+- Le mensuel est sélectionné à l’ouverture. L’annuel affiche l’équivalent mensuel, le montant facturé chaque année et l’économie sur douze mois. L’offre À vie coûte 99 € en un seul paiement.
 
 ## Entitlements à implémenter avant de vendre
 
@@ -32,5 +30,3 @@
 ## Risque économique
 
 À 99 € à vie, l'offre se substitue à ~5,2 mois d'abonnement Illimité à 19 €/mois. Mesurer les coûts moyens par transcription et le comportement des utilisateurs avant d'activer ce prix ; une offre à vie illimitée peut devenir déficitaire.
-
-**Important :** le site sur Vercel est une maquette interactive sans stockage des abonnements, sans paiements et sans génération IA réelle à partir des plateformes.

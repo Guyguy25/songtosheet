@@ -53,55 +53,7 @@
 #guitar-solo-exports[hidden],#guitar-solo-pdf[hidden]{display:none}
 
 
-/* Membership pricing */
-.cycle-switch{display:flex;gap:5px;background:#f5f0ff;border:1px solid #e3d9f7;border-radius:50px;padding:5px;width:max-content;max-width:100%;margin:30px auto 0}
-.cycle-switch button{border:0;border-radius:40px;padding:12px 20px;font:inherit;font-size:12px;font-weight:800;color:#746e80;background:transparent;cursor:pointer}
-.cycle-switch button.active{color:white;background:#714be5;box-shadow:0 4px 18px #714be52e}
-.cycle-switch .saving{font-size:10px;padding:4px 6px;border-radius:20px;background:#e4d9ff;color:#6b48c3;margin-left:5px}
-.cycle-switch button.active .saving{background:#ffffff35;color:#fff}
-.pricing-section .pricing-grid{margin-top:42px}
-.price-card .plan-billing{font-size:11px;min-height:31px;color:#9c93aa}
-.price-card .price-amount{margin-bottom:3px}
-.price-card.popular{background:linear-gradient(#faf7ff,#fff 55%)}
-.price-card .price-top p{min-height:36px;line-height:1.5}
-.price-card .btn{margin-top:auto}
-.price-card .credit-bubble{background:#f1edff}
-.plan-note{font-size:11px;line-height:1.7;text-align:center;max-width:790px;margin:26px auto 0;color:#9690a1}
-#billing-page .cycle-switch{margin:0 auto 26px}
-#billing-page .price-amount strong{font-size:34px}
-body.pricing-open{overflow:hidden}
-.pricing-overlay{position:fixed;inset:0;z-index:3000;display:grid;place-items:center;padding:16px;background:#100d1ec4;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-.pricing-dialog{width:min(100%,555px);max-height:94dvh;overflow:auto;overscroll-behavior:contain;border-radius:25px;padding:29px;background:radial-gradient(circle at 14% 0,#292042,#14121d 52%,#0b0a10);color:white;position:relative;box-shadow:0 25px 100px #07050db9;border:1px solid #433b56}
-.pricing-dialog h2{color:white;font-size:26px;letter-spacing:-.04em;margin:0 42px 6px 0}
-.pricing-dialog>p{color:#ada5bc;font-size:12px;line-height:1.5;margin:0 0 19px}
-.pricing-x{position:absolute;right:16px;top:12px;background:transparent;border:0;font-size:28px;color:#b3acc1;cursor:pointer}
-.pricing-dialog .cycle-switch{display:grid;grid-template-columns:1fr 1fr;width:100%;margin:0 0 17px;background:#252131;border-color:#40394c}
-.pricing-dialog .cycle-switch button{padding:12px 4px}
-.pricing-choices{display:grid;gap:11px}
-.pricing-choice{display:flex;align-items:center;gap:12px;width:100%;text-align:left;border:1px solid #3b3545;border-radius:16px;background:#1d1926;padding:16px;color:white;cursor:pointer}
-.pricing-choice.selected{border:2px solid #845af0;padding:15px;background:#252039}
-.pricing-choice:hover{border-color:#9a78f9}
-.pricing-radio{width:20px;height:20px;border:2px solid #888197;border-radius:50%;flex-shrink:0;display:grid;place-items:center}
-.pricing-choice.selected .pricing-radio{border-color:#9871ff}
-.pricing-choice.selected .pricing-radio:after{content:'';width:10px;height:10px;border-radius:50%;background:#9871ff}
-.pricing-choice .choice-info{flex:1;min-width:0}
-.pricing-choice .choice-info b{display:block;font-size:14px}
-.pricing-choice .choice-info small{display:block;font-size:11px;color:#a7a0b5;line-height:1.45;margin-top:5px}
-.pricing-choice .choice-amount{text-align:right;flex-shrink:0}
-.pricing-choice .choice-amount b{display:block;font-size:20px;letter-spacing:-.04em}
-.pricing-choice .choice-amount small{display:block;font-size:10px;color:#aaa3b7}
-.choice-tag{font-size:9px;border-radius:20px;padding:4px 7px;background:#724af0;color:white;margin-left:6px}
-.pricing-benefits{border:1px solid #403655;border-radius:15px;background:#261e38;padding:16px;margin:16px 0}
-.pricing-benefits b{font-size:12px}
-.pricing-benefits p{font-size:11px;color:#d1c9db;margin:10px 0 0;line-height:1.5}
-.pricing-benefits p:before{content:'✓';color:#ac85ff;margin-right:10px}
-.pricing-bottom{position:sticky;bottom:-29px;background:linear-gradient(transparent,#100d19 12%);padding:17px 0 0}
-.pricing-bottom>button{display:block;width:100%;border:0;border-radius:50px;background:linear-gradient(110deg,#8654e9,#258cff);color:white;font-size:14px;font-weight:850;padding:17px;cursor:pointer;box-shadow:0 10px 35px #6437ce5a}
-.pricing-bottom .pricing-summary,.pricing-bottom small{text-align:center;display:block;color:#ada5b8;font-size:11px;margin:0 0 12px;line-height:1.5}
-.pricing-bottom small{margin:11px 0 0;font-size:10px}
-#pricing-message{color:#d7c8ff;font-size:12px;text-align:center;line-height:1.5}
-#pricing-message:empty{display:none}
-@media(max-width:650px){.cycle-switch button{padding:11px 13px}.pricing-overlay{padding:8px}.pricing-dialog{padding:24px 17px 14px;max-height:97dvh}.pricing-dialog h2{font-size:23px}.pricing-choice{padding:13px 10px;gap:9px}.pricing-choice.selected{padding:12px 9px}.pricing-choice .choice-info b{font-size:13px}.pricing-choice .choice-amount b{font-size:16px}.choice-tag{font-size:8px}.price-card .price-top p{min-height:0}.pricing-bottom{bottom:-14px}}
+
 
 
 /* Landing V2: intent-first pattern, without public pricing. */
@@ -359,25 +311,9 @@ body.pricing-open{overflow:hidden}
 .result-detail-grid article>span{font-weight:950;font-size:11px;color:#8461e7}
 .result-detail-grid h3{font-size:18px;color:#302742;margin:12px 0}.result-detail-grid p{font-size:12px;color:#8c8198;line-height:1.65}
 .result-action{text-align:center;margin:38px auto 0}.result-action p{color:#ada3b9;font-size:11px}
-.pricing-subhero{padding-bottom:70px}
-.sub-pricing{padding:0 0 95px;margin-top:-35px;position:relative;background:linear-gradient(#fff,#fff)}
-.sub-pricing .container{position:relative;z-index:2}
-.sub-pricing .cycle-switch{margin:0 auto 46px;box-shadow:0 15px 40px #29204117}
-.sub-pricing .pricing-grid{margin-top:0}
-.sub-pricing .price-card{background:#fff}
-.sub-pricing .price-card.popular{background:linear-gradient(#f4efff,#fff 55%)}
-.sub-pricing .price-card .price-list p{font-size:12px}
-.compare-section{background:#faf8fe;border-top:1px solid #f2edf8}
 .sub-title{text-align:center;max-width:650px;margin:0 auto 35px}
 .sub-title h2{font-size:clamp(30px,4vw,47px);color:#281d3d;letter-spacing:-.05em;margin:0 0 13px}
 .sub-title p{font-size:14px;color:#91889b}
-.compare-scroll{overflow-x:auto;border:1px solid #e8e1f1;border-radius:18px;background:white}
-.compare-table{width:100%;min-width:650px;border-collapse:collapse;text-align:center}
-.compare-table th,.compare-table td{padding:20px;border-bottom:1px solid #eeeaf3;font-size:12px}
-.compare-table tr:last-child td{border:0}
-.compare-table th{background:#f1ecfc;color:#4b366d}
-.compare-table th:first-child,.compare-table td:first-child{text-align:left}
-.compare-table td{color:#6c617d}
 .pricing-faq{background:#fff}
 .simple-faq{max-width:850px;margin:auto;border-top:1px solid #e7e1ed}
 .simple-faq details{border-bottom:1px solid #e7e1ed}
@@ -396,7 +332,7 @@ body.pricing-open{overflow:hidden}
 .site-footer .footer-wrap nav a:hover{color:#754ee0}
 .site-footer .footer-wrap>div:last-child small{color:#aba4b5;font-size:10px;line-height:1.7;display:block;margin-bottom:10px}
 @media(max-width:850px){.feature-wide{padding:30px}.result-showcase-body{grid-template-columns:1fr}.result-to{transform:rotate(90deg)}.result-sound{min-height:205px}.result-disc{height:90px;width:90px}.faq-page-grid{grid-template-columns:1fr;gap:20px}.site-footer .footer-wrap{grid-template-columns:1fr 1fr}.site-footer .footer-wrap>div:last-child{grid-column:span 2}}
-@media(max-width:650px){.sub-hero{padding:70px 0 75px}.sub-hero h1{font-size:clamp(36px,10vw,55px)}.sub-hero p{font-size:13px}.sub-section{padding:60px 0}.feature-mosaic{grid-template-columns:1fr;gap:15px}.feature-wide{grid-column:span 1;grid-template-columns:1fr;padding:25px}.feature-tile{padding:24px}.tile-art{height:145px}.feature-tile h2{font-size:26px}.feature-wide h2{font-size:32px}.link-stack{margin:15px 0 0}.link-stack>span{padding:10px}.link-stack small{font-size:9px}.result-showcase{padding:12px}.result-showcase-top{font-size:10px}.result-score{padding:14px}.result-score-head b{font-size:11px}.result-detail-grid{grid-template-columns:1fr;gap:12px}.result-detail-grid article{padding:21px}.sub-pricing{padding:20px 0 70px;margin:0}.sub-pricing .pricing-grid{margin-top:0}.sub-pricing .cycle-switch{margin-bottom:40px}.faq-page-grid aside h2{font-size:28px}.site-footer .footer-wrap{grid-template-columns:1fr;padding:30px 0}.site-footer .footer-wrap>div:last-child{grid-column:span 1}.sub-cta h2{font-size:31px}}
+@media(max-width:650px){.sub-hero{padding:70px 0 75px}.sub-hero h1{font-size:clamp(36px,10vw,55px)}.sub-hero p{font-size:13px}.sub-section{padding:60px 0}.feature-mosaic{grid-template-columns:1fr;gap:15px}.feature-wide{grid-column:span 1;grid-template-columns:1fr;padding:25px}.feature-tile{padding:24px}.tile-art{height:145px}.feature-tile h2{font-size:26px}.feature-wide h2{font-size:32px}.link-stack{margin:15px 0 0}.link-stack>span{padding:10px}.link-stack small{font-size:9px}.result-showcase{padding:12px}.result-showcase-top{font-size:10px}.result-score{padding:14px}.result-score-head b{font-size:11px}.result-detail-grid{grid-template-columns:1fr;gap:12px}.result-detail-grid article{padding:21px}.sub-pricing{padding:20px 0 70px;margin:0}.faq-page-grid aside h2{font-size:28px}.site-footer .footer-wrap{grid-template-columns:1fr;padding:30px 0}.site-footer .footer-wrap>div:last-child{grid-column:span 1}.sub-cta h2{font-size:31px}}
 
 
 /* Brand: selected minimal 2D musical S mark. Use only in identity slots. */
@@ -665,6 +601,7 @@ body.pricing-open{overflow:hidden}
 </style>
 
 
+<link rel="stylesheet" href="/assets/upgrade.css?v=1">
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -804,16 +741,69 @@ body.pricing-open{overflow:hidden}
 <div class="result-showcase-body"><div class="result-sound"><div class="result-disc">♫</div><div><b>Mélodie originale</b><small>Source audio de démonstration</small></div></div><div class="result-to">→</div><div class="result-score"><div class="result-score-head"><span>songtosheet.ai</span><b>Exemple pour piano</b></div><svg viewBox="0 0 700 255" role="img" aria-label="Partition d'exemple de mélodie originale"><g stroke="#b8b1c7" stroke-width="1.4" fill="none"><path d="M20 52H675M20 69H675M20 86H675M20 103H675M20 120H675M20 173H675M20 190H675M20 207H675M20 224H675M20 241H675"/></g><text x="25" y="118" fill="#352b49" font-size="66" font-family="serif">𝄞</text><g stroke="#6850bf" stroke-width="2" fill="#6850bf"><ellipse cx="138" cy="108" rx="10" ry="7" transform="rotate(-20 138 108)"/><path d="M147 106V54"/><ellipse cx="232" cy="90" rx="10" ry="7" transform="rotate(-20 232 90)"/><path d="M241 88V36"/><ellipse cx="326" cy="72" rx="10" ry="7" transform="rotate(-20 326 72)"/><path d="M335 70V18"/><ellipse cx="420" cy="81" rx="10" ry="7" transform="rotate(-20 420 81)"/><path d="M429 79V27"/><ellipse cx="514" cy="99" rx="10" ry="7" transform="rotate(-20 514 99)"/><path d="M523 97V45"/><ellipse cx="608" cy="90" rx="10" ry="7" transform="rotate(-20 608 90)"/><path d="M617 88V36"/></g><text x="25" y="240" fill="#352b49" font-size="64" font-family="serif">𝄞</text><g stroke="#3b3453" stroke-width="2" fill="#3b3453"><ellipse cx="138" cy="225" rx="10" ry="7" transform="rotate(-20 138 225)"/><path d="M147 223V171"/><ellipse cx="252" cy="208" rx="10" ry="7" transform="rotate(-20 252 208)"/><path d="M261 206V154"/><ellipse cx="366" cy="190" rx="10" ry="7" transform="rotate(-20 366 190)"/><path d="M375 188V136"/><ellipse cx="480" cy="198" rx="10" ry="7" transform="rotate(-20 480 198)"/><path d="M489 196V144"/><ellipse cx="594" cy="217" rx="10" ry="7" transform="rotate(-20 594 217)"/><path d="M603 215V163"/></g></svg><div class="result-format-row"><span>PDF</span><span>MIDI</span><span>MusicXML</span></div></div></div>
 </div><div class="result-detail-grid"><article><span>01</span><h3>Un relevé lisible</h3><p>Visualise la mélodie sur une portée plutôt que d'essayer de deviner chaque note.</p></article><article><span>02</span><h3>Des formats réutilisables</h3><p>Imprime en PDF ou travaille la partition dans un logiciel grâce à MIDI et MusicXML.</p></article><article><span>03</span><h3>La V1 en toute transparence</h3><p>Les mélodies isolées sont plus simples à relever. Les morceaux polyphoniques et arrangements complexes nécessiteront un moteur plus avancé.</p></article></div><div class="result-action"><button type="button" class="sub-primary" data-start>Créer ma partition ↗</button><p>Le traitement audio en ligne reste désactivé sur ce prototype.</p></div></div></section></main>
 <main id="pricing-view" class="site-subpage hidden">
-<section class="sub-hero pricing-subhero"><div class="container sub-hero-center"><span class="sub-kicker">TARIFS</span><h1>Une partition par semaine.<br><em>Ou autant que tu veux.</em></h1><p>Choisis le rythme qui te convient. Pas d'essai gratuit, une tarification claire et des exports inclus.</p></div></section>
-<section class="sub-section pricing-section sub-pricing"><div class="container"><div class="cycle-switch" role="group" aria-label="Facturation"><button type="button" class="active" data-cycle="monthly" aria-pressed="true">Mensuel</button><button type="button" data-cycle="annual" aria-pressed="false">Annuel <span class="saving">−35 %</span></button></div><div class="pricing-grid"><article class="price-card"><div class="price-top"><span class="price-icon">♪</span><h3>Essentiel</h3><p>Un morceau chaque semaine, à ton rythme.</p></div><div class="price-amount"><strong data-plan-price="essential">10 €</strong><span data-plan-period="essential">/mois</span></div><div class="plan-billing" data-plan-billed="essential">Facturé chaque mois</div><div class="credit-bubble">1 musique tous les 7 jours</div><div class="price-list"><p>✓ 1 transcription par semaine (non cumulable)</p><p>✓ Exports PDF, MIDI et MusicXML</p><p>✓ Tous les instruments de la V1</p></div><button type="button" class="btn btn-outline" data-plan="essential">Choisir Essentiel ↗</button></article><article class="price-card popular"><span class="popular-badge">✦ RECOMMANDÉ</span><div class="price-top"><span class="price-icon">♫</span><h3>Illimité</h3><p>Joue autant de morceaux que tu veux.</p></div><div class="price-amount"><strong data-plan-price="unlimited">19 €</strong><span data-plan-period="unlimited">/mois</span></div><div class="plan-billing" data-plan-billed="unlimited">Facturé chaque mois</div><div class="credit-bubble">♾ Transcriptions illimitées*</div><div class="price-list"><p>✓ Aucune limite hebdomadaire*</p><p>✓ Exports PDF, MIDI et MusicXML</p><p>✓ Tous les instruments de la V1</p></div><button type="button" class="btn btn-primary" data-plan="unlimited">Choisir Illimité ↗</button></article><article class="price-card"><div class="price-top"><span class="price-icon">♬</span><h3>À vie</h3><p>Un paiement. Un accès durable.</p></div><div class="price-amount"><strong data-plan-price="lifetime">99 €</strong><span data-plan-period="lifetime">une fois</span></div><div class="plan-billing" data-plan-billed="lifetime">Sans renouvellement</div><div class="credit-bubble">Accès illimité à vie*</div><div class="price-list"><p>✓ Transcriptions illimitées à vie*</p><p>✓ Exports PDF, MIDI et MusicXML</p><p>✓ Tous les instruments de la V1</p><p>✓ Aucun paiement récurrent</p></div><button type="button" class="btn btn-outline" data-plan="lifetime">Choisir À vie ↗</button></article></div><p class="plan-note">*Illimité dans le cadre d'un usage personnel raisonnable, sans automatisation abusive. Tarifs présentés pour test : paiements Stripe non activés.</p></div></section>
-<section class="sub-section compare-section"><div class="container"><div class="sub-title"><span class="sub-kicker">COMPARER LES OFFRES</span><h2>L'essentiel, en un coup d'œil.</h2><p>Les mêmes formats, des rythmes de transcription différents.</p></div>
-<div class="compare-scroll"><table class="compare-table"><thead><tr><th>Fonctionnalités</th><th>Essentiel</th><th>Illimité</th><th>À vie</th></tr></thead><tbody>
-<tr><td>Musiques / semaine</td><td>1</td><td>Illimité*</td><td>Illimité*</td></tr><tr><td>Partitions PDF</td><td>✓</td><td>✓</td><td>✓</td></tr><tr><td>Export MIDI</td><td>✓</td><td>✓</td><td>✓</td></tr><tr><td>Export MusicXML</td><td>✓</td><td>✓</td><td>✓</td></tr><tr><td>Renouvellement</td><td>Mensuel / annuel</td><td>Mensuel / annuel</td><td>Aucun</td></tr></tbody></table></div>
-</div></section>
-<section class="sub-section pricing-faq"><div class="container"><div class="sub-title"><span class="sub-kicker">QUESTIONS SUR LES OFFRES</span><h2>Avant de choisir.</h2></div><div class="simple-faq">
+  <section class="upgrade-pricing" aria-labelledby="upgrade-title">
+    <div class="upgrade-inner">
+      <a href="/app" data-nav="app" class="upgrade-back hidden" id="upgrade-back">← Retour à mon espace</a>
+      <header class="upgrade-heading">
+        <h1 id="upgrade-title" tabindex="-1">Choisis ton abonnement</h1>
+        <p>Compare les offres pour débloquer tes partitions complètes.</p>
+      </header>
+      <div class="upgrade-cycle" role="group" aria-label="Fréquence de facturation">
+        <button type="button" data-cycle="monthly" aria-pressed="true">Mensuel</button>
+        <button type="button" data-cycle="annual" aria-pressed="false">Annuel <span>−35 %</span></button>
+      </div>
+      <p id="upgrade-cycle-status" class="upgrade-sr" role="status"></p>
+      <div class="upgrade-grid">
+        <article class="upgrade-card" aria-labelledby="upgrade-essential">
+          <div class="upgrade-plan-heading"><h2 id="upgrade-essential">Essentiel</h2></div>
+          <p class="upgrade-description">Pour travailler un morceau à la fois.</p>
+          <div class="upgrade-price"><strong data-plan-price="essential">10 €</strong><span>/ mois</span></div>
+          <p class="upgrade-charge" data-plan-billed="essential">10 € facturés chaque mois</p>
+          <p class="upgrade-saving" data-plan-saved="essential" hidden></p>
+          <p class="upgrade-limit">1 transcription tous les 7 jours</p>
+          <ul class="upgrade-features">
+            <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Transcriptions illimitées*</span></li>
+            <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Tous les instruments</span></li>
+            <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
+            <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Accès sans renouvellement</span></li>
+          </ul>
+        </article>
+        <article class="upgrade-card upgrade-featured" aria-labelledby="upgrade-unlimited">
+          <div class="upgrade-plan-heading"><h2 id="upgrade-unlimited">Illimité</h2><span class="upgrade-recommended">Recommandé</span></div>
+          <p class="upgrade-description">Pour jouer de nouveaux morceaux plus souvent.</p>
+          <div class="upgrade-price"><strong data-plan-price="unlimited">19 €</strong><span>/ mois</span></div>
+          <p class="upgrade-charge" data-plan-billed="unlimited">19 € facturés chaque mois</p>
+          <p class="upgrade-saving" data-plan-saved="unlimited" hidden></p>
+          <p class="upgrade-limit">Sans quota hebdomadaire*</p>
+          <ul class="upgrade-features">
+            <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Transcriptions illimitées*</span></li>
+            <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Tous les instruments</span></li>
+            <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
+            <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Accès sans renouvellement</span></li>
+          </ul>
+        </article>
+        <article class="upgrade-card" aria-labelledby="upgrade-lifetime">
+          <div class="upgrade-plan-heading"><h2 id="upgrade-lifetime">À vie</h2></div>
+          <p class="upgrade-description">Pour garder ton accès avec un seul paiement.</p>
+          <div class="upgrade-price"><strong data-plan-price="lifetime">99 €</strong><span>une fois</span></div>
+          <p class="upgrade-charge" data-plan-billed="lifetime">Paiement unique de 99 €</p>
+          <p class="upgrade-limit">Sans quota hebdomadaire*</p>
+          <ul class="upgrade-features">
+            <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Transcriptions illimitées*</span></li>
+            <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Tous les instruments</span></li>
+            <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
+            <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Accès sans renouvellement</span></li>
+          </ul>
+        </article>
+      </div>
+      <p class="upgrade-availability">Les abonnements ne sont pas encore ouverts à l’achat.</p>
+      <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Le quota Essentiel est non cumulable.</p>
+    </div>
+  </section>
+<section class="sub-section pricing-faq"><div class="container"><div class="sub-title"><h2>Questions sur les abonnements</h2></div><div class="simple-faq">
 <details><summary>Pourquoi l'annuel est-il moins cher ? <span>+</span></summary><p>La réduction annuelle de 35 % ramène Essentiel à 78 €/an (6,50 €/mois) et Illimité à 148,20 €/an (12,35 €/mois), avec paiement de l'année entière.</p></details>
 <details><summary>Que comprend l'offre à vie ? <span>+</span></summary><p>Le tarif envisagé est 99 € une fois pour les fonctionnalités couvertes par la V1, dans le cadre d'une utilisation raisonnable. Les conditions détaillées seront publiées avant commercialisation.</p></details>
-<details><summary>Puis-je acheter un abonnement dès maintenant ? <span>+</span></summary><p>Pas encore : cette version permet de tester le parcours mais aucun paiement n'est réellement possible.</p></details>
+<details><summary>Puis-je acheter un abonnement dès maintenant ? <span>+</span></summary><p>Les abonnements ne sont pas encore ouverts à l’achat. Tu peux déjà générer un aperçu gratuit de 30 secondes.</p></details>
 </div></div></section></main>
 <main id="faq-view" class="site-subpage hidden">
 <section class="sub-hero"><div class="container sub-hero-center"><span class="sub-kicker">CENTRE D'AIDE</span><h1>Une question ?<br><em>On t'explique tout.</em></h1><p>Tout ce qu'il faut savoir avant de transformer ta musique en partition.</p></div></section>
@@ -828,17 +818,16 @@ body.pricing-open{overflow:hidden}
 <details><summary>Les abonnements et la génération sont-ils actifs ? <span>+</span></summary><p>Non, le site public est une démonstration. Les vrais paiements et le traitement audio en ligne seront activés après intégration et tests.</p></details>
 </div></div></section></main>
 <main id="workspace" class="hidden">
-    <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><span class="sidebar-label">TON ESPACE</span><nav class="side-nav"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-create"><span>✦</span> Nouvelle partition</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Démo</strong><small>Offre de démonstration</small><button class="btn btn-primary" id="side-buy">Voir les abonnements ↗</button></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
+    <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><span class="sidebar-label">TON ESPACE</span><nav class="side-nav"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-create"><span>✦</span> Nouvelle partition</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Démo</strong><small>Offre de démonstration</small><a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
     <div class="app-layout"><header class="app-header"><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><span class="small-credit"><span>◇</span> <b id="top-credits">Démo</b> · accès</span><div class="user-avatar" id="user-avatar">S</div></div></header><div class="app-scroll">
       <section id="dashboard-page" class="app-page"><div class="app-welcome"><div><span class="dashboard-kicker">TON STUDIO PERSONNEL ✦</span><h1>Prêt à jouer quelque chose<br/><span>de nouveau ?</span></h1><p>Transforme tes enregistrements en partitions en quelques étapes.</p></div><div class="welcome-decor">♫</div></div><div class="overview-cards"><div class="overview-card"><span class="metric-symbol purple">◇</span><div><strong id="metric-credits">Démo</strong><small>Accès actuel</small></div></div><div class="overview-card"><span class="metric-symbol green">▤</span><div><strong id="metric-total">0</strong><small>Partitions générées</small></div></div><div class="overview-card"><span class="metric-symbol orange">✧</span><div><strong id="metric-progress">0</strong><small>Générations en cours</small></div></div></div><div class="dashboard-grid"><div class="dashboard-create"><div><span class="section-label">CRÉATION RAPIDE</span><h2>Ta prochaine partition est à un clic.</h2><p>Dépose un morceau et laisse SongToSheet faire le premier relevé.</p><button id="dashboard-start" class="btn btn-primary">Nouvelle partition <span>↗</span></button></div><div class="dashboard-illustration">♬</div></div><div class="dashboard-helper"><span class="helper-symbol">✦</span><h3>Comment ça marche ?</h3><p>Importe ton fichier audio, choisis ton instrument, puis lance la génération. Le résultat sera sauvegardé dans ta bibliothèque.</p><a href="/#comment-ca-marche" id="learn-more">Voir les étapes <span>↗</span></a></div></div><div class="list-heading"><h2>Dernières partitions</h2><button id="view-all">Tout voir →</button></div><div id="recent-jobs" class="jobs-list"></div><p id="admin-guitar-comparison" hidden><a class="btn btn-outline" href="/comparatif.html">Comparer les tablatures guitare</a></p></section>
 
-      <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><div id="track-onboarding"></div><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Essentiel : 1 musique tous les 7 jours.</p></div><div class="tip-line"><i>✓</i><p>L'illimité prévoit un usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><button class="btn btn-outline" id="create-buy">Voir les abonnements ↗</button></aside></div></section>
+      <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><div id="track-onboarding"></div><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Essentiel : 1 musique tous les 7 jours.</p></div><div class="tip-line"><i>✓</i><p>L'illimité prévoit un usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><a class="btn btn-outline" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></aside></div></section>
 
       <section id="library-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">TA BIBLIOTHÈQUE</span><h1>Toutes tes partitions.</h1><p>Retrouve et télécharge les musiques que tu as transcrites.</p></div><button id="library-new" class="btn btn-primary">＋ Nouvelle partition</button></div><div class="library-toolbar"><span id="library-count">0 partition</span><div class="search-wrapper"><span>⌕</span><input id="library-search" placeholder="Rechercher un morceau..."/></div></div><div id="library-jobs" class="jobs-list library-jobs"></div></section>
 
       <section id="result-page" class="app-page hidden"><button id="back-to-library" class="back-link">← Retour à ma bibliothèque</button><div id="result-content"></div></section>
 
-      <section id="billing-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">ABONNEMENTS & FACTURATION</span><h1>Choisis ton rythme.</h1><p>Des abonnements clairs, sans essai gratuit.</p></div><span class="credit-balance-large">✦ <b id="billing-balance">Démo</b></span></div><div class="cycle-switch" role="group" aria-label="Fréquence de facturation"><button type="button" class="active" data-cycle="monthly" aria-pressed="true">Mensuel</button><button type="button" data-cycle="annual" aria-pressed="false">Annuel <span class="saving">−35 %</span></button></div><div class="app-pricing" id="app-pricing"></div><div class="billing-note">🔒 Démonstration uniquement : aucun abonnement ni paiement actif tant que Stripe et les droits côté serveur ne sont pas intégrés.</div></section>
     </div></div>
   </main>
 
@@ -950,7 +939,6 @@ body.pricing-open{overflow:hidden}
 <nav aria-label="Navigation de bas de page"><a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a><a href="/legal" data-nav="legal">Mentions</a></nav>
 <div><small>Version de démonstration. Les paiements et la transcription audio en ligne ne sont pas encore actifs.</small><small>© <span id="footer-year"></span> SongToSheet</small></div>
 </div></footer>
-<div id="pricing-overlay" class="pricing-overlay hidden" aria-hidden="true"><section class="pricing-dialog" role="dialog" aria-modal="true" aria-labelledby="pricing-title"><button type="button" class="pricing-x" id="pricing-close" aria-label="Fermer">×</button><h2 id="pricing-title">Débloque tes partitions ✦</h2><p>Choisis ton abonnement et transforme tes morceaux en partitions.</p><div class="cycle-switch" role="group" aria-label="Fréquence de facturation"><button type="button" class="active" data-cycle="monthly" aria-pressed="true">Mensuel</button><button type="button" data-cycle="annual" aria-pressed="false">Annuel <span class="saving">−35 %</span></button></div><div class="pricing-choices" role="group" aria-label="Formules"><button type="button" class="pricing-choice" data-plan="essential" aria-pressed="false"><span class="pricing-radio"></span><span class="choice-info"><b>Essentiel</b><small>1 musique par semaine</small></span><span class="choice-amount"><b data-modal-price="essential">10 €</b><small data-modal-billed="essential">par mois</small></span></button><button type="button" class="pricing-choice selected" data-plan="unlimited" aria-pressed="true"><span class="pricing-radio"></span><span class="choice-info"><b>Illimité <span class="choice-tag">RECOMMANDÉ</span></b><small>Musiques illimitées* · Tous les instruments</small></span><span class="choice-amount"><b data-modal-price="unlimited">19 €</b><small data-modal-billed="unlimited">par mois</small></span></button><button type="button" class="pricing-choice" data-plan="lifetime" aria-pressed="false"><span class="pricing-radio"></span><span class="choice-info"><b>À vie</b><small>Accès illimité* sans renouvellement</small></span><span class="choice-amount"><b data-modal-price="lifetime">99 €</b><small data-modal-billed="lifetime">une fois</small></span></button></div><div class="pricing-benefits"><b>Avec <span id="selected-plan-name">Illimité</span>, tu obtiens :</b><p id="selected-plan-usage">Des transcriptions illimitées* sans quota hebdomadaire</p><p>Exports PDF, MIDI et MusicXML</p><p>Tous les instruments et ta bibliothèque personnelle</p></div><div class="pricing-bottom"><span class="pricing-summary" id="pricing-summary">Illimité · 19 €/mois</span><button type="button" id="pricing-confirm">Continuer avec Illimité ↗</button><small>🔒 Démo : aucun paiement réel. *Usage personnel raisonnable.</small><p id="pricing-message" role="status" aria-live="polite"></p></div></section></div>
 <script>
 /* Paiements et transcription restent simulés. Comptes et bibliothèque : vrais endpoints serveur. */
 (()=>{
@@ -972,7 +960,7 @@ body.pricing-open{overflow:hidden}
 (() => {
   'use strict';
   const $ = (id) => document.getElementById(id);
-  const state = {user:null,jobs:[],packages:[],link:'',file:null,heroMode:'link',activePage:'dashboard',resultId:null,pendingPack:null,poll:null,checkoutEnabled:false,authMode:'signup'};
+  const state = {user:null,jobs:[],link:'',file:null,heroMode:'link',activePage:'dashboard',resultId:null,poll:null,authMode:'signup'};
   const safe = (s) => String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const timeFmt = (secs) => `${Math.floor(secs/60)}:${String(Math.floor(secs%60)).padStart(2,'0')}`;
   const dateFmt = (epoch) => new Date(epoch*1000).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
@@ -1057,7 +1045,7 @@ body.pricing-open{overflow:hidden}
   function renderRoute(){
     clearInterval(state.poll);state.poll=null;menuClose();
     const pathname=(location.pathname.replace(/\/$/,'')||'/').toLowerCase();
-    const publicRoutes={'/':'landing','/fonctionnalites':'features-view','/resultats':'results-view','/tarifs':'pricing-view','/faq':'faq-view'};
+    const publicRoutes={'/':'landing','/fonctionnalites':'features-view','/resultats':'results-view','/tarifs':'pricing-view','/upgrade':'pricing-view','/faq':'faq-view'};
     const activePublic=publicRoutes[pathname]||null;
     const marketing=Boolean(activePublic)||pathname==='/legal';
     const app=pathname==='/app';
@@ -1069,6 +1057,13 @@ body.pricing-open{overflow:hidden}
     updatePublicHeader();
     show('public-footer',marketing);
     for(const id of ['landing','features-view','results-view','pricing-view','faq-view'])show(id,activePublic===id);
+    const pricing=activePublic==='pricing-view';
+    show('upgrade-back',pathname==='/upgrade'&&Boolean(state.user));
+    if(pricing&&!pricingWasOpen){
+      syncPricing('monthly');
+      $('upgrade-title').focus({preventScroll:true});
+    }
+    pricingWasOpen=pricing;
     show('workspace',app);show('auth-view',authPage);show('legal-view',pathname==='/legal');
     show('generation-view',pathname==='/choisir-instrument'||pathname==='/choisir-format'||pathname==='/generation'||pathname==='/apercu');
     document.querySelectorAll('#public-header .top-nav a').forEach(a=>{
@@ -1084,6 +1079,7 @@ body.pricing-open{overflow:hidden}
       '/fonctionnalites':'Fonctionnalités — SongToSheet.ai',
       '/resultats':'Résultats et exemples — SongToSheet.ai',
       '/tarifs':'Tarifs et abonnements — SongToSheet.ai',
+      '/upgrade':'Choisir mon abonnement — SongToSheet.ai',
       '/faq':'FAQ — SongToSheet.ai',
       '/legal':'Informations légales — SongToSheet.ai',
       '/app':'Mon studio — SongToSheet.ai',
@@ -1122,13 +1118,12 @@ body.pricing-open{overflow:hidden}
     $('public-header').removeAttribute('data-session-pending');
   }
   async function loadUser(){try{const data=await api('/api/auth/me');setCurrentUser(data.user);}catch{setCurrentUser(null);}}
-  async function loadPackages(){try{const data=await api('/api/packs');state.packages=data.packs;state.checkoutEnabled=data.checkout_enabled;}catch{state.packages=[];state.checkoutEnabled=false;}}
   async function refresh(){if(!state.user)return;
     try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);setCurrentUser(user.user);state.jobs=jobs.jobs||[];
       if(!state.user){go('/inscription');return;}
       const access=state.user.role==='admin'?'Admin':'Freemium';
       $('sidebar-credits').textContent=access;$('top-credits').textContent=access;$('metric-credits').textContent=access;
-      $('create-balance').textContent='Démo';$('billing-balance').textContent='Démo';
+      $('create-balance').textContent='Démo';
       $('metric-total').textContent=state.jobs.length;
       $('metric-progress').textContent=state.jobs.filter(j=>['processing','queued'].includes(j.status)).length;
       $('user-avatar').textContent=state.user.email.charAt(0).toUpperCase();
@@ -1171,10 +1166,10 @@ body.pricing-open{overflow:hidden}
     if(page!=='result')stopPlayer();
     if(page!=='create')trackWizard?.pause();
     state.activePage=page;
-    for(const p of ['dashboard','create','library','result','billing'])show(p+'-page',page===p);
+    for(const p of ['dashboard','create','library','result'])show(p+'-page',page===p);
     const side=page==='dashboard'?'menu-dashboard':page==='library'||page==='result'?'menu-library':'menu-create';
     for(const id of ['menu-dashboard','menu-create','menu-library'])$(id).classList.toggle('side-active',id===side);
-    const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition',billing:'Abonnements'};
+    const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition'};
     $('page-crumb').textContent=names[page]||'Mon espace';
     document.querySelector('.sidebar').classList.remove('mobile-open');
     if(page==='create'){
@@ -1188,7 +1183,6 @@ body.pricing-open{overflow:hidden}
         if(audioUrl)trackWizard.prefill({audioUrl});
       }
     }
-    if(page==='billing')renderAppPricing();
     if(page==='result'&&state.resultId)loadResult(state.resultId);
     document.querySelector('.app-scroll').scrollTo({top:0,behavior:'smooth'});
   }
@@ -1211,67 +1205,35 @@ body.pricing-open{overflow:hidden}
     else showAppPage(page);
   }
 
-  // Pricing demo: Stripe and backend entitlement enforcement are not activated.
-  const subscriptionPlans={
-    essential:{name:'Essentiel',monthly:10,yearly:78,usage:'1 musique tous les 7 jours, non cumulable'},
-    unlimited:{name:'Illimité',monthly:19,yearly:148.20,usage:'Transcriptions illimitées* sans quota hebdomadaire'},
-    lifetime:{name:'À vie',monthly:99,yearly:99,usage:'Transcriptions illimitées* avec un paiement unique'}
+  const subscriptionPrices={
+    essential:{monthly:10,yearly:78},
+    unlimited:{monthly:19,yearly:148.20}
   };
-  let subscriptionCycle='monthly',subscriptionChoice='unlimited',pricingPreviousFocus=null;
-  function euros(number){
-    return new Intl.NumberFormat('fr-FR',{minimumFractionDigits:Number.isInteger(number)?0:2,maximumFractionDigits:2}).format(number)+' €';
+  let pricingWasOpen=false;
+  const euroFormatter=new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'});
+
+  function euros(amount){
+    return euroFormatter.format(amount).replace(/,00(?=\s)/,'');
   }
-  function syncPricing(){
-    document.querySelectorAll('[data-cycle]').forEach(b=>{
-      const active=b.dataset.cycle===subscriptionCycle;
-      b.classList.toggle('active',active);b.setAttribute('aria-pressed',String(active));
+  function syncPricing(cycle){
+    const annual=cycle==='annual';
+    $('pricing-view').querySelectorAll('[data-cycle]').forEach(button=>{
+      button.setAttribute('aria-pressed',String(button.dataset.cycle===cycle));
     });
-    Object.keys(subscriptionPlans).forEach(key=>{
-      const p=subscriptionPlans[key],life=key==='lifetime';
-      const cost=life?99:subscriptionCycle==='annual'?p.yearly/12:p.monthly;
-      const billed=life?'Sans renouvellement':subscriptionCycle==='annual'?'Facturé '+euros(p.yearly)+' / an · −35 %':'Facturé chaque mois';
-      document.querySelectorAll('[data-plan-price="'+key+'"]').forEach(el=>el.textContent=euros(cost));
-      document.querySelectorAll('[data-plan-period="'+key+'"]').forEach(el=>el.textContent=life?'une fois':'/mois');
-      document.querySelectorAll('[data-plan-billed="'+key+'"]').forEach(el=>el.textContent=billed);
-      document.querySelectorAll('[data-modal-price="'+key+'"]').forEach(el=>el.textContent=euros(cost));
-      document.querySelectorAll('[data-modal-billed="'+key+'"]').forEach(el=>el.textContent=life?'une fois':subscriptionCycle==='annual'?'facturé '+euros(p.yearly)+'/an':'par mois');
-    });
-    document.querySelectorAll('.pricing-choice').forEach(b=>{
-      const active=b.dataset.plan===subscriptionChoice;
-      b.classList.toggle('selected',active);b.setAttribute('aria-pressed',String(active));
-    });
-    const chosen=subscriptionPlans[subscriptionChoice];
-    const amount=subscriptionChoice==='lifetime'?99:subscriptionCycle==='annual'?chosen.yearly/12:chosen.monthly;
-    $('selected-plan-name').textContent=chosen.name;
-    $('selected-plan-usage').textContent=chosen.usage;
-    $('pricing-summary').textContent=chosen.name+' · '+euros(amount)+(subscriptionChoice==='lifetime'?' une fois':subscriptionCycle==='annual'?' / mois (facturé '+euros(chosen.yearly)+'/an)':' / mois');
-    $('pricing-confirm').textContent='Continuer avec '+chosen.name+' ↗';
+    for(const [plan,{monthly,yearly}] of Object.entries(subscriptionPrices)){
+      const price=document.querySelector('[data-plan-price="'+plan+'"]');
+      const billed=document.querySelector('[data-plan-billed="'+plan+'"]');
+      const saved=document.querySelector('[data-plan-saved="'+plan+'"]');
+      price.textContent=euros(annual?yearly/12:monthly);
+      billed.textContent=annual?euros(yearly)+' facturés chaque année':euros(monthly)+' facturés chaque mois';
+      saved.hidden=!annual;
+      saved.textContent=annual?euros(monthly*12-yearly)+' économisés par an':'';
+    }
+    $('upgrade-cycle-status').textContent=annual
+      ?'Facturation annuelle sélectionnée. Les prix affichés par mois sont des équivalents.'
+      :'Facturation mensuelle sélectionnée.';
   }
-  function showPricing(plan){
-    if(subscriptionPlans[plan])subscriptionChoice=plan;
-    if($('pricing-overlay').classList.contains('hidden'))pricingPreviousFocus=document.activeElement;
-    $('pricing-overlay').classList.remove('hidden');
-    $('pricing-overlay').setAttribute('aria-hidden','false');
-    document.body.classList.add('pricing-open');
-    $('pricing-message').textContent='';
-    syncPricing();$('pricing-close').focus();
-  }
-  function hidePricing(){
-    $('pricing-overlay').classList.add('hidden');
-    $('pricing-overlay').setAttribute('aria-hidden','true');
-    document.body.classList.remove('pricing-open');
-    if(pricingPreviousFocus&&pricingPreviousFocus.isConnected)pricingPreviousFocus.focus();
-  }
-  function renderAppPricing(){
-    $('app-pricing').innerHTML=document.querySelector('.pricing-grid').innerHTML;
-    syncPricing();
-  }
-  async function buy(pack){
-    state.pendingPack=pack;
-    if(!state.user){state.activePage='billing';go('/inscription');return;}
-    if(!state.checkoutEnabled){startApp('billing');toast('Les paiements ne sont pas encore configurés. Aucun débit ne sera effectué.',true);return;}
-    try{const data=await post('/api/checkout',{pack_id:pack});const url=new URL(data.url);if(url.hostname.endsWith('.stripe.com')&&url.protocol==='https:')location.assign(data.url);else throw new Error('URL de paiement invalide');}catch(e){toast(e.message,true);}
-  }
+
   async function inspectLink(value){const info=await post('/api/links/inspect',{url:value});state.link=info.source_url;toast(info.message);return info;}
   function switchHero(mode){state.heroMode=mode;window.SongToSheetFlow?.sourceError('');window.SongToSheetFlow?.showHeroMetadata(null);const link=mode==='link';show('link-panel',link);show('upload-panel',!link);$('tab-link').classList.toggle('active',link);$('tab-upload').classList.toggle('active',!link);$('tab-link').setAttribute('aria-selected',link);$('tab-upload').setAttribute('aria-selected',!link);}
   async function heroGenerate(){
@@ -1581,7 +1543,6 @@ body.pricing-open{overflow:hidden}
       if(pending&&pending.completed===true)window.SongToSheetFlow.clearPending();
       await refresh();
       if(state.pendingTrack){const draft=state.pendingTrack;state.pendingTrack=null;openTrackDraft(draft);}
-      else if(state.pendingPack){const pack=state.pendingPack;state.pendingPack=null;startApp('billing');await buy(pack);}
       else{state.activePage='library';startApp('library');}
     }catch(err){$('auth-error').textContent=err.message;show('auth-error',true);}
     finally{btn.disabled=false;renderAuth();}
@@ -1590,6 +1551,7 @@ body.pricing-open{overflow:hidden}
   function wire(){
     document.addEventListener('click',async(e)=>{
       const nav=e.target.closest('[data-nav]');if(nav){
+        if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
         e.preventDefault();
         const target=nav.getAttribute('href') || (nav.dataset.nav==='home'?'/':'/connexion');
         if(target==='/#comment-ca-marche' && !$('how-link').value.trim() && $('hero-link').value.trim()){
@@ -1601,25 +1563,10 @@ body.pricing-open{overflow:hidden}
       const demoGenerate=e.target.closest('[data-demo-generate]');
       if(demoGenerate){e.preventDefault();await revealDemo(demoGenerate.dataset.demoGenerate);return;}
       const job=e.target.closest('[data-job]');if(job){openResult(job.dataset.job);return;}
-      const cycle=e.target.closest('[data-cycle]');if(cycle){subscriptionCycle=cycle.dataset.cycle;syncPricing();return;}
-      const choice=e.target.closest('[data-plan]');if(choice){showPricing(choice.dataset.plan);return;}
+      const cycle=e.target.closest('#pricing-view [data-cycle]');
+      if(cycle)syncPricing(cycle.dataset.cycle);
     });
 
-    $('pricing-close').onclick=hidePricing;
-    $('pricing-overlay').onclick=e=>{if(e.target===$('pricing-overlay'))hidePricing();};
-    $('pricing-confirm').onclick=()=>{
-      $('pricing-message').textContent='Le paiement '+subscriptionPlans[subscriptionChoice].name+' est indisponible dans cette démo. Aucun débit ne sera effectué.';
-    };
-    document.addEventListener('keydown',e=>{
-      if($('pricing-overlay').classList.contains('hidden'))return;
-      if(e.key==='Escape'){hidePricing();return;}
-      if(e.key==='Tab'){
-        const buttons=Array.from($('pricing-overlay').querySelectorAll('button')).filter(b=>b.offsetWidth||b.offsetHeight);
-        const first=buttons[0],last=buttons[buttons.length-1];
-        if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
-        else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
-      }
-    });
     window.addEventListener('popstate',renderRoute);
     window.addEventListener('scroll',updatePublicHeader,{passive:true});
     window.addEventListener('pageshow',updatePublicHeader);
@@ -1679,21 +1626,19 @@ body.pricing-open{overflow:hidden}
     }
     $('sidebar-logout').onclick=logout;$('mobile-sidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('mobile-open');
     $('menu-dashboard').onclick=()=>showAppPage('dashboard');$('menu-create').onclick=()=>showAppPage('create');$('menu-library').onclick=()=>showAppPage('library');
-    $('side-buy').onclick=()=>showPricing('unlimited');$('create-buy').onclick=()=>showPricing('unlimited');$('dashboard-start').onclick=()=>showAppPage('create');$('view-all').onclick=()=>showAppPage('library');$('library-new').onclick=()=>showAppPage('create');
+    $('dashboard-start').onclick=()=>showAppPage('create');$('view-all').onclick=()=>showAppPage('library');$('library-new').onclick=()=>showAppPage('create');
     $('back-to-library').onclick=()=>showAppPage('library');$('workspace-generate').onclick=submitJob;
     $('library-search').oninput=()=>renderJobs('library-jobs',filterJobs());$('auth-form').onsubmit=submitAuth;
     $('learn-more').onclick=(e)=>{e.preventDefault();go('/#comment-ca-marche');document.querySelector('#comment-ca-marche')?.scrollIntoView({behavior:'smooth'});};
     $('footer-year').textContent=new Date().getFullYear();
   }
   const sessionReady=loadUser();
-  async function init(){wire();syncPricing();howShowStep(1);await Promise.all([sessionReady,loadPackages()]);
+  async function init(){wire();howShowStep(1);await sessionReady;
     const audioUrl=rememberedTrackLink();
     if(audioUrl&&location.pathname==='/app')state.activePage='create';
     if(audioUrl&&location.pathname==='/'&&!$('hero-link').value)$('hero-link').value=audioUrl;
-    renderRoute();if(state.user){await refresh();if(location.search.includes('checkout=success')){
-      toast('Paiement confirmé : les crédits apparaîtront dès que Stripe aura envoyé sa confirmation.');history.replaceState({},'',location.pathname);showAppPage('billing');
-      let count=0;const timer=setInterval(async()=>{await refresh();if(++count>=8)clearInterval(timer);},2000);
-    }}else if(location.pathname==='/app'){go('/inscription',true);}}
+
+    renderRoute();if(state.user)await refresh();}
   init();
 })();
 

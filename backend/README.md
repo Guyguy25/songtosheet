@@ -154,7 +154,7 @@ Le serveur valide la signature HMAC et le montant, crédite une seule fois chaqu
 2. Lien YouTube / Spotify : validation du format et conservation de la référence, puis demande de fichier audio autorisé.
 3. Inscription / connexion email et mot de passe (PBKDF2). Cookie HttpOnly signé et SameSite.
 4. Dashboard : solde de crédits, historique, nouvelle transcription, bibliothèque.
-5. Upload audio : 25 Mo et 6 min maximum, formats MP3, WAV, M4A, FLAC, OGG, AAC.
+5. Upload audio : 25 Mo maximum, formats MP3, WAV, M4A, FLAC, OGG, AAC.
 6. Vérification et réservation des crédits ; génération en tâche asynchrone.
 7. Extraction de mélodie, PDF, MIDI, MusicXML, aperçu SVG, téléchargement authentifié.
 8. Débit des crédits après succès. Aucun débit si l'analyse échoue.

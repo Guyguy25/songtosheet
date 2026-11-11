@@ -336,7 +336,7 @@
       if(!request)return;
       $('flow-select-track').textContent=request.name;
       $('flow-select-source').textContent=request.provider+(request.artist?' · '+request.artist:'');
-      $('flow-select-duration').textContent=request.durationVerified?durationText(request.duration)+' / 6:00 max':'Durée non vérifiée · max 6:00';
+      $('flow-select-duration').textContent=request.durationVerified?durationText(request.duration):'Durée non vérifiée';
       $('flow-select-duration').classList.toggle('unverified',!request.durationVerified);
       setCover('flow-select-cover',request);
       var option=document.querySelector('input[name="flow-instrument"][value="'+request.instrument+'"]');

@@ -63,8 +63,6 @@ def prepare_preview(audio, directory, limit):
                           "-of", "default=noprint_wrappers=1:nokey=1", *input_options], timeout=20))
     if not math.isfinite(duration) or duration < .5:
         raise ValueError("L’audio doit durer au moins 0,5 seconde.")
-    if duration > 361:
-        raise ValueError("L’audio dépasse 6 minutes. Importe un extrait plus court.")
     preview = directory / "preview.wav"
     run(["ffmpeg", "-nostdin", "-v", "error", *input_options, "-map", "0:a:0", "-t", str(limit),
          "-ar", "44100", "-ac", "2", str(preview)], timeout=45)

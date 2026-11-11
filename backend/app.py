@@ -366,7 +366,6 @@ async def create_job(request:Request,background:BackgroundTasks,
         if size<1024:fail('Fichier audio trop petit ou invalide.')
         try:duration=get_duration(str(source))
         except Exception:fail('Impossible de lire la durée du fichier audio.')
-        if duration>6*60:fail('Cette V1 accepte les fichiers de 6 minutes maximum.')
         cost=0 if TRACK_TEST else max(1,math.ceil(duration/60))
         with db() as c:
             c.execute('BEGIN IMMEDIATE')

@@ -3,6 +3,20 @@ from xml.etree import ElementTree
 from piano_score import clean_piano_notes, estimate_piano_grid, piano_hands, write_piano_score
 
 
+def test_basic_pitch_notes_can_be_persisted_in_the_result_manifest():
+    import json
+    from types import SimpleNamespace
+    import numpy as np
+    from transcribe_track import midi_events
+
+    note = SimpleNamespace(pitch=np.int64(60), start=np.float32(.25),
+                           end=np.float32(.75), velocity=np.int64(80))
+    midi = SimpleNamespace(instruments=[SimpleNamespace(is_drum=False, notes=[note])])
+    assert json.loads(json.dumps(midi_events(midi, 30))) == [
+        {"pitch": 60, "start": .25, "end": .75, "velocity": 80}
+    ]
+
+
 def event(pitch, start, duration, velocity=85):
     return {"pitch": pitch, "start": start, "end": start + duration, "velocity": velocity}
 

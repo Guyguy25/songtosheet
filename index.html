@@ -10,10 +10,10 @@
   <script>document.documentElement.classList.toggle('is-landing', location.pathname === '/');</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=6" />
+  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=7" />
   <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=16" defer></script>
-  <link rel="stylesheet" href="/backend/web/score-player.css?v=7" />
+  <script src="/backend/web/track-onboarding.js?v=17" defer></script>
+  <link rel="stylesheet" href="/backend/web/score-player.css?v=8" />
   <script src="/backend/web/score-player.js?v=10" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
   <style>
@@ -1390,16 +1390,17 @@ body.pricing-open{overflow:hidden}
     svg+='</svg>';return svg;
   }
   const trackStages={
-    queue:['En file d’attente','Ton morceau sera traité dès que le moteur sera disponible.',-1],
-    audio:['Récupération de l’audio','',0],
-    decode:['Préparation de l’audio','',1],
-    isolate:['Séparation des pistes','',1],
-    detect:['Détection des notes','',2],
-    arrange:['Écriture du relevé','',3],
-    cached:['Relevé déjà calculé','',3],
-    pdf:['Préparation du PDF','Le relevé est disponible à l’écoute.',3],
-    solo:['Préparation de l’arrangement','Le relevé est disponible à l’écoute.',3],
-    processing:['Analyse en cours','Cette page se met à jour automatiquement.',1]
+    queue:['En file d’attente','Ton morceau sera traité dès que le moteur sera disponible.',-1,0],
+    audio:['Récupération de l’audio','',0,8],
+    decode:['Préparation de l’audio','',1,20],
+    isolate:['Séparation des pistes','',1,32],
+    detect:['Détection des notes','',2,58],
+    arrange:['Écriture du relevé','',3,78],
+    cached:['Relevé déjà calculé','',3,88],
+    pdf:['Préparation du PDF','Le relevé est disponible à l’écoute.',3,94],
+    solo:['Préparation de l’arrangement','Le relevé est disponible à l’écoute.',3,94],
+    finalize:['Finalisation de l’aperçu','Le relevé est disponible à l’écoute.',3,94],
+    processing:['Analyse en cours','Cette page se met à jour automatiquement.',1,null]
   };
   const trackMilestones=['Source','Audio','Notes','Relevé'];
   let trackSummaryMarkup,trackProgressMarkup;
@@ -1456,6 +1457,7 @@ body.pricing-open{overflow:hidden}
           $('result-content').innerHTML=`<div id="track-result-summary" class="result-hero"></div>
             <section id="track-progress" class="track-progress hidden" aria-label="Progression du relevé">
               <div aria-live="polite"><h2></h2><p hidden></p></div>
+              <span class="track-progress-percent" role="progressbar" aria-label="Progression estimée" hidden></span>
               <ol class="track-progress-steps" aria-label="Étapes du traitement"></ol>
             </section>
             <section id="track-wait-survey" class="wait-survey" aria-label="Questions facultatives" hidden></section>`;
@@ -1475,14 +1477,21 @@ body.pricing-open{overflow:hidden}
         if(completed&&state.user?.role==='admin')addAudioReview(j);
         show('track-progress',waiting);
         window.SongToSheetWaitSurvey?.mount($('track-wait-survey'),state.user?.id,waiting&&!ready);
-        const stage=ready?(j.preview_limit?'solo':'pdf'):j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
+        const stage=ready?(j.preview_limit?(j.instrument==='guitare'?'solo':'finalize'):'pdf'):
+          j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
         if(waiting&&trackProgressMarkup!==stage){
           const progress=$('track-progress');
-          const [label,description,current]=trackStages[stage];
+          const [label,description,current,percent]=trackStages[stage];
           progress.querySelector('h2').textContent=label;
           const descriptionNode=progress.querySelector('p');
           descriptionNode.textContent=description;
           descriptionNode.hidden=!description;
+          const progressPercent=progress.querySelector('.track-progress-percent');
+          progressPercent.hidden=percent===null;
+          if(percent!==null){
+            progressPercent.textContent=percent+' %';
+            progressPercent.setAttribute('aria-valuenow',String(percent));
+          }
           progress.querySelector('ol').innerHTML=trackMilestones.map((item,index)=>
             `<li${index<current?' class="is-done"':index===current?' aria-current="step"':''}><span aria-hidden="true">${index<current?'✓':index===current?'…':'·'}</span>${item}</li>`).join('');
           trackProgressMarkup=stage;

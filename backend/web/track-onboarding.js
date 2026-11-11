@@ -49,22 +49,29 @@
       <form>
         <div class="track-choices" role="group" aria-labelledby="track-question"></div>
         <div class="track-import hidden">
-          ${allowLink?`<div class="track-upload track-link-pane">
-            <label for="track-link-input">Lien du morceau</label>
-            <input id="track-link-input" class="field" type="text" inputmode="url" autocomplete="off" maxlength="4096"
-              placeholder="Colle un lien YouTube, Spotify…" aria-describedby="track-link-help">
-            <small id="track-link-help">Tu peux aussi coller un lien direct vers un fichier audio.</small>
-          </div>`:''}
-          <div class="track-upload track-file-pane">
-            <p class="track-reference" aria-live="polite" hidden></p>
-            <label for="track-audio-input">Ton fichier audio</label>
-            <input id="track-audio-input" type="file" accept=".wav,.mp3,.m4a,.flac,.ogg,.aac,audio/*">
-            <small>MP3, WAV, M4A, FLAC, OGG ou AAC · 25 Mo maximum</small>
-            <small class="track-filename" aria-live="polite"></small>
-            <audio class="track-audio-preview hidden" controls preload="metadata" aria-label="Écouter le fichier sélectionné"></audio>
-            ${sampleUrl?'<button type="button" class="btn btn-outline track-sample">Charger la mélodie de test</button>':''}
+          <p class="track-reference" aria-live="polite" hidden></p>
+          <div class="track-import-card">
+            ${allowLink?`<div class="track-source-tabs" role="tablist" aria-label="Source du morceau">
+              <button type="button" id="track-link-tab" data-source-mode="link" role="tab" aria-controls="track-link-pane"><span aria-hidden="true">↗</span> Lien musical</button>
+              <button type="button" id="track-file-tab" data-source-mode="file" role="tab" aria-controls="track-file-pane"><span aria-hidden="true">⇧</span> Fichier audio</button>
+            </div>
+            <div class="track-link-pane" id="track-link-pane" role="tabpanel" aria-labelledby="track-link-tab">
+              <label class="track-source-field" for="track-link-input"><span aria-hidden="true">↗</span>
+                <input id="track-link-input" type="text" inputmode="url" autocomplete="off" maxlength="4096"
+                  placeholder="Colle un lien YouTube, Spotify, Deezer…" aria-label="Lien du morceau">
+              </label>
+            </div>`:''}
+            <div class="track-file-pane" id="track-file-pane" ${allowLink?'role="tabpanel" aria-labelledby="track-file-tab"':''}>
+              <label class="track-source-field track-file-drop" for="track-audio-input">
+                <span aria-hidden="true">⇧</span>
+                <span><strong class="track-filename" aria-live="polite">Déposer ou choisir un audio</strong><small>MP3, WAV, M4A, FLAC, OGG ou AAC · 25 Mo</small></span>
+                <input id="track-audio-input" type="file" accept=".wav,.mp3,.m4a,.flac,.ogg,.aac,audio/*" aria-label="Ton fichier audio">
+              </label>
+            </div>
+            <button class="track-import-next" type="submit">Continuer <span aria-hidden="true">↗</span></button>
           </div>
-          ${allowLink?'<button type="button" class="btn btn-outline track-switch-source"></button>':''}
+          <audio class="track-audio-preview hidden" controls preload="metadata" aria-label="Écouter le fichier sélectionné"></audio>
+          ${sampleUrl?'<button type="button" class="btn btn-outline track-sample">Charger la mélodie de test</button>':''}
         </div>
         <div class="track-upload track-confirm hidden">
           <div class="track-recap" aria-label="Récapitulatif de la transcription"></div>
@@ -86,7 +93,8 @@
     const confirmation=get('.track-confirm'), recap=get('.track-recap');
     const back=get('.track-back'), next=get('.track-next'), title=get('#track-title-input');
     const fileInput=get('#track-audio-input'), rights=get('#track-rights-input'), status=get('.track-status');
-    const linkInput=get('#track-link-input'), switchSource=get('.track-switch-source'), referenceNote=get('.track-reference');
+    const linkInput=get('#track-link-input'), referenceNote=get('.track-reference');
+    const sourceTabs=[...root.querySelectorAll('[data-source-mode]')];
     const soloLabel=get('.track-solo'), solo=soloLabel.querySelector('input'), filename=get('.track-filename');
     const media=get('.track-audio-preview');
     const setStatus=(message,error=false)=>{
@@ -135,7 +143,7 @@
       draft.file=file;
       solo.checked=false;
       rights.checked=false;
-      filename.textContent=file?.name||'';
+      filename.textContent=file?.name||'Déposer ou choisir un audio';
       if(!file)return;
       previewUrl=URL.createObjectURL(file);
       media.onloadedmetadata=()=>{
@@ -229,7 +237,11 @@
       if(!importing)media.pause();
       get('.track-link-pane')?.classList.toggle('hidden',mode!=='link');
       get('.track-file-pane').classList.toggle('hidden',mode!=='file');
-      if(switchSource)switchSource.textContent=mode==='link'?'Importer un fichier audio':'Utiliser un lien';
+      for(const tab of sourceTabs){
+        const active=tab.dataset.sourceMode===mode;
+        tab.setAttribute('aria-selected',String(active));
+        tab.tabIndex=active?0:-1;
+      }
       referenceNote.hidden=!reference;
       referenceNote.textContent=reference?audioSource.importHint(reference.provider):'';
       soloLabel.classList.toggle('hidden',draft.source!=='instrumental');
@@ -243,8 +255,8 @@
           <span><strong>${name}</strong>${detail?`<small>${detail}</small>`:''}</span>
           <span class="track-choice-arrow" aria-hidden="true">→</span></button>`).join(''):'';
       back.classList.toggle('hidden',index===0);
-      next.classList.toggle('hidden',Boolean(options));
-      next.textContent=importing?'Continuer →':freemium?'Générer mon aperçu gratuit ↗':'Générer mon relevé ↗';
+      next.classList.toggle('hidden',!confirming);
+      next.textContent=freemium?'Générer mon aperçu gratuit ↗':'Générer mon relevé ↗';
       setStatus('');
       if(focus)heading.focus({preventScroll:true});
     }
@@ -282,10 +294,31 @@
     });
     title.addEventListener('input',()=>{titleEdited=true;});
     solo.addEventListener('change',renderRecap);
-    switchSource?.addEventListener('click',()=>{
-      setMode(mode==='link'?'file':'link');
-      render();
-      (mode==='link'?linkInput:fileInput).focus();
+    for(const tab of sourceTabs){
+      tab.addEventListener('click',()=>{
+        if(mode===tab.dataset.sourceMode)return;
+        setMode(tab.dataset.sourceMode);
+        render();
+      });
+      tab.addEventListener('keydown',event=>{
+        if(!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;
+        event.preventDefault();
+        const destination=event.key==='Home'?sourceTabs[0]:event.key==='End'?sourceTabs.at(-1):
+          sourceTabs.find(option=>option!==tab);
+        destination.click();
+        destination.focus();
+      });
+    }
+    const fileDrop=get('.track-file-drop');
+    fileDrop.addEventListener('dragover',event=>event.preventDefault());
+    fileDrop.addEventListener('drop',event=>{
+      event.preventDefault();
+      if(mode!=='file'||current!=='import'||busy)return;
+      const file=event.dataTransfer.files[0];
+      if(!file)return;
+      fileInput.value='';
+      setFile(file);
+      titleEdited=false;
     });
     fileInput.addEventListener('change',()=>{
       setFile(fileInput.files[0]||null);

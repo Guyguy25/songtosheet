@@ -220,7 +220,8 @@ async function download(db,req,res,user){
   const {id,download:format}=req.query;
   if(!isId(id)||!Object.hasOwn(FORMATS,format))return json(res,404,{detail:'Export introuvable.'});
   const access=user.role==='admin'?{}:{preview_limit:PREVIEW_SECONDS};
-  const job=await db.collection('track_jobs').findOne({...trackFilter(id,user),...access,status:{$in:['processing','completed']}},
+  const job=await db.collection('track_jobs').findOne({...trackFilter(id,user),...access,
+    $or:[{status:{$in:['processing','completed']}},{status:'failed',downloads:{$all:['mid','musicxml']}}]},
     {projection:{[`exports.${format}`]:1,preview_limit:1,solo_engine:1}});
   if(job&&SOLO_FORMATS.has(format)&&!showSolo(job))return json(res,404,{detail:'Export introuvable.'});
   const data=job?.exports?.[format];

@@ -71,6 +71,7 @@ def prepare_preview(audio, directory, limit):
 
 def process_job(call, job, data, guitar_engine=None, solo_engine=None):
     identity = {"id": job["id"], "lease": job["lease"]}
+    direct_published = False
 
     def report(stage):
         try:
@@ -98,6 +99,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None):
                 audio, source_duration = prepare_preview(audio, directory, job["preview_limit"])
 
             def publish_direct(result, meta):
+                nonlocal direct_published
                 exports = {
                     key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
                     for key, filename in EXPORTS.items() if (result / filename).is_file()
@@ -108,6 +110,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None):
                      preview_duration=meta["duration"], note_count=len(meta["notes"]), exports=exports,
                      diagnostic=meta.get("diagnostic"), resolved_capo=meta.get("resolved_capo", capo),
                      engine=meta.get("engine"))
+                direct_published = True
                 print(f"{job['id']}: relevé disponible", flush=True)
 
             started = time.monotonic()
@@ -151,7 +154,8 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None):
         message = "La transcription a échoué. Essaie un audio valide ou une piste plus claire."
         if isinstance(error, TrackLinkError) or str(error).startswith(("L’audio doit durer", "L’audio dépasse", "Aucune note exploitable", "Les exports dépassent")):
             message = str(error)
-        payload = {"ok": False, "error": message}
+        payload = ({"ok": True, "preview": True, "exports": {}, "pdf_error": not job.get("preview_limit")}
+                   if direct_published else {"ok": False, "error": message})
     for attempt in range(3):
         try:
             call("finish", **identity, **payload)

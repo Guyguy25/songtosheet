@@ -186,8 +186,8 @@ def write_midi(notes, destination, program, instrument, bpm, *, beats=None, beat
 
 def midi_events(midi, duration, *, guitar_only=False):
     return sorted([
-        {"pitch": note.pitch, "start": note.start, "end": min(note.end, duration),
-         "velocity": note.velocity}
+        {"pitch": int(note.pitch), "start": float(note.start), "end": float(min(note.end, duration)),
+         "velocity": int(note.velocity)}
         for track in midi.instruments
         if not track.is_drum and (not guitar_only or 24 <= track.program <= 31)
         for note in track.notes
@@ -358,6 +358,8 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         if instrument == "piano":
             if isolated:
                 notes = clean_piano_notes(notes, onset_strengths(model, notes))
+            if not notes:
+                raise ValueError("Aucune note exploitable. Essaie un audio plus clair.")
             detected_bpm, beats = estimate_piano_grid(notes, bpm)
             intro = notes[0]["start"]
             notes = [{**note, "start": note["start"] - intro, "end": note["end"] - intro} for note in notes]
@@ -392,12 +394,14 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                       intro_count=intro_count, pull_offs=pull_offs, slides=slides, strummed=strummed)
         manifest = {**config, "notes": notes, "duration": duration, "tab": bool(tab)}
         if instrument == "piano":
-            manifest.update(bpm=detected_bpm, meter=f"{beats}/4", intro=intro)
+            manifest.update(bpm=int(detected_bpm), meter=f"{beats}/4", intro=float(intro))
         if capo == "auto":
             manifest["resolved_capo"] = resolved_capo
         if instrument == "guitare":
             manifest.update(bpm=bpm, meter=f"{tab_meter[0]}/{tab_meter[1]}")
             manifest["diagnostic"] = guitar_diagnostic(notes, tab, transients, filtered)
+        manifest_path = result / "notes.json"
+        manifest_path.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
         if on_direct:
             on_direct(result, manifest)
         vocals = []
@@ -433,9 +437,9 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                               bpm, tab_meter, resolved_capo, mix=mix_notes, mix_attacks=mix_attacks):
                     solo_result.rename(result / "solo")
                     manifest["solo_engine"] = config["solo"]["engine"]
+                    manifest_path.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
             except Exception as error:
                 print(f"Arrangement solo indisponible : {error}", file=sys.stderr, flush=True)
-        (result / "notes.json").write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
         try:
             result.rename(target)
         except OSError:

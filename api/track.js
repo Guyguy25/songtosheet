@@ -5,7 +5,7 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,prepareTracks}=require('../lib/track-jobs');
+const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,prepareTracks}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
@@ -64,6 +64,8 @@ async function begin(db,res,user,body){
   await prepareTracks(db);
   const jobs=db.collection('track_jobs');
   const now=new Date();
+  await jobs.updateOne({user_id:user._id,active:true,...expiredQueue(now)},
+    {$set:{active:false,status:'failed',error_message:QUEUE_TIMEOUT_MESSAGE},$unset:{audio_url:''}});
   await jobs.updateMany({user_id:user._id,active:true,expires_at:{$lte:now}},
     {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'},$unset:{audio_url:''}});
   try{
@@ -72,6 +74,7 @@ async function begin(db,res,user,body){
     const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
+      ...(link?{queued_at:now}:{}),
       created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+(link?AUDIO_RETENTION_MS:UPLOAD_MS))});
     return json(res,201,{id:String(result.insertedId),chunk_bytes:CHUNK_BYTES});
   }catch(error){
@@ -96,7 +99,8 @@ async function upload(db,res,user,body){
   if(body.action==='queue'){
     if(await chunks.countDocuments({job_id:job._id})!==count)return json(res,400,{detail:'Import incomplet.'});
     const expires_at=new Date(job.created_at.getTime()+AUDIO_RETENTION_MS);
-    const updated=await jobs.updateOne(filter,{$set:{status:'queued',expires_at}});
+    const queued_at=new Date();
+    const updated=await jobs.updateOne({...filter,expires_at:{$gt:queued_at}},{$set:{status:'queued',queued_at,expires_at}});
     return updated.modifiedCount?json(res,200,{id:body.id}):json(res,409,{detail:'Import déjà traité.'});
   }
   const {index,data}=body;
@@ -125,6 +129,7 @@ async function worker(db,res,body){
     if(body.capo!==true)compatible.capo={$in:[null,0]};
     else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
+      $nor:[expiredQueue(now)],
       $or:[{status:'queued'},{status:'processing',lease_until:{$lte:now}}]},
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS),stage:'audio',stages:['audio']}},
       {sort:{created_at:1},returnDocument:'after'});

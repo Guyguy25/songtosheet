@@ -58,8 +58,8 @@
             <div class="track-link-pane" id="track-link-pane" role="tabpanel" aria-labelledby="track-link-tab">
               <label class="track-link-label" for="track-link-input">Lien du morceau</label>
               <input id="track-link-input" class="field track-source-field" type="text" inputmode="url"
-                autocomplete="off" maxlength="4096" placeholder="https://…" aria-describedby="track-link-hint">
-              <p class="track-source-hint" id="track-link-hint">Utilise un lien YouTube ou un lien direct vers un fichier audio.</p>
+                autocomplete="off" maxlength="4096" placeholder="Lien YouTube, Spotify ou Deezer" aria-describedby="track-link-hint">
+              <p class="track-source-hint" id="track-link-hint">Colle un lien YouTube, Spotify, Deezer ou un lien direct vers un fichier audio. Pour Spotify et Deezer, il faudra aussi ajouter le fichier audio.</p>
             </div>`:''}
             <div class="track-file-pane" id="track-file-pane" ${allowLink?'role="tabpanel" aria-labelledby="track-file-tab"':''}>
               <label class="track-source-field track-file-drop" for="track-audio-input">

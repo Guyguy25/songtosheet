@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=8" />
   <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=18" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=19" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=9" />
   <script src="/backend/web/score-player.js?v=10" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
@@ -354,20 +354,26 @@
 }
 
 
-/* Compact conversion field: input and CTA on one line, without a huge button row. */
-.hero-action-panel{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:stretch;column-gap:7px;row-gap:7px;padding:8px}
-.hero-action-panel .rev-mode{grid-column:1 / -1;grid-row:1;min-width:0;margin:0}
-.hero-action-panel .hero-source-panel{grid-column:1;grid-row:2;min-width:0}
-.hero-action-panel .hero-input,.hero-action-panel .hero-upload{height:54px;min-height:54px;width:100%;margin:0;box-sizing:border-box}
-.hero-action-panel .hero-input input{min-width:0;text-overflow:ellipsis}
-.hero-action-panel #hero-generate{grid-column:2;grid-row:2;align-self:stretch;width:auto;min-height:54px;margin:0;padding:0 19px;white-space:nowrap;border-radius:11px;font-size:13px;box-shadow:0 4px 14px #4424a851;display:flex;gap:8px}
+/* Shared surface for the active source field and its action. */
+.hero-action-panel{display:grid;gap:8px;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none}
+.hero-action-panel .rev-mode{min-width:0;margin:0}
+.hero-action-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;padding:5px;border:1px solid #c5acff55;border-radius:999px;background:#2d2343;box-shadow:0 10px 35px #130b2d55}
+.hero-action-row:focus-within{border-color:#c5acff}
+.hero-action-panel .hero-source-panel{min-width:0}
+.hero-action-panel .hero-input,.hero-action-panel .hero-upload{min-height:48px;width:100%;margin:0;border-radius:999px;background:transparent;color:#ede4ff}
+.hero-action-panel .hero-input>span{color:#c5acff}
+.hero-action-panel .hero-input input{min-width:0;color:#fff;text-overflow:ellipsis}
+.hero-action-panel .hero-input input::placeholder,.hero-action-panel .hero-upload small{color:#d2c4e6}
+.hero-action-panel .hero-upload{justify-content:flex-start}
+.hero-action-panel #hero-generate{width:auto;min-height:48px;margin:0;padding:0 19px;white-space:nowrap;border-radius:999px;background:#7848e7;font-size:13px;box-shadow:none;gap:8px}
+.hero-action-panel #hero-generate:focus-visible,.hero-action-panel .rev-mode button:focus-visible{outline:2px solid #e0caff;outline-offset:2px}
 .hero-action-panel #hero-generate span{font-size:17px}
 @media(max-width:650px){
-  .hero-action-panel{grid-template-columns:minmax(0,1fr) auto;gap:6px;padding:7px}
-  .hero-action-panel .hero-input,.hero-action-panel .hero-upload{height:50px;min-height:50px;padding:0 9px}
-  .hero-action-panel .hero-input input{font-size:11px}
+  .hero-action-row{gap:4px}
+  .hero-action-panel .hero-input,.hero-action-panel .hero-upload{min-height:44px;padding-inline:9px}
+  .hero-action-panel .hero-input input{font-size:16px}
   .hero-action-panel .hero-input>span{font-size:17px}
-  .hero-action-panel #hero-generate{min-height:50px;padding:0 12px;font-size:12px;gap:5px}
+  .hero-action-panel #hero-generate{min-height:44px;padding:0 12px;font-size:12px;gap:5px}
   .hero-action-panel .rev-mode button{padding:8px 10px}
   .hero-action-panel .hero-upload b{font-size:10px}.hero-action-panel .hero-upload small{font-size:8px}
 }
@@ -631,10 +637,12 @@
  <p class="split-subtitle">Collez un lien YouTube, Spotify ou Deezer, ou importez un audio. Choisissez votre instrument et <strong>obtenez votre partition ou tablature.</strong></p>
  <div class="hero-action-panel">
    <div class="rev-mode" role="tablist" aria-label="Source de musique"><button id="tab-link" class="active" type="button" role="tab" aria-selected="true">🔗 Lien musical</button><button id="tab-upload" type="button" role="tab" aria-selected="false">⇧ Fichier audio</button></div>
-   <div id="link-panel" class="hero-source-panel"><label class="hero-input" for="hero-link"><span>↗</span><input id="hero-link" type="url" inputmode="url" autocomplete="off" placeholder="Colle un lien YouTube, Spotify, Deezer…"></label></div>
-   <div id="upload-panel" class="hero-source-panel hidden"><label id="hero-drop" class="hero-upload" for="hero-file"><span>⇧</span><span><b id="hero-file-label">Déposer ou choisir un audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo</small></span><input id="hero-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"></label></div>
+   <div class="hero-action-row">
+     <div id="link-panel" class="hero-source-panel"><label class="hero-input" for="hero-link"><span aria-hidden="true">↗</span><input id="hero-link" type="url" inputmode="url" autocomplete="off" aria-label="Lien du morceau" placeholder="Lien YouTube, Spotify ou Deezer"></label></div>
+     <div id="upload-panel" class="hero-source-panel hidden"><label id="hero-drop" class="hero-upload" for="hero-file"><span aria-hidden="true">⇧</span><span><b id="hero-file-label">Déposer ou choisir un audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo</small></span><input id="hero-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"></label></div>
+     <button id="hero-generate" class="split-submit" type="button" aria-label="Continuer vers le choix de l’instrument">Continuer <span aria-hidden="true">→</span></button>
+   </div>
    <select id="hero-instrument" aria-label="Instrument" hidden><option value="piano">Piano</option><option value="guitare">Guitare</option><option value="violon">Violon</option><option value="voix">Voix</option><option value="basse">Basse</option></select>
-   <button id="hero-generate" class="split-submit" type="button" aria-label="Continuer vers le choix de l’instrument">Continuer <span aria-hidden="true">↗</span></button>
  </div>
  <p class="flow-source-error hidden" id="hero-source-error" role="alert"></p>
  <div class="flow-youtube-check hidden" id="hero-youtube-check" aria-hidden="true"><div id="hero-youtube-player"></div></div>

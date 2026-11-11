@@ -56,10 +56,10 @@
               <button type="button" id="track-file-tab" data-source-mode="file" role="tab" aria-controls="track-file-pane"><span aria-hidden="true">⇧</span> Fichier audio</button>
             </div>
             <div class="track-link-pane" id="track-link-pane" role="tabpanel" aria-labelledby="track-link-tab">
-              <label class="track-source-field" for="track-link-input"><span aria-hidden="true">↗</span>
-                <input id="track-link-input" type="text" inputmode="url" autocomplete="off" maxlength="4096"
-                  placeholder="Colle un lien YouTube, Spotify, Deezer…" aria-label="Lien du morceau">
-              </label>
+              <label class="track-link-label" for="track-link-input">Lien du morceau</label>
+              <input id="track-link-input" class="field track-source-field" type="text" inputmode="url"
+                autocomplete="off" maxlength="4096" placeholder="https://…" aria-describedby="track-link-hint">
+              <p class="track-source-hint" id="track-link-hint">Utilise un lien YouTube ou un lien direct vers un fichier audio.</p>
             </div>`:''}
             <div class="track-file-pane" id="track-file-pane" ${allowLink?'role="tabpanel" aria-labelledby="track-file-tab"':''}>
               <label class="track-source-field track-file-drop" for="track-audio-input">
@@ -68,7 +68,7 @@
                 <input id="track-audio-input" type="file" accept=".wav,.mp3,.m4a,.flac,.ogg,.aac,audio/*" aria-label="Ton fichier audio">
               </label>
             </div>
-            <button class="track-import-next" type="submit">Continuer <span aria-hidden="true">↗</span></button>
+            <button class="btn btn-primary track-import-next" type="submit">Continuer <span aria-hidden="true">→</span></button>
           </div>
           <audio class="track-audio-preview hidden" controls preload="metadata" aria-label="Écouter le fichier sélectionné"></audio>
           ${sampleUrl?'<button type="button" class="btn btn-outline track-sample">Charger la mélodie de test</button>':''}

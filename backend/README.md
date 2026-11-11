@@ -121,7 +121,19 @@ export TRACK_GUITARARRANGER_ROOT=/opt/guitararranger
 export TRACK_REMI_ROOT=/opt/remi-z
 ```
 
-Redémarre le worker avec les deux moteurs configurés. Les nouveaux aperçus requièrent ce worker et limitent l’inférence à 30 secondes. Le serveur renvoie les fichiers de cet extrait. La suite floutée est dessinée par le lecteur à partir d’une notation illustrative. Piano et basse utilisent Basic Pitch. Les licences MIT sont conservées dans les dépôts amont.
+Redémarre le worker avec les deux moteurs configurés. Les nouveaux aperçus requièrent ce worker et limitent l’inférence à 30 secondes. Le serveur renvoie les fichiers de cet extrait. La suite floutée est dessinée par le lecteur à partir d’une notation illustrative. La basse utilise Basic Pitch. Les licences MIT sont conservées dans les dépôts amont.
+
+### YourMT3+ pour le piano
+
+Le worker analyse le mix avec YourMT3+ MoE sans pitch shift. Les notes mélodiques sont réunies dans un MIDI piano et gravées sur deux portées. Les percussions sont écartées.
+
+Dans un environnement Python 3.11 séparé avec PyTorch et torchaudio de versions compatibles, installe l'adaptateur utilisé pour valider l'inférence.
+
+```bash
+python -m pip install 'transformers==4.43.4' 'mt3-infer[torch] @ git+https://github.com/openmirlab/mt3-infer.git@d8cbd287470291dee335f84315c5a9b9ff6e6c8a'
+```
+
+Configure `TRACK_YOURMT3_PYTHON` avec le chemin absolu de ce Python et `TRACK_YOURMT3_CHECKPOINT` avec le chemin vers [le checkpoint officiel](https://huggingface.co/spaces/mimbres/YourMT3/resolve/main/amt/logs/2024/mc13_256_g4_all_v7_mt3f_sqr_rms_moe_wf4_n8k2_silu_rope_rp_b36_nops/checkpoints/last.ckpt). Le worker vérifie son SHA-256 au démarrage. `TRACK_YOURMT3_DEVICE` accepte `auto`, `cpu` ou `cuda`. Redémarre le worker après modification. Pour revenir à Basic Pitch, retire les deux variables de configuration YourMT3+ et redémarre.
 
 ## Paiement Stripe
 

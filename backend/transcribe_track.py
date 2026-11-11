@@ -23,6 +23,7 @@ from guitar_evidence import (
 from guitar_intro import open_pull_offs, repeated_open_intro
 from piano_score import clean_piano_notes, estimate_piano_grid, write_piano_score
 from tsumugi_engine import ENGINE as TSUMUGI_ENGINE, Tsumugi
+from yourmt3_engine import ENGINE as YOURMT3_ENGINE
 
 
 TRACKS = {
@@ -195,9 +196,28 @@ def midi_events(midi, duration, *, guitar_only=False):
     ], key=lambda note: (note["start"], note["pitch"]))
 
 
+def piano_midi_events(midi, duration):
+    """Combine melodic MIDI tracks onto one piano without overlapping same-pitch notes."""
+    notes = []
+    latest = {}
+    for note in midi_events(midi, duration):
+        pitch = note["pitch"]
+        if not 21 <= pitch <= 108:
+            continue
+        if previous := latest.get(pitch):
+            if note["start"] - previous["start"] <= .025:
+                previous["end"] = max(previous["end"], note["end"])
+                previous["velocity"] = max(previous["velocity"], note["velocity"])
+                continue
+            previous["end"] = min(previous["end"], note["start"])
+        notes.append(note)
+        latest[pitch] = note
+    return notes
+
+
 def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0, progress=None,
                review_audio=None, guitar_engine=None, guitar_solo=False, has_voice=True, solo_engine=None,
-               on_direct=None):
+               on_direct=None, piano_engine=None):
     if (capo != "auto" and (type(capo) is not int or not 0 <= capo <= 12)) or (capo and instrument != "guitare"):
         raise ValueError("Le capo est disponible pour la guitare uniquement, en mode automatique ou avec une case de 0 à 12.")
     source = source.resolve(strict=True)
@@ -222,9 +242,11 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     stem, program = TRACKS[instrument]
     separator = "htdemucs_6s" if stem in ("guitar", "piano") else "htdemucs"
     guitar_engine = guitar_engine if instrument == "guitare" else None
+    piano_engine = piano_engine if instrument == "piano" else None
     guitar_solo = guitar_solo and instrument == "guitare"
-    config = {"engine": TSUMUGI_ENGINE if guitar_engine else "basic-pitch-0.4.0",
-              "separator": None if isolated else f"demucs-4.1.0:{separator}",
+    engine = YOURMT3_ENGINE if piano_engine else TSUMUGI_ENGINE if guitar_engine else "basic-pitch-0.4.0"
+    config = {"engine": engine,
+              "separator": None if isolated or piano_engine else f"demucs-4.1.0:{separator}",
               "instrument": instrument, "bpm": bpm,
               "version": {"guitare": 15 if isolated else 16, "basse": 4, "piano": 3}.get(instrument, 1)}
     if guitar_solo:
@@ -249,7 +271,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             on_direct(target, json.loads((target / "notes.json").read_text(encoding="utf-8")))
         return target
 
-    if not guitar_engine or (guitar_solo and has_voice and not isolated):
+    if not (piano_engine or guitar_engine) or (guitar_solo and has_voice and not isolated):
         from basic_pitch.inference import predict
 
     with tempfile.TemporaryDirectory(dir=output) as temporary:
@@ -259,7 +281,10 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
              "-ar", "44100", "-ac", "2", "-fs", str(max_pcm_bytes), str(wav)], timeout=90)
         if wav.stat().st_size >= max_pcm_bytes:
             raise ValueError(capacity_error)
-        if not isolated:
+        if piano_engine:
+            if review_audio is not None:
+                review_audio(original, work)
+        elif not isolated:
             report("isolate")
             run([sys.executable, "-m", "demucs", "-n", separator, "-o", str(work),
                  "--shifts", "0", str(wav)], timeout=900)
@@ -273,7 +298,10 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             return target
 
         report("detect")
-        if guitar_engine:
+        if piano_engine:
+            midi = piano_engine.transcribe(wav, work / "piano-source.mid")
+            notes = piano_midi_events(midi, duration)
+        elif guitar_engine:
             midi = guitar_engine.transcribe(wav, work / "guitar.mid")
             notes = midi_events(midi, duration, guitar_only=True)
         else:
@@ -356,12 +384,12 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         result.mkdir()
         score_title = title or source.stem
         if instrument == "piano":
-            if isolated:
+            if isolated and not piano_engine:
                 notes = clean_piano_notes(notes, onset_strengths(model, notes))
             if not notes:
                 raise ValueError("Aucune note exploitable. Essaie un audio plus clair.")
             detected_bpm, beats = estimate_piano_grid(notes, bpm)
-            intro = notes[0]["start"]
+            intro = 0.0 if piano_engine else notes[0]["start"]
             notes = [{**note, "start": note["start"] - intro, "end": note["end"] - intro} for note in notes]
             write_midi(notes, result / "score.mid", program, instrument, detected_bpm, beats=beats)
             write_piano_score(notes, result / "score.musicxml", score_title, detected_bpm, beats)

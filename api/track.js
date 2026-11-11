@@ -192,7 +192,8 @@ async function worker(db,res,body){
       return json(res,400,{detail:'Case du capo invalide.'});
     }
     const capo=job.capo==='auto'?{resolved_capo:resolved}:{};
-    const engine=body.engine==='tsumugi-guitar-v1.5'&&job.instrument==='guitare'?{engine:body.engine}:{};
+    const approvedEngine={guitare:'tsumugi-guitar-v1.5',piano:'yourmt3-plus-moe-nops'}[job.instrument];
+    const engine=approvedEngine&&body.engine===approvedEngine?{engine:body.engine}:{};
     const preview=job.preview_limit?{preview_duration:Math.min(previewDuration,job.preview_limit)}:{};
     const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo,...engine,...preview},
       $unset:{solo_engine:'',...(!engine.engine?{engine:''}:{})},

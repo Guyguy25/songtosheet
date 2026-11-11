@@ -19,6 +19,7 @@ from score_pdf import render_pdf
 from track_link import TrackLinkError, download_track, download_youtube
 from tsumugi_engine import Tsumugi
 from guitararranger_engine import GuitarArranger
+from yourmt3_engine import YourMT3
 
 
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
@@ -69,7 +70,7 @@ def prepare_preview(audio, directory, limit):
     return preview, duration
 
 
-def process_job(call, job, data, guitar_engine=None, solo_engine=None):
+def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_engine=None):
     identity = {"id": job["id"], "lease": job["lease"]}
     direct_published = False
 
@@ -117,7 +118,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None):
             result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"],
                                 capo=capo, progress=report,
                                 guitar_engine=guitar_engine, guitar_solo=True,
-                                solo_engine=solo_engine, on_direct=publish_direct,
+                                solo_engine=solo_engine, on_direct=publish_direct, piano_engine=piano_engine,
                                 has_voice=job.get("source_content") != "instrumental",
                                 review_audio=(lambda original, stems: encode_review_audio(original, stems, review))
                                 if job.get("review_audio") else None)
@@ -185,6 +186,7 @@ def main():
 
     guitar_engine = Tsumugi.from_env()
     solo_engine = GuitarArranger.from_env()
+    piano_engine = YourMT3.from_env()
     with requests.Session() as session:
         session.headers["Authorization"] = f"Bearer {token}"
 
@@ -197,13 +199,13 @@ def main():
         if not args.once:
             load_note_model()
         youtube = find_spec("yt_dlp") is not None and find_spec("yt_dlp_ejs") is not None and shutil.which("node") is not None
-        print("Moteur de transcription prêt.", flush=True)
+        print(f"Moteur de transcription prêt. Piano : {'YourMT3+' if piano_engine else 'Basic Pitch'}.", flush=True)
         while True:
             try:
                 job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True,
                            preview=guitar_engine is not None and solo_engine is not None)["job"]
                 if job:
-                    process_job(call, job, args.cache, guitar_engine, solo_engine)
+                    process_job(call, job, args.cache, guitar_engine, solo_engine, piano_engine)
                 if args.once:
                     return
                 if not job:

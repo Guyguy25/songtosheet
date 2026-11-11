@@ -21,6 +21,25 @@ def event(pitch, start, duration, velocity=85):
     return {"pitch": pitch, "start": start, "end": start + duration, "velocity": velocity}
 
 
+def test_yourmt3_piano_merges_melodic_tracks_and_clips_to_preview():
+    from types import SimpleNamespace
+    from transcribe_track import piano_midi_events
+
+    def note(pitch, start, end, velocity=70):
+        return SimpleNamespace(pitch=pitch, start=start, end=end, velocity=velocity)
+
+    piano = SimpleNamespace(is_drum=False, notes=[note(60, .10, 1), note(60, .65, 2), note(20, 0, 1)])
+    strings = SimpleNamespace(is_drum=False, notes=[note(60, .12, .9, 90), note(67, .4, .6)])
+    drums = SimpleNamespace(is_drum=True, notes=[note(42, .2, .3)])
+    midi = SimpleNamespace(instruments=[piano, strings, drums])
+
+    assert piano_midi_events(midi, 1) == [
+        {"pitch": 60, "start": .10, "end": .65, "velocity": 90},
+        {"pitch": 67, "start": .4, "end": .6, "velocity": 70},
+        {"pitch": 60, "start": .65, "end": 1, "velocity": 70},
+    ]
+
+
 def test_regular_bass_and_melody_support_three_beats():
     notes = []
     for index, bass in enumerate((48, 52, 53, 55, 52)):

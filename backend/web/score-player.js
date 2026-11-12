@@ -54,9 +54,10 @@
         if(pitch){
           const midi=(Number(pitch.querySelector('octave').textContent)+1)*12+
             pitchClass[pitch.querySelector('step').textContent]+Number(pitch.querySelector('alter')?.textContent||0);
-          const key=`${midi}:${item.querySelector('technical string')?.textContent||''}`;
+          const string=Number(item.querySelector('technical string')?.textContent)||null;
+          const key=`${midi}:${string??''}`;
           const previous=item.querySelector('tie[type="stop"]')&&ties.get(key);
-          const note=previous||{time:onset,midi,duration,velocity:.7};
+          const note=previous||{time:onset,midi,duration,velocity:.7,string};
           if(previous)note.duration=onset+duration-note.time;
           else result.push(note);
           if(item.querySelector('tie[type="start"]'))ties.set(key,note);
@@ -67,6 +68,43 @@
       measureStart=measure.getAttribute('implicit')==='yes'?position:measureStart+measureLength;
     }
     return result;
+  }
+
+  function guitarEntry(notes){
+    const attacks=[];
+    for(const note of [...notes].sort((a,b)=>a.time-b.time)){
+      if(note.duration<.08||note.velocity<.2)continue;
+      if(!attacks.length||note.time-attacks.at(-1)>.06)attacks.push(note.time);
+      if(attacks.length===3)break;
+    }
+    return attacks[0]>=1&&attacks[2]-attacks[0]<=2?attacks[0]:0;
+  }
+
+  function addSoloSustain(notes,notation,bpm,end){
+    const byPitch=new Map();
+    for(const event of notation.sort((a,b)=>a.time-b.time)){
+      if(!byPitch.has(event.midi))byPitch.set(event.midi,{events:[],next:0});
+      byPitch.get(event.midi).events.push(event);
+    }
+    const strings=notes.map(note=>{
+      const group=byPitch.get(note.midi);
+      if(!group)return null;
+      while(group.events[group.next]?.time<note.time-.055)group.next++;
+      const event=group.events[group.next];
+      if(!event||event.time>note.time+.055)return null;
+      group.next++;
+      return event.string;
+    });
+    const nextOnString=new Map();
+    const sustain=Math.min(.6,45/bpm);
+    let nextUnknown=end;
+    for(let index=notes.length-1;index>=0;index--){
+      const note=notes[index],string=strings[index];
+      if(!string){nextUnknown=note.time;continue;}
+      const stop=Math.min(note.time+sustain,nextOnString.get(string)??end,nextUnknown);
+      note.ringDuration=Math.max(note.duration,stop-note.time);
+      nextOnString.set(string,note.time);
+    }
   }
 
   function guitarNotation(source){
@@ -83,7 +121,8 @@
     return new XMLSerializer().serializeToString(xml);
   }
 
-  function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,preferTab=false,startAt=0}){
+  function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,preferTab=false,startAt=0,
+                       findEntry=false,entryMidiUrl,soloSustain=false}){
     const controller=new AbortController();
     const {signal}=controller;
     root.innerHTML=`
@@ -147,11 +186,13 @@
     if(kind&&preferTab)kind.value='tab';
 
     let notes=[],duration=0,midi,position=startAt,rate=1,context,playing=false,starting=false,anchor=0,next=0,frame;
+    let entry=0,playbackStart=0,initializedPosition=false;
     let score,cursorTimes=[],cursorIndex=0,zoom=1,loadId=0,audioLoadId=0,resizeTimer;
     let chart,playhead,pixelsPerSecond=1;
     const sounds=new Set();
     let sampleBuffers;
     const now=()=>playing?Math.min(duration,Math.max(0,(context.currentTime-anchor)*rate)):position;
+    const noteEnd=note=>note.time+(note.ringDuration??note.duration);
 
     function stopSounds(){
       for(const sound of sounds)sound.stop();
@@ -159,7 +200,7 @@
     }
     function scheduleNote(note,offset){
       const from=Math.max(context.currentTime,anchor+Math.max(offset,note.time)/rate);
-      const length=(note.time+note.duration-Math.max(offset,note.time))/rate;
+      const length=(noteEnd(note)-Math.max(offset,note.time))/rate;
       if(length<=0)return;
       const gain=context.createGain();
       let sound,startAt=0;
@@ -246,7 +287,9 @@
       anchor=context.currentTime+.025-position/rate;
       next=notes.findIndex(note=>note.time>=position);
       if(next<0)next=notes.length;
-      for(let i=0;i<next;i++)if(notes[i].time+notes[i].duration>position)scheduleNote(notes[i],position);
+      if(!playbackStart||position!==playbackStart){
+        for(let i=0;i<next;i++)if(noteEnd(notes[i])>position)scheduleNote(notes[i],position);
+      }
       cancelAnimationFrame(frame);tick();
     }
     function jump(value){
@@ -273,7 +316,7 @@
           status.hidden=true;
         }
         if(signal.aborted)return;
-        if(position>=duration)position=0;
+        if(position>=duration)position=playbackStart;
         playing=true;
         play.textContent='❚❚';play.setAttribute('aria-label','Mettre en pause');
         schedule();
@@ -287,7 +330,7 @@
       finally{starting=false;}
     };
     seek.oninput=()=>jump(Number(seek.value));
-    restart.onclick=()=>{sheet.scrollLeft=0;scroll.scrollLeft=0;jump(0);};
+    restart.onclick=()=>{sheet.scrollLeft=0;scroll.scrollLeft=0;jump(playbackStart);};
     speed.onchange=()=>{position=now();rate=Number(speed.value);if(playing)schedule();};
 
     function drawRoll(){
@@ -345,13 +388,25 @@
         }else{
           track=midi.tracks.flatMap(part=>part.notes);
         }
+        const notation=soloSustain?await loadXml(scoreUrl).catch(()=>null):null;
         if(signal.aborted||current!==audioLoadId)return;
         if(!track.length)throw new Error('Aucune note à lire.');
-        notes=track.filter(note=>!previewDuration||note.time<previewDuration).map(note=>previewDuration
-          ?{...note,midi:note.midi,velocity:note.velocity,time:note.time,duration:Math.min(note.duration,previewDuration-note.time)}
-          :note).sort((a,b)=>a.time-b.time);
+        notes=track.filter(note=>!previewDuration||note.time<previewDuration).map(note=>({
+          midi:note.midi,velocity:note.velocity,time:note.time,
+          duration:previewDuration?Math.min(note.duration,previewDuration-note.time):note.duration
+        })).sort((a,b)=>a.time-b.time);
         if(!notes.length)throw new Error('Aucune note dans cet aperçu.');
         duration=notes.reduce((end,note)=>Math.max(end,note.time+note.duration),0);
+        if(notation){
+          const bpm=midi.header.tempos[0]?.bpm||120;
+          try{addSoloSustain(notes,tabNotes(notation,bpm),bpm,duration);}
+          catch{/* A damaged tablature must not prevent MIDI playback. */}
+        }
+        playbackStart=entry?notes.find(note=>note.time>=entry-.035)?.time??0:0;
+        if(!initializedPosition){
+          position=startAt>playbackStart+.035?startAt:playbackStart;
+          initializedPosition=true;
+        }
         if(sourceDuration>0){
           const timing=get('.sp-source-duration');
           timing.textContent=`Audio importé : ${time(Math.round(sourceDuration))} · Dernière note du relevé : ${time(Math.round(duration))}`;
@@ -426,9 +481,16 @@
     });
     observer.observe(sheet);
     observer.observe(scroll);
-    Promise.all([loadScript('midi','2.0.28'),read(midiUrl,signal,true)]).then(([,buffer])=>{
+    const entryMidi=entryMidiUrl?read(entryMidiUrl,signal,true).catch(()=>null):null;
+    Promise.all([loadScript('midi','2.0.28'),read(midiUrl,signal,true),entryMidi]).then(([,buffer,entryBuffer])=>{
       if(signal.aborted)return;
       midi=new window.Midi(buffer);
+      if(findEntry){
+        try{
+          const original=entryMidiUrl?(entryBuffer&&new window.Midi(entryBuffer)):midi;
+          if(original)entry=guitarEntry(original.tracks.flatMap(track=>track.notes));
+        }catch{/* Playback can start at zero when the original MIDI is unavailable. */}
+      }
       selectSound();
       if(score)drawSheet();
     }).catch(()=>{if(!signal.aborted)scroll.textContent='Le piano roll est indisponible pour ce relevé.';});

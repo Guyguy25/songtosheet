@@ -14,7 +14,7 @@
   <script src="/assets/audio-source.js?v=2" defer></script>
   <script src="/backend/web/track-onboarding.js?v=19" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=9" />
-  <script src="/backend/web/score-player.js?v=10" defer></script>
+  <script src="/backend/web/score-player.js?v=11" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
@@ -1519,7 +1519,8 @@
               scoreUrl:solo?tabUrl:exportUrl('musicxml'),midiUrl:exportUrl(solo?'solomid':'mid'),
               instrument:j.instrument,sourceDuration:j.duration,previewDuration:j.preview_duration,startAt,tabUrl:solo?null:tabUrl,
               tabMidiUrl:!solo&&j.downloads.includes('tabmid')?exportUrl('tabmid'):null,
-              preferTab:solo||tab
+                preferTab:solo||tab,findEntry:j.instrument==='guitare',
+                entryMidiUrl:solo?exportUrl('mid'):null,soloSustain:solo
             });
             $('guitar-versions')?.querySelectorAll('[data-version]').forEach(button=>{
               const active=(button.dataset.version==='solo')===solo;

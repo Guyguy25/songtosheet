@@ -10,9 +10,9 @@
   <script>document.documentElement.classList.toggle('is-landing', location.pathname === '/');</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=8" />
+  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=9" />
   <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=21" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=22" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=11" />
   <script src="/backend/web/score-player.js?v=14" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=1" />
@@ -1157,6 +1157,24 @@
     }).join('');
   }
   let trackWizard;
+  function selectHeroExcerpt(draft){
+    const dialog=$('hero-excerpt-dialog');
+    const host=$('hero-excerpt-wizard');
+    const heroExcerptWizard=window.SongToSheetTrackWizard.mount(host,{
+      allowLink:true,
+      onExcerptBack:()=>dialog.close(),
+      onExcerpt:excerpt=>{
+        dialog.close();
+        openTrackDraft({...draft,excerpt});
+      }
+    });
+    dialog.addEventListener('close',()=>{
+      heroExcerptWizard.dispose();
+      host.replaceChildren();
+    },{once:true});
+    dialog.showModal();
+    heroExcerptWizard.prefill(draft);
+  }
   const trackLinkKey='songtosheet:track-link';
   function rememberTrackLink(value){
     try{
@@ -1255,7 +1273,9 @@
         const value=$('hero-link').value.trim();if(!value)throw new Error('Colle un lien musical ou importe un audio.');
         const source=window.SongToSheetAudioSource.parse(value);
         if(!source)throw new Error('Colle un lien HTTPS valide.');
-        openTrackDraft({audioUrl:source.url.href,instrument});
+        const draft={audioUrl:source.url.href,instrument};
+        if(source.youtubeId||!source.provider)selectHeroExcerpt(draft);
+        else openTrackDraft(draft);
       }else{
         const file=$('hero-file').files[0]||state.file;
         if(!file)throw new Error('Ajoute un fichier audio pour commencer.');
@@ -1289,13 +1309,13 @@
       reader.readAsDataURL(blob);
     });
   }
-  async function submitTrack({file,audioUrl,title,instrument,format,source,capo,guitarGoal,guitarPresence},setStatus){
+  async function submitTrack({file,audioUrl,title,instrument,format,source,capo,guitarGoal,guitarPresence,excerpt},setStatus){
     setStatus(audioUrl?'Mise en file du lien audio…':'Préparation de l’envoi…');
     let id,queued=false;
     try{
       const input=audioUrl?{audioUrl}:{extension:file.name.split('.').at(-1).toLowerCase(),size:file.size,sourceName:file.name};
       const guidance=guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence}:{};
-      const result=await post('/api/track',{action:'begin',title,authorized:true,instrument,format,source,capo,...guidance,...input});
+      const result=await post('/api/track',{action:'begin',title,authorized:true,instrument,format,source,capo,excerpt,...guidance,...input});
       id=result.id;
       if(!audioUrl){
         const count=Math.ceil(file.size/result.chunk_bytes);
@@ -1768,7 +1788,10 @@ const type={pdf:'application/pdf',mid:'audio/midi',musicxml:'application/vnd.rec
 const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const link=document.createElement('a');link.href=url;link.download='songtosheet-demo.'+ext;document.body.appendChild(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),30000);},true);
 })();
 </script>
-<script src="/assets/conversion-flow.js?v=17" defer></script>
+<dialog id="hero-excerpt-dialog" class="track-excerpt-dialog" aria-labelledby="hero-track-question">
+  <div id="hero-excerpt-wizard"></div>
+</dialog>
+<script src="/assets/conversion-flow.js?v=18" defer></script>
 
 <script>
 /* Hero typewriter: partition <-> tablature. */

@@ -46,6 +46,14 @@ async function begin(db,res,user,body){
   const source_name=link?(source.youtubeId?'YouTube':link.hostname):typeof body.sourceName==='string'
     ?body.sourceName.split(/[\\/]/).at(-1).replace(/[\u0000-\u001f\u007f]/g,'').trim().slice(0,160)
     :'';
+  const excerpt=body.excerpt;
+  if(excerpt!==undefined&&(!link||!excerpt||!Number.isSafeInteger(excerpt.start_ms)||
+    !Number.isSafeInteger(excerpt.end_ms)||excerpt.start_ms<0||excerpt.end_ms>86400000||
+    excerpt.end_ms-excerpt.start_ms<500||excerpt.end_ms-excerpt.start_ms>PREVIEW_SECONDS*1000)){
+    return json(res,400,{detail:'Choisis un extrait de 0,5 à 30 secondes.'});
+  }
+  const excerptKey=excerpt&&(excerpt.start_ms!==0||excerpt.end_ms!==PREVIEW_SECONDS*1000)
+    ?':'+excerpt.start_ms+'-'+excerpt.end_ms:'';
   const format=body.format??'partition';
   const capo=body.capo??0;
   const guitarGoal=body.guitar_goal;
@@ -81,8 +89,9 @@ async function begin(db,res,user,body){
     const input=source?.youtubeId?{youtube_id:source.youtubeId,source_kind:'link'}:
       link?{audio_url:link.href,source_kind:'link'}:{extension,size};
     const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
+      ...(excerpt?{excerpt:{start_ms:excerpt.start_ms,end_ms:excerpt.end_ms}}:{}),
       ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence,guitar_compare:true,guitar_judge:true,
-        ...(link?{song_key:sourceKey(source)}:{})}:{}),
+        ...(link?{song_key:sourceKey(source)+excerptKey}:{})}:{}),
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
       ...(link?{queued_at:now}:{}),
@@ -136,6 +145,7 @@ async function worker(db,res,body){
     const compatible=body.pdf===true?{}:{format:{$exists:false}};
     if(body.links!==true)compatible.audio_url={$exists:false};
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
+    if(body.excerpts!==true)compatible.excerpt={$exists:false};
     if(body.preview!==true)compatible.preview_limit={$exists:false};
     if(body.guitar_goals!==true)compatible.guitar_goal={$exists:false};
     else if(body.guided_guitar_only===true){
@@ -151,7 +161,7 @@ async function worker(db,res,body){
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS),stage:'audio',stages:['audio']}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
-      isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
+      excerpt:job.excerpt,isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
       guitar_compare:job.guitar_compare===true,guitar_judge:job.guitar_judge===true,
       review_audio:!job.isolated&&!job.preview_limit,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});

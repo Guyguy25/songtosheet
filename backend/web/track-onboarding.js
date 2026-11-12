@@ -26,6 +26,7 @@
   ];
   const steps=[
     ['import','Source','Quel morceau veux-tu jouer ?'],
+    ['excerpt','Extrait','Délimite l’extrait à transcrire'],
     ['instrument','Instrument','Quel instrument veux-tu jouer ?',instruments],
     ['guitarPresence','Guitare','Le morceau contient déjà de la guitare ?',guitarPresence],
     ['guitarGoal','Objectif','Qu’est-ce que tu veux jouer ?',guitarGoals],
@@ -41,13 +42,15 @@
     return `${Math.floor(total/60)}:${String(total%60).padStart(2,'0')}`;
   };
 
-  function mount(root,{onSubmit,onLinkChange,sampleUrl,allowLink=false,freemium=false,guitarGuidance=false}){
+  function mount(root,{onSubmit,onLinkChange,sampleUrl,onExcerpt,onExcerptBack,allowLink=false,freemium=false,guitarGuidance=false}){
+    const idPrefix=onExcerpt?'hero-':'';
     const draft={instrument:'',format:'',source:'',file:null,capo:null,guitarPresence:null,guitarGoal:null};
     const audioSource=allowLink?window.SongToSheetAudioSource:null;
     const allowsTab=()=>['guitare','basse'].includes(draft.instrument);
     const guidedGuitar=()=>guitarGuidance&&draft.instrument==='guitare';
     const activeSteps=()=>steps.filter(([field])=>
-      (field!=='import'||!prefilledSource||current==='import')&&
+      (field!=='import'||!prefilledSource||current==='import'||(mode==='link'&&link))&&
+      (field!=='excerpt'||(mode==='link'&&link))&&
       (field!=='capo'||(allowLink&&draft.instrument==='guitare'&&!guidedGuitar()))&&
       (field!=='guitarPresence'||guidedGuitar())&&
       (field!=='guitarGoal'||guidedGuitar())&&
@@ -57,28 +60,28 @@
     root.innerHTML=`
       <ol class="track-steps" aria-label="Étapes de création"></ol>
       <div class="track-step-heading">
-        <h2 id="track-question" tabindex="-1"></h2><p></p>
+        <h2 id="${idPrefix}track-question" tabindex="-1"></h2><p></p>
       </div>
       <form>
-        <div class="track-choices" role="group" aria-labelledby="track-question"></div>
+        <div class="track-choices" role="group" aria-labelledby="${idPrefix}track-question"></div>
         <div class="track-import hidden">
           <p class="track-reference" aria-live="polite" hidden></p>
           <div class="track-import-card">
             ${allowLink?`<div class="track-source-tabs" role="tablist" aria-label="Source du morceau">
-              <button type="button" id="track-link-tab" data-source-mode="link" role="tab" aria-controls="track-link-pane"><span aria-hidden="true">↗</span> Lien musical</button>
-              <button type="button" id="track-file-tab" data-source-mode="file" role="tab" aria-controls="track-file-pane"><span aria-hidden="true">⇧</span> Fichier audio</button>
+              <button type="button" id="${idPrefix}track-link-tab" data-source-mode="link" role="tab" aria-controls="${idPrefix}track-link-pane"><span aria-hidden="true">↗</span> Lien musical</button>
+              <button type="button" id="${idPrefix}track-file-tab" data-source-mode="file" role="tab" aria-controls="${idPrefix}track-file-pane"><span aria-hidden="true">⇧</span> Fichier audio</button>
             </div>
-            <div class="track-link-pane" id="track-link-pane" role="tabpanel" aria-labelledby="track-link-tab">
-              <label class="track-link-label" for="track-link-input">Lien du morceau</label>
-              <input id="track-link-input" class="field track-source-field" type="text" inputmode="url"
-                autocomplete="off" maxlength="4096" placeholder="Lien YouTube, Spotify ou Deezer" aria-describedby="track-link-hint">
-              <p class="track-source-hint" id="track-link-hint">Colle un lien YouTube, Spotify, Deezer ou un lien direct vers un fichier audio. Pour Spotify et Deezer, il faudra aussi ajouter le fichier audio.</p>
+            <div class="track-link-pane" id="${idPrefix}track-link-pane" role="tabpanel" aria-labelledby="${idPrefix}track-link-tab">
+              <label class="track-link-label" for="${idPrefix}track-link-input">Lien du morceau</label>
+              <input id="${idPrefix}track-link-input" class="field track-source-field" type="text" inputmode="url"
+                autocomplete="off" maxlength="4096" placeholder="Lien YouTube, Spotify ou Deezer" aria-describedby="${idPrefix}track-link-hint">
+              <p class="track-source-hint" id="${idPrefix}track-link-hint">Colle un lien YouTube, Spotify, Deezer ou un lien direct vers un fichier audio. Pour Spotify et Deezer, il faudra aussi ajouter le fichier audio.</p>
             </div>`:''}
-            <div class="track-file-pane" id="track-file-pane" ${allowLink?'role="tabpanel" aria-labelledby="track-file-tab"':''}>
-              <label class="track-source-field track-file-drop" for="track-audio-input">
+            <div class="track-file-pane" id="${idPrefix}track-file-pane" ${allowLink?'role="tabpanel" aria-labelledby="'+idPrefix+'track-file-tab"':''}>
+              <label class="track-source-field track-file-drop" for="${idPrefix}track-audio-input">
                 <span aria-hidden="true">⇧</span>
                 <span><strong class="track-filename" aria-live="polite">Déposer ou choisir un audio</strong><small>MP3, WAV, M4A, FLAC, OGG ou AAC · 25 Mo</small></span>
-                <input id="track-audio-input" type="file" accept=".wav,.mp3,.m4a,.flac,.ogg,.aac,audio/*" aria-label="Ton fichier audio">
+                <input id="${idPrefix}track-audio-input" type="file" accept=".wav,.mp3,.m4a,.flac,.ogg,.aac,audio/*" aria-label="Ton fichier audio">
               </label>
             </div>
             <button class="btn btn-primary track-import-next" type="submit">Continuer <span aria-hidden="true">→</span></button>
@@ -86,14 +89,32 @@
           <audio class="track-audio-preview hidden" controls preload="metadata" aria-label="Écouter le fichier sélectionné"></audio>
           ${sampleUrl?'<button type="button" class="btn btn-outline track-sample">Charger la mélodie de test</button>':''}
         </div>
+        <section class="track-excerpt hidden">
+          <div class="track-excerpt-video" hidden></div>
+          <audio preload="metadata"></audio>
+          <p class="track-excerpt-hint" aria-live="polite"></p>
+          <div class="track-excerpt-controls hidden">
+            <div class="track-excerpt-timeline">
+              <span aria-hidden="true"></span>
+              <input type="range" min="0" step="1" aria-label="Début de l’extrait">
+              <input type="range" min="0" step="1" aria-label="Fin de l’extrait">
+            </div>
+            <div class="track-excerpt-times">
+              <label>Début <output></output></label>
+              <button type="button" class="btn btn-outline" aria-label="Écouter l’extrait">▶</button>
+              <label>Fin <output></output></label>
+            </div>
+            <p class="track-excerpt-limit">30 secondes maximum</p>
+          </div>
+        </section>
         <div class="track-upload track-confirm hidden">
           <div class="track-recap" aria-label="Récapitulatif de la transcription"></div>
           <div class="track-title-field">
-            <label for="track-title-input">Titre du relevé</label>
-            <input id="track-title-input" class="field" type="text" maxlength="110">
+            <label for="${idPrefix}track-title-input">Titre du relevé</label>
+            <input id="${idPrefix}track-title-input" class="field" type="text" maxlength="110">
           </div>
           <label class="track-rights track-solo hidden"><input type="checkbox"> Ce fichier contient uniquement l’instrument choisi.</label>
-          <label class="track-rights"><input id="track-rights-input" type="checkbox"> <span class="track-rights-text"></span></label>
+          <label class="track-rights"><input id="${idPrefix}track-rights-input" type="checkbox"> <span class="track-rights-text"></span></label>
         </div>
         <p class="track-status" aria-live="polite"></p>
         <div class="track-actions">
@@ -104,12 +125,163 @@
     const get=selector=>root.querySelector(selector);
     const form=get('form'), heading=get('h2'), choices=get('.track-choices'), importer=get('.track-import');
     const confirmation=get('.track-confirm'), recap=get('.track-recap');
-    const back=get('.track-back'), next=get('.track-next'), title=get('#track-title-input');
-    const fileInput=get('#track-audio-input'), rights=get('#track-rights-input'), status=get('.track-status');
-    const linkInput=get('#track-link-input'), referenceNote=get('.track-reference');
+    const back=get('.track-back'), next=get('.track-next'), title=get('#'+idPrefix+'track-title-input');
+    const fileInput=get('#'+idPrefix+'track-audio-input'), rights=get('#'+idPrefix+'track-rights-input'), status=get('.track-status');
+    const linkInput=get('#'+idPrefix+'track-link-input'), referenceNote=get('.track-reference');
     const sourceTabs=[...root.querySelectorAll('[data-source-mode]')];
     const soloLabel=get('.track-solo'), solo=soloLabel.querySelector('input'), filename=get('.track-filename');
     const media=get('.track-audio-preview');
+    const clip=get('.track-excerpt'), clipAudio=clip.querySelector('audio');
+    const clipVideo=clip.querySelector('.track-excerpt-video'), clipControls=clip.querySelector('.track-excerpt-controls');
+    const [clipStart,clipEnd]=clip.querySelectorAll('input'), [startLabel,endLabel]=clip.querySelectorAll('output');
+    const clipPlay=clip.querySelector('button'), clipHint=clip.querySelector('p');
+    const clipLimit=30000, clipMinimum=500;
+    let initialExcerpt, clipSource, clipPlayer, clipDuration=0, clipTimer, clipLoadTimer, clipPlaying=false;
+
+    function clipTime(ms){
+      const seconds=Math.floor(ms/1000);
+      const fraction=String(ms%1000).padStart(3,'0').replace(/0+$/,'');
+      return Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+(fraction?','+fraction:'');
+    }
+
+    function stopClip(){
+      clearInterval(clipTimer);
+      clipPlaying=false;
+      clipAudio.pause();
+      clipPlayer?.pauseVideo?.();
+      clipPlay.textContent='▶';
+      clipPlay.setAttribute('aria-label','Écouter l’extrait');
+    }
+
+    function updateClip(){
+      clipControls.classList.toggle('hidden',!draft.excerpt);
+      if(!draft.excerpt)return;
+      const {start_ms:start,end_ms:end}=draft.excerpt;
+      clipStart.max=clipEnd.max=clipDuration;
+      clipStart.value=start;
+      clipEnd.value=end;
+      startLabel.textContent=clipTime(start);
+      endLabel.textContent=clipTime(end);
+      clipStart.setAttribute('aria-valuetext',startLabel.textContent);
+      clipEnd.setAttribute('aria-valuetext',endLabel.textContent);
+      const selection=clip.querySelector('.track-excerpt-timeline span');
+      selection.style.left=100*start/clipDuration+'%';
+      selection.style.right=100*(clipDuration-end)/clipDuration+'%';
+    }
+
+    function resetClip(){
+      stopClip();
+      clearTimeout(clipLoadTimer);
+      clipLoadTimer=null;
+      clipSource=null;
+      clipDuration=0;
+      draft.excerpt=undefined;
+      clipPlayer?.destroy();
+      clipPlayer=null;
+      clipVideo.replaceChildren();
+      clipAudio.onloadedmetadata=clipAudio.onerror=null;
+      clipAudio.removeAttribute('src');
+      clipAudio.load();
+      updateClip();
+    }
+
+    function loadClip(){
+      if(clipSource===link&&(draft.excerpt||clipLoadTimer))return;
+      resetClip();
+      const source=clipSource=link;
+      const fail=()=>{
+        if(clipSource!==source)return;
+        clearTimeout(clipLoadTimer);
+        clipLoadTimer=null;
+        stopClip();
+        draft.excerpt=undefined;
+        clipHint.textContent='Impossible de lire ce lien. Essaie un autre lien ou importe le fichier audio.';
+        updateClip();
+        if(current==='excerpt')next.disabled=true;
+      };
+      const ready=seconds=>{
+        if(clipSource!==source||!Number.isFinite(seconds)||seconds<.5||draft.excerpt)return;
+        clearTimeout(clipLoadTimer);
+        clipLoadTimer=null;
+        clipDuration=Math.min(86400000,Math.floor(seconds*1000));
+        const saved=initialExcerpt;
+        initialExcerpt=null;
+        draft.excerpt=saved&&saved.end_ms<=clipDuration?saved:{start_ms:0,end_ms:Math.min(clipLimit,clipDuration)};
+        clipHint.textContent='Fais glisser les poignées pour choisir le passage à transcrire.';
+        updateClip();
+        if(current==='excerpt')next.disabled=false;
+      };
+      clipHint.textContent='Chargement du morceau…';
+      clipLoadTimer=setTimeout(fail,12000);
+      clipVideo.hidden=!source.youtubeId;
+      if(!source.youtubeId){
+        clipAudio.onloadedmetadata=()=>ready(clipAudio.duration);
+        clipAudio.onerror=fail;
+        clipAudio.src=source.url.href;
+        return;
+      }
+      window.SongToSheetFlow.loadYoutubeIframeApi().then(YT=>{
+        if(clipSource!==source)return;
+        const host=document.createElement('div');
+        clipVideo.append(host);
+        clipPlayer=new YT.Player(host,{
+          videoId:source.youtubeId,
+          playerVars:{controls:0,playsinline:1,disablekb:1,origin:location.origin},
+          events:{
+            onReady:({target})=>{
+              target.getIframe().tabIndex=-1;
+              ready(target.getDuration()||metadata?.duration_seconds);
+              lookup?.request.then(()=>ready(target.getDuration()||metadata?.duration_seconds));
+            },
+            onStateChange:({target,data})=>{
+              ready(target.getDuration());
+              if(data===YT.PlayerState.ENDED&&clipPlaying)stopClip();
+            },
+            onAutoplayBlocked:()=>{
+              if(clipSource!==source)return;
+              stopClip();
+              clipHint.textContent='La lecture a été bloquée. Appuie de nouveau sur Play.';
+            },
+            onError:fail
+          }
+        });
+      }).catch(fail);
+    }
+
+    clipStart.addEventListener('input',()=>{
+      stopClip();
+      const start=Math.min(Number(clipStart.value),clipDuration-clipMinimum);
+      const end=Math.max(start+clipMinimum,Math.min(draft.excerpt.end_ms,start+clipLimit));
+      draft.excerpt={start_ms:start,end_ms:end};
+      updateClip();
+    });
+    clipEnd.addEventListener('input',()=>{
+      stopClip();
+      const end=Math.max(Number(clipEnd.value),clipMinimum);
+      const start=Math.min(end-clipMinimum,Math.max(draft.excerpt.start_ms,end-clipLimit));
+      draft.excerpt={start_ms:start,end_ms:end};
+      updateClip();
+    });
+    clipPlay.addEventListener('click',()=>{
+      if(clipPlaying){stopClip();return;}
+      const {start_ms:start,end_ms:end}=draft.excerpt;
+      clipPlaying=true;
+      clipPlay.textContent='❚❚';
+      clipPlay.setAttribute('aria-label','Mettre en pause');
+      if(link.youtubeId){
+        clipPlayer.loadVideoById({videoId:link.youtubeId,startSeconds:start/1000,endSeconds:end/1000});
+      }else{
+        clipAudio.currentTime=start/1000;
+        clipAudio.play().catch(()=>{
+          if(!clipPlaying)return;
+          stopClip();
+          clipHint.textContent='La lecture a échoué. Réessaie.';
+        });
+        clipTimer=setInterval(()=>{
+          if(clipAudio.currentTime>=end/1000||clipAudio.ended)stopClip();
+        },30);
+      }
+    });
     const setStatus=(message,error=false)=>{
       status.textContent=message;
       status.classList.toggle('is-error',error);
@@ -170,6 +342,8 @@
     }
 
     function setMode(value,sourceReference=null){
+      resetClip();
+      initialExcerpt=null;
       mode=value;
       reference=sourceReference;
       link=null;
@@ -192,6 +366,9 @@
         ['source','Contenu',draft.source==='instrumental'&&solo.checked
           ?'Instrument seul':labelFor(sources,draft.source),'♬']
       ];
+      if(draft.excerpt){
+        rows.splice(1,0,['excerpt','Extrait',clipTime(draft.excerpt.start_ms)+' – '+clipTime(draft.excerpt.end_ms),'↔']);
+      }
       if(guidedGuitar()){
         rows.splice(2,0,['guitarPresence','Guitare dans le morceau',labelFor(guitarPresence,draft.guitarPresence),'♫'],
           ['guitarGoal','Objectif',labelFor(guitarGoals,draft.guitarGoal),'♪']);
@@ -240,7 +417,7 @@
       const flow=activeSteps();
       const index=flow.findIndex(([field])=>field===current);
       const [field,,question,options]=flow[index];
-      const importing=field==='import', confirming=field==='confirm';
+      const importing=field==='import', confirming=field==='confirm', clipping=field==='excerpt';
       heading.textContent=question;
       const intro=get('.track-step-heading p');
       intro.textContent=confirming&&freemium?'Écoute jusqu’à 30 secondes du relevé.':'';
@@ -250,6 +427,9 @@
       choices.classList.toggle('hidden',!options);
       importer.classList.toggle('hidden',!importing);
       confirmation.classList.toggle('hidden',!confirming);
+      clip.classList.toggle('hidden',!clipping);
+      if(clipping)loadClip();
+      else stopClip();
       if(!importing)media.pause();
       get('.track-link-pane')?.classList.toggle('hidden',mode!=='link');
       get('.track-file-pane').classList.toggle('hidden',mode!=='file');
@@ -270,15 +450,18 @@
           <span class="track-choice-icon" aria-hidden="true">${icon}</span>
           <span><strong>${name}</strong>${detail?`<small>${detail}</small>`:''}</span>
           <span class="track-choice-arrow" aria-hidden="true">→</span></button>`).join(''):'';
-      back.classList.toggle('hidden',index===0);
-      next.classList.toggle('hidden',!confirming);
-      next.textContent=freemium?'Générer mon aperçu gratuit ↗':'Générer mon relevé ↗';
+      back.classList.toggle('hidden',index===0&&!onExcerptBack);
+      next.classList.toggle('hidden',!confirming&&!clipping);
+      next.disabled=clipping&&!draft.excerpt;
+      next.textContent=clipping?'Continuer →':freemium?'Générer mon aperçu gratuit ↗':'Générer mon relevé ↗';
       setStatus('');
       if(focus)heading.focus({preventScroll:true});
     }
 
     function advance(){
-      if(editing){
+      if(current==='import'&&mode==='link'){
+        current='excerpt';
+      }else if(editing){
         current=activeSteps().find(([field,,,options])=>options&&
           (draft[field]===null||draft[field]===''))?.[0]||'confirm';
         editing=current!=='confirm';
@@ -344,6 +527,7 @@
     linkInput?.addEventListener('input',()=>{rights.checked=false;});
     back.addEventListener('click',()=>{
       if(busy)return;
+      if(onExcerptBack){onExcerptBack();return;}
       const flow=activeSteps();
       const index=flow.findIndex(([field])=>field===current);
       if(index>0){current=flow[index-1][0];editing=false;render(true);}
@@ -403,7 +587,15 @@
         if(acceptSource())advance();
         return;
       }
+      if(current==='excerpt'){
+        if(draft.excerpt){
+          if(onExcerpt)onExcerpt(draft.excerpt);
+          else advance();
+        }
+        return;
+      }
       if(current!=='confirm')return;
+      if(mode==='link'&&!draft.excerpt){current='excerpt';render(true);return;}
       if(!rights.checked){setStatus('Confirme que tu disposes des droits nécessaires.',true);rights.focus();return;}
       busy=true;
       media.pause();
@@ -431,8 +623,9 @@
     });
     render();
     return {
-      pause(){media.pause();},
-      prefill({instrument,file,name,audioUrl}){
+      pause(){media.pause();stopClip();},
+      dispose(){resetClip();lookup?.controller.abort();},
+      prefill({instrument,file,name,audioUrl,excerpt}){
         if(busy)return;
         if(file!==undefined||audioUrl!==undefined){
           Object.assign(draft,{instrument:'',format:'',source:'',capo:null,guitarPresence:null,guitarGoal:null});
@@ -455,7 +648,11 @@
         else if(!allowsTab()&&draft.instrument)draft.format='partition';
         if(draft.instrument!=='guitare')draft.capo=null;
         if(name){title.value=name;titleEdited=true;}
-        current=prefilledSource?'instrument':'import';
+        if(prefilledSource&&mode==='link'&&excerpt){
+          initialExcerpt=excerpt;
+          draft.excerpt=excerpt;
+        }
+        current=prefilledSource?(mode==='link'&&!excerpt?'excerpt':'instrument'):'import';
         editing=false;
         render(true);
       }

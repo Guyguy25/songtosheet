@@ -120,14 +120,23 @@ def encode_review_audio(original, stems, destination):
             print(f"Piste de diagnostic {kind} indisponible : {type(error).__name__}", flush=True)
 
 
-def prepare_preview(audio, directory, limit):
+def prepare_preview(audio, directory, limit, excerpt=None):
     input_options = ["-protocol_whitelist", "file", "-f", AUDIO_FORMATS[audio.suffix.lower()], "-i", str(audio)]
     duration = float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
                           "-of", "default=noprint_wrappers=1:nokey=1", *input_options], timeout=20))
     if not math.isfinite(duration) or duration < .5:
         raise ValueError("L’audio doit durer au moins 0,5 seconde.")
+    seek = []
+    if excerpt:
+        start = excerpt["start_ms"] / 1000
+        end = excerpt["end_ms"] / 1000
+        if end > duration + .1 or min(duration, end) - start < .5:
+            raise ValueError("L’extrait dépasse la durée de l’audio ou dure moins de 0,5 seconde.")
+        limit = min(limit, end - start, duration - start)
+        duration = limit
+        seek = ["-ss", str(start)]
     preview = directory / "preview.wav"
-    run(["ffmpeg", "-nostdin", "-v", "error", *input_options, "-map", "0:a:0", "-t", str(limit),
+    run(["ffmpeg", "-nostdin", "-v", "error", *input_options, *seek, "-map", "0:a:0", "-t", str(limit),
          "-ar", "44100", "-ac", "2", str(preview)], timeout=45)
     return preview, duration
 
@@ -163,7 +172,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                 with audio.open("rb") as stream:
                     audio_hash = file_digest(stream, "sha256").hexdigest()
             if job.get("preview_limit"):
-                audio, source_duration = prepare_preview(audio, directory, job["preview_limit"])
+                audio, source_duration = prepare_preview(audio, directory, job["preview_limit"], job.get("excerpt"))
 
             if job.get("guitar_compare"):
                 meta, exports, recommendation = compare_versions(audio, data, directory, job, report, guitar_engine, solo_engine, piano_engine)
@@ -293,7 +302,7 @@ def main():
                            guitar_compare=piano_engine is not None and guitar_engine is not None and solo_engine is not None,
                            guitar_judge=True,
                            guided_guitar_only=args.guided_guitar_only,
-                           preview=guitar_engine is not None and solo_engine is not None)["job"]
+                           excerpts=True, preview=guitar_engine is not None and solo_engine is not None)["job"]
                 if not connected:
                     print("Connexion à la file de transcription confirmée.", flush=True)
                     connected = True

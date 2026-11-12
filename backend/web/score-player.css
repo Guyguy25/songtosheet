@@ -13,6 +13,7 @@
 .sp-sheet{min-height:160px;overflow-x:auto;background:#fff;color:#221b2b;position:relative;overscroll-behavior-inline:contain}
 .sp-sheet>p,.sp-roll-scroll>p{margin:0;padding:18px;font-size:13px}
 .sp-engraving{position:relative;min-width:0;padding:10px 8px}
+.sp-score-playhead{position:absolute;top:0;left:0;width:2px;background:#7549eb;border-radius:2px;z-index:1;pointer-events:none}
 .sp-continuation{position:relative;isolation:isolate;overflow:hidden;border-top:1px solid #ede7f2;min-height:155px;max-height:225px;background:#fff}
 .sp-continuation-notation{padding:0 9px;filter:blur(2.6px);opacity:.55;pointer-events:none;user-select:none}
 .sp-continuation-notation svg{display:block;width:100%;height:auto;min-height:145px}

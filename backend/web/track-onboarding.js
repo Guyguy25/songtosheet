@@ -20,9 +20,9 @@
     ['yes','♫','Oui'],['no','—','Non'],['unknown','?','Je ne sais pas']
   ];
   const guitarGoals=[
-    ['original','♪','Rejouer la guitare originale','Suis les notes de la guitare du morceau.'],
-    ['chords','♫','M’accompagner pour chanter','Joue des accords tenus ou rythmés.'],
-    ['solo','↗','Jouer la mélodie en solo','Réunis mélodie et accompagnement sur une guitare.']
+    ['original','♪','Rejouer la guitare originale'],
+    ['chords','♫','M’accompagner pour chanter'],
+    ['solo','↗','Jouer la mélodie en solo']
   ];
   const steps=[
     ['import','Source','Quel morceau veux-tu jouer ?'],
@@ -50,9 +50,8 @@
       (field!=='import'||!prefilledSource||current==='import')&&
       (field!=='capo'||(allowLink&&draft.instrument==='guitare'&&!guidedGuitar()))&&
       (field!=='guitarPresence'||guidedGuitar())&&
-      (field!=='guitarGoal'||(guidedGuitar()&&draft.guitarPresence==='yes'))&&
-      (field!=='format'||(allowsTab()&&!guidedGuitar()))&&
-      (field!=='source'||!guidedGuitar()||draft.guitarGoal!=='chords'));
+      (field!=='guitarGoal'||guidedGuitar())&&
+      (field!=='format'||(allowsTab()&&!guidedGuitar())));
     let current='import', mode=allowLink?'link':'file', prefilledSource=false, editing=false, busy=false;
     let reference=null, link=null, metadata=null, lookup=null, titleEdited=false, fileDuration=null, previewUrl;
     root.innerHTML=`
@@ -196,7 +195,6 @@
       if(guidedGuitar()){
         rows.splice(2,0,['guitarPresence','Guitare dans le morceau',labelFor(guitarPresence,draft.guitarPresence),'♫'],
           ['guitarGoal','Objectif',labelFor(guitarGoals,draft.guitarGoal),'♪']);
-        if(draft.guitarGoal==='chords')rows.pop();
       }else if(allowLink&&draft.instrument==='guitare')rows.splice(2,0,['capo','Capo',labelFor(capos,draft.capo),'♯']);
       recap.replaceChildren(...rows.map(([field,label,value,icon,detail])=>{
         const row=document.createElement('div');
@@ -262,7 +260,7 @@
       }
       referenceNote.hidden=!reference;
       referenceNote.textContent=reference?audioSource.importHint(reference.provider):'';
-      soloLabel.classList.toggle('hidden',draft.source!=='instrumental'||(guidedGuitar()&&draft.guitarGoal==='chords'));
+      soloLabel.classList.toggle('hidden',draft.source!=='instrumental');
       get('.track-rights-text').textContent=link?.youtubeId
         ?'Je dispose des autorisations pour récupérer l’audio de cette vidéo et le transcrire.'
         :'Je dispose des droits nécessaires pour transcrire cet audio.';
@@ -295,16 +293,11 @@
       const button=event.target.closest('.track-choice');
       if(!button||busy)return;
       const options=activeSteps().find(([field])=>field===current)[3];
-      const previous=draft[current];
       draft[current]=options.find(([value])=>String(value)===button.value)[0];
       if(current==='instrument'){
         draft.format=guidedGuitar()?'tablature':allowsTab()?'':'partition';
         if(draft.instrument!=='guitare'||guidedGuitar())draft.capo=null;
         if(!guidedGuitar())draft.guitarPresence=draft.guitarGoal=null;
-      }
-      if(current==='guitarPresence'){
-        if(draft.guitarPresence!=='yes')draft.guitarGoal='chords';
-        else if(previous!=='yes')draft.guitarGoal=null;
       }
       if(current==='source'&&draft.source!=='instrumental')solo.checked=false;
       advance();
@@ -420,8 +413,7 @@
           setStatus('Récupération du titre du morceau…');
           await lookup.request;
         }
-        const source=guidedGuitar()&&draft.guitarGoal==='chords'?'mixed':
-          solo.checked&&draft.source==='instrumental'?'instrument':draft.source;
+        const source=solo.checked&&draft.source==='instrumental'?'instrument':draft.source;
         await onSubmit({...draft,capo:draft.capo??0,source,
           file:mode==='file'?draft.file:null,audioUrl:mode==='link'?link?.url.href:undefined,
           title:title.value.trim()||sourceTitle()},setStatus);

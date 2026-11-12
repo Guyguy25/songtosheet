@@ -12,9 +12,11 @@
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=8" />
   <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=20" defer></script>
-  <link rel="stylesheet" href="/backend/web/score-player.css?v=9" />
-  <script src="/backend/web/score-player.js?v=12" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=21" defer></script>
+  <link rel="stylesheet" href="/backend/web/score-player.css?v=10" />
+  <script src="/backend/web/score-player.js?v=14" defer></script>
+  <link rel="stylesheet" href="/assets/guitar-comparison.css?v=1" />
+  <script src="/assets/guitar-result-comparison.js?v=1" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
@@ -1455,7 +1457,7 @@
         const status=ready?(tab?'TABLATURE PRÊTE':'PARTITION PRÊTE'):waiting?'TRANSCRIPTION EN COURS':'TRANSCRIPTION INTERROMPUE';
         const fallback=j.format==='tablature'&&!tab?' Aucune tablature jouable n’a été détectée. La partition est disponible.':'';
         const soloAvailable=j.downloads.includes('solotab')&&j.downloads.includes('solomid');
-        const soloFallback=completed&&j.guitar_goal==='solo'&&!soloAvailable?' Le solo n’a pas passé les vérifications. Le relevé original est disponible.':'';
+        const soloFallback=completed&&!j.guitar_compare&&j.guitar_goal==='solo'&&!soloAvailable?' Le solo n’a pas passé les vérifications. Le relevé original est disponible.':'';
         const detail=ready?`${j.guitar_goal==='chords'?'Grille d’accords estimée.':j.note_count+' notes estimées.'}${fallback}${soloFallback}${j.preview_limit?'':waiting?'':j.pdf_error?' Le PDF est indisponible pour ce relevé.':' Tu peux corriger le résultat dans un éditeur MusicXML.'}`
           :waiting?'':j.error_message||'Importe ton fichier pour réessayer.';
         if($('track-result-summary')?.dataset.job!==id){
@@ -1510,9 +1512,19 @@
           });
           trackProgressMarkup=stage;
         }
-        if(ready&&!$('score-player'))$('result-content').insertAdjacentHTML('beforeend',
+        const compare=completed&&ready&&j.instrument==='guitare'&&window.SongToSheetGuitarComparison;
+        if(compare&&!$('guitar-comparison')){
+          stopPlayer();
+          $('guitar-versions')?.remove();
+          $('guitar-solo-exports')?.remove();
+          $('score-player')?.remove();
+          $('result-content').insertAdjacentHTML('beforeend','<section id="guitar-comparison" class="guitar-comparison" aria-label="Comparaison des tablatures"></section>');
+          closePlayer=compare.mount($('guitar-comparison'),j,{api,post});
+        }
+        const showSinglePlayer=ready&&!compare&&!(j.guitar_compare&&waiting);
+        if(showSinglePlayer&&!$('score-player'))$('result-content').insertAdjacentHTML('beforeend',
           '<section id="score-player" class="score-player" aria-label="Lecteur de la transcription"></section>');
-        if(ready&&window.SongToSheetPlayer){
+        if(showSinglePlayer&&window.SongToSheetPlayer){
           const exportUrl=kind=>`/api/track?id=${encodeURIComponent(id)}&download=${kind}`;
           const root=$('score-player');
           const chords=j.guitar_goal==='chords';

@@ -124,16 +124,17 @@
   }
 
   function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,preferTab=false,startAt=0,
-                       findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false}){
+                       findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false,comparison=false,onReady}){
     const controller=new AbortController();
     const {signal}=controller;
+    const guitar=instrument==='guitare';
     root.innerHTML=`
       <div class="sp-toolbar">
-        <div class="sp-tabs" role="group" aria-label="Affichage">
+        ${guitar?'':`<div class="sp-tabs" role="group" aria-label="Affichage">
           <button type="button" data-view="both" aria-pressed="true">Les deux</button>
           <button type="button" data-view="score" aria-pressed="false">Partition</button>
           <button type="button" data-view="roll" aria-pressed="false">Piano roll</button>
-        </div>
+        </div>`}
         <div class="sp-tools">
           <span class="sp-instrument" hidden></span>
           ${tabUrl?'<label class="sp-kind"><span class="sp-sr">Notation</span><select><option value="score">Partition</option><option value="tab">Tablature</option></select></label>':''}
@@ -149,10 +150,10 @@
           <div class="sp-continuation" hidden><div class="sp-continuation-notation" aria-hidden="true"></div>
           <div class="sp-continuation-label"><strong>Suite verrouillée</strong><span>Les 30 premières secondes sont gratuites. La suite floutée est illustrative.</span></div></div>
         </div>
-        <div class="sp-roll">
+        ${guitar?'':`<div class="sp-roll">
           <div class="sp-roll-heading"><span aria-hidden="true">●</span> Piano roll <small>Clique dans la grille pour te déplacer</small></div>
           <div class="sp-roll-scroll" tabindex="0" aria-label="Grille des notes"><p>Chargement des notes…</p></div>
-        </div>
+        </div>`}
       </div>
       <div class="sp-controls">
         <button type="button" class="sp-restart" aria-label="Revenir au début" disabled>↶</button>
@@ -175,7 +176,7 @@
     const speed=get('.sp-speed select'),restart=get('.sp-restart'),kind=get('.sp-kind select');
     const zoomButtons=[...root.querySelectorAll('[data-zoom]')];
     const full=get('.sp-full');
-    const guitar=instrument==='guitare',instrumentBadge=get('.sp-instrument'),audioCredit=get('.sp-audio-credit');
+    const instrumentBadge=get('.sp-instrument'),audioCredit=get('.sp-audio-credit');
     const profile=accompaniment?accompanimentProfile:soundProfiles[instrument];
     const sampleFolder=profile?new URL(profile.folder,samples):null;
     instrumentBadge.textContent=instrumentLabels[instrument]||'';
@@ -189,7 +190,8 @@
 
     let notes=[],duration=0,midi,position=startAt,rate=1,context,playing=false,starting=false,anchor=0,next=0,frame;
     let entry=0,playbackStart=0,initializedPosition=false;
-    let score,cursorTimes=[],cursorIndex=0,zoom=1,loadId=0,audioLoadId=0,resizeTimer;
+    let score,scoreSystems=[],scoreLine,activeSystem,zoom=1,loadId=0,audioLoadId=0,resizeTimer;
+    let playRequest=0;
     let chart,playhead,pixelsPerSecond=1;
     const sounds=new Set();
     let sampleBuffers;
@@ -235,26 +237,86 @@
       sound.stop(from+length+release);
     }
 
-    function syncScore(value,follow){
-      if(!score||sheet.hidden||!cursorTimes.length)return;
-      let low=0,high=cursorTimes.length;
+    function mapScore(display){
+      const systems=new Map(), pages=new Map();
+      const bounds=engraving.getBoundingClientRect();
+      const scale=10*display.Zoom;
+      const seconds=value=>midi?midi.header.ticksToSeconds(value*4*midi.header.ppq):value*2;
+      for(const row of display.GraphicSheet.MeasureList){
+        const measure=row.find(item=>item?.ParentMusicSystem);
+        if(!measure)continue;
+        const system=measure.ParentMusicSystem;
+        const page=system.Parent.PageNumber;
+        if(!pages.has(page)){
+          const element=engraving.querySelector('#osmdCanvasPage'+page);
+          const rect=element?.getBoundingClientRect()??bounds;
+          pages.set(page,{x:rect.left-bounds.left,y:rect.top-bounds.top});
+        }
+        const offset=pages.get(page);
+        const source=measure.parentSourceMeasure;
+        const start=seconds(source.AbsoluteTimestamp.RealValue);
+        const end=seconds(source.AbsoluteTimestamp.RealValue+source.Duration.RealValue);
+        const box=measure.PositionAndShape;
+        const x=box.AbsolutePosition.x;
+        if(!systems.has(system)){
+          const staves=system.StaffLines;
+          const top=staves[0].PositionAndShape.AbsolutePosition.y;
+          const last=staves.at(-1);
+          const bottom=last.PositionAndShape.AbsolutePosition.y+last.StaffHeight;
+          systems.set(system,{start,top:offset.y+top*scale-4,height:(bottom-top)*scale+8,points:new Map()});
+        }
+        const line=systems.get(system);
+        const addPoint=(time,unit)=>line.points.set(time,offset.x+unit*scale);
+        addPoint(start,x);
+        for(const staff of row){
+          if(staff?.ParentMusicSystem!==system)continue;
+          for(const entry of staff.staffEntries){
+            const hasNote=entry.graphicalVoiceEntries.some(voice=>voice.notes.some(note=>!note.sourceNote.isRest()));
+            if(!hasNote)continue;
+            const time=seconds(entry.getAbsoluteTimestamp().RealValue);
+            if(time>=start&&time<end)addPoint(time,entry.PositionAndShape.AbsolutePosition.x);
+          }
+        }
+        addPoint(end,x+box.Size.width);
+      }
+      return [...systems.values()].map(line=>({...line,points:[...line.points].sort(([a],[b])=>a-b)}));
+    }
+
+    function findTimeIndex(items,value,timeOf){
+      let low=0,high=items.length;
       while(low+1<high){
         const middle=Math.floor((low+high)/2);
-        if(cursorTimes[middle]<=value+.035)low=middle;else high=middle;
+        if(timeOf(items[middle])<=value)low=middle;else high=middle;
       }
-      if(low===cursorIndex)return;
-      const cursor=score.cursor;
-      if(low<cursorIndex){cursor.resetIterator();cursorIndex=0;}
-      while(cursorIndex<low){cursor.Iterator.moveToNext();cursorIndex++;}
-      cursor.update();
-      if(follow){
+      return low;
+    }
+
+    function syncScore(value,follow){
+      if(!scoreLine||sheet.hidden||!scoreSystems.length)return;
+      const line=scoreSystems[findTimeIndex(scoreSystems,value,item=>item.start)];
+      const index=findTimeIndex(line.points,value,item=>item[0]);
+      const [time,x]=line.points[index];
+      const next=line.points[index+1];
+      const fraction=next?Math.min(1,Math.max(0,(value-time)/(next[0]-time))):0;
+      const left=next?x+(next[1]-x)*fraction:x;
+      const changed=activeSystem!==line;
+      activeSystem=line;
+      scoreLine.style.transform=`translate(${left}px,${line.top}px)`;
+      scoreLine.style.height=line.height+'px';
+      if(follow&&(left>sheet.scrollLeft+sheet.clientWidth-20||left<sheet.scrollLeft)){
+        sheet.scrollLeft=Math.max(0,left-55);
+      }
+      if(follow&&changed&&comparison){
+        if(line.top<sheet.scrollTop||line.top+line.height>sheet.scrollTop+sheet.clientHeight)
+          sheet.scrollTop=Math.max(0,line.top-24);
+      }else if(follow&&changed){
         const viewport=document.fullscreenElement===root?body:pageScroll;
         const bounds=viewport?.getBoundingClientRect();
         const top=bounds?.top??0;
         const bottom=Math.min(bounds?.bottom??window.innerHeight,controls.getBoundingClientRect().top);
         const sheetBounds=sheet.getBoundingClientRect();
         if(sheetBounds.bottom<=top||sheetBounds.top>=bottom)return;
-        const cursorBounds=cursor.cursorElement.getBoundingClientRect();
+        const cursorBounds=scoreLine.getBoundingClientRect();
         if(cursorBounds.top<top||cursorBounds.bottom>bottom){
           (viewport||window).scrollBy({top:cursorBounds.top-top-24,behavior:'instant'});
         }
@@ -273,6 +335,7 @@
       syncScore(value,follow);
     }
     function pause(){
+      playRequest++;
       position=now();playing=false;
       cancelAnimationFrame(frame);stopSounds();
       play.textContent='▶';play.setAttribute('aria-label','Lire la transcription');
@@ -295,14 +358,15 @@
       }
       cancelAnimationFrame(frame);tick();
     }
-    function jump(value){
+    function jump(value,follow=true){
       position=Math.max(0,Math.min(duration,value));
       if(playing)schedule();
-      update(position,true);
+      update(position,follow);
     }
     play.onclick=async()=>{
       if(playing){pause();return;}
-      if(starting)return;
+      if(starting||play.disabled)return;
+      const request=++playRequest;
       starting=true;
       try{
         const Audio=window.AudioContext||window.webkitAudioContext;
@@ -318,7 +382,7 @@
           })));
           status.hidden=true;
         }
-        if(signal.aborted)return;
+        if(signal.aborted||request!==playRequest)return;
         if(position>=duration)position=playbackStart;
         playing=true;
         play.textContent='❚❚';play.setAttribute('aria-label','Mettre en pause');
@@ -333,7 +397,7 @@
       finally{starting=false;}
     };
     seek.oninput=()=>jump(Number(seek.value));
-    restart.onclick=()=>{sheet.scrollLeft=0;scroll.scrollLeft=0;jump(playbackStart);};
+    restart.onclick=()=>{sheet.scrollLeft=0;if(scroll)scroll.scrollLeft=0;jump(playbackStart);};
     speed.onchange=()=>{position=now();rate=Number(speed.value);if(playing)schedule();};
 
     function drawRoll(){
@@ -408,7 +472,8 @@
             previous=note.time;
           }
         }
-        duration=notes.reduce((end,note)=>Math.max(end,note.time+note.duration),0);
+        const lastNote=notes.reduce((end,note)=>Math.max(end,note.time+note.duration),0);
+        duration=accompaniment||comparison?Math.max(lastNote,previewDuration||sourceDuration||0):lastNote;
         if(notation){
           const bpm=midi.header.tempos[0]?.bpm||120;
           try{addSoloSustain(notes,tabNotes(notation,bpm),bpm,duration);}
@@ -421,17 +486,28 @@
         }
         if(sourceDuration>0){
           const timing=get('.sp-source-duration');
-          timing.textContent=`Audio importé : ${time(Math.round(sourceDuration))} · Dernière note du relevé : ${time(Math.round(duration))}`;
+          timing.textContent=`Audio importé : ${time(Math.round(sourceDuration))} · Dernière note du relevé : ${time(Math.round(lastNote))}`;
           timing.hidden=false;
         }
         position=Math.min(position,duration);
         seek.max=duration;
         get('.sp-audio-label').textContent=profile?.label??(tab?'Lecture de la tablature':'Transcription MIDI');
         for(const control of [play,seek,speed,restart])control.disabled=false;
-        drawRoll();
+        if(scroll)drawRoll();
+        else update(position);
+        onReady?.(duration);
       }catch{
-        if(!signal.aborted&&current===audioLoadId)scroll.textContent='Le piano roll est indisponible pour ce relevé.';
+        if(!signal.aborted&&current===audioLoadId)showPlaybackError();
       }
+    }
+    function showPlaybackError(){
+      if(scroll)scroll.textContent='Le piano roll est indisponible pour ce relevé.';
+      else{
+        const status=get('.sp-status');
+        status.textContent='La lecture est indisponible pour cette tablature.';
+        status.hidden=false;
+      }
+      onReady?.(0);
     }
     async function drawSheet(){
       get('.sp-technique-key').hidden=!guitar||kind?.value!=='tab';
@@ -446,6 +522,7 @@
       try{
         const [,source]=await Promise.all([loadScript('score','2.3.0'),loadXml(url)]);
         if(current!==loadId||signal.aborted||sheet.hidden)return;
+        scoreLine=null;
         engraving.replaceChildren();
         const display=new window.opensheetmusicdisplay.OpenSheetMusicDisplay(engraving,{
           backend:'svg',autoResize:false,drawTitle:false,drawSubtitle:false,drawComposer:false,drawCredits:false,
@@ -453,14 +530,12 @@
         });
         await display.load(guitar&&url===scoreUrl?guitarNotation(source):source);
         if(current!==loadId||signal.aborted||sheet.hidden)return;
-        score=display;score.Zoom=zoom;score.render();score.cursor.show();
-        cursorTimes=[];cursorIndex=0;
-        const iterator=score.cursor.Iterator.clone();
-        const bpm=midi?.header.tempos[0]?.bpm||120;
-        while(!iterator.EndReached&&cursorTimes.length<20000){
-          cursorTimes.push(iterator.CurrentEnrolledTimestamp.RealValue*240/bpm);
-          iterator.moveToNext();
-        }
+        score=display;score.Zoom=zoom;score.render();
+        scoreSystems=mapScore(display);activeSystem=null;
+        scoreLine=document.createElement('div');
+        scoreLine.className='sp-score-playhead';
+        scoreLine.setAttribute('aria-hidden','true');
+        engraving.append(scoreLine);
         sheetStatus.hidden=true;syncScore(now(),playing);
       }catch{
         if(current!==loadId||signal.aborted)return;
@@ -482,7 +557,7 @@
     full.onclick=()=>{const action=document.fullscreenElement===root?document.exitFullscreen():root.requestFullscreen();action.catch(()=>{});};
     let width=0,rollWidth=0;
     const observer=new ResizeObserver(()=>{
-      if(scroll.clientWidth&&scroll.clientWidth!==rollWidth){
+      if(scroll?.clientWidth&&scroll.clientWidth!==rollWidth){
         rollWidth=scroll.clientWidth;
         if(notes.length)drawRoll();
       }
@@ -492,7 +567,7 @@
       clearTimeout(resizeTimer);resizeTimer=setTimeout(drawSheet,140);
     });
     observer.observe(sheet);
-    observer.observe(scroll);
+    if(scroll)observer.observe(scroll);
     const entryMidi=entryMidiUrl?read(entryMidiUrl,signal,true).catch(()=>null):null;
     Promise.all([loadScript('midi','2.0.28'),read(midiUrl,signal,true),entryMidi]).then(([,buffer,entryBuffer])=>{
       if(signal.aborted)return;
@@ -505,12 +580,16 @@
       }
       selectSound();
       if(score)drawSheet();
-    }).catch(()=>{if(!signal.aborted)scroll.textContent='Le piano roll est indisponible pour ce relevé.';});
+    }).catch(()=>{if(!signal.aborted)showPlaybackError();});
     const dispose=()=>{
       controller.abort();pause();observer.disconnect();clearTimeout(resizeTimer);
       if(context&&context.state!=='closed')context.close().catch(()=>{});
     };
     dispose.position=now;
+    dispose.seek=jump;
+    dispose.play=()=>play.onclick();
+    dispose.pause=pause;
+    dispose.playing=()=>playing;
     return dispose;
   }
   window.SongToSheetPlayer={mount};

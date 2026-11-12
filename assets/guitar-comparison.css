@@ -1,0 +1,30 @@
+.guitar-comparison { margin: 20px 0; }
+.guitar-comparison h2 { margin: 0; text-align: center; font-size: clamp(22px, 3vw, 32px); }
+.guitar-comparison-status { margin: 8px 0; text-align: center; color: #625477; font-size: 14px; }
+.guitar-comparison-status:empty { display: none; }
+.guitar-comparison-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 14px; margin: 18px 0 12px; }
+.guitar-comparison-grid[data-count="1"] { grid-template-columns: minmax(0,1fr); }
+.guitar-option { border: 1px solid #e6ddf3; background: #fdfbff; border-radius: 16px; padding: 12px; min-width: 0; }
+.guitar-option-header { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.guitar-option-header h3 { margin: 0; font-size: 16px; }
+.guitar-option-header button { margin-left: auto; }
+.guitar-option .btn { min-height: 36px; padding: 7px 12px; }
+.guitar-option-badge { padding: 4px 7px; border-radius: 20px; background: #e9dcff; color: #53328a; font-size: 11px; font-weight: 750; }
+.guitar-option-player { margin: 10px 0; border-color: #ede6f5; background: #f7f2ff; color: #392949; border-radius: 10px; }
+.guitar-option-player .sp-toolbar,.guitar-option-player .sp-controls,.guitar-option-player .sp-source-duration { display: none; }
+.guitar-option-player .sp-sheet { max-height: 370px; overflow: auto; }
+.guitar-option-player .sp-status { background: #f3eaff; color: #53328a; }
+.guitar-option-vote { width: 100%; }
+.guitar-option button:disabled { opacity: .65; cursor: default; }
+.guitar-option-downloads { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+.guitar-comparison-transport { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; background: #211a2d; color: #fff; }
+.guitar-comparison-transport span { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.guitar-comparison-transport input { width: 100%; accent-color: #a979fc; }
+.guitar-comparison [hidden] { display: none !important; }
+@media (min-width: 1450px) {
+  .guitar-comparison-grid[data-count="3"] { grid-template-columns: repeat(3,minmax(0,1fr)); }
+}
+@media (max-width: 720px) {
+  .guitar-comparison-grid { grid-template-columns: minmax(0,1fr); }
+  .guitar-option-player .sp-sheet { max-height: 310px; }
+}

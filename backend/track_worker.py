@@ -1,6 +1,7 @@
 """Process SongToSheet beta jobs on a machine with the transcription models."""
 import argparse
 import base64
+from hashlib import file_digest
 import json
 import math
 import os
@@ -25,6 +26,52 @@ from yourmt3_engine import YourMT3
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
 CHORD_EXPORTS = {"rhythmtab": "rhythm.musicxml", "rhythmmid": "rhythm.mid"}
 REVIEW_TRACKS = ("original", "guitar", "vocals", "bass", "drums", "piano", "other")
+
+
+def read_exports(folder, mapping):
+    return {key: base64.b64encode((folder / name).read_bytes()).decode("ascii")
+            for key, name in mapping.items() if (folder / name).is_file()}
+
+
+def compare_versions(audio, data, directory, job, report, guitar_engine, solo_engine, piano_engine):
+    from guitar_accompaniment import accompany
+
+    exports = {}
+    direct = None
+    try:
+        result = transcribe(audio, "guitare", data, isolated=False, title=job["title"],
+                            progress=report, guitar_engine=guitar_engine, guitar_solo=True,
+                            solo_engine=solo_engine, has_voice=True, compare_solo=True)
+        files = read_exports(result, EXPORTS)
+        if {"musicxml", "mid", "tab", "tabmid"} <= files.keys():
+            direct = json.loads((result / "notes.json").read_text(encoding="utf-8"))
+            exports.update(files)
+            if direct.get("solo_engine") == "guitararranger-v2":
+                solo = read_exports(result / "solo", {"solotab": "tab.musicxml", "solomid": "tab.mid"})
+                if len(solo) == 2:
+                    exports.update(solo)
+    except Exception as error:
+        print(f"{job['id']}: relevé guitare indisponible : {error}", flush=True)
+
+    chord = None
+    try:
+        folder = directory / "chords"
+        chord = accompany(audio, folder, job["title"], (lambda _: None) if direct else report, piano_engine)
+        chord_files = read_exports(folder, CHORD_EXPORTS | {"heldtab": "tab.musicxml", "heldmid": "score.mid"})
+        if len(chord_files) != 4:
+            raise ValueError("Les deux accompagnements n’ont pas été exportés.")
+        exports.update(chord_files)
+        if not direct:
+            exports.update(musicxml=chord_files["heldtab"], mid=chord_files["heldmid"], tab=chord_files["heldtab"])
+    except Exception as error:
+        chord = None
+        print(f"{job['id']}: accompagnements indisponibles : {error}", flush=True)
+    meta = direct or chord
+    if not meta:
+        raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre morceau.")
+    if sum(map(len, exports.values())) > 4_000_000:
+        raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
+    return meta, exports
 
 
 def publish_solo(call, identity, result, job, engine):
@@ -97,8 +144,21 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
             capo = job.get("capo", 0)
             review = directory / "review"
             source_duration = None
+            audio_hash = None
+            if job.get("guitar_compare") and not (job.get("youtube_id") or job.get("audio_url")):
+                with audio.open("rb") as stream:
+                    audio_hash = file_digest(stream, "sha256").hexdigest()
             if job.get("preview_limit"):
                 audio, source_duration = prepare_preview(audio, directory, job["preview_limit"])
+
+            if job.get("guitar_compare"):
+                meta, exports = compare_versions(audio, data, directory, job, report, guitar_engine, solo_engine, piano_engine)
+                call("preview", **identity, duration=source_duration or meta["duration"],
+                     preview_duration=meta["duration"], note_count=len(meta["notes"]), exports=exports,
+                     diagnostic=meta.get("diagnostic"), engine=meta.get("engine"),
+                     solo_engine=meta.get("solo_engine"), audio_hash=audio_hash)
+                call("finish", **identity, ok=True, preview=True, exports={})
+                return
 
             def publish_direct(result, meta):
                 nonlocal direct_published
@@ -216,6 +276,7 @@ def main():
             try:
                 job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True,
                            guitar_goals=True, guitar_chords=piano_engine is not None,
+                           guitar_compare=piano_engine is not None and guitar_engine is not None and solo_engine is not None,
                            guided_guitar_only=args.guided_guitar_only,
                            preview=guitar_engine is not None and solo_engine is not None)["job"]
                 if not connected:

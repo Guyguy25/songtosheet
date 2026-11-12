@@ -217,7 +217,7 @@ def piano_midi_events(midi, duration):
 
 def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0, progress=None,
                review_audio=None, guitar_engine=None, guitar_solo=False, has_voice=True, solo_engine=None,
-               on_direct=None, piano_engine=None):
+                 on_direct=None, piano_engine=None, compare_solo=False):
     if (capo != "auto" and (type(capo) is not int or not 0 <= capo <= 12)) or (capo and instrument != "guitare"):
         raise ValueError("Le capo est disponible pour la guitare uniquement, en mode automatique ou avec une case de 0 à 12.")
     source = source.resolve(strict=True)
@@ -255,6 +255,8 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         else:
             solo_engine_id = "mix-melody-v1"
         config["solo"] = {"version": 8, "voice": has_voice and not isolated, "engine": solo_engine_id}
+        if compare_solo:
+            config["solo"]["compare"] = True
     if capo:
         config["capo"] = capo
     if title:
@@ -441,7 +443,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             except Exception as error:
                 print(f"Mélodie vocale indisponible : {error}", file=sys.stderr, flush=True)
         offer_solo = guitar_solo
-        if offer_solo and solo_engine and tab:
+        if offer_solo and solo_engine and tab and not compare_solo:
             from guitar_solo import vocal_melody
             from solo_quality import has_complete_opening
 

@@ -63,10 +63,21 @@
 .track-progress-steps li.is-done,.track-progress-steps li[aria-current]{color:#5d36b9;font-weight:750}
 .track-progress-steps li.is-done>span{border-color:#7549eb;background:#7549eb;color:#fff}
 .track-progress-steps li[aria-current]>span{border-color:#7549eb;background:#f4edff}
+.track-activity{display:grid;gap:10px;list-style:none;margin:16px 0 0;padding:14px 0 0;border-top:1px solid #eee7f5;text-align:left}
+.track-activity li{display:flex;align-items:center;gap:10px;min-height:20px;color:#625a71;font-size:13px;line-height:1.4;animation:track-activity-enter .25s ease-out both}
+.track-activity li[aria-current]{color:#5d36b9;font-weight:750}
+.track-activity-check{display:grid;place-items:center;flex:0 0 19px;height:19px;border:1px solid #cdb9f1;border-radius:5px;background:#f5efff;color:#fff;transition:background-color .25s,border-color .25s}
+.track-activity-check::after{content:''}
+.track-activity li[aria-current] .track-activity-check::after{width:8px;height:8px;border:1.5px solid #d9c8f7;border-top-color:#7549eb;border-radius:50%;animation:track-progress-spin .85s linear infinite}
+.track-activity li.is-done .track-activity-check{border-color:#7549eb;background:#7549eb}
+.track-activity li.is-done .track-activity-check::after{width:5px;height:9px;border:solid currentColor;border-width:0 2px 2px 0;transform:translateY(-1px) rotate(45deg);animation:track-activity-tick .25s ease-out both}
+@keyframes track-activity-enter{from{opacity:0;transform:translateY(4px)}}
+@keyframes track-activity-tick{from{opacity:0;transform:translateY(-1px) rotate(45deg) scale(.5)}}
 @media(prefers-reduced-motion:reduce){
   .track-progress-spinner{animation:none}
   .track-progress-steps li>span{transition:none}
-}
+  .track-activity li,.track-activity li[aria-current] .track-activity-check::after,.track-activity li.is-done .track-activity-check::after{animation:none}
+  .track-activity-check{transition:none}}
 @media(max-width:600px){
   .sp-toolbar,.sp-controls{padding:8px;gap:5px}
   .sp-roll-heading small,.sp-audio-label{display:none}

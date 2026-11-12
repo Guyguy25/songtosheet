@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=8" />
   <script src="/assets/audio-source.js?v=2" defer></script>
   <script src="/backend/web/track-onboarding.js?v=21" defer></script>
-  <link rel="stylesheet" href="/backend/web/score-player.css?v=10" />
+  <link rel="stylesheet" href="/backend/web/score-player.css?v=11" />
   <script src="/backend/web/score-player.js?v=14" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=1" />
   <script src="/assets/guitar-result-comparison.js?v=2" defer></script>
@@ -1377,7 +1377,45 @@
     processing:['Analyse en cours','Cette page se met à jour automatiquement.',1,null]
   };
   const trackMilestones=['Source','Audio','Notes','Relevé'];
+  const trackActivity={
+    queue:['En attente du moteur','Moteur disponible'],
+    audio:['Récupération du morceau','Morceau récupéré'],
+    decode:['Préparation de l’audio','Audio préparé'],
+    isolate:['Séparation des pistes','Pistes séparées'],
+    detect:['Détection des notes','Notes détectées'],
+    arrange:['Écriture du relevé','Relevé écrit'],
+    cached:['Chargement d’un relevé déjà calculé','Relevé existant chargé'],
+    pdf:['Préparation du PDF','Préparation du PDF terminée'],
+    solo:['Préparation de l’arrangement'],
+    finalize:['Finalisation de l’aperçu'],
+    processing:['Analyse du morceau']
+  };
   let trackSummaryMarkup,trackProgressMarkup,trackProgressFrame;
+  function updateTrackActivity(list,stage,reported){
+    const history=Array.isArray(reported)?reported:[];
+    const observedQueue=list.firstElementChild?.dataset.stage==='queue'?['queue']:[];
+    const entries=[...new Set([...observedQueue,...history.filter(key=>Object.hasOwn(trackActivity,key)&&
+      key!==stage&&!(key==='pdf'&&['solo','finalize'].includes(stage))),stage])];
+    for(const row of [...list.children]){
+      if(!entries.includes(row.dataset.stage))row.remove();
+    }
+    entries.forEach((key,index)=>{
+      let row=list.children[index];
+      if(row?.dataset.stage!==key){
+        row=document.createElement('li');
+        row.dataset.stage=key;
+        row.innerHTML='<span class="track-activity-check" aria-hidden="true"></span><span></span>';
+        list.insertBefore(row,list.children[index]||null);
+      }
+      const done=key!==stage;
+      const labels=trackActivity[key];
+      const label=done?(labels[1]||labels[0]):labels[0];
+      row.classList.toggle('is-done',done);
+      if(done)row.removeAttribute('aria-current');
+      else row.setAttribute('aria-current','step');
+      if(row.lastElementChild.textContent!==label)row.lastElementChild.textContent=label;
+    });
+  }
   function animateTrackProgress(progress,target){
     cancelAnimationFrame(trackProgressFrame);
     const bar=progress.querySelector('[role="progressbar"]');
@@ -1476,6 +1514,7 @@
                   ${trackMilestones.map(item=>`<li><span aria-hidden="true">·</span>${item}</li>`).join('')}
                 </ol>
               </div>
+              <ol class="track-activity" aria-label="Journal de génération"></ol>
             </section>
             <section id="track-wait-survey" class="wait-survey" aria-label="Questions facultatives" hidden></section>`;
           $('track-result-summary').dataset.job=id;
@@ -1497,6 +1536,7 @@
         window.SongToSheetWaitSurvey?.mount($('track-wait-survey'),state.user?.id,waiting&&!ready);
         const stage=ready?(j.preview_limit?(j.instrument==='guitare'&&!['chords','original'].includes(j.guitar_goal)?'solo':'finalize'):'pdf'):
           j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
+        if(waiting)updateTrackActivity($('track-progress').querySelector('.track-activity'),stage,j.stages);
         if(waiting&&trackProgressMarkup!==stage){
           const progress=$('track-progress');
           const [label,description,current,percent]=trackStages[stage];
@@ -1505,7 +1545,7 @@
           descriptionNode.textContent=description;
           descriptionNode.hidden=!description;
           animateTrackProgress(progress,percent);
-          progress.querySelectorAll('li').forEach((step,index)=>{
+          progress.querySelectorAll('.track-progress-steps li').forEach((step,index)=>{
             step.classList.toggle('is-done',index<current);
             if(index===current)step.setAttribute('aria-current','step');
             else step.removeAttribute('aria-current');

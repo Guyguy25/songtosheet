@@ -1517,7 +1517,7 @@
         const fallback=j.format==='tablature'&&!tab?' Aucune tablature jouable n’a été détectée. La partition est disponible.':'';
         const soloAvailable=j.downloads.includes('solotab')&&j.downloads.includes('solomid');
         const soloFallback=completed&&!j.guitar_compare&&j.guitar_goal==='solo'&&!soloAvailable?' Le solo n’a pas passé les vérifications. Le relevé original est disponible.':'';
-        const detail=ready?`${j.guitar_goal==='chords'?'Grille d’accords estimée.':j.note_count+' notes estimées.'}${fallback}${soloFallback}${j.preview_limit?'':waiting?'':j.pdf_error?' Le PDF est indisponible pour ce relevé.':' Tu peux corriger le résultat dans un éditeur MusicXML.'}`
+        const detail=ready?`${j.guitar_goal==='chords'?'Grille d’accords estimée.':j.note_count+' notes estimées.'}${fallback}${soloFallback}${j.status==='failed'&&j.error_message?' '+j.error_message:''}${j.preview_limit?'':waiting?'':j.pdf_error?' Le PDF est indisponible pour ce relevé.':' Tu peux corriger le résultat dans un éditeur MusicXML.'}`
           :waiting?'':j.error_message||'Importe ton fichier pour réessayer.';
         if($('track-result-summary')?.dataset.job!==id){
           $('result-content').innerHTML=`<div id="track-result-summary" class="result-hero"></div>

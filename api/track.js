@@ -6,11 +6,10 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,prepareTracks}=require('../lib/track-jobs');
+const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
-const LEASE_MS=25*60*1000;
 const REVIEW_MS=24*60*60*1000;
 const WORKER_ACTIONS=new Set(['claim','read','progress','preview','solo','review_audio','finish']);
 const PROGRESS_STAGES=new Set(['decode','isolate','detect','arrange','cached','judge']);
@@ -83,6 +82,9 @@ async function begin(db,res,user,body){
   const now=new Date();
   await jobs.updateOne({user_id:user._id,active:true,...expiredQueue(now)},
     {$set:{active:false,status:'failed',error_message:QUEUE_TIMEOUT_MESSAGE},$unset:{audio_url:''}});
+  await jobs.updateOne({user_id:user._id,...expiredProcessing(now)},
+    {$set:{active:false,status:'failed',finished_at:now,error_message:PROCESSING_TIMEOUT_MESSAGE},
+      $unset:{lease:'',lease_until:'',audio_url:''}});
   await jobs.updateMany({user_id:user._id,active:true,expires_at:{$lte:now}},
     {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'},$unset:{audio_url:''}});
   try{
@@ -155,10 +157,10 @@ async function worker(db,res,body){
     if(body.guitar_judge!==true)compatible.guitar_judge={$ne:true};
     if(body.capo!==true)compatible.capo={$in:[null,0]};
     else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
-    const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
-      $nor:[expiredQueue(now)],
-      $or:[{status:'queued'},{status:'processing',lease_until:{$lte:now}}]},
-      {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS),stage:'audio',stages:['audio']}},
+    const deadline=new Date(now.getTime()+PROCESSING_MS);
+    const job=await jobs.findOneAndUpdate({...compatible,active:true,status:'queued',expires_at:{$gt:deadline},
+      $nor:[expiredQueue(now)]},
+      {$set:{status:'processing',lease,lease_until:deadline,processing_deadline:deadline,stage:'audio',stages:['audio']}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
       excerpt:job.excerpt,isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
@@ -167,7 +169,8 @@ async function worker(db,res,body){
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
   if(!isId(body.id)||typeof body.lease!=='string')return json(res,400,{detail:'Traitement invalide.'});
-  const filter={_id:new ObjectId(body.id),status:'processing',active:true,lease:body.lease,lease_until:{$gt:now}};
+  const filter={_id:new ObjectId(body.id),status:'processing',active:true,lease:body.lease,lease_until:{$gt:now},
+    $nor:[expiredProcessing(now)]};
   if(body.action==='progress'){
     if(!PROGRESS_STAGES.has(body.stage))return json(res,400,{detail:'Étape invalide.'});
     const updated=await jobs.updateOne(filter,{$set:{stage:body.stage},$addToSet:{stages:body.stage}});

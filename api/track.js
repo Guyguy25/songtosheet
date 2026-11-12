@@ -1,6 +1,6 @@
 'use strict';
 const {createHash,randomUUID,timingSafeEqual}=require('node:crypto');
-const {compareGuitar,sourceKey}=require('../lib/guitar-comparison');
+const {compareGuitar,sourceKey,candidates}=require('../lib/guitar-comparison');
 const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
@@ -13,7 +13,7 @@ const AUDIO_RETENTION_MS=2*60*60*1000;
 const LEASE_MS=25*60*1000;
 const REVIEW_MS=24*60*60*1000;
 const WORKER_ACTIONS=new Set(['claim','read','progress','preview','solo','review_audio','finish']);
-const PROGRESS_STAGES=new Set(['decode','isolate','detect','arrange','cached']);
+const PROGRESS_STAGES=new Set(['decode','isolate','detect','arrange','cached','judge']);
 
 function validExports(exports){
   return exports&&typeof exports==='object'&&!Array.isArray(exports)&&
@@ -81,7 +81,7 @@ async function begin(db,res,user,body){
     const input=source?.youtubeId?{youtube_id:source.youtubeId,source_kind:'link'}:
       link?{audio_url:link.href,source_kind:'link'}:{extension,size};
     const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
-      ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence,guitar_compare:true,
+      ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence,guitar_compare:true,guitar_judge:true,
         ...(link?{song_key:sourceKey(source)}:{})}:{}),
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
@@ -142,6 +142,7 @@ async function worker(db,res,body){
       compatible.guitar_goal={$in:body.guitar_chords===true?['original','solo','chords']:['original','solo']};
     }else if(body.guitar_chords!==true)compatible.guitar_goal={$ne:'chords'};
     if(body.guitar_compare!==true)compatible.guitar_compare={$ne:true};
+    if(body.guitar_judge!==true)compatible.guitar_judge={$ne:true};
     if(body.capo!==true)compatible.capo={$in:[null,0]};
     else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
@@ -151,7 +152,7 @@ async function worker(db,res,body){
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
       isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
-      guitar_compare:job.guitar_compare===true,
+      guitar_compare:job.guitar_compare===true,guitar_judge:job.guitar_judge===true,
       review_audio:!job.isolated&&!job.preview_limit,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
@@ -230,9 +231,20 @@ async function worker(db,res,body){
     const engine=comparison||approvedEngine&&body.engine===approvedEngine?{engine:body.engine}:{};
     const comparisonData=comparison?{song_key:job.song_key||'file:'+body.audio_hash,
       ...(exports.solotab?{solo_engine:APPROVED_SOLO_ENGINE}:{})}:{};
+    const suggestion=body.recommendation;
+    if(comparison&&job.guitar_judge&&suggestion?.version===1&&suggestion.scores&&typeof suggestion.scores==='object'){
+      const valid=candidates({...job,...engine,...comparisonData,downloads:Object.keys(exports)});
+      const scores=Object.fromEntries(valid.filter(({key})=>Number.isInteger(suggestion.scores[key])&&
+        suggestion.scores[key]>=0&&suggestion.scores[key]<=100).map(({key})=>[key,suggestion.scores[key]]));
+      if(Object.hasOwn(scores,suggestion.recommended)&&Object.keys(scores).length>=2&&
+        scores[suggestion.recommended]===Math.max(...Object.values(scores))){
+        comparisonData.auto_recommendation={version:1,recommended:suggestion.recommended,scores};
+      }
+    }
     const preview=job.preview_limit?{preview_duration:Math.min(previewDuration,job.preview_limit)}:{};
     const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo,...engine,...preview,...comparisonData},
-      $unset:{...(!comparisonData.solo_engine?{solo_engine:''}:{}),...(!engine.engine?{engine:''}:{})},
+      $unset:{...(!comparisonData.solo_engine?{solo_engine:''}:{}),...(!engine.engine?{engine:''}:{}),
+        ...(!comparisonData.auto_recommendation?{auto_recommendation:''}:{})},
       $addToSet:{stages:'pdf'}});
     if(!updated.matchedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
     return json(res,200,{ok:true});

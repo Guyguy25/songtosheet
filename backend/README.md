@@ -99,6 +99,8 @@ Le parcours guitare guidé permet aussi de choisir l’accompagnement. **YourMT3
 
 L’option `--guided-guitar-only` permet de réserver un worker aux nouvelles demandes guitare. Pour traiter les demandes d’accords, configure YourMT3+ en plus des moteurs de guitare. Déploie l’API compatible avec cette option avant de démarrer ce worker.
 
+Pour les nouvelles comparaisons, le worker attribue une première recommandation après la génération des tablatures. Le juge utilise une lecture Basic Pitch du mix, la concordance harmonique, la couverture des passages audibles et la jouabilité des doigtés. La présence d’une piste guitare isolée et la couverture de ses attaques apportent un signal supplémentaire au relevé original. La recommandation reste une estimation expérimentale. Le résultat continue de recueillir des votes, et un consensus suffisant prend le relais. Les workers plus anciens laissent ces tâches aux workers qui annoncent la capacité `guitar_judge`.
+
 Prépare un environnement séparé pour Tsumugi avec les dépendances officielles. Ce modèle et les poids guitare sont publiés sous MIT. Utilise l’inférence de base sans l’option SheetSage2.
 
 ```bash

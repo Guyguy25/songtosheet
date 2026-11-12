@@ -1,4 +1,4 @@
-"""Local audit of guitar tablatures against independent evidence from the audio."""
+"""Evaluate guitar options against independent audio evidence."""
 
 import argparse
 import json
@@ -93,7 +93,32 @@ def midi_support(evidence, notes):
             "unsupported_seconds": round(float((used & ~audible).sum() * step), 2)}
 
 
-def evaluate(mix, candidates, guitar=None):
+def learned_reference(audio):
+    from basic_pitch.inference import predict
+    from transcribe_track import load_note_model
+
+    _, midi, _ = predict(audio, load_note_model())
+    return [note for track in midi.instruments if not track.is_drum for note in track.notes]
+
+
+def note_agreement(notes, reference, step, frames):
+    if not reference:
+        return None
+    def active(events):
+        pitches = np.zeros((frames, 12), dtype=bool)
+        for note in events:
+            first = max(0, round(note.start / step))
+            last = min(frames, round(note.end / step))
+            pitches[first:last, note.pitch % 12] = True
+        return pitches
+    expected, played = active(reference), active(notes)
+    relevant = played & expected.any(axis=1, keepdims=True)
+    if not relevant.any():
+        return None
+    return round(float((relevant & expected).sum() / relevant.sum()), 3)
+
+
+def evaluate(mix, candidates, guitar=None, reference=None):
     evidence = audio_evidence(mix)
     stem = audio_evidence(guitar) if guitar else None
     report = {}
@@ -103,11 +128,47 @@ def evaluate(mix, candidates, guitar=None):
         attacks, invalid = score_fingering(files["score"])
         row = {"notes": len(notes), "tab_attacks": attacks, "invalid_fingerings": invalid,
                "mix": midi_support(evidence, notes)}
+        if reference is not None:
+            row["model_agreement"] = note_agreement(notes, reference, evidence[2], len(evidence[0]))
         if key == "original" and stem is not None:
             row["guitar_stem"] = midi_support(stem, notes)
             row["guitar_stem"]["attacks"] = attack_alignment(guitar, notes)
         report[key] = row
     return report
+
+
+def recommend(mix, candidates, *, guitar_evidence=None):
+    """Return a version key and bounded scores. Human votes can supersede this suggestion."""
+    try:
+        reference = learned_reference(mix)
+    except Exception as error:
+        print(f"Référence indépendante Basic Pitch indisponible : {error}", flush=True)
+        reference = None
+    report = evaluate(mix, candidates, reference=reference)
+    guitar_evidence = guitar_evidence or {}
+    guitar_support = guitar_evidence.get("relative_rms", 0)
+    guitar_coverage = guitar_evidence.get("attack_coverage", 0)
+    scores = {}
+    for key, row in report.items():
+        evidence = row["mix"]
+        if not row["notes"] or evidence["harmonic_support"] is None:
+            continue
+        harmony = np.clip(evidence["harmonic_support"] * 1.6 + .12, 0, 1)
+        agreement = row.get("model_agreement")
+        agreement = harmony if agreement is None else agreement
+        # Coverage is evaluated on audible parts. A sustained chord and its
+        # rhythmic rendering receive the same harmonic credit.
+        score = .43 * harmony + .28 * evidence["coverage"] + .21 * agreement
+        score -= .25 * row["invalid_fingerings"] / max(1, row["tab_attacks"])
+        score -= min(.16, .012 * evidence["unsupported_seconds"])
+        if key == "original-v1":
+            score += .24 * min(1, guitar_support / .18) * min(1, guitar_coverage / .55)
+        if key == "held-v1":
+            score += .015  # Prefer the easier voicing when evidence is otherwise equal.
+        scores[key] = round(100 * float(np.clip(score, 0, 1)))
+    # Preserve the simplicity preference for a tie caused by rounding.
+    preferred = max(scores, key=lambda key: (scores[key], key == "held-v1"), default=None)
+    return {"version": 1, "recommended": preferred, "scores": scores}
 
 
 def main():

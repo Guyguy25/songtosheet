@@ -25,6 +25,7 @@
       for (const card of cards) {
         const current = data.versions.find(version => version.key === card.key);
         card.badge.hidden = !current?.recommended;
+        card.badge.textContent = current?.recommendation_source === 'ai' ? 'Recommandé par l’IA' : 'Recommandé';
         if (data.selected === card.key) card.vote.textContent = 'Ton choix ✓';
         card.vote.hidden = !data.token && data.selected !== card.key;
         card.vote.disabled = !data.token || saving || readyCount !== cards.length;

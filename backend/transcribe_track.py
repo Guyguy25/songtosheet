@@ -256,7 +256,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             solo_engine_id = "mix-melody-v1"
         config["solo"] = {"version": 8, "voice": has_voice and not isolated, "engine": solo_engine_id}
         if compare_solo:
-            config["solo"]["compare"] = True
+            config["solo"]["compare"] = 2
     if capo:
         config["capo"] = capo
     if title:
@@ -430,6 +430,22 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         if instrument == "guitare":
             manifest.update(bpm=bpm, meter=f"{tab_meter[0]}/{tab_meter[1]}")
             manifest["diagnostic"] = guitar_diagnostic(notes, tab, transients, filtered)
+            if compare_solo:
+                try:
+                    import librosa
+                    import numpy as np
+
+                    reference, _ = librosa.load(original, sr=22050, mono=True)
+                    guitar_signal, _ = librosa.load(wav, sr=22050, mono=True)
+                    reference_power = np.mean(reference ** 2)
+                    guitar_power = np.mean(guitar_signal ** 2)
+                    matched = manifest["diagnostic"]["matched_attacks"] or 0
+                    manifest["guitar_evidence"] = {
+                        "relative_rms": float(np.sqrt(guitar_power / max(1e-10, reference_power))),
+                        "attack_coverage": min(1., matched / max(1, len(transients))),
+                    }
+                except (ValueError, OSError) as error:
+                    print(f"Signal guitare indisponible pour la recommandation : {error}", file=sys.stderr, flush=True)
         manifest_path = result / "notes.json"
         manifest_path.write_text(json.dumps(manifest, ensure_ascii=False), encoding="utf-8")
         if on_direct:

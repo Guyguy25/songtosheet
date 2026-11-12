@@ -37,6 +37,7 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
     from guitar_accompaniment import accompany
 
     exports = {}
+    options = {}
     direct = None
     try:
         result = transcribe(audio, "guitare", data, isolated=False, title=job["title"],
@@ -46,10 +47,12 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
         if {"musicxml", "mid", "tab", "tabmid"} <= files.keys():
             direct = json.loads((result / "notes.json").read_text(encoding="utf-8"))
             exports.update(files)
+            options["original-v1"] = {"score": result / "tab.musicxml", "midi": result / "tab.mid"}
             if direct.get("solo_engine") == "guitararranger-v2":
                 solo = read_exports(result / "solo", {"solotab": "tab.musicxml", "solomid": "tab.mid"})
                 if len(solo) == 2:
                     exports.update(solo)
+                    options["solo-v2"] = {"score": result / "solo" / "tab.musicxml", "midi": result / "solo" / "tab.mid"}
     except Exception as error:
         print(f"{job['id']}: relevé guitare indisponible : {error}", flush=True)
 
@@ -61,6 +64,8 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
         if len(chord_files) != 4:
             raise ValueError("Les deux accompagnements n’ont pas été exportés.")
         exports.update(chord_files)
+        options["held-v1"] = {"score": folder / "tab.musicxml", "midi": folder / "score.mid"}
+        options["rhythm-v1"] = {"score": folder / "rhythm.musicxml", "midi": folder / "rhythm.mid"}
         if not direct:
             exports.update(musicxml=chord_files["heldtab"], mid=chord_files["heldmid"], tab=chord_files["heldtab"])
     except Exception as error:
@@ -71,7 +76,16 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
         raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre morceau.")
     if sum(map(len, exports.values())) > 4_000_000:
         raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
-    return meta, exports
+    recommendation = None
+    if job.get("guitar_judge") and len(options) >= 2:
+        report("judge")
+        try:
+            from evaluate_guitar_options import recommend
+
+            recommendation = recommend(audio, options, guitar_evidence=(direct or {}).get("guitar_evidence"))
+        except Exception as error:
+            print(f"{job['id']}: recommandation automatique indisponible : {error}", flush=True)
+    return meta, exports, recommendation
 
 
 def publish_solo(call, identity, result, job, engine):
@@ -152,11 +166,11 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                 audio, source_duration = prepare_preview(audio, directory, job["preview_limit"])
 
             if job.get("guitar_compare"):
-                meta, exports = compare_versions(audio, data, directory, job, report, guitar_engine, solo_engine, piano_engine)
+                meta, exports, recommendation = compare_versions(audio, data, directory, job, report, guitar_engine, solo_engine, piano_engine)
                 call("preview", **identity, duration=source_duration or meta["duration"],
                      preview_duration=meta["duration"], note_count=len(meta["notes"]), exports=exports,
                      diagnostic=meta.get("diagnostic"), engine=meta.get("engine"),
-                     solo_engine=meta.get("solo_engine"), audio_hash=audio_hash)
+                     solo_engine=meta.get("solo_engine"), audio_hash=audio_hash, recommendation=recommendation)
                 call("finish", **identity, ok=True, preview=True, exports={})
                 return
 
@@ -277,6 +291,7 @@ def main():
                 job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True,
                            guitar_goals=True, guitar_chords=piano_engine is not None,
                            guitar_compare=piano_engine is not None and guitar_engine is not None and solo_engine is not None,
+                           guitar_judge=True,
                            guided_guitar_only=args.guided_guitar_only,
                            preview=guitar_engine is not None and solo_engine is not None)["job"]
                 if not connected:

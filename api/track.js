@@ -47,6 +47,15 @@ async function begin(db,res,user,body){
     :'';
   const format=body.format??'partition';
   const capo=body.capo??0;
+  const guitarGoal=body.guitar_goal;
+  const guitarPresence=body.guitar_presence;
+  if(guitarGoal!=null||guitarPresence!=null){
+    if(instrument!=='guitare'||format!=='tablature'||!['original','chords','solo'].includes(guitarGoal)||
+      !['yes','no','unknown'].includes(guitarPresence)||(guitarPresence!=='yes'&&guitarGoal!=='chords')||
+      (guitarGoal==='chords'&&capo!==0)){
+      return json(res,400,{detail:'Choisis un objectif compatible avec le contenu du morceau.'});
+    }
+  }
   if(body.authorized!==true)return json(res,400,{detail:'Confirme que tu disposes des droits nécessaires pour transcrire cet audio.'});
   if(body.audioUrl!=null&&!link)return json(res,400,{detail:'Colle un lien HTTPS public vers un fichier audio.'});
   if(source?.provider&&!source.youtubeId)return json(res,400,{detail:audioSource.importHint(source.provider)});
@@ -72,6 +81,7 @@ async function begin(db,res,user,body){
     const input=source?.youtubeId?{youtube_id:source.youtubeId,source_kind:'link'}:
       link?{audio_url:link.href,source_kind:'link'}:{extension,size};
     const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
+      ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence}:{}),
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
       ...(link?{queued_at:now}:{}),
@@ -126,6 +136,7 @@ async function worker(db,res,body){
     if(body.links!==true)compatible.audio_url={$exists:false};
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
     if(body.preview!==true)compatible.preview_limit={$exists:false};
+    if(body.guitar_goals!==true)compatible.guitar_goal={$exists:false};
     if(body.capo!==true)compatible.capo={$in:[null,0]};
     else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
@@ -134,7 +145,7 @@ async function worker(db,res,body){
       {$set:{status:'processing',lease,lease_until:new Date(now.getTime()+LEASE_MS),stage:'audio',stages:['audio']}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
-      isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,
+      isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
       review_audio:!job.isolated&&!job.preview_limit,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
@@ -167,7 +178,7 @@ async function worker(db,res,body){
   const isPreview=body.action==='preview';
   const hasPreview=job.downloads?.includes('mid')&&job.downloads?.includes('musicxml');
   if(body.action==='solo'){
-    if(job.instrument!=='guitare'||!hasPreview||!validExports(exports)||!exports.solotab||!exports.solomid||
+    if(job.instrument!=='guitare'||job.guitar_goal==='chords'||!hasPreview||!validExports(exports)||!exports.solotab||!exports.solomid||
       Object.keys(exports).length!==2)return json(res,400,{detail:'Arrangement invalide.'});
     const engines=['guitararranger-v1',APPROVED_SOLO_ENGINE];
     if(job.preview_limit&&!engines.includes(body.solo_engine))return json(res,400,{detail:'Moteur d’arrangement invalide.'});
@@ -177,8 +188,11 @@ async function worker(db,res,body){
     return updated.matchedCount?json(res,200,{ok:true}):json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   }
   const finishingPreview=completed&&!isPreview&&hasPreview&&body.preview===true;
+  const chordJob=job.guitar_goal==='chords';
+  const guitarEngine=chordJob?'chroma-guitar-chords-v1':'tsumugi-guitar-v1.5';
   const fullValid=validExports(exports)&&exports.musicxml&&exports.mid&&Number.isFinite(duration)&&duration>=.5&&
-    Number.isInteger(note_count)&&note_count>=1;
+    Number.isInteger(note_count)&&note_count>=1&&
+    (chordJob?Boolean(exports.rhythmtab&&exports.rhythmmid):!exports.rhythmtab&&!exports.rhythmmid);
   const finishValid=validExports(exports)&&Object.keys(exports).every(key=>key==='pdf'||(key==='solopdf'&&job.downloads.includes('solotab')))&&
     (job.preview_limit?Object.keys(exports).length===0:Boolean(exports.pdf)||body.pdf_error===true);
   if((isPreview||completed)&&!(finishingPreview?finishValid:fullValid)){
@@ -188,7 +202,7 @@ async function worker(db,res,body){
     const previewDuration=body.preview_duration;
     if(job.preview_limit&&(!Number.isFinite(previewDuration)||previewDuration<.5||
       previewDuration>Math.min(job.preview_limit,duration)+.05||
-      (job.instrument==='guitare'&&body.engine!=='tsumugi-guitar-v1.5'))){
+      (job.instrument==='guitare'&&body.engine!==guitarEngine))){
       return json(res,400,{detail:'Aperçu ou moteur de transcription invalide.'});
     }
     const diagnostic=job.instrument==='guitare'?validDiagnostic(body.diagnostic,note_count,duration):null;
@@ -197,7 +211,7 @@ async function worker(db,res,body){
       return json(res,400,{detail:'Case du capo invalide.'});
     }
     const capo=job.capo==='auto'?{resolved_capo:resolved}:{};
-    const approvedEngine={guitare:'tsumugi-guitar-v1.5',piano:'yourmt3-plus-moe-nops'}[job.instrument];
+    const approvedEngine={guitare:guitarEngine,piano:'yourmt3-plus-moe-nops'}[job.instrument];
     const engine=approvedEngine&&body.engine===approvedEngine?{engine:body.engine}:{};
     const preview=job.preview_limit?{preview_duration:Math.min(previewDuration,job.preview_limit)}:{};
     const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo,...engine,...preview},

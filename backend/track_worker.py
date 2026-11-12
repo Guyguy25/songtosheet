@@ -23,6 +23,7 @@ from yourmt3_engine import YourMT3
 
 
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
+CHORD_EXPORTS = {"rhythmtab": "rhythm.musicxml", "rhythmmid": "rhythm.mid"}
 REVIEW_TRACKS = ("original", "guitar", "vocals", "bass", "drums", "piano", "other")
 
 
@@ -103,7 +104,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                 nonlocal direct_published
                 exports = {
                     key: base64.b64encode((result / filename).read_bytes()).decode("ascii")
-                    for key, filename in EXPORTS.items() if (result / filename).is_file()
+                    for key, filename in (EXPORTS | CHORD_EXPORTS).items() if (result / filename).is_file()
                 }
                 if sum(map(len, exports.values())) > 4_000_000:
                     raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
@@ -114,10 +115,19 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                 direct_published = True
                 print(f"{job['id']}: relevé disponible", flush=True)
 
+            goal = job.get("guitar_goal")
+            if goal == "chords":
+                from guitar_accompaniment import accompany
+
+                result = directory / "chords"
+                meta = accompany(audio, result, job["title"], report)
+                publish_direct(result, {**meta, "engine": "chroma-guitar-chords-v1"})
+                call("finish", **identity, ok=True, preview=True, exports={})
+                return
             started = time.monotonic()
             result = transcribe(audio, job["instrument"], data, isolated=job["isolated"], title=job["title"],
                                 capo=capo, progress=report,
-                                guitar_engine=guitar_engine, guitar_solo=True,
+                                guitar_engine=guitar_engine, guitar_solo=goal != "original",
                                 solo_engine=solo_engine, on_direct=publish_direct, piano_engine=piano_engine,
                                 has_voice=job.get("source_content") != "instrumental",
                                 review_audio=(lambda original, stems: encode_review_audio(original, stems, review))
@@ -153,7 +163,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
     except Exception as error:
         print(f"{job['id']}: {error}", flush=True)
         message = "La transcription a échoué. Essaie un audio valide ou une piste plus claire."
-        if isinstance(error, TrackLinkError) or str(error).startswith(("L’audio doit durer", "L’audio dépasse", "Aucune note exploitable", "Les exports dépassent")):
+        if isinstance(error, TrackLinkError) or str(error).startswith(("L’audio doit durer", "L’audio dépasse", "Aucune note exploitable", "Les exports dépassent", "Les accords sont trop incertains")):
             message = str(error)
         payload = ({"ok": True, "preview": True, "exports": {}, "pdf_error": not job.get("preview_limit")}
                    if direct_published else {"ok": False, "error": message})
@@ -202,7 +212,7 @@ def main():
         print(f"Moteur de transcription prêt. Piano : {'YourMT3+' if piano_engine else 'Basic Pitch'}.", flush=True)
         while True:
             try:
-                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True,
+                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True, guitar_goals=True,
                            preview=guitar_engine is not None and solo_engine is not None)["job"]
                 if job:
                     process_job(call, job, args.cache, guitar_engine, solo_engine, piano_engine)

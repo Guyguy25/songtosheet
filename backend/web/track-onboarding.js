@@ -16,9 +16,19 @@
     [0,'♪','Sans capo','Joue avec l’accordage habituel.'],
     ['auto','♯','Capo automatique','On te propose une case sur la tablature.']
   ];
+  const guitarPresence=[
+    ['yes','♫','Oui'],['no','—','Non'],['unknown','?','Je ne sais pas']
+  ];
+  const guitarGoals=[
+    ['original','♪','Rejouer la guitare originale','Suis les notes de la guitare du morceau.'],
+    ['chords','♫','M’accompagner pour chanter','Joue des accords tenus ou rythmés.'],
+    ['solo','↗','Jouer la mélodie en solo','Réunis mélodie et accompagnement sur une guitare.']
+  ];
   const steps=[
     ['import','Source','Quel morceau veux-tu jouer ?'],
     ['instrument','Instrument','Quel instrument veux-tu jouer ?',instruments],
+    ['guitarPresence','Guitare','Le morceau contient déjà de la guitare ?',guitarPresence],
+    ['guitarGoal','Objectif','Qu’est-ce que tu veux jouer ?',guitarGoals],
     ['capo','Capo','Tu joues avec un capo ?',capos],
     ['format','Format','Partition ou tablature ?',formats],
     ['source','Voix','Y a-t-il une voix dans ton morceau ?',sources],
@@ -31,14 +41,18 @@
     return `${Math.floor(total/60)}:${String(total%60).padStart(2,'0')}`;
   };
 
-  function mount(root,{onSubmit,onLinkChange,sampleUrl,allowLink=false,freemium=false}){
-    const draft={instrument:'',format:'',source:'',file:null,capo:null};
+  function mount(root,{onSubmit,onLinkChange,sampleUrl,allowLink=false,freemium=false,guitarGuidance=false}){
+    const draft={instrument:'',format:'',source:'',file:null,capo:null,guitarPresence:null,guitarGoal:null};
     const audioSource=allowLink?window.SongToSheetAudioSource:null;
     const allowsTab=()=>['guitare','basse'].includes(draft.instrument);
+    const guidedGuitar=()=>guitarGuidance&&draft.instrument==='guitare';
     const activeSteps=()=>steps.filter(([field])=>
       (field!=='import'||!prefilledSource||current==='import')&&
-      (field!=='capo'||(allowLink&&draft.instrument==='guitare'))&&
-      (field!=='format'||allowsTab()));
+      (field!=='capo'||(allowLink&&draft.instrument==='guitare'&&!guidedGuitar()))&&
+      (field!=='guitarPresence'||guidedGuitar())&&
+      (field!=='guitarGoal'||(guidedGuitar()&&draft.guitarPresence==='yes'))&&
+      (field!=='format'||(allowsTab()&&!guidedGuitar()))&&
+      (field!=='source'||!guidedGuitar()||draft.guitarGoal!=='chords'));
     let current='import', mode=allowLink?'link':'file', prefilledSource=false, editing=false, busy=false;
     let reference=null, link=null, metadata=null, lookup=null, titleEdited=false, fileDuration=null, previewUrl;
     root.innerHTML=`
@@ -179,7 +193,11 @@
         ['source','Contenu',draft.source==='instrumental'&&solo.checked
           ?'Instrument seul':labelFor(sources,draft.source),'♬']
       ];
-      if(allowLink&&draft.instrument==='guitare')rows.splice(2,0,['capo','Capo',labelFor(capos,draft.capo),'♯']);
+      if(guidedGuitar()){
+        rows.splice(2,0,['guitarPresence','Guitare dans le morceau',labelFor(guitarPresence,draft.guitarPresence),'♫'],
+          ['guitarGoal','Objectif',labelFor(guitarGoals,draft.guitarGoal),'♪']);
+        if(draft.guitarGoal==='chords')rows.pop();
+      }else if(allowLink&&draft.instrument==='guitare')rows.splice(2,0,['capo','Capo',labelFor(capos,draft.capo),'♯']);
       recap.replaceChildren(...rows.map(([field,label,value,icon,detail])=>{
         const row=document.createElement('div');
         row.className='track-recap-row';
@@ -207,7 +225,7 @@
           text.append(small);
         }
         row.append(visual,text);
-        if(field!=='format'||allowsTab()){
+        if(field==='import'||activeSteps().some(([step])=>step===field)){
           const edit=document.createElement('button');
           edit.type='button';
           edit.className='track-edit';
@@ -244,7 +262,7 @@
       }
       referenceNote.hidden=!reference;
       referenceNote.textContent=reference?audioSource.importHint(reference.provider):'';
-      soloLabel.classList.toggle('hidden',draft.source!=='instrumental');
+      soloLabel.classList.toggle('hidden',draft.source!=='instrumental'||(guidedGuitar()&&draft.guitarGoal==='chords'));
       get('.track-rights-text').textContent=link?.youtubeId
         ?'Je dispose des autorisations pour récupérer l’audio de cette vidéo et le transcrire.'
         :'Je dispose des droits nécessaires pour transcrire cet audio.';
@@ -277,10 +295,16 @@
       const button=event.target.closest('.track-choice');
       if(!button||busy)return;
       const options=activeSteps().find(([field])=>field===current)[3];
+      const previous=draft[current];
       draft[current]=options.find(([value])=>String(value)===button.value)[0];
       if(current==='instrument'){
-        if(!allowsTab())draft.format='partition';
-        if(draft.instrument!=='guitare')draft.capo=null;
+        draft.format=guidedGuitar()?'tablature':allowsTab()?'':'partition';
+        if(draft.instrument!=='guitare'||guidedGuitar())draft.capo=null;
+        if(!guidedGuitar())draft.guitarPresence=draft.guitarGoal=null;
+      }
+      if(current==='guitarPresence'){
+        if(draft.guitarPresence!=='yes')draft.guitarGoal='chords';
+        else if(previous!=='yes')draft.guitarGoal=null;
       }
       if(current==='source'&&draft.source!=='instrumental')solo.checked=false;
       advance();
@@ -396,14 +420,15 @@
           setStatus('Récupération du titre du morceau…');
           await lookup.request;
         }
-        const source=solo.checked&&draft.source==='instrumental'?'instrument':draft.source;
+        const source=guidedGuitar()&&draft.guitarGoal==='chords'?'mixed':
+          solo.checked&&draft.source==='instrumental'?'instrument':draft.source;
         await onSubmit({...draft,capo:draft.capo??0,source,
           file:mode==='file'?draft.file:null,audioUrl:mode==='link'?link?.url.href:undefined,
           title:title.value.trim()||sourceTitle()},setStatus);
         setMode(allowLink?'link':'file');
         title.value='';
         prefilledSource=editing=false;
-        Object.assign(draft,{instrument:'',format:'',source:'',capo:null});
+        Object.assign(draft,{instrument:'',format:'',source:'',capo:null,guitarPresence:null,guitarGoal:null});
         current='import';
       }catch(error){setStatus(error.message,true);}
       finally{
@@ -418,7 +443,7 @@
       prefill({instrument,file,name,audioUrl}){
         if(busy)return;
         if(file!==undefined||audioUrl!==undefined){
-          Object.assign(draft,{instrument:'',format:'',source:'',capo:null});
+          Object.assign(draft,{instrument:'',format:'',source:'',capo:null,guitarPresence:null,guitarGoal:null});
           const parsed=audioSource?.parse(audioUrl);
           const isReference=parsed?.provider&&parsed.provider!=='YouTube';
           const validLink=parsed&&(!parsed.provider||parsed.youtubeId);
@@ -434,7 +459,8 @@
             file&&file.size>=1024&&file.size<=maxFileSize&&fileExtension.test(file.name));
         }
         if(instruments.some(([value])=>value===instrument))draft.instrument=instrument;
-        if(!allowsTab()&&draft.instrument)draft.format='partition';
+        if(guidedGuitar())draft.format='tablature';
+        else if(!allowsTab()&&draft.instrument)draft.format='partition';
         if(draft.instrument!=='guitare')draft.capo=null;
         if(name){title.value=name;titleEdited=true;}
         current=prefilledSource?'instrument':'import';

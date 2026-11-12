@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=8" />
   <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=19" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=20" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=9" />
   <script src="/backend/web/score-player.js?v=11" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
@@ -1186,7 +1186,7 @@
       $('create-page').classList.add('track-guided');
       show('track-onboarding',true);
       if(!trackWizard){
-        trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{onSubmit:submitTrack,onLinkChange:rememberTrackLink,allowLink:true,freemium:true});
+        trackWizard=window.SongToSheetTrackWizard.mount($('track-onboarding'),{onSubmit:submitTrack,onLinkChange:rememberTrackLink,allowLink:true,freemium:true,guitarGuidance:true});
         const audioUrl=rememberedTrackLink();
         if(audioUrl)trackWizard.prefill({audioUrl});
       }
@@ -1287,12 +1287,13 @@
       reader.readAsDataURL(blob);
     });
   }
-  async function submitTrack({file,audioUrl,title,instrument,format,source,capo},setStatus){
+  async function submitTrack({file,audioUrl,title,instrument,format,source,capo,guitarGoal,guitarPresence},setStatus){
     setStatus(audioUrl?'Mise en file du lien audio…':'Préparation de l’envoi…');
     let id,queued=false;
     try{
       const input=audioUrl?{audioUrl}:{extension:file.name.split('.').at(-1).toLowerCase(),size:file.size,sourceName:file.name};
-      const result=await post('/api/track',{action:'begin',title,authorized:true,instrument,format,source,capo,...input});
+      const guidance=guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence}:{};
+      const result=await post('/api/track',{action:'begin',title,authorized:true,instrument,format,source,capo,...guidance,...input});
       id=result.id;
       if(!audioUrl){
         const count=Math.ceil(file.size/result.chunk_bytes);
@@ -1453,7 +1454,9 @@
           <p>Ce diagnostic vérifie la cohérence des attaques. Pour mesurer la justesse des notes et des accords, il faut comparer le relevé à une référence validée.</p></details>`:'';
         const status=ready?(tab?'TABLATURE PRÊTE':'PARTITION PRÊTE'):waiting?'TRANSCRIPTION EN COURS':'TRANSCRIPTION INTERROMPUE';
         const fallback=j.format==='tablature'&&!tab?' Aucune tablature jouable n’a été détectée. La partition est disponible.':'';
-        const detail=ready?`${j.note_count} notes estimées.${fallback}${j.preview_limit?'':waiting?'':j.pdf_error?' Le PDF est indisponible pour ce relevé.':' Tu peux corriger le résultat dans un éditeur MusicXML.'}`
+        const soloAvailable=j.downloads.includes('solotab')&&j.downloads.includes('solomid');
+        const soloFallback=completed&&j.guitar_goal==='solo'&&!soloAvailable?' Le solo n’a pas passé les vérifications. Le relevé original est disponible.':'';
+        const detail=ready?`${j.guitar_goal==='chords'?'Grille d’accords estimée.':j.note_count+' notes estimées.'}${fallback}${soloFallback}${j.preview_limit?'':waiting?'':j.pdf_error?' Le PDF est indisponible pour ce relevé.':' Tu peux corriger le résultat dans un éditeur MusicXML.'}`
           :waiting?'':j.error_message||'Importe ton fichier pour réessayer.';
         if($('track-result-summary')?.dataset.job!==id){
           $('result-content').innerHTML=`<div id="track-result-summary" class="result-hero"></div>
@@ -1489,7 +1492,7 @@
         show('track-progress',waiting);
         if(!waiting)cancelAnimationFrame(trackProgressFrame);
         window.SongToSheetWaitSurvey?.mount($('track-wait-survey'),state.user?.id,waiting&&!ready);
-        const stage=ready?(j.preview_limit?(j.instrument==='guitare'?'solo':'finalize'):'pdf'):
+        const stage=ready?(j.preview_limit?(j.instrument==='guitare'&&!['chords','original'].includes(j.guitar_goal)?'solo':'finalize'):'pdf'):
           j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';
         if(waiting&&trackProgressMarkup!==stage){
           const progress=$('track-progress');
@@ -1512,26 +1515,34 @@
         if(ready&&window.SongToSheetPlayer){
           const exportUrl=kind=>`/api/track?id=${encodeURIComponent(id)}&download=${kind}`;
           const root=$('score-player');
-          const mountVersion=(solo,startAt=0)=>{
+          const chords=j.guitar_goal==='chords';
+          const rhythmAvailable=chords&&j.downloads.includes('rhythmtab')&&j.downloads.includes('rhythmmid');
+          const mountVersion=(version,startAt=0)=>{
             stopPlayer();
+            const solo=version==='solo',rhythm=version==='rhythm';
             const tabUrl=solo?exportUrl('solotab'):j.downloads.includes('tab')?exportUrl('tab'):null;
             closePlayer=window.SongToSheetPlayer.mount(root,{
-              scoreUrl:solo?tabUrl:exportUrl('musicxml'),midiUrl:exportUrl(solo?'solomid':'mid'),
-              instrument:j.instrument,sourceDuration:j.duration,previewDuration:j.preview_duration,startAt,tabUrl:solo?null:tabUrl,
-              tabMidiUrl:!solo&&j.downloads.includes('tabmid')?exportUrl('tabmid'):null,
-                preferTab:solo||tab,findEntry:j.instrument==='guitare',
+              scoreUrl:rhythm?exportUrl('rhythmtab'):solo?tabUrl:exportUrl('musicxml'),
+              midiUrl:exportUrl(rhythm?'rhythmmid':solo?'solomid':'mid'),
+              instrument:j.instrument,sourceDuration:j.duration,previewDuration:j.preview_duration,startAt,tabUrl:solo||chords?null:tabUrl,
+              tabMidiUrl:!solo&&!chords&&j.downloads.includes('tabmid')?exportUrl('tabmid'):null,
+                preferTab:chords||solo||tab,findEntry:j.instrument==='guitare'&&!chords,
                 entryMidiUrl:solo?exportUrl('mid'):null,soloSustain:solo
             });
             $('guitar-versions')?.querySelectorAll('[data-version]').forEach(button=>{
-              const active=(button.dataset.version==='solo')===solo;
+              const active=button.dataset.version===version;
               button.setAttribute('aria-pressed',String(active));
               button.classList.toggle('btn-primary',active);
               button.classList.toggle('btn-outline',!active);
             });
             if($('guitar-solo-exports'))$('guitar-solo-exports').hidden=!solo||Boolean(j.preview_limit);
           };
-          if(j.downloads.includes('solotab')&&j.downloads.includes('solomid')&&!$('guitar-versions')){
-            root.insertAdjacentHTML('beforebegin',`
+          if((soloAvailable||rhythmAvailable)&&!$('guitar-versions')){
+            const versions=rhythmAvailable?`
+              <div id="guitar-versions" class="result-actions" role="group" aria-label="Type d’accompagnement">
+                <button class="btn btn-primary" type="button" data-version="direct" aria-pressed="true">Accords tenus</button>
+                <button class="btn btn-outline" type="button" data-version="rhythm" aria-pressed="false">Accords rythmés</button>
+              </div>`:`
               <div id="guitar-versions" class="result-actions" role="group" aria-label="Version de la tablature">
                 <button class="btn btn-primary" type="button" data-version="direct" aria-pressed="true">Guitare originale${j.engine==='tsumugi-guitar-v1.5'?' · Tsumugi':''}</button>
                 <button class="btn btn-outline" type="button" data-version="solo" aria-pressed="false">Guitare solo${j.solo_engine==='guitararranger-v2'?' · GuitarArranger':''}</button>
@@ -1543,16 +1554,18 @@
                 <a class="btn btn-outline" href="${exportUrl('solotab')}">↓ MusicXML solo</a>
                 <a class="btn btn-outline" href="${exportUrl('solomid')}">↓ MIDI solo</a>
                 <a class="btn btn-outline" id="guitar-solo-pdf" href="${exportUrl('solopdf')}" hidden>↓ PDF solo</a>
-              </div>`);
+              </div>`;
+            root.insertAdjacentHTML('beforebegin',versions);
             $('guitar-versions').querySelectorAll('[data-version]').forEach(button=>{
               button.onclick=()=>{
                 if(button.getAttribute('aria-pressed')!=='true')
-                  mountVersion(button.dataset.version==='solo',closePlayer?.position?.()??0);
+                  mountVersion(button.dataset.version,closePlayer?.position?.()??0);
               };
             });
+            if(soloAvailable&&j.guitar_goal==='solo')mountVersion('solo',closePlayer?.position?.()??0);
           }
           if($('guitar-solo-pdf'))$('guitar-solo-pdf').hidden=!j.downloads.includes('solopdf');
-          if(!closePlayer)mountVersion(false);
+          if(!closePlayer)mountVersion('direct');
         }
         clearInterval(state.poll);state.poll=null;
         if(waiting)state.poll=setTimeout(()=>{

@@ -137,6 +137,9 @@ async function worker(db,res,body){
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
     if(body.preview!==true)compatible.preview_limit={$exists:false};
     if(body.guitar_goals!==true)compatible.guitar_goal={$exists:false};
+    else if(body.guided_guitar_only===true){
+      compatible.guitar_goal={$in:body.guitar_chords===true?['original','solo','chords']:['original','solo']};
+    }else if(body.guitar_chords!==true)compatible.guitar_goal={$ne:'chords'};
     if(body.capo!==true)compatible.capo={$in:[null,0]};
     else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
     const job=await jobs.findOneAndUpdate({...compatible,active:true,expires_at:{$gt:new Date(now.getTime()+LEASE_MS)},
@@ -189,7 +192,7 @@ async function worker(db,res,body){
   }
   const finishingPreview=completed&&!isPreview&&hasPreview&&body.preview===true;
   const chordJob=job.guitar_goal==='chords';
-  const guitarEngine=chordJob?'chroma-guitar-chords-v1':'tsumugi-guitar-v1.5';
+  const guitarEngine=chordJob?'yourmt3-guitar-chords-v1':'tsumugi-guitar-v1.5';
   const fullValid=validExports(exports)&&exports.musicxml&&exports.mid&&Number.isFinite(duration)&&duration>=.5&&
     Number.isInteger(note_count)&&note_count>=1&&
     (chordJob?Boolean(exports.rhythmtab&&exports.rhythmmid):!exports.rhythmtab&&!exports.rhythmmid);

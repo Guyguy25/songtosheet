@@ -6,6 +6,8 @@
     guitare:{folder:'guitar-steel/',pitches:[40,45,50,55,59,64,69,74,79,83,88],label:'Son de guitare acoustique',volume:.5,release:.06},
     piano:{folder:'piano-grand/',pitches:[21,24,30,36,42,48,54,60,66,72,78,84,90,96,102,108],label:'Son de piano à queue',volume:.27,release:.18}
   };
+  const accompanimentProfile={folder:'guitar-acoustic/',pitches:[40,43,46,49,52,55,58,61,64,67,70],
+    label:'Guitare acoustique enregistrée',volume:.52,release:.14};
   const instrumentLabels={guitare:'Guitare',basse:'Basse',piano:'Piano',voix:'Voix'};
   const loadScript=(asset,version)=>{
     if(!scripts.has(asset))scripts.set(asset,new Promise((resolve,reject)=>{
@@ -122,7 +124,7 @@
   }
 
   function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,preferTab=false,startAt=0,
-                       findEntry=false,entryMidiUrl,soloSustain=false}){
+                       findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false}){
     const controller=new AbortController();
     const {signal}=controller;
     root.innerHTML=`
@@ -174,7 +176,7 @@
     const zoomButtons=[...root.querySelectorAll('[data-zoom]')];
     const full=get('.sp-full');
     const guitar=instrument==='guitare',instrumentBadge=get('.sp-instrument'),audioCredit=get('.sp-audio-credit');
-    const profile=soundProfiles[instrument];
+    const profile=accompaniment?accompanimentProfile:soundProfiles[instrument];
     const sampleFolder=profile?new URL(profile.folder,samples):null;
     instrumentBadge.textContent=instrumentLabels[instrument]||'';
     instrumentBadge.hidden=!instrumentBadge.textContent;
@@ -199,8 +201,9 @@
       sounds.clear();
     }
     function scheduleNote(note,offset){
-      const from=Math.max(context.currentTime,anchor+Math.max(offset,note.time)/rate);
-      const length=(noteEnd(note)-Math.max(offset,note.time))/rate;
+      const attack=note.time+(note.strumDelay??0);
+      const from=Math.max(context.currentTime,anchor+Math.max(offset,attack)/rate);
+      const length=(noteEnd(note)-Math.max(offset,attack))/rate;
       if(length<=0)return;
       const gain=context.createGain();
       let sound,startAt=0;
@@ -210,7 +213,7 @@
         const pitch=profile.pitches.reduce((closest,key)=>Math.abs(key-note.midi)<Math.abs(closest-note.midi)?key:closest);
         const ratio=2**((note.midi-pitch)/12);
         const buffer=sampleBuffers.get(pitch);
-        startAt=Math.max(0,offset-note.time)*ratio/rate;
+        startAt=Math.max(0,offset-attack)*ratio/rate;
         if(startAt>=buffer.duration)return;
         sound=context.createBufferSource();
         sound.buffer=buffer;
@@ -396,6 +399,15 @@
           duration:previewDuration?Math.min(note.duration,previewDuration-note.time):note.duration
         })).sort((a,b)=>a.time-b.time);
         if(!notes.length)throw new Error('Aucune note dans cet aperçu.');
+        if(accompaniment){
+          let previous=-1,strings=0;
+          notes.sort((a,b)=>a.time-b.time||a.midi-b.midi);
+          for(const note of notes){
+            strings=Math.abs(note.time-previous)<.005?strings+1:0;
+            note.strumDelay=Math.min(strings,5)*.012;
+            previous=note.time;
+          }
+        }
         duration=notes.reduce((end,note)=>Math.max(end,note.time+note.duration),0);
         if(notation){
           const bpm=midi.header.tempos[0]?.bpm||120;

@@ -1,8 +1,10 @@
 """Estimate a chord grid from a mix and render two playable accompaniments."""
 
-from itertools import combinations, product
+from itertools import combinations, groupby, product
 from math import ceil
+from pathlib import Path
 from shutil import copyfile
+from tempfile import TemporaryDirectory
 from xml.etree import ElementTree as ET
 
 import numpy as np
@@ -14,11 +16,20 @@ from guitar_tab import (
 
 
 TUNING = (64, 59, 55, 50, 45, 40)
+ENGINE = "yourmt3-guitar-chords-v1"
 CHORDS = [(root, quality) for root in range(12) for quality in ("major", "minor")]
 PROFILES = np.zeros((len(CHORDS), 12))
 for index, (root, quality) in enumerate(CHORDS):
     PROFILES[index, [root, (root + (4 if quality == "major" else 3)) % 12, (root + 7) % 12]] = 1
 ROOTS = [root for root, _ in CHORDS]
+
+
+def estimate_tempo(signal, rate, hop):
+    import librosa
+
+    detected, _ = librosa.beat.beat_track(y=signal, sr=rate, hop_length=hop)
+    bpm = float(np.asarray(detected).ravel()[0])
+    return round(bpm / 2 if bpm > 170 else bpm) if bpm >= 50 else 100
 
 
 def pitch_profiles(audio, *, bpm=None):
@@ -31,9 +42,7 @@ def pitch_profiles(audio, *, bpm=None):
     bass = librosa.feature.chroma_cqt(y=harmonic, sr=rate, hop_length=hop, n_octaves=2)
     rms = librosa.feature.rms(y=harmonic, hop_length=hop)[0]
     if bpm is None:
-        detected, _ = librosa.beat.beat_track(y=signal, sr=rate, hop_length=hop)
-        bpm = float(np.asarray(detected).ravel()[0])
-        bpm = round(bpm / 2 if bpm > 170 else bpm) if bpm >= 50 else 100
+        bpm = estimate_tempo(signal, rate, hop)
     return chroma, bass, rms, hop / rate, len(signal) / rate, bpm
 
 
@@ -126,6 +135,17 @@ def render_chords(grid, bpm, duration, output, title, *, rhythmic=False):
     add(ET.SubElement(part_list, "score-part", id="P1"), "part-name", "Guitare")
     part = ET.SubElement(root, "part", id="P1")
     notes = []
+    # A guitar string decays even if the score still holds the note.
+    # Rearticulate long runs once per four beats, with no change of fingering.
+    sustain_end = {}
+    if not rhythmic:
+        span = 2 if bpm >= 80 else 1
+        cursor = 0
+        for chord, cells in groupby(grid):
+            end = cursor + sum(1 for _ in cells)
+            if chord is not None:
+                sustain_end.update((index, min(end, index + span)) for index in range(cursor, end, span))
+            cursor = end
     for index, chord in enumerate(grid):
         if index % 2 == 0:
             measure = ET.SubElement(part, "measure", number=str(index // 2 + 1))
@@ -134,9 +154,10 @@ def render_chords(grid, bpm, duration, output, title, *, rhythmic=False):
         if chord is None:
             write_rest(measure, 2 * DIVISIONS, False)
             continue
-        previous = index > 0 and grid[index - 1] == chord
-        following = index + 1 < len(grid) and grid[index + 1] == chord
-        if not previous:
+        same_chord = index > 0 and grid[index - 1] == chord
+        tied_from_previous = not rhythmic and index not in sustain_end
+        tied_to_next = not rhythmic and sustain_end.get(index) == index + 2
+        if not same_chord:
             write_harmony(measure, *chord)
         if rhythmic:
             pattern = ((0, 8, 83), (8, 4, 72), (12, 4, 66)) if index % 2 else ((0, 8, 85), (8, 8, 70))
@@ -149,18 +170,15 @@ def render_chords(grid, bpm, duration, output, title, *, rhythmic=False):
                        for pitch, string, fret in shapes[chord]]
             before = len(measure)
             write_attack(measure, offset, length, [(offset + length, note) for note in attacks], {}, None, False)
-            if rhythmic or not previous:
+            if not tied_from_previous:
                 if not rhythmic:
-                    last = index + 1
-                    while last < len(grid) and grid[last] == chord:
-                        last += 1
                     for note in attacks:
-                        note.end = min(duration, last * 2 * beat)
+                        note.end = min(duration, sustain_end[index] * 2 * beat)
                 notes.extend(note for note in attacks if note.start < note.end)
-            if not rhythmic and (previous or following):
+            if tied_from_previous or tied_to_next:
                 for note in list(measure)[before:]:
                     notation = note.find("notations")
-                    for direction, applies in (("stop", previous), ("start", following)):
+                    for direction, applies in (("stop", tied_from_previous), ("start", tied_to_next)):
                         if applies:
                             note.insert(list(note).index(notation), ET.Element("tie", type=direction))
                             notation.insert(0, ET.Element("tied", type=direction))
@@ -172,12 +190,19 @@ def render_chords(grid, bpm, duration, output, title, *, rhythmic=False):
     return events
 
 
-def accompany(audio, output, title, progress):
+def accompany(audio, output, title, progress, engine):
+    import librosa
+
+    if engine is None:
+        raise ValueError("Le moteur d’accompagnement est indisponible pour le moment.")
     progress("detect")
-    profiles = pitch_profiles(audio)
-    _, _, _, _, duration, bpm = profiles
+    signal, rate = librosa.load(audio, sr=22050, mono=True)
+    duration = len(signal) / rate
+    bpm = estimate_tempo(signal, rate, 512)
     blocks = max(1, ceil(duration * bpm / 120))
-    grid = audio_chords(profiles, blocks)
+    with TemporaryDirectory(dir=output.parent) as work:
+        midi = engine.transcribe(audio, Path(work) / "harmony.mid")
+    grid = midi_chords(midi, bpm, blocks)
     if sum(chord is not None for chord in grid) < max(1, blocks // 3):
         raise ValueError("Les accords sont trop incertains sur cet audio. Essaie un passage plus clair.")
     progress("arrange")
@@ -185,4 +210,4 @@ def accompany(audio, output, title, progress):
     notes = render_chords(grid, bpm, duration, output, title)
     render_chords(grid, bpm, duration, output, title, rhythmic=True)
     copyfile(output / "score.musicxml", output / "tab.musicxml")
-    return {"duration": duration, "notes": notes, "bpm": bpm}
+    return {"duration": duration, "notes": notes, "bpm": bpm, "engine": ENGINE}

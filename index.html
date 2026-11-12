@@ -14,7 +14,7 @@
   <script src="/assets/audio-source.js?v=2" defer></script>
   <script src="/backend/web/track-onboarding.js?v=20" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=9" />
-  <script src="/backend/web/score-player.js?v=11" defer></script>
+  <script src="/backend/web/score-player.js?v=12" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
@@ -1527,7 +1527,7 @@
               instrument:j.instrument,sourceDuration:j.duration,previewDuration:j.preview_duration,startAt,tabUrl:solo||chords?null:tabUrl,
               tabMidiUrl:!solo&&!chords&&j.downloads.includes('tabmid')?exportUrl('tabmid'):null,
                 preferTab:chords||solo||tab,findEntry:j.instrument==='guitare'&&!chords,
-                entryMidiUrl:solo?exportUrl('mid'):null,soloSustain:solo
+                entryMidiUrl:solo?exportUrl('mid'):null,soloSustain:solo,accompaniment:chords
             });
             $('guitar-versions')?.querySelectorAll('[data-version]').forEach(button=>{
               const active=button.dataset.version===version;
@@ -1542,7 +1542,8 @@
               <div id="guitar-versions" class="result-actions" role="group" aria-label="Type d’accompagnement">
                 <button class="btn btn-primary" type="button" data-version="direct" aria-pressed="true">Accords tenus</button>
                 <button class="btn btn-outline" type="button" data-version="rhythm" aria-pressed="false">Accords rythmés</button>
-              </div>`:`
+              </div>
+              <p class="result-note">Écoute les deux versions et choisis celle que tu préfères.</p>`:`
               <div id="guitar-versions" class="result-actions" role="group" aria-label="Version de la tablature">
                 <button class="btn btn-primary" type="button" data-version="direct" aria-pressed="true">Guitare originale${j.engine==='tsumugi-guitar-v1.5'?' · Tsumugi':''}</button>
                 <button class="btn btn-outline" type="button" data-version="solo" aria-pressed="false">Guitare solo${j.solo_engine==='guitararranger-v2'?' · GuitarArranger':''}</button>

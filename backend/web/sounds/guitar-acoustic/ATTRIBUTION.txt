@@ -1,0 +1,6 @@
+Meta Steel Guitar — Meta Creative Audio, Meta Open Sound.
+License: CC0 1.0 Universal. See LICENSE in this directory.
+Source: https://github.com/facebookincubator/Meta-open-sound/tree/251c0be57d5d1b3242b91f53e0cde62ab1cb42d9/systems/instruments/meta-steel-guitar
+
+SongToSheet uses eleven medium-velocity note recordings from the default SFZ
+mapping. The recordings are converted to mono MP3 and capped at five seconds.

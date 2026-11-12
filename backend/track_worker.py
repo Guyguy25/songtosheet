@@ -120,8 +120,8 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                 from guitar_accompaniment import accompany
 
                 result = directory / "chords"
-                meta = accompany(audio, result, job["title"], report)
-                publish_direct(result, {**meta, "engine": "chroma-guitar-chords-v1"})
+                meta = accompany(audio, result, job["title"], report, piano_engine)
+                publish_direct(result, meta)
                 call("finish", **identity, ok=True, preview=True, exports={})
                 return
             started = time.monotonic()
@@ -163,7 +163,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
     except Exception as error:
         print(f"{job['id']}: {error}", flush=True)
         message = "La transcription a échoué. Essaie un audio valide ou une piste plus claire."
-        if isinstance(error, TrackLinkError) or str(error).startswith(("L’audio doit durer", "L’audio dépasse", "Aucune note exploitable", "Les exports dépassent", "Les accords sont trop incertains")):
+        if isinstance(error, TrackLinkError) or str(error).startswith(("L’audio doit durer", "L’audio dépasse", "Aucune note exploitable", "Les exports dépassent", "Les accords sont trop incertains", "Le moteur d’accompagnement")):
             message = str(error)
         payload = ({"ok": True, "preview": True, "exports": {}, "pdf_error": not job.get("preview_limit")}
                    if direct_published else {"ok": False, "error": message})
@@ -188,6 +188,7 @@ def main():
     parser.add_argument("url")
     parser.add_argument("cache", type=Path)
     parser.add_argument("--once", action="store_true")
+    parser.add_argument("--guided-guitar-only", action="store_true")
     args = parser.parse_args()
     token = os.environ.get("TRACK_WORKER_TOKEN")
     url = urlparse(args.url)
@@ -206,14 +207,20 @@ def main():
             response.raise_for_status()
             return response.json()
 
-        if not args.once:
+        if not args.once and not args.guided_guitar_only:
             load_note_model()
         youtube = find_spec("yt_dlp") is not None and find_spec("yt_dlp_ejs") is not None and shutil.which("node") is not None
         print(f"Moteur de transcription prêt. Piano : {'YourMT3+' if piano_engine else 'Basic Pitch'}.", flush=True)
+        connected = False
         while True:
             try:
-                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True, guitar_goals=True,
+                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True,
+                           guitar_goals=True, guitar_chords=piano_engine is not None,
+                           guided_guitar_only=args.guided_guitar_only,
                            preview=guitar_engine is not None and solo_engine is not None)["job"]
+                if not connected:
+                    print("Connexion à la file de transcription confirmée.", flush=True)
+                    connected = True
                 if job:
                     process_job(call, job, args.cache, guitar_engine, solo_engine, piano_engine)
                 if args.once:

@@ -95,6 +95,10 @@ L’évaluation mesure la précision, le rappel et le F1 des notes. Elle compare
 
 Le worker utilise **Tsumugi Guitar v1.5** pour le relevé guitare et **GuitarArranger** pour la version Solo. Demucs sépare les pistes du mix. Pour l’arrangement, le worker prépare une ligne mélodique à partir de la voix et du riff, puis réutilise l’harmonie du mix. Le relevé est publié dès qu’il est prêt. Le Solo arrive ensuite dans le même résultat.
 
+Le parcours guitare guidé permet aussi de choisir l’accompagnement. **YourMT3+** relève les notes du mix. Le moteur d’accompagnement en déduit une grille de triades et produit deux tablatures avec les mêmes doigtés, l’une tenue et l’autre rythmée. Les longues tenues sont rejouées jusqu’à toutes les quatre pulsations pour rester audibles. Les blocs sans accord suffisamment étayé restent silencieux.
+
+L’option `--guided-guitar-only` permet de réserver un worker aux nouvelles demandes guitare. Pour traiter les demandes d’accords, configure YourMT3+ en plus des moteurs de guitare. Déploie l’API compatible avec cette option avant de démarrer ce worker.
+
 Prépare un environnement séparé pour Tsumugi avec les dépendances officielles. Ce modèle et les poids guitare sont publiés sous MIT. Utilise l’inférence de base sans l’option SheetSage2.
 
 ```bash

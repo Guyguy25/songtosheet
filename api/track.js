@@ -6,13 +6,14 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks}=require('../lib/track-jobs');
+const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
 const REVIEW_MS=24*60*60*1000;
 const WORKER_ACTIONS=new Set(['claim','read','progress','preview','solo','review_audio','finish']);
 const PROGRESS_STAGES=new Set(['decode','isolate','detect','arrange','cached','judge']);
+const PIANO_FILES=Object.values(PIANO_VARIANTS).flatMap(({score,midi})=>[score,midi]);
 
 function validExports(exports){
   return exports&&typeof exports==='object'&&!Array.isArray(exports)&&
@@ -149,6 +150,12 @@ async function worker(db,res,body){
     if(body.links!==true)compatible.audio_url={$exists:false};
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
     if(body.excerpts!==true)compatible.excerpt={$exists:false};
+    if(body.piano_only===true){
+      compatible.instrument='piano';
+      compatible.preview_limit=PREVIEW_SECONDS;
+    }else if(process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_compare!==true){
+      compatible.$and=[{$or:[{instrument:{$ne:'piano'}},{preview_limit:{$ne:PREVIEW_SECONDS}}]}];
+    }
     if(body.preview!==true)compatible.preview_limit={$exists:false};
     if(body.guitar_goals!==true)compatible.guitar_goal={$exists:false};
     else if(body.guided_guitar_only===true){
@@ -167,6 +174,8 @@ async function worker(db,res,body){
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
       excerpt:job.excerpt,isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
       guitar_compare:job.guitar_compare===true,guitar_judge:job.guitar_judge===true,guitar_vocals:job.guitar_vocals===true,
+      piano_compare:process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_compare===true&&
+        job.instrument==='piano'&&job.preview_limit===PREVIEW_SECONDS,
       review_audio:!job.isolated&&!job.preview_limit,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
@@ -214,6 +223,13 @@ async function worker(db,res,body){
   const chordJob=job.guitar_goal==='chords';
   const guitarEngine=chordJob?'yourmt3-guitar-chords-v1':'tsumugi-guitar-v1.5';
   const paired=(a,b)=>Boolean(exports?.[a])===Boolean(exports?.[b]);
+  const primary=typeof body.piano_primary==='string'&&Object.hasOwn(PIANO_VARIANTS,body.piano_primary)
+    ?PIANO_VARIANTS[body.piano_primary]:null;
+  const hasPianoFiles=PIANO_FILES.some(key=>Boolean(exports?.[key]));
+  const pianoValid=!hasPianoFiles||isPreview&&job.instrument==='piano'&&job.preview_limit===PREVIEW_SECONDS&&
+    primary&&exports?.[primary.score]===exports?.musicxml&&exports?.[primary.midi]===exports?.mid&&
+    Object.values(PIANO_VARIANTS).every(({score,midi})=>paired(score,midi))&&
+    Object.keys(exports).every(key=>key==='musicxml'||key==='mid'||PIANO_FILES.includes(key));
   const compareValid=paired('heldtab','heldmid')&&paired('rhythmtab','rhythmmid')&&paired('solotab','solomid')&&
     Boolean(exports?.heldtab)===Boolean(exports?.rhythmtab)&&
     (body.engine==='tsumugi-guitar-v1.5'&&exports?.tab&&exports?.tabmid||
@@ -221,7 +237,7 @@ async function worker(db,res,body){
     (!exports?.solotab||body.solo_engine===APPROVED_SOLO_ENGINE)&&
     (job.song_key||typeof body.audio_hash==='string'&&/^[a-f0-9]{64}$/.test(body.audio_hash));
   const fullValid=validExports(exports)&&exports.musicxml&&exports.mid&&Number.isFinite(duration)&&duration>=.5&&
-    Number.isInteger(note_count)&&note_count>=1&&(!exports.vocals||
+    Number.isInteger(note_count)&&note_count>=1&&pianoValid&&(!exports.vocals||
       comparison&&job.guitar_vocals&&job.preview_limit===PREVIEW_SECONDS&&exports.vocals.length<=420000)&&
     (comparison?compareValid:
       !exports.heldtab&&!exports.heldmid&&(chordJob?Boolean(exports.rhythmtab&&exports.rhythmmid):!exports.rhythmtab&&!exports.rhythmmid));
@@ -258,9 +274,23 @@ async function worker(db,res,body){
       }
     }
     const preview=job.preview_limit?{preview_duration:Math.min(previewDuration,job.preview_limit)}:{};
-    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo,...engine,...preview,...comparisonData},
+    const pianoData=hasPianoFiles?{piano_primary:body.piano_primary}:{};
+    const pianoSuggestion=body.piano_recommendation;
+    if(hasPianoFiles&&pianoSuggestion?.version===1&&pianoSuggestion.recommended===body.piano_primary){
+      const available=Object.entries(PIANO_VARIANTS).filter(([,v])=>exports[v.score]&&exports[v.midi]);
+      const scores=Object.fromEntries(available
+        .map(([key])=>[key,pianoSuggestion.scores?.[key]])
+        .filter(([,score])=>Number.isInteger(score)&&score>=0&&score<=100));
+      if(available.length>=2&&Object.keys(scores).length===available.length&&
+        scores[body.piano_primary]===Math.max(...Object.values(scores))){
+        pianoData.piano_recommendation={version:1,recommended:body.piano_primary,scores};
+      }
+    }
+    const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo,...engine,...preview,...comparisonData,...pianoData},
       $unset:{...(!comparisonData.solo_engine?{solo_engine:''}:{}),...(!engine.engine?{engine:''}:{}),
-        ...(!comparisonData.auto_recommendation?{auto_recommendation:''}:{})},
+        ...(!comparisonData.auto_recommendation?{auto_recommendation:''}:{}),
+        ...(!pianoData.piano_primary?{piano_primary:''}:{}),
+        ...(!pianoData.piano_recommendation?{piano_recommendation:''}:{})},
       $addToSet:{stages:'pdf'}});
     if(!updated.matchedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
     return json(res,200,{ok:true});

@@ -133,6 +133,10 @@ Redémarre le worker avec les deux moteurs configurés. Les nouveaux aperçus re
 
 Le worker analyse le mix avec YourMT3+ MoE sans pitch shift. Les notes mélodiques sont réunies dans un MIDI piano et gravées sur deux portées. Les percussions sont écartées.
 
+Les aperçus piano comparent YourMT3+, Basic Pitch sur le mix et une réduction à règles issue de Basic Pitch. Les trois utilisent le même extrait. Un modèle spectral indépendant estime les hauteurs dans le mix et classe les exports selon la concordance des hauteurs et des timings. Le résultat affiche les variantes disponibles et ouvre la recommandation quand au moins deux variantes ont pu être évaluées. Le modèle reste indicatif pour les mix denses.
+
+L’option `--piano-only` réserve le worker aux aperçus piano. Pour revenir au parcours simple, configure `TRACK_PIANO_COMPARISON=0` sur le site.
+
 Dans un environnement Python 3.11 séparé avec PyTorch et torchaudio de versions compatibles, installe l'adaptateur utilisé pour valider l'inférence.
 
 ```bash

@@ -202,6 +202,30 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
             if job.get("preview_limit"):
                 audio, source_duration = prepare_preview(audio, directory, job["preview_limit"], job.get("excerpt"))
 
+            if job.get("piano_compare"):
+                from piano_comparison import DEFAULT, EXPORTS as PIANO_EXPORTS, generate
+
+                duration, variants, recommendation = generate(audio, directory, job["title"], report, piano_engine)
+                primary = recommendation["recommended"] if recommendation else next(iter(variants))
+                score, midi, count = variants[primary]
+                exports = {}
+                for key, (xml, mid, _) in variants.items():
+                    score_key, midi_key = PIANO_EXPORTS[key]
+                    exports.update(read_exports(directory, {score_key: xml.name, midi_key: mid.name}))
+                score_key, midi_key = PIANO_EXPORTS[primary]
+                exports.update(musicxml=exports[score_key], mid=exports[midi_key])
+                if sum(map(len, exports.values())) > 4_000_000:
+                    raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
+                call("preview", **identity, duration=source_duration or duration,
+                     preview_duration=duration, note_count=count, exports=exports,
+                     engine="yourmt3-plus-moe-nops" if primary == DEFAULT else "basic-pitch-0.4.0",
+                     piano_primary=primary, piano_recommendation=recommendation)
+                direct_published = True
+                payload = {"ok": True, "preview": True, "exports": {}}
+                call("finish", **identity, **payload)
+                print(f"{job['id']}: comparatif piano terminé ({len(variants)} versions, {primary})", flush=True)
+                return
+
             if job.get("guitar_compare"):
                 meta, exports, recommendation = compare_versions(audio, data, directory, job, report, guitar_engine, solo_engine, piano_engine)
                 call("preview", **identity, duration=source_duration or meta["duration"],
@@ -300,15 +324,20 @@ def main():
     parser.add_argument("cache", type=Path)
     parser.add_argument("--once", action="store_true")
     parser.add_argument("--guided-guitar-only", action="store_true")
+    parser.add_argument("--piano-only", action="store_true")
     args = parser.parse_args()
     token = os.environ.get("TRACK_WORKER_TOKEN")
     url = urlparse(args.url)
     if not token or not (url.scheme == "https" or (url.scheme == "http" and url.hostname in ("127.0.0.1", "localhost"))):
         parser.error("Configure TRACK_WORKER_TOKEN et une URL HTTPS ou locale.")
 
-    guitar_engine = Tsumugi.from_env()
-    solo_engine = GuitarArranger.from_env()
+    if args.guided_guitar_only and args.piano_only:
+        parser.error("Choisis un seul mode de traitement spécialisé.")
+    guitar_engine = None if args.piano_only else Tsumugi.from_env()
+    solo_engine = None if args.piano_only else GuitarArranger.from_env()
     piano_engine = YourMT3.from_env()
+    if args.piano_only and piano_engine is None:
+        parser.error("Configure YourMT3+ pour le comparatif piano.")
     with requests.Session() as session:
         session.headers["Authorization"] = f"Bearer {token}"
 
@@ -331,7 +360,8 @@ def main():
                            guitar_judge=True,
                            guitar_vocals=True,
                            guided_guitar_only=args.guided_guitar_only,
-                           excerpts=True, preview=guitar_engine is not None and solo_engine is not None)["job"]
+                           piano_only=args.piano_only, piano_compare=piano_engine is not None,
+                           excerpts=True, preview=args.piano_only or (guitar_engine is not None and solo_engine is not None))["job"]
                 if not connected:
                     print("Connexion à la file de transcription confirmée.", flush=True)
                     connected = True

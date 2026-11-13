@@ -15,7 +15,7 @@
   <script src="/backend/web/track-onboarding.js?v=29" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=11" />
   <script src="/backend/web/score-player.js?v=15" defer></script>
-  <link rel="stylesheet" href="/assets/guitar-comparison.css?v=3" />
+  <link rel="stylesheet" href="/assets/guitar-comparison.css?v=4" />
   <script src="/assets/guitar-result-comparison.js?v=4" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
   <style>
@@ -1403,7 +1403,7 @@
     isolate:['Séparation des pistes','',1,32],
     detect:['Détection des notes','',2,58],
     arrange:['Écriture du relevé','',3,78],
-    judge:['Comparaison des tablatures','Le juge analyse les versions face au morceau.',3,89],
+    judge:['Comparaison des versions','Le juge compare les notes de chaque version au morceau.',3,89],
     cached:['Relevé déjà calculé','',3,88],
     pdf:['Préparation du PDF','Le relevé est disponible à l’écoute.',3,94],
     solo:['Préparation de l’arrangement','Le relevé est disponible à l’écoute.',3,94],
@@ -1418,7 +1418,7 @@
     isolate:['Séparation des pistes','Pistes séparées'],
     detect:['Détection des notes','Notes détectées'],
     arrange:['Écriture du relevé','Relevé écrit'],
-    judge:['Comparaison des tablatures','Tablatures comparées'],
+    judge:['Comparaison des versions','Versions comparées'],
     cached:['Chargement d’un relevé déjà calculé','Relevé existant chargé'],
     pdf:['Préparation du PDF','Préparation du PDF terminée'],
     solo:['Préparation de l’arrangement'],
@@ -1595,6 +1595,7 @@
           trackProgressMarkup=stage;
         }
         const compare=completed&&ready&&j.instrument==='guitare'&&window.SongToSheetGuitarComparison;
+        const pianoVersions=j.instrument==='piano'&&ready?(j.piano_versions||[]):[];
         if(compare&&!$('guitar-comparison')){
           stopPlayer();
           $('guitar-versions')?.remove();
@@ -1613,17 +1614,18 @@
           const rhythmAvailable=chords&&j.downloads.includes('rhythmtab')&&j.downloads.includes('rhythmmid');
           const mountVersion=(version,startAt=0)=>{
             stopPlayer();
+            const piano=pianoVersions.find(item=>item.key===version);
             const solo=version==='solo',rhythm=version==='rhythm';
             const tabUrl=solo?exportUrl('solotab'):j.downloads.includes('tab')?exportUrl('tab'):null;
             closePlayer=window.SongToSheetPlayer.mount(root,{
-              scoreUrl:rhythm?exportUrl('rhythmtab'):solo?tabUrl:exportUrl('musicxml'),
-              midiUrl:exportUrl(rhythm?'rhythmmid':solo?'solomid':'mid'),
+              scoreUrl:piano?exportUrl(piano.score):rhythm?exportUrl('rhythmtab'):solo?tabUrl:exportUrl('musicxml'),
+              midiUrl:exportUrl(piano?.midi||(rhythm?'rhythmmid':solo?'solomid':'mid')),
               instrument:j.instrument,sourceDuration:j.duration,previewDuration:j.preview_duration,startAt,tabUrl:solo||chords?null:tabUrl,
               tabMidiUrl:!solo&&!chords&&j.downloads.includes('tabmid')?exportUrl('tabmid'):null,
                 preferTab:chords||solo||tab,findEntry:j.instrument==='guitare'&&!chords,
                 entryMidiUrl:solo?exportUrl('mid'):null,soloSustain:solo,accompaniment:chords
             });
-            $('guitar-versions')?.querySelectorAll('[data-version]').forEach(button=>{
+            ($('piano-versions')||$('guitar-versions'))?.querySelectorAll('[data-version]').forEach(button=>{
               const active=button.dataset.version===version;
               button.setAttribute('aria-pressed',String(active));
               button.classList.toggle('btn-primary',active);
@@ -1631,6 +1633,25 @@
             });
             if($('guitar-solo-exports'))$('guitar-solo-exports').hidden=!solo||Boolean(j.preview_limit);
           };
+          if(pianoVersions.length&&!$('piano-versions')){
+            const primary=pianoVersions[0];
+            root.insertAdjacentHTML('beforebegin',`<section id="piano-versions" class="piano-versions" aria-label="Versions de la partition piano">
+              <h2>Versions piano</h2>
+              <div class="piano-version-buttons" role="group" aria-label="Choisir une partition">
+                ${pianoVersions.map(({key,label,recommended})=>`<button type="button" class="btn btn-outline" data-version="${safe(key)}" aria-pressed="false">
+                  ${recommended?'<span class="guitar-option-badge">Recommandé par l’IA</span>':''}<span>${safe(label)}</span>
+                </button>`).join('')}
+              </div>
+              ${primary.recommended?'<p class="result-note">La recommandation se fonde sur la concordance des notes avec l’audio de l’extrait.</p>':''}
+            </section>`);
+            $('piano-versions').querySelectorAll('[data-version]').forEach(button=>{
+              button.onclick=()=>{
+                if(button.getAttribute('aria-pressed')!=='true')
+                  mountVersion(button.dataset.version,closePlayer?.position?.()??0);
+              };
+            });
+            mountVersion(primary.key);
+          }
           if((soloAvailable||rhythmAvailable)&&!$('guitar-versions')){
             const versions=rhythmAvailable?`
               <div id="guitar-versions" class="result-actions" role="group" aria-label="Type d’accompagnement">
@@ -1660,7 +1681,7 @@
             if(soloAvailable&&j.guitar_goal==='solo')mountVersion('solo',closePlayer?.position?.()??0);
           }
           if($('guitar-solo-pdf'))$('guitar-solo-pdf').hidden=!j.downloads.includes('solopdf');
-          if(!closePlayer)mountVersion('direct');
+          if(!closePlayer)mountVersion(pianoVersions[0]?.key||'direct');
         }
         clearInterval(state.poll);state.poll=null;
         if(waiting)state.poll=setTimeout(()=>{

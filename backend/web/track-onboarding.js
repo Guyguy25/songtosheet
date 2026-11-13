@@ -75,7 +75,7 @@
               <label class="track-link-label" for="${idPrefix}track-link-input">Lien du morceau</label>
               <div class="track-link-field track-source-field">
                 <input id="${idPrefix}track-link-input" class="field" type="text" inputmode="url"
-                  autocomplete="off" maxlength="4096" placeholder="Colle un lien" aria-describedby="${idPrefix}track-link-hint">
+                  autocomplete="off" maxlength="4096" placeholder="Colle un lien (YouTube, Spotify, Deezer)" aria-describedby="${idPrefix}track-link-hint">
                 ${audioSource.platformLogos}
               </div>
               <p class="track-source-hint" id="${idPrefix}track-link-hint">Colle un lien YouTube, Spotify, Deezer ou un lien direct vers un fichier audio. Pour Spotify et Deezer, il faudra aussi ajouter le fichier audio.</p>

@@ -125,11 +125,14 @@
   }
 
   function mount(root, job, {api, post}) {
+    const piano = job.instrument === 'piano';
+    const question = piano ? 'Quelle partition piano préfères-tu ?' : 'Quelle tablature préfères-tu ?';
+    const chosenTitle = piano ? 'Ta partition piano' : 'Ta tablature';
     const controller = new AbortController();
     const {signal} = controller;
     const exportUrl = name => `/api/track?id=${encodeURIComponent(job.id)}&download=${encodeURIComponent(name)}`;
-    const heading = add(root, 'h2', '', 'Quelle tablature préfères-tu ?');
-    const status = add(root, 'p', 'guitar-comparison-status', 'Chargement des tablatures…');
+    const heading = add(root, 'h2', '', question);
+    const status = add(root, 'p', 'guitar-comparison-status', piano ? 'Chargement des partitions…' : 'Chargement des tablatures…');
     status.setAttribute('role', 'status');
     const cards = [];
     let active, frame, position = 0, token, saving = false;
@@ -150,9 +153,9 @@
         card.badge.hidden = !current?.recommended;
         card.badge.textContent = current?.recommendation_source === 'ai' ? 'Recommandé par l’IA' : 'Recommandé';
         const chosen = data.selected === card.key;
-        card.vote.textContent = chosen ? 'Ton choix ✓' : cards.length === 1 ? 'Choisir cette tablature' : 'Je préfère cette version';
-        card.vote.hidden = !data.token && !chosen;
-        card.vote.disabled = chosen || !data.token || saving || card.listen.disabled;
+        card.vote.textContent = chosen ? 'Ton choix ✓' : piano || cards.length > 1 ? 'Je préfère cette version' : 'Choisir cette tablature';
+        card.vote.hidden = !piano && !data.token && !chosen;
+        card.vote.disabled = chosen || (!piano && !data.token) || saving || card.listen.disabled;
       }
       status.textContent = data.selected ? 'Ton choix a été enregistré.' :
         data.votingUnavailable ? 'Le vote est momentanément indisponible. Tu peux écouter les versions.' : '';
@@ -162,17 +165,20 @@
       if (signal.aborted) return;
       if (!data.versions.length) {
         heading.hidden = true;
-        status.textContent = 'Aucune tablature à comparer.';
+        status.textContent = piano ? 'Aucune partition à comparer.' : 'Aucune tablature à comparer.';
         return;
       }
       const single = data.versions.length === 1;
-      if (single) heading.textContent = 'Ta tablature';
-      const chords = add(root, 'section', 'guitar-chords');
-      chords.hidden = true;
-      add(chords, 'h3', '', 'Accords de cette tablature');
-      const diagrams = add(chords, 'ul', 'guitar-chord-list');
+      if (single) heading.textContent = chosenTitle;
+      const chords = piano ? null : add(root, 'section', 'guitar-chords');
+      if (chords) {
+        chords.hidden = true;
+        add(chords, 'h3', '', 'Accords de cette tablature');
+      }
+      const diagrams = chords && add(chords, 'ul', 'guitar-chord-list');
       let focused;
       const showChords = () => {
+        if (!chords) return;
         const shapes = (focused || (single ? cards[0] : null))?.chords || [];
         diagrams.replaceChildren(...shapes.map(chordDiagram));
         chords.hidden = !shapes.length;
@@ -196,7 +202,7 @@
       const voice = loadVocals ? add(transport, 'button', 'guitar-comparison-voice', '🎙 Voix isolée') : null;
       if (voice) {
         voice.type = 'button';
-        voice.setAttribute('aria-label', 'Écouter la voix isolée avec la tablature');
+        voice.setAttribute('aria-label', piano ? 'Écouter la voix isolée avec la partition piano' : 'Écouter la voix isolée avec la tablature');
         voice.setAttribute('aria-pressed', 'false');
         voice.onclick = async () => {
           voiceEnabled = !voiceEnabled;
@@ -209,7 +215,7 @@
             if (signal.aborted) return;
             voiceEnabled = false;
             voice.setAttribute('aria-pressed', 'false');
-            status.textContent = 'La piste voix est indisponible. Tu peux continuer à écouter la tablature.';
+            status.textContent = 'La piste voix est indisponible.';
           }
         };
       }
@@ -226,7 +232,7 @@
         for (const card of cards) card.element.hidden = !card.available || Boolean(item && card !== item);
         grid.dataset.count = item ? 1 : cards.filter(card => card.available).length;
         grid.classList.toggle('is-focused', Boolean(item));
-        heading.textContent = item || single ? 'Ta tablature' : 'Quelle tablature préfères-tu ?';
+        heading.textContent = item || single ? chosenTitle : question;
         back.hidden = !item || single;
         focused = item;
         showChords();
@@ -257,7 +263,7 @@
       for (const [index, version] of data.versions.entries()) {
         const card = add(grid, 'article', 'guitar-option');
         const header = add(card, 'header', 'guitar-option-header');
-        add(header, 'h3', '', single ? 'Tablature' : `Option ${index + 1}`);
+        add(header, 'h3', '', piano ? version.label : single ? 'Tablature' : `Option ${index + 1}`);
         const badge = add(header, 'span', 'guitar-option-badge', 'Recommandé');
         const listen = add(header, 'button', 'btn btn-outline', 'Écouter');
         listen.type = 'button';
@@ -269,10 +275,10 @@
         cards.push(item);
         item.player = window.SongToSheetPlayer.mount(score, {
           scoreUrl: exportUrl(version.score), midiUrl: exportUrl(version.midi),
-          instrument: 'guitare', sourceDuration: job.duration, previewDuration: job.preview_duration,
-          preferTab: true, soloSustain: version.key.startsWith('solo-'),
-          accompaniment: /^(held|rhythm)-/.test(version.key), comparison: !single, loadVocals,
-          onNotation(source) {
+          instrument: job.instrument, sourceDuration: job.duration, previewDuration: job.preview_duration,
+          preferTab: !piano, soloSustain: version.key.startsWith('solo-'),
+          accompaniment: /^(held|rhythm)-/.test(version.key), comparison: piano || !single, loadVocals,
+          onNotation: piano ? undefined : function(source) {
             if (item.chords) return;
             item.chords = readChords(source);
             if (focused === item || single) showChords();
@@ -301,7 +307,7 @@
             if (signal.aborted || active !== item || !voice) return;
             voiceEnabled = false;
             voice.setAttribute('aria-pressed', 'false');
-            status.textContent = 'La piste voix est indisponible. Tu peux continuer à écouter la tablature.';
+            status.textContent = 'La piste voix est indisponible.';
           });
           listen.textContent = 'Pause';
           await item.player.play();
@@ -315,11 +321,13 @@
           }
         }
         vote.onclick = async () => {
-          if (!token || saving) return;
+          if ((!piano && !token) || saving) return;
           saving = true;
           decorate(data);
           try {
-            const result = await post('/api/track', {action: 'guitar_vote', id: job.id, token, choice: version.key});
+            const result = await post('/api/track', {
+              action: piano ? 'piano_choice' : 'guitar_vote', id: job.id, token, choice: version.key
+            });
             if (!signal.aborted) Object.assign(data, result);
           } catch (error) {
             if (!signal.aborted) {
@@ -343,7 +351,11 @@
       if (selected) focusOption(selected);
     }
 
-    api(`/api/track?id=${encodeURIComponent(job.id)}&comparison=1`, {signal}).then(display).catch(() => {
+    if (piano) display({
+      versions: job.piano_versions.map(version => ({...version, recommendation_source: 'ai'})),
+      selected: job.piano_choice
+    });
+    else api(`/api/track?id=${encodeURIComponent(job.id)}&comparison=1`, {signal}).then(display).catch(() => {
       if (!signal.aborted) status.textContent = 'Comparaison indisponible. Actualise cette page pour réessayer.';
     });
     return () => {

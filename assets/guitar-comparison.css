@@ -1,8 +1,4 @@
 .guitar-comparison { margin: 20px 0; }
-.piano-versions { margin: 20px 0 12px; }
-.piano-versions h2 { margin: 0 0 10px; font-size: 19px; }
-.piano-version-buttons { display: flex; flex-wrap: wrap; gap: 9px; }
-.piano-version-buttons .btn { display: flex; flex-direction: column; align-items: flex-start; justify-content: center; gap: 4px; white-space: normal; }
 .guitar-comparison h2 { margin: 0; text-align: center; font-size: clamp(22px, 3vw, 32px); }
 .guitar-comparison-status { margin: 8px 0; text-align: center; color: #625477; font-size: 14px; }
 .guitar-comparison-status:empty { display: none; }

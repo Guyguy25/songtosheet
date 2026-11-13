@@ -93,6 +93,7 @@ async function begin(db,res,user,body){
       link?{audio_url:link.href,source_kind:'link'}:{extension,size};
     const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
       ...(excerpt?{excerpt:{start_ms:excerpt.start_ms,end_ms:excerpt.end_ms}}:{}),
+      ...(instrument==='piano'&&body.source==='mixed'&&process.env.TRACK_PIANO_COMPARISON!=='0'?{piano_vocals:true}:{}),
       ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence,guitar_compare:true,guitar_judge:true,guitar_choice:null,
         ...(body.source==='mixed'?{guitar_vocals:true}:{}),
         ...(link?{song_key:sourceKey(source)+excerptKey}:{})}:{}),
@@ -164,6 +165,7 @@ async function worker(db,res,body){
     if(body.guitar_compare!==true)compatible.guitar_compare={$ne:true};
     if(body.guitar_judge!==true)compatible.guitar_judge={$ne:true};
     if(body.guitar_vocals!==true)compatible.guitar_vocals={$ne:true};
+    if(process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_vocals!==true)compatible.piano_vocals={$ne:true};
     if(body.capo!==true)compatible.capo={$in:[null,0]};
     else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
     const deadline=new Date(now.getTime()+PROCESSING_MS);
@@ -174,6 +176,7 @@ async function worker(db,res,body){
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
       excerpt:job.excerpt,isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
       guitar_compare:job.guitar_compare===true,guitar_judge:job.guitar_judge===true,guitar_vocals:job.guitar_vocals===true,
+      piano_vocals:job.piano_vocals===true,
       piano_compare:process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_compare===true&&
         job.instrument==='piano'&&job.preview_limit===PREVIEW_SECONDS,
       review_audio:!job.isolated&&!job.preview_limit,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
@@ -229,7 +232,7 @@ async function worker(db,res,body){
   const pianoValid=!hasPianoFiles||isPreview&&job.instrument==='piano'&&job.preview_limit===PREVIEW_SECONDS&&
     primary&&exports?.[primary.score]===exports?.musicxml&&exports?.[primary.midi]===exports?.mid&&
     Object.values(PIANO_VARIANTS).every(({score,midi})=>paired(score,midi))&&
-    Object.keys(exports).every(key=>key==='musicxml'||key==='mid'||PIANO_FILES.includes(key));
+    Object.keys(exports).every(key=>key==='musicxml'||key==='mid'||key==='vocals'||PIANO_FILES.includes(key));
   const compareValid=paired('heldtab','heldmid')&&paired('rhythmtab','rhythmmid')&&paired('solotab','solomid')&&
     Boolean(exports?.heldtab)===Boolean(exports?.rhythmtab)&&
     (body.engine==='tsumugi-guitar-v1.5'&&exports?.tab&&exports?.tabmid||
@@ -238,7 +241,8 @@ async function worker(db,res,body){
     (job.song_key||typeof body.audio_hash==='string'&&/^[a-f0-9]{64}$/.test(body.audio_hash));
   const fullValid=validExports(exports)&&exports.musicxml&&exports.mid&&Number.isFinite(duration)&&duration>=.5&&
     Number.isInteger(note_count)&&note_count>=1&&pianoValid&&(!exports.vocals||
-      comparison&&job.guitar_vocals&&job.preview_limit===PREVIEW_SECONDS&&exports.vocals.length<=420000)&&
+      ((comparison&&job.guitar_vocals)||(hasPianoFiles&&job.piano_vocals))&&
+      job.preview_limit===PREVIEW_SECONDS&&exports.vocals.length<=420000)&&
     (comparison?compareValid:
       !exports.heldtab&&!exports.heldmid&&(chordJob?Boolean(exports.rhythmtab&&exports.rhythmmid):!exports.rhythmtab&&!exports.rhythmmid));
   const finishValid=validExports(exports)&&Object.keys(exports).every(key=>key==='pdf'||(key==='solopdf'&&job.downloads.includes('solotab')))&&
@@ -372,6 +376,17 @@ module.exports=async(req,res)=>{
     if(!user)return json(res,401,{detail:'Connexion requise.'});
     if((req.method==='GET'&&req.query.comparison==='1')||(req.method==='POST'&&body.action==='guitar_vote')){
       return await compareGuitar(await database(),req,res,user);
+    }
+    if(req.method==='POST'&&body.action==='piano_choice'){
+      const {id,choice}=body;
+      const version=typeof choice==='string'&&Object.hasOwn(PIANO_VARIANTS,choice)?PIANO_VARIANTS[choice]:null;
+      if(!isId(id)||!version)return json(res,400,{detail:'Partition piano invalide.'});
+      const db=await database();
+      const access=user.role==='admin'?{}:{preview_limit:PREVIEW_SECONDS};
+      const saved=await db.collection('track_jobs').updateOne({...trackFilter(id,user),...access,
+        status:'completed',instrument:'piano',piano_primary:{$exists:true},downloads:{$all:[version.score,version.midi]}},
+        {$set:{piano_choice:choice}});
+      return saved.matchedCount?json(res,200,{selected:choice}):json(res,404,{detail:'Partition piano indisponible.'});
     }
     if(req.method==='GET'&&req.query.audio!==undefined&&user.role!=='admin')return json(res,403,{detail:'Accès refusé.'});
     if(req.method==='GET')return req.query.audio===undefined

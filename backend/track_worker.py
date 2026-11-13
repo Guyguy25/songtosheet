@@ -7,6 +7,7 @@ import math
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 from importlib.util import find_spec
@@ -33,6 +34,29 @@ def read_exports(folder, mapping):
             for key, name in mapping.items() if (folder / name).is_file()}
 
 
+def encode_vocals(original, source, output, limit):
+    if not source.is_file():
+        return
+    import librosa
+    import numpy as np
+
+    voice, rate = librosa.load(source, sr=16000, mono=True)
+    mix, _ = librosa.load(original, sr=rate, mono=True)
+    frames = librosa.feature.rms(y=voice, frame_length=1600, hop_length=800)[0]
+    threshold = max(.003, float(np.sqrt(np.mean(mix ** 2))) * .12)
+    if np.count_nonzero(frames > threshold) >= 8:
+        run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(source),
+             "-t", str(limit), "-map_metadata", "-1", "-ac", "1",
+             "-ar", "24000", "-b:a", "64k", str(output)], timeout=20)
+
+
+def include_vocals(exports, vocals):
+    if vocals.is_file():
+        voice = base64.b64encode(vocals.read_bytes()).decode("ascii")
+        if 0 < len(voice) <= 420_000 and sum(map(len, exports.values())) + len(voice) <= 4_000_000:
+            exports["vocals"] = voice
+
+
 def compare_versions(audio, data, directory, job, report, guitar_engine, solo_engine, piano_engine):
     from guitar_accompaniment import accompany
 
@@ -42,22 +66,8 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
     vocals = directory / "vocals.mp3"
 
     def prepare_vocals(original, stems):
-        source = stems / "vocals.wav"
-        if not source.is_file():
-            return
         try:
-            import librosa
-            import numpy as np
-
-            voice, rate = librosa.load(source, sr=16000, mono=True)
-            mix, _ = librosa.load(original, sr=rate, mono=True)
-            frames = librosa.feature.rms(y=voice, frame_length=1600, hop_length=800)[0]
-            threshold = max(.003, float(np.sqrt(np.mean(mix ** 2))) * .12)
-            if np.count_nonzero(frames > threshold) < 8:
-                return
-            run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(source),
-                 "-t", str(job["preview_limit"]), "-map_metadata", "-1", "-ac", "1",
-                 "-ar", "24000", "-b:a", "64k", str(vocals)], timeout=20)
+            encode_vocals(original, stems / "vocals.wav", vocals, job["preview_limit"])
         except Exception as error:
             vocals.unlink(missing_ok=True)
             print(f"{job['id']}: piste voix indisponible : {type(error).__name__}", flush=True)
@@ -100,10 +110,7 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
         raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre morceau.")
     if sum(map(len, exports.values())) > 4_000_000:
         raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
-    if vocals.is_file():
-        voice = base64.b64encode(vocals.read_bytes()).decode("ascii")
-        if 0 < len(voice) <= 420_000 and sum(map(len, exports.values())) + len(voice) <= 4_000_000:
-            exports["vocals"] = voice
+    include_vocals(exports, vocals)
     recommendation = None
     if job.get("guitar_judge") and len(options) >= 2:
         report("judge")
@@ -205,6 +212,17 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
             if job.get("piano_compare"):
                 from piano_comparison import DEFAULT, EXPORTS as PIANO_EXPORTS, generate
 
+                vocals = directory / "piano-vocals.mp3"
+                if job.get("piano_vocals"):
+                    report("isolate")
+                    try:
+                        run([sys.executable, "-m", "demucs", "-n", "htdemucs", "-o", str(directory),
+                             "--two-stems", "vocals", "--shifts", "0", str(audio)], timeout=110)
+                        encode_vocals(audio, directory / "htdemucs" / audio.stem / "vocals.wav",
+                                      vocals, job["preview_limit"])
+                    except Exception as error:
+                        vocals.unlink(missing_ok=True)
+                        print(f"{job['id']}: piste voix piano indisponible : {error}", flush=True)
                 duration, variants, recommendation = generate(audio, directory, job["title"], report, piano_engine)
                 primary = recommendation["recommended"] if recommendation else next(iter(variants))
                 score, midi, count = variants[primary]
@@ -216,6 +234,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                 exports.update(musicxml=exports[score_key], mid=exports[midi_key])
                 if sum(map(len, exports.values())) > 4_000_000:
                     raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
+                include_vocals(exports, vocals)
                 call("preview", **identity, duration=source_duration or duration,
                      preview_duration=duration, note_count=count, exports=exports,
                      engine="yourmt3-plus-moe-nops" if primary == DEFAULT else "basic-pitch-0.4.0",
@@ -361,6 +380,7 @@ def main():
                            guitar_vocals=True,
                            guided_guitar_only=args.guided_guitar_only,
                            piano_only=args.piano_only, piano_compare=piano_engine is not None,
+                           piano_vocals=piano_engine is not None and find_spec("demucs") is not None,
                            excerpts=True, preview=args.piano_only or (guitar_engine is not None and solo_engine is not None))["job"]
                 if not connected:
                     print("Connexion à la file de transcription confirmée.", flush=True)

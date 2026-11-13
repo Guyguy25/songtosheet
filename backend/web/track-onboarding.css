@@ -32,7 +32,10 @@
 .track-source-tabs button:focus-visible,.track-import-next:focus-visible,.track-source-field:focus-within{outline:2px solid var(--purple-dark);outline-offset:2px}
 .track-link-pane,.track-file-pane{min-width:0}
 .track-link-label{display:block;margin-bottom:7px;font-size:13px;font-weight:750}
-.track-link-pane .field{font-size:16px;color:var(--ink)}
+.source-platforms{display:inline-flex;flex:none;align-items:center;gap:8px;color:#776b89}
+.source-platforms svg{display:block;width:17px;height:17px}
+.track-link-field{display:flex;align-items:center;gap:8px;padding-right:13px;border:1px solid #e2dce9;border-radius:10px;background:#fff}
+.track-link-pane .field{min-width:0;border:0;background:transparent;font-size:16px;color:var(--ink)}
 .track-link-pane .field::placeholder{color:#746a82}
 .track-source-hint{margin:7px 0 0;color:#625a71;font-size:12px;line-height:1.5}
 .track-file-drop{position:relative;display:flex;align-items:center;justify-content:center;gap:12px;min-height:96px;padding:14px;border:1px dashed #a38dc7;border-radius:13px;background:#faf7ff;cursor:pointer}

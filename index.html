@@ -10,9 +10,9 @@
   <script>document.documentElement.classList.toggle('is-landing', location.pathname === '/');</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=9" />
-  <script src="/assets/audio-source.js?v=2" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=22" defer></script>
+  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=10" />
+  <script src="/assets/audio-source.js?v=3" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=23" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=11" />
   <script src="/backend/web/score-player.js?v=14" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=1" />
@@ -361,6 +361,9 @@
 .hero-action-panel .rev-mode{min-width:0;margin:0}
 .hero-action-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:6px;padding:5px;border:1px solid #c5acff55;border-radius:999px;background:#2d2343;box-shadow:0 10px 35px #130b2d55}
 .hero-action-row:focus-within{border-color:#c5acff}
+.hero-action-row:has(#upload-panel.hidden){grid-template-columns:minmax(0,1fr)}
+.hero-action-row .source-platforms{color:#d2c4e6;--source-icon-cutout:#2d2343}
+.hero-action-panel .hero-input>.source-platforms{margin-left:auto}
 .hero-action-panel .hero-source-panel{min-width:0}
 .hero-action-panel .hero-input,.hero-action-panel .hero-upload{min-height:48px;width:100%;margin:0;border-radius:999px;background:transparent;color:#ede4ff}
 .hero-action-panel .hero-input>span{color:#c5acff}
@@ -640,9 +643,9 @@
  <div class="hero-action-panel">
    <div class="rev-mode" role="tablist" aria-label="Source de musique"><button id="tab-link" class="active" type="button" role="tab" aria-selected="true">🔗 Lien musical</button><button id="tab-upload" type="button" role="tab" aria-selected="false">⇧ Fichier audio</button></div>
    <div class="hero-action-row">
-     <div id="link-panel" class="hero-source-panel"><label class="hero-input" for="hero-link"><span aria-hidden="true">↗</span><input id="hero-link" type="url" inputmode="url" autocomplete="off" aria-label="Lien du morceau" placeholder="Lien YouTube, Spotify ou Deezer"></label></div>
+     <div id="link-panel" class="hero-source-panel"><label class="hero-input" for="hero-link"><span aria-hidden="true">↗</span><input id="hero-link" type="url" inputmode="url" autocomplete="off" aria-label="Lien du morceau" placeholder="Colle un lien"></label></div>
      <div id="upload-panel" class="hero-source-panel hidden"><label id="hero-drop" class="hero-upload" for="hero-file"><span aria-hidden="true">⇧</span><span><b id="hero-file-label">Déposer ou choisir un audio</b><small>MP3, WAV, M4A, FLAC · 25 Mo</small></span><input id="hero-file" type="file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac"></label></div>
-     <button id="hero-generate" class="split-submit" type="button" aria-label="Continuer vers le choix de l’instrument">Continuer <span aria-hidden="true">→</span></button>
+     <button id="hero-generate" class="split-submit hidden" type="button">Continuer <span aria-hidden="true">→</span></button>
    </div>
    <select id="hero-instrument" aria-label="Instrument" hidden><option value="piano">Piano</option><option value="guitare">Guitare</option><option value="violon">Violon</option><option value="voix">Voix</option><option value="basse">Basse</option></select>
  </div>
@@ -1263,7 +1266,7 @@
   }
 
   async function inspectLink(value){const info=await post('/api/links/inspect',{url:value});state.link=info.source_url;toast(info.message);return info;}
-  function switchHero(mode){state.heroMode=mode;window.SongToSheetFlow?.sourceError('');window.SongToSheetFlow?.showHeroMetadata(null);const link=mode==='link';show('link-panel',link);show('upload-panel',!link);$('tab-link').classList.toggle('active',link);$('tab-upload').classList.toggle('active',!link);$('tab-link').setAttribute('aria-selected',link);$('tab-upload').setAttribute('aria-selected',!link);}
+  function switchHero(mode){state.heroMode=mode;window.SongToSheetFlow?.sourceError('');window.SongToSheetFlow?.showHeroMetadata(null);const link=mode==='link';show('link-panel',link);show('upload-panel',!link);show('hero-generate',!link);$('tab-link').classList.toggle('active',link);$('tab-upload').classList.toggle('active',!link);$('tab-link').setAttribute('aria-selected',link);$('tab-upload').setAttribute('aria-selected',!link);}
   async function heroGenerate(){
     const instrument=$('hero-instrument').value;$('workspace-instrument').value=instrument;
     const button=$('hero-generate');if(button.disabled)return;button.disabled=true;
@@ -1273,6 +1276,7 @@
         const value=$('hero-link').value.trim();if(!value)throw new Error('Colle un lien musical ou importe un audio.');
         const source=window.SongToSheetAudioSource.parse(value);
         if(!source)throw new Error('Colle un lien HTTPS valide.');
+        if(source.provider==='YouTube'&&!source.youtubeId)throw new Error('Colle le lien d’une vidéo YouTube.');
         const draft={audioUrl:source.url.href,instrument};
         if(source.youtubeId||!source.provider)selectHeroExcerpt(draft);
         else openTrackDraft(draft);
@@ -1546,7 +1550,11 @@
           ${detail?`<p>${safe(detail)}</p>`:''}${downloads?`<div class="result-actions">${downloads}</div>`:''}${diagnostic}
           ${!waiting&&!completed&&!ready?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;
         if(trackSummaryMarkup!==summary){
-          $('track-result-summary').innerHTML=summary;
+          const resultSummary=$('track-result-summary');
+          const wasOpen=resultSummary.querySelector('details')?.open;
+          resultSummary.innerHTML=summary;
+          const details=resultSummary.querySelector('details');
+          if(details&&wasOpen!==undefined)details.open=wasOpen;
           trackSummaryMarkup=summary;
         }
         $('track-result-summary').classList.toggle('track-result-waiting',waiting&&!ready);
@@ -1699,7 +1707,7 @@
       if(e.target.closest('[data-start]')){startApp('create');return;}
       const demoGenerate=e.target.closest('[data-demo-generate]');
       if(demoGenerate){e.preventDefault();await revealDemo(demoGenerate.dataset.demoGenerate);return;}
-      const job=e.target.closest('[data-job]');if(job){openResult(job.dataset.job);return;}
+      const job=e.target.closest('button[data-job]');if(job){openResult(job.dataset.job);return;}
       const cycle=e.target.closest('#pricing-view [data-cycle]');
       if(cycle)syncPricing(cycle.dataset.cycle);
     });
@@ -1751,6 +1759,8 @@
     $('how-back-instrument').onclick=()=>howShowStep(2);
     $('how-view-demo').onclick=()=>{state.resultId='preview-melody';startApp('result');};
 
+    $('hero-link').insertAdjacentHTML('afterend',window.SongToSheetAudioSource.platformLogos);
+    window.SongToSheetAudioSource.advanceOnPaste($('hero-link'),heroGenerate);
     $('hero-link').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();heroGenerate();}});
     $('hero-file').onchange=e=>{const file=e.target.files[0];if(file){state.file=file;$('hero-file-label').textContent=file.name;}};
     $('workspace-file').onchange=e=>{const file=e.target.files[0];if(file){state.file=file;$('workspace-file-name').textContent=file.name;}};

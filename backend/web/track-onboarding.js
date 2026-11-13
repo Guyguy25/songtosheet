@@ -73,8 +73,11 @@
             </div>
             <div class="track-link-pane" id="${idPrefix}track-link-pane" role="tabpanel" aria-labelledby="${idPrefix}track-link-tab">
               <label class="track-link-label" for="${idPrefix}track-link-input">Lien du morceau</label>
-              <input id="${idPrefix}track-link-input" class="field track-source-field" type="text" inputmode="url"
-                autocomplete="off" maxlength="4096" placeholder="Lien YouTube, Spotify ou Deezer" aria-describedby="${idPrefix}track-link-hint">
+              <div class="track-link-field track-source-field">
+                <input id="${idPrefix}track-link-input" class="field" type="text" inputmode="url"
+                  autocomplete="off" maxlength="4096" placeholder="Colle un lien" aria-describedby="${idPrefix}track-link-hint">
+                ${audioSource.platformLogos}
+              </div>
               <p class="track-source-hint" id="${idPrefix}track-link-hint">Colle un lien YouTube, Spotify, Deezer ou un lien direct vers un fichier audio. Pour Spotify et Deezer, il faudra aussi ajouter le fichier audio.</p>
             </div>`:''}
             <div class="track-file-pane" id="${idPrefix}track-file-pane" ${allowLink?'role="tabpanel" aria-labelledby="'+idPrefix+'track-file-tab"':''}>
@@ -433,6 +436,7 @@
       if(!importing)media.pause();
       get('.track-link-pane')?.classList.toggle('hidden',mode!=='link');
       get('.track-file-pane').classList.toggle('hidden',mode!=='file');
+      get('.track-import-next').classList.toggle('hidden',mode==='link');
       for(const tab of sourceTabs){
         const active=tab.dataset.sourceMode===mode;
         tab.setAttribute('aria-selected',String(active));
@@ -524,7 +528,18 @@
       setFile(fileInput.files[0]||null);
       titleEdited=false;
     });
-    linkInput?.addEventListener('input',()=>{rights.checked=false;});
+    if(linkInput){
+      linkInput.addEventListener('input',()=>{rights.checked=false;setStatus('');});
+      audioSource.advanceOnPaste(linkInput,()=>{
+        if(!busy&&current==='import'&&mode==='link')form.requestSubmit();
+      });
+      linkInput.addEventListener('keydown',event=>{
+        if(event.key==='Enter'&&!event.isComposing){
+          event.preventDefault();
+          form.requestSubmit();
+        }
+      });
+    }
     back.addEventListener('click',()=>{
       if(busy)return;
       if(onExcerptBack){onExcerptBack();return;}

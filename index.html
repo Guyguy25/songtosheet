@@ -1408,6 +1408,7 @@
     isolate:['Séparation des pistes','Pistes séparées'],
     detect:['Détection des notes','Notes détectées'],
     arrange:['Écriture du relevé','Relevé écrit'],
+    judge:['Comparaison des tablatures','Tablatures comparées'],
     cached:['Chargement d’un relevé déjà calculé','Relevé existant chargé'],
     pdf:['Préparation du PDF','Préparation du PDF terminée'],
     solo:['Préparation de l’arrangement'],
@@ -1419,16 +1420,19 @@
     const history=Array.isArray(reported)?reported:[];
     const observedQueue=list.firstElementChild?.dataset.stage==='queue'?['queue']:[];
     const entries=[...new Set([...observedQueue,...history.filter(key=>Object.hasOwn(trackActivity,key)&&
-      key!==stage&&!(key==='pdf'&&['solo','finalize'].includes(stage))),stage])];
+      key!==stage&&!(key==='pdf'&&['solo','finalize'].includes(stage))),stage])].filter(key=>Object.hasOwn(trackActivity,key));
     for(const row of [...list.children]){
       if(!entries.includes(row.dataset.stage))row.remove();
     }
     entries.forEach((key,index)=>{
       let row=list.children[index];
       if(row?.dataset.stage!==key){
-        row=document.createElement('li');
-        row.dataset.stage=key;
-        row.innerHTML='<span class="track-activity-check" aria-hidden="true"></span><span></span>';
+        const existing=[...list.children].find(item=>item.dataset.stage===key);
+        row=existing||document.createElement('li');
+        if(!existing){
+          row.dataset.stage=key;
+          row.innerHTML='<span class="track-activity-check" aria-hidden="true"></span><span></span>';
+        }
         list.insertBefore(row,list.children[index]||null);
       }
       const done=key!==stage;
@@ -1462,12 +1466,11 @@
     }
     draw(from);
     const started=performance.now();
-    const duration=Math.min(1100,350+Math.abs(target-from)*18);
+    const duration=Math.min(5200,2600+Math.abs(target-from)*90);
     function frame(now){
       if(!progress.isConnected||progress.classList.contains('hidden'))return;
       const elapsed=Math.min(1,(now-started)/duration);
-      const eased=elapsed*(2-elapsed);
-      draw(from+(target-from)*eased);
+      draw(from+(target-from)*elapsed);
       if(elapsed<1)trackProgressFrame=requestAnimationFrame(frame);
     }
     trackProgressFrame=requestAnimationFrame(frame);

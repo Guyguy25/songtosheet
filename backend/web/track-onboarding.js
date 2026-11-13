@@ -109,7 +109,7 @@
               <button type="button" class="btn btn-outline" aria-label="Écouter l’extrait">▶</button>
               <label>Fin <output></output></label>
             </div>
-            <p class="track-excerpt-limit">30 secondes maximum</p>
+            <p class="track-excerpt-limit">30 s gratuites</p>
           </div>
         </section>
         <div class="track-upload track-confirm hidden">

@@ -57,6 +57,7 @@
       back.type = 'button';
       back.hidden = true;
       const transport = add(root, 'div', 'guitar-comparison-transport');
+      root.insertBefore(transport, grid);
       const time = add(transport, 'span', '', '0:00');
       const seek = add(transport, 'input', '');
       seek.type = 'range';
@@ -66,7 +67,7 @@
       seek.value = 0;
       seek.disabled = true;
       seek.setAttribute('aria-label', 'Position commune de lecture');
-      const voice = loadVocals ? add(transport, 'button', 'guitar-comparison-voice', '🎙 Voix') : null;
+      const voice = loadVocals ? add(transport, 'button', 'guitar-comparison-voice', '🎙 Voix isolée') : null;
       if (voice) {
         voice.type = 'button';
         voice.setAttribute('aria-label', 'Écouter la voix isolée avec la tablature');
@@ -103,7 +104,7 @@
         back.hidden = !item || single;
         if (focus) {
           item.listen.focus({preventScroll:true});
-          heading.scrollIntoView({block:'nearest'});
+          transport.scrollIntoView({block:'nearest'});
         }
       }
       back.onclick = () => {focusOption(null);heading.tabIndex = -1;heading.focus();};

@@ -15,15 +15,15 @@
 .guitar-option-player .sp-sheet { max-height: 370px; overflow: auto; }
 .guitar-comparison-grid.is-focused .sp-sheet { max-height: min(75vh, 760px); }
 .guitar-comparison-back { margin-bottom: 12px; }
-.guitar-comparison-voice { flex: none; border: 1px solid #7e699e; border-radius: 8px; background: transparent; color: #fff; padding: 7px 10px; font: inherit; cursor: pointer; }
+.guitar-comparison-voice { flex: none; border: 1px solid #7e699e; border-radius: 8px; background: #3e2f54; color: #fff; padding: 7px 10px; min-height: 36px; font: inherit; font-weight: 700; cursor: pointer; }
 .guitar-comparison-voice[aria-pressed="true"] { background: #e8d7ff; color: #30204f; border-color: #e8d7ff; }
 .guitar-option-player .sp-status { background: #f3eaff; color: #53328a; }
 .guitar-option-vote { width: 100%; }
 .guitar-option button:disabled { opacity: .65; cursor: default; }
 .guitar-option-downloads { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
-.guitar-comparison-transport { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; background: #211a2d; color: #fff; }
+.guitar-comparison-transport { display: flex; align-items: center; gap: 12px; margin: 12px 0; padding: 8px 14px; border-radius: 10px; background: #211a2d; color: #fff; }
 .guitar-comparison-transport span { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
-.guitar-comparison-transport input { width: 100%; accent-color: #a979fc; }
+.guitar-comparison-transport input { flex: 1; min-width: 0; accent-color: #a979fc; }
 .guitar-comparison [hidden] { display: none !important; }
 @media (min-width: 1450px) {
   .guitar-comparison-grid[data-count="3"] { grid-template-columns: repeat(3,minmax(0,1fr)); }

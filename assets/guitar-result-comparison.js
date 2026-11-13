@@ -19,6 +19,14 @@
     status.setAttribute('role', 'status');
     const cards = [];
     let active, frame, position = 0, token, saving = false, readyCount = 0;
+    let voiceEnabled = false, voiceRequest;
+    const loadVocals = job.downloads?.includes('vocals') ? () => {
+      voiceRequest ??= fetch(exportUrl('vocals'), {signal}).then(response => {
+        if (!response.ok) throw new Error('La piste voix est indisponible.');
+        return response.arrayBuffer();
+      }).catch(error => {voiceRequest = null; throw error;});
+      return voiceRequest;
+    } : null;
 
     function decorate(data) {
       token = data.token;
@@ -45,6 +53,9 @@
       if (single) heading.textContent = 'Ta tablature';
       const grid = add(root, 'div', 'guitar-comparison-grid');
       grid.dataset.count = data.versions.length;
+      const back = add(root, 'button', 'btn btn-outline guitar-comparison-back', '← Comparer les versions');
+      back.type = 'button';
+      back.hidden = true;
       const transport = add(root, 'div', 'guitar-comparison-transport');
       const time = add(transport, 'span', '', '0:00');
       const seek = add(transport, 'input', '');
@@ -55,6 +66,47 @@
       seek.value = 0;
       seek.disabled = true;
       seek.setAttribute('aria-label', 'Position commune de lecture');
+      const voice = loadVocals ? add(transport, 'button', 'guitar-comparison-voice', '🎙 Voix') : null;
+      if (voice) {
+        voice.type = 'button';
+        voice.setAttribute('aria-label', 'Écouter la voix isolée avec la tablature');
+        voice.setAttribute('aria-pressed', 'false');
+        voice.onclick = async () => {
+          voiceEnabled = !voiceEnabled;
+          voice.setAttribute('aria-pressed', String(voiceEnabled));
+          try {
+            if (voiceEnabled) await loadVocals();
+            if (signal.aborted) return;
+            await active?.player.setVocals(voiceEnabled);
+          } catch {
+            if (signal.aborted) return;
+            voiceEnabled = false;
+            voice.setAttribute('aria-pressed', 'false');
+            status.textContent = 'La piste voix est indisponible. Tu peux continuer à écouter la tablature.';
+          }
+        };
+      }
+
+      function focusOption(item, focus = false) {
+        if (active && active !== item && item) {
+          position = active.player.position();
+          active.player.pause();
+          active.listen.textContent = 'Écouter';
+          active = null;
+          cancelAnimationFrame(frame);
+          update(position);
+        }
+        for (const card of cards) card.element.hidden = Boolean(item && card !== item);
+        grid.dataset.count = item ? 1 : cards.length;
+        grid.classList.toggle('is-focused', Boolean(item));
+        heading.textContent = item ? 'Ta tablature' : 'Quelle tablature préfères-tu ?';
+        back.hidden = !item || single;
+        if (focus) {
+          item.listen.focus({preventScroll:true});
+          heading.scrollIntoView({block:'nearest'});
+        }
+      }
+      back.onclick = () => {focusOption(null);heading.tabIndex = -1;heading.focus();};
 
       function update(value, source) {
         position = value;
@@ -84,13 +136,13 @@
         const score = add(card, 'section', 'score-player guitar-option-player');
         const vote = add(card, 'button', 'btn btn-primary guitar-option-vote', 'Je préfère cette version');
         vote.type = 'button';
-        const item = {key: version.key, badge, listen, vote, player: null};
+        const item = {key: version.key, element:card, badge, listen, vote, player: null};
         cards.push(item);
         item.player = window.SongToSheetPlayer.mount(score, {
           scoreUrl: exportUrl(version.score), midiUrl: exportUrl(version.midi),
           instrument: 'guitare', sourceDuration: job.duration, previewDuration: job.preview_duration,
           preferTab: true, soloSustain: version.key.startsWith('solo-'),
-          accompaniment: /^(held|rhythm)-/.test(version.key), comparison: !single,
+          accompaniment: /^(held|rhythm)-/.test(version.key), comparison: !single, loadVocals,
           onReady(duration) {
             if (!duration) return;
             readyCount++;
@@ -112,8 +164,15 @@
           active = same ? null : item;
           if (same) { update(position); return; }
           item.player.seek(position);
+          const vocals = item.player.setVocals(voiceEnabled).catch(() => {
+            if (signal.aborted || active !== item || !voice) return;
+            voiceEnabled = false;
+            voice.setAttribute('aria-pressed', 'false');
+            status.textContent = 'La piste voix est indisponible. Tu peux continuer à écouter la tablature.';
+          });
           listen.textContent = 'Pause';
           await item.player.play();
+          await vocals;
           if (!signal.aborted && active === item) sync();
         };
         if (!job.preview_limit) {
@@ -138,11 +197,17 @@
             return;
           }
           saving = false;
-          if (!signal.aborted) decorate(data);
+          if (!signal.aborted) {
+            decorate(data);
+            const selected = cards.find(card => card.key === data.selected);
+            if (selected) focusOption(selected, true);
+          }
         };
       }
       update(0);
       decorate(data);
+      const selected = cards.find(card => card.key === data.selected);
+      if (selected) focusOption(selected);
     }
 
     api(`/api/track?id=${encodeURIComponent(job.id)}&comparison=1`, {signal}).then(display).catch(() => {

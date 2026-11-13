@@ -124,7 +124,7 @@
   }
 
   function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,preferTab=false,startAt=0,
-                       findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false,comparison=false,onReady}){
+                       findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false,comparison=false,onReady,loadVocals}){
     const controller=new AbortController();
     const {signal}=controller;
     const guitar=instrument==='guitare';
@@ -195,12 +195,33 @@
     let chart,playhead,pixelsPerSecond=1;
     const sounds=new Set();
     let sampleBuffers;
+    let vocalsEnabled=false,vocalsBuffer,vocalsSource,vocalsDecode;
     const now=()=>playing?Math.min(duration,Math.max(0,(context.currentTime-anchor)*rate)):position;
     const noteEnd=note=>note.time+(note.ringDuration??note.duration);
 
     function stopSounds(){
       for(const sound of sounds)sound.stop();
       sounds.clear();
+      if(vocalsSource){vocalsSource.stop();vocalsSource.disconnect();vocalsSource=null;}
+    }
+    function scheduleVocals(from=now()){
+      if(!vocalsEnabled||!vocalsBuffer||!playing)return;
+      const when=Math.max(context.currentTime,anchor+from/rate);
+      const offset=Math.max(0,(when-anchor)*rate);
+      const length=Math.min(duration,vocalsBuffer.duration)-offset;
+      if(length<=0)return;
+      const source=context.createBufferSource();
+      const gain=context.createGain();
+      gain.gain.value=.65;
+      source.buffer=vocalsBuffer;
+      source.playbackRate.value=rate;
+      source.connect(gain).connect(context.destination);
+      source.onended=()=>{
+        if(vocalsSource===source)vocalsSource=null;
+        source.disconnect();gain.disconnect();
+      };
+      vocalsSource=source;
+      source.start(when,offset,length);
     }
     function scheduleNote(note,offset){
       const attack=note.time+(note.strumDelay??0);
@@ -351,6 +372,7 @@
     function schedule(){
       stopSounds();
       anchor=context.currentTime+.025-position/rate;
+      scheduleVocals(position);
       next=notes.findIndex(note=>note.time>=position);
       if(next<0)next=notes.length;
       if(!playbackStart||position!==playbackStart){
@@ -381,6 +403,10 @@
             return [pitch,await context.decodeAudioData(data)];
           })));
           status.hidden=true;
+        }
+        if(signal.aborted||request!==playRequest)return;
+        if(vocalsEnabled&&!vocalsBuffer){
+          try{await setVocals(true);}catch{vocalsEnabled=false;}
         }
         if(signal.aborted||request!==playRequest)return;
         if(position>=duration)position=playbackStart;
@@ -585,11 +611,28 @@
       controller.abort();pause();observer.disconnect();clearTimeout(resizeTimer);
       if(context&&context.state!=='closed')context.close().catch(()=>{});
     };
+    async function setVocals(enabled){
+      vocalsEnabled=enabled&&Boolean(loadVocals);
+      if(!vocalsEnabled){
+        if(vocalsSource){vocalsSource.stop();vocalsSource.disconnect();vocalsSource=null;}
+        return;
+      }
+      if(!context)return;
+      try{
+        if(!vocalsBuffer){
+          vocalsDecode??=loadVocals().then(bytes=>context.decodeAudioData(bytes.slice(0)))
+            .catch(error=>{vocalsDecode=null;throw error;});
+          vocalsBuffer=await vocalsDecode;
+        }
+        if(!signal.aborted&&!vocalsSource)scheduleVocals();
+      }catch(error){if(!signal.aborted)vocalsEnabled=false;throw error;}
+    }
     dispose.position=now;
     dispose.seek=jump;
     dispose.play=()=>play.onclick();
     dispose.pause=pause;
     dispose.playing=()=>playing;
+    dispose.setVocals=setVocals;
     return dispose;
   }
   window.SongToSheetPlayer={mount};

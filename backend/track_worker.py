@@ -39,10 +39,34 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
     exports = {}
     options = {}
     direct = None
+    vocals = directory / "vocals.mp3"
+
+    def prepare_vocals(original, stems):
+        source = stems / "vocals.wav"
+        if not source.is_file():
+            return
+        try:
+            import librosa
+            import numpy as np
+
+            voice, rate = librosa.load(source, sr=16000, mono=True)
+            mix, _ = librosa.load(original, sr=rate, mono=True)
+            frames = librosa.feature.rms(y=voice, frame_length=1600, hop_length=800)[0]
+            threshold = max(.003, float(np.sqrt(np.mean(mix ** 2))) * .12)
+            if np.count_nonzero(frames > threshold) < 8:
+                return
+            run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(source),
+                 "-t", str(job["preview_limit"]), "-map_metadata", "-1", "-ac", "1",
+                 "-ar", "24000", "-b:a", "64k", str(vocals)], timeout=20)
+        except Exception as error:
+            vocals.unlink(missing_ok=True)
+            print(f"{job['id']}: piste voix indisponible : {type(error).__name__}", flush=True)
+
     try:
         result = transcribe(audio, "guitare", data, isolated=False, title=job["title"],
                             progress=report, guitar_engine=guitar_engine, guitar_solo=True,
-                            solo_engine=solo_engine, has_voice=True, compare_solo=True)
+                            solo_engine=solo_engine, has_voice=True, compare_solo=True,
+                            review_audio=prepare_vocals if job.get("guitar_vocals") and job.get("preview_limit") else None)
         files = read_exports(result, EXPORTS)
         if {"musicxml", "mid", "tab", "tabmid"} <= files.keys():
             direct = json.loads((result / "notes.json").read_text(encoding="utf-8"))
@@ -76,6 +100,10 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
         raise ValueError("Aucune note exploitable. Essaie une piste plus claire ou un autre morceau.")
     if sum(map(len, exports.values())) > 4_000_000:
         raise ValueError("Les exports dépassent la taille maximale. Essaie un extrait plus court.")
+    if vocals.is_file():
+        voice = base64.b64encode(vocals.read_bytes()).decode("ascii")
+        if 0 < len(voice) <= 420_000 and sum(map(len, exports.values())) + len(voice) <= 4_000_000:
+            exports["vocals"] = voice
     recommendation = None
     if job.get("guitar_judge") and len(options) >= 2:
         report("judge")
@@ -301,6 +329,7 @@ def main():
                            guitar_goals=True, guitar_chords=piano_engine is not None,
                            guitar_compare=piano_engine is not None and guitar_engine is not None and solo_engine is not None,
                            guitar_judge=True,
+                           guitar_vocals=True,
                            guided_guitar_only=args.guided_guitar_only,
                            excerpts=True, preview=guitar_engine is not None and solo_engine is not None)["job"]
                 if not connected:

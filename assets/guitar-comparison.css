@@ -13,6 +13,10 @@
 .guitar-option-player { margin: 10px 0; border-color: #ede6f5; background: #f7f2ff; color: #392949; border-radius: 10px; }
 .guitar-option-player .sp-toolbar,.guitar-option-player .sp-controls,.guitar-option-player .sp-source-duration { display: none; }
 .guitar-option-player .sp-sheet { max-height: 370px; overflow: auto; }
+.guitar-comparison-grid.is-focused .sp-sheet { max-height: min(75vh, 760px); }
+.guitar-comparison-back { margin-bottom: 12px; }
+.guitar-comparison-voice { flex: none; border: 1px solid #7e699e; border-radius: 8px; background: transparent; color: #fff; padding: 7px 10px; font: inherit; cursor: pointer; }
+.guitar-comparison-voice[aria-pressed="true"] { background: #e8d7ff; color: #30204f; border-color: #e8d7ff; }
 .guitar-option-player .sp-status { background: #f3eaff; color: #53328a; }
 .guitar-option-vote { width: 100%; }
 .guitar-option button:disabled { opacity: .65; cursor: default; }

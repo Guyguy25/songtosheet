@@ -93,6 +93,7 @@ async function begin(db,res,user,body){
     const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
       ...(excerpt?{excerpt:{start_ms:excerpt.start_ms,end_ms:excerpt.end_ms}}:{}),
       ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence,guitar_compare:true,guitar_judge:true,
+        ...(body.source==='mixed'?{guitar_vocals:true}:{}),
         ...(link?{song_key:sourceKey(source)+excerptKey}:{})}:{}),
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
@@ -155,6 +156,7 @@ async function worker(db,res,body){
     }else if(body.guitar_chords!==true)compatible.guitar_goal={$ne:'chords'};
     if(body.guitar_compare!==true)compatible.guitar_compare={$ne:true};
     if(body.guitar_judge!==true)compatible.guitar_judge={$ne:true};
+    if(body.guitar_vocals!==true)compatible.guitar_vocals={$ne:true};
     if(body.capo!==true)compatible.capo={$in:[null,0]};
     else if(body.auto_capo!==true)compatible.capo={$ne:'auto'};
     const deadline=new Date(now.getTime()+PROCESSING_MS);
@@ -164,7 +166,7 @@ async function worker(db,res,body){
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
       excerpt:job.excerpt,isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
-      guitar_compare:job.guitar_compare===true,guitar_judge:job.guitar_judge===true,
+      guitar_compare:job.guitar_compare===true,guitar_judge:job.guitar_judge===true,guitar_vocals:job.guitar_vocals===true,
       review_audio:!job.isolated&&!job.preview_limit,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
         {extension:job.extension,chunks:Math.ceil(job.size/CHUNK_BYTES)})}:null});
   }
@@ -219,7 +221,8 @@ async function worker(db,res,body){
     (!exports?.solotab||body.solo_engine===APPROVED_SOLO_ENGINE)&&
     (job.song_key||typeof body.audio_hash==='string'&&/^[a-f0-9]{64}$/.test(body.audio_hash));
   const fullValid=validExports(exports)&&exports.musicxml&&exports.mid&&Number.isFinite(duration)&&duration>=.5&&
-    Number.isInteger(note_count)&&note_count>=1&&
+    Number.isInteger(note_count)&&note_count>=1&&(!exports.vocals||
+      comparison&&job.guitar_vocals&&job.preview_limit===PREVIEW_SECONDS&&exports.vocals.length<=420000)&&
     (comparison?compareValid:
       !exports.heldtab&&!exports.heldmid&&(chordJob?Boolean(exports.rhythmtab&&exports.rhythmmid):!exports.rhythmtab&&!exports.rhythmmid));
   const finishValid=validExports(exports)&&Object.keys(exports).every(key=>key==='pdf'||(key==='solopdf'&&job.downloads.includes('solotab')))&&

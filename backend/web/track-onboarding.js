@@ -78,7 +78,7 @@
                   autocomplete="off" maxlength="4096" placeholder="Colle un lien (YouTube, Spotify, Deezer)" aria-describedby="${idPrefix}track-link-hint">
                 ${audioSource.platformLogos}
               </div>
-              <p class="track-source-hint" id="${idPrefix}track-link-hint">Colle un lien YouTube, Spotify, Deezer ou un lien direct vers un fichier audio. Pour Spotify et Deezer, il faudra aussi ajouter le fichier audio.</p>
+              <p class="track-source-hint" id="${idPrefix}track-link-hint">Pour Spotify et Deezer, une version YouTube est proposée si elle est disponible.</p>
             </div>`:''}
             <div class="track-file-pane" id="${idPrefix}track-file-pane" ${allowLink?'role="tabpanel" aria-labelledby="'+idPrefix+'track-file-tab"':''}>
               <label class="track-source-field track-file-drop" for="${idPrefix}track-audio-input">
@@ -93,6 +93,7 @@
           ${sampleUrl?'<button type="button" class="btn btn-outline track-sample">Charger la mélodie de test</button>':''}
         </div>
         <section class="track-excerpt hidden">
+          <p class="track-version-label" hidden></p>
           <div class="track-excerpt-video" hidden></div>
           <audio preload="metadata"></audio>
           <p class="track-excerpt-hint" aria-live="polite"></p>
@@ -437,6 +438,9 @@
       importer.classList.toggle('hidden',!importing);
       confirmation.classList.toggle('hidden',!confirming);
       clip.classList.toggle('hidden',!clipping);
+      const versionLabel=get('.track-version-label');
+      versionLabel.hidden=!link?.versionLabel;
+      versionLabel.textContent=link?.versionLabel?'Version proposée sur YouTube · '+link.versionLabel:'';
       if(clipping)loadClip();
       else stopClip();
       if(!importing)media.pause();
@@ -573,7 +577,7 @@
       finally{sample.disabled=false;}
     });
 
-    function acceptSource(){
+    async function acceptSource(){
       if(mode==='file'){
         if(!draft.file){setStatus('Ajoute le fichier audio du morceau.',true);fileInput.focus();return false;}
         if(draft.file.size>maxFileSize||draft.file.size<1024||!fileExtension.test(draft.file.name)){
@@ -581,9 +585,24 @@
         }
         return true;
       }
-      const source=audioSource.parse(linkInput.value.trim());
+      const rawLink=linkInput.value.trim();
+      let source=audioSource.parse(rawLink);
       if(!source){
         setStatus('Colle un lien HTTPS vers ton morceau.',true);linkInput.focus();return false;
+      }
+      if(audioSource.needsVersion(source)){
+        setStatus('Recherche d’une version YouTube du morceau…');
+        const version=await audioSource.resolveVersion(source);
+        if(mode!=='link'||linkInput.value.trim()!==rawLink)return false;
+        if(version){
+          source={...audioSource.parse(version.audioUrl),versionLabel:version.versionLabel};
+        }else{
+          setMode('file',source);
+          render();
+          setStatus('Aucune version YouTube trouvée. Ajoute ton fichier audio pour continuer.',true);
+          fileInput.focus();
+          return false;
+        }
       }
       if(source.provider&&!source.youtubeId){
         if(source.provider==='YouTube'){
@@ -594,7 +613,7 @@
         fileInput.focus();
         return false;
       }
-      if(link?.url.href!==source.url.href){
+      if(link?.url.href!==source.url.href||source.versionLabel){
         link=source;
         titleEdited=false;
         fetchMetadata(link);
@@ -607,7 +626,16 @@
       event.preventDefault();
       if(busy)return;
       if(current==='import'){
-        if(acceptSource())advance();
+        busy=true;
+        const control=event.submitter;
+        if(control)control.disabled=true;
+        try{
+          if(await acceptSource())advance();
+        }catch(error){setStatus(error.message,true);}
+        finally{
+          busy=false;
+          if(control)control.disabled=false;
+        }
         return;
       }
       if(current==='excerpt'){
@@ -648,7 +676,7 @@
     return {
       pause(){media.pause();stopClip();},
       dispose(){resetClip();lookup?.controller.abort();},
-      prefill({instrument,file,name,audioUrl,excerpt},{focus=true}={}){
+      prefill({instrument,file,name,audioUrl,excerpt,versionLabel},{focus=true}={}){
         if(busy)return;
         if(file!==undefined||audioUrl!==undefined){
           Object.assign(draft,{instrument:'',format:'',source:'',capo:null,guitarPresence:null,guitarGoal:null});
@@ -658,7 +686,7 @@
           setMode(file||isReference||!allowLink?'file':'link',isReference?parsed:null);
           if(file)setFile(file);
           else if(validLink){
-            link=parsed;
+            link={...parsed,versionLabel};
             linkInput.value=parsed.url.href;
             fetchMetadata(link);
             onLinkChange?.(link.url.href);

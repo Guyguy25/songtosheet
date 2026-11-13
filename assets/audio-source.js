@@ -46,6 +46,21 @@
     });
   }
 
-  if(typeof module==='object')module.exports={parse,importHint,platformLogos,advanceOnPaste};
-  else window.SongToSheetAudioSource={parse,importHint,platformLogos,advanceOnPaste};
+  function needsVersion(source){
+    return ['Spotify','Deezer'].includes(source?.provider);
+  }
+
+  async function resolveVersion(source){
+    const response=await fetch('/api/media-info?resolve=youtube&url='+encodeURIComponent(source.url.href),{
+      signal:AbortSignal.timeout(20000)
+    });
+    const info=await response.json();
+    if(response.status===400)throw new Error(info.error);
+    if(!response.ok)throw new Error('La recherche du morceau a échoué. Réessaie ou importe ton fichier audio.');
+    const version=parse(info.version?.url);
+    return version?.youtubeId?{audioUrl:version.url.href,versionLabel:info.version.title}:null;
+  }
+
+  if(typeof module==='object')module.exports={parse,importHint,needsVersion,resolveVersion,platformLogos,advanceOnPaste};
+  else window.SongToSheetAudioSource={parse,importHint,needsVersion,resolveVersion,platformLogos,advanceOnPaste};
 })();

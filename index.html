@@ -11,8 +11,8 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=12" />
-  <script src="/assets/audio-source.js?v=4" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=28" defer></script>
+  <script src="/assets/audio-source.js?v=5" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=29" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=11" />
   <script src="/backend/web/score-player.js?v=14" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=1" />
@@ -731,7 +731,7 @@
 <div class="rev-example-art"><div class="rev-paper"><header><b>Ma partition • Piano</b><span>✓ Exemple</span></header><svg viewBox="0 0 480 156" role="img" aria-label="Portée avec une mélodie originale à six notes"><g stroke="#cfc8dc" stroke-width="1.5"><path d="M25 51H455M25 66H455M25 81H455M25 96H455M25 111H455"/></g><text x="33" y="107" font-size="59" font-family="serif" fill="#392953">𝄞</text><g fill="#6340cd" stroke="#6340cd" stroke-width="2"><ellipse cx="133" cy="103" rx="9" ry="6" transform="rotate(-20 133 103)"/><path d="M141 101V57"/><ellipse cx="192" cy="89" rx="9" ry="6" transform="rotate(-20 192 89)"/><path d="M200 87V43"/><ellipse cx="251" cy="74" rx="9" ry="6" transform="rotate(-20 251 74)"/><path d="M259 72V28"/><ellipse cx="310" cy="81" rx="9" ry="6" transform="rotate(-20 310 81)"/><path d="M318 79V35"/><ellipse cx="369" cy="96" rx="9" ry="6" transform="rotate(-20 369 96)"/><path d="M377 94V50"/><ellipse cx="428" cy="89" rx="9" ry="6" transform="rotate(-20 428 89)"/><path d="M436 87V43"/></g></svg><div class="rev-paper-foot"><span>PDF</span><span>MIDI</span><span>MusicXML</span></div></div></div></div><div class="rev-example-actions"><button type="button" class="btn btn-primary" id="showcase-cta">Créer ma partition ↗</button></div>
 </div></section>
 <section class="rev-faq"><div class="rev-wrap rev-faq-grid"><div><h2>Les réponses avant de jouer.</h2><p>Une première version transparente sur ce qu'elle sait faire et ce qui reste en développement.</p></div><div class="rev-faq-list">
-<details open><summary>Est-ce que je peux coller un lien YouTube ou Spotify ? <span>+</span></summary><p>Oui, pour identifier le morceau. Aujourd'hui, il faut aussi disposer d'un fichier audio autorisé pour le transcrire : l'audio n'est pas téléchargé depuis ces plateformes.</p></details>
+<details open><summary>Est-ce que je peux coller un lien YouTube, Spotify ou Deezer ? <span>+</span></summary><p>Oui. Pour Spotify et Deezer, vérifie la version YouTube proposée avant de choisir ton extrait. Si aucune version n’est disponible, importe ton fichier audio.</p></details>
 <details><summary>Peut-on convertir n'importe quel instrument ? <span>+</span></summary><p>Le relevé expérimental de V1 fonctionne surtout sur des mélodies isolées. Les accords complexes et les morceaux multi-instruments demandent un moteur plus avancé.</p></details>
 <details><summary>Quels formats sont prévus ? <span>+</span></summary><p>Partitions en PDF, MIDI et MusicXML pour lire, imprimer ou retravailler les notes. Les tablatures pour guitare et basse sont prévues, mais ne sont pas encore disponibles dans cette démo.</p></details>
 <details><summary>La génération et le paiement sont-ils actifs ? <span>+</span></summary><p>Pas encore sur ce site de démonstration. Tu peux tester le parcours et consulter un exemple, mais aucun paiement ni traitement audio en ligne ne sont effectués.</p></details>
@@ -742,7 +742,7 @@
 <main id="features-view" class="site-subpage hidden">
 <section class="sub-hero"><div class="container sub-hero-center"><span class="sub-kicker">FONCTIONNALITÉS</span><h1>Une musique dans les oreilles.<br><em>Des notes sous les yeux.</em></h1><p>Nous travaillons à rendre la transcription musicale aussi simple qu'une recherche de morceau. Voici le parcours imaginé pour SongToSheet.</p><button class="sub-primary" data-start type="button">Créer une partition ↗</button></div></section>
 <section class="sub-section"><div class="container"><div class="feature-mosaic">
-<article class="feature-wide"><div><span class="tile-kicker">01 / LA SOURCE</span><h2>Partir de la musique que tu aimes.</h2><p>Colle un lien YouTube, Spotify ou Deezer pour référencer le titre, ou importe directement un fichier audio autorisé.</p><span class="tile-small">Les plateformes ne sont pas une source audio téléchargeable dans cette V1.</span></div><div class="link-stack"><span>▶ <strong>YouTube</strong><small>Lien de référence</small></span><span>◉ <strong>Spotify</strong><small>Lien de référence</small></span><span>▥ <strong>Deezer</strong><small>Lien de référence</small></span><span>↥ <strong>Fichier audio</strong><small>Source pour la transcription</small></span></div></article>
+<article class="feature-wide"><div><span class="tile-kicker">01 / LA SOURCE</span><h2>Partir de la musique que tu aimes.</h2><p>Colle un lien YouTube, Spotify ou Deezer, ou importe un fichier audio.</p><span class="tile-small">Pour Spotify et Deezer, vérifie la version YouTube proposée avant de choisir ton extrait.</span></div><div class="link-stack"><span>▶ <strong>YouTube</strong><small>Vidéo ou Short</small></span><span>◉ <strong>Spotify</strong><small>Lien de morceau</small></span><span>▥ <strong>Deezer</strong><small>Lien de morceau</small></span><span>↥ <strong>Fichier audio</strong><small>Import direct</small></span></div></article>
 <article class="feature-tile"><span class="tile-kicker">02 / INSTRUMENT</span><div class="tile-art instrument-tiles"><span>🎹</span><span>🎸</span><span>🎻</span><span>🎤</span></div><h2>Choisis ton instrument.</h2><p>Piano, guitare, violon, voix ou basse : les options de sortie sont pensées pour les musiciens.</p></article>
 <article class="feature-tile"><span class="tile-kicker">03 / PARTITION</span><div class="tile-art feature-score"><svg viewBox="0 0 700 255" role="img" aria-label="Partition d'exemple de mélodie originale"><g stroke="#b8b1c7" stroke-width="1.4" fill="none"><path d="M20 52H675M20 69H675M20 86H675M20 103H675M20 120H675M20 173H675M20 190H675M20 207H675M20 224H675M20 241H675"/></g><text x="25" y="118" fill="#352b49" font-size="66" font-family="serif">𝄞</text><g stroke="#6850bf" stroke-width="2" fill="#6850bf"><ellipse cx="138" cy="108" rx="10" ry="7" transform="rotate(-20 138 108)"/><path d="M147 106V54"/><ellipse cx="232" cy="90" rx="10" ry="7" transform="rotate(-20 232 90)"/><path d="M241 88V36"/><ellipse cx="326" cy="72" rx="10" ry="7" transform="rotate(-20 326 72)"/><path d="M335 70V18"/><ellipse cx="420" cy="81" rx="10" ry="7" transform="rotate(-20 420 81)"/><path d="M429 79V27"/><ellipse cx="514" cy="99" rx="10" ry="7" transform="rotate(-20 514 99)"/><path d="M523 97V45"/><ellipse cx="608" cy="90" rx="10" ry="7" transform="rotate(-20 608 90)"/><path d="M617 88V36"/></g><text x="25" y="240" fill="#352b49" font-size="64" font-family="serif">𝄞</text><g stroke="#3b3453" stroke-width="2" fill="#3b3453"><ellipse cx="138" cy="225" rx="10" ry="7" transform="rotate(-20 138 225)"/><path d="M147 223V171"/><ellipse cx="252" cy="208" rx="10" ry="7" transform="rotate(-20 252 208)"/><path d="M261 206V154"/><ellipse cx="366" cy="190" rx="10" ry="7" transform="rotate(-20 366 190)"/><path d="M375 188V136"/><ellipse cx="480" cy="198" rx="10" ry="7" transform="rotate(-20 480 198)"/><path d="M489 196V144"/><ellipse cx="594" cy="217" rx="10" ry="7" transform="rotate(-20 594 217)"/><path d="M603 215V163"/></g></svg></div><h2>Lis ton relevé.</h2><p>Une partition sur portée, que tu peux utiliser comme point de départ pour apprendre ou ajuster.</p></article>
 <article class="feature-wide export-tile"><div><span class="tile-kicker">04 / TON FICHIER</span><h2>Récupère les notes.<br>Continue à les jouer.</h2><p>Télécharge le résultat dans le format qui correspond à ta façon de pratiquer.</p></div><div class="file-chip-stack"><span>↧ <b>Partition PDF</b><small>Lire ou imprimer</small></span><span>♪ <b>MIDI</b><small>Écouter et retravailler</small></span><span>♬ <b>MusicXML</b><small>Modifier dans un éditeur</small></span></div></article>
@@ -827,7 +827,7 @@
 <section class="sub-section"><div class="container faq-page-grid"><aside><span class="sub-kicker">LES RÉPONSES</span><h2>Une expérience simple, sans jargon musical.</h2><p>Le produit évolue encore. Nous affichons clairement ses limites actuelles.</p><button type="button" class="sub-primary" data-start>Créer ma partition ↗</button></aside>
 <div class="simple-faq faq-full">
 <details open><summary>À quoi sert SongToSheet ? <span>+</span></summary><p>À obtenir un relevé musical sous forme de partition, à partir d'un fichier audio autorisé, afin d'apprendre plus facilement à jouer un morceau.</p></details>
-<details><summary>Un lien YouTube, Spotify ou Deezer suffit-il ? <span>+</span></summary><p>Pas dans cette V1 : le lien sert à identifier et mémoriser le titre. Il faut fournir un fichier audio autorisé ; nous ne téléchargeons pas les morceaux depuis ces plateformes.</p></details>
+<details><summary>Un lien YouTube, Spotify ou Deezer suffit-il ? <span>+</span></summary><p>Oui, si la vidéo YouTube est accessible ou si une version YouTube du morceau est proposée. Sinon, tu peux importer ton fichier audio.</p></details>
 <details><summary>Quels instruments sont prévus ? <span>+</span></summary><p>Piano, guitare, violon, basse et voix. Le moteur expérimental relève avant tout la mélodie principale et non un arrangement complet de tous les instruments.</p></details>
 <details><summary>La partition est-elle toujours correcte ? <span>+</span></summary><p>Non. La qualité dépend de la source. Les mélodies isolées sont plus simples à analyser que les morceaux avec accords, percussions et plusieurs instruments superposés.</p></details>
 <details><summary>Quels fichiers puis-je récupérer ? <span>+</span></summary><p>Un PDF pour lire et imprimer, un fichier MIDI et un MusicXML pour reprendre la transcription dans un logiciel de musique.</p></details>
@@ -1278,11 +1278,17 @@
       await sessionReady;
       if(state.heroMode==='link'){
         const value=$('hero-link').value.trim();if(!value)throw new Error('Colle un lien musical ou importe un audio.');
-        const source=window.SongToSheetAudioSource.parse(value);
+        const audioSource=window.SongToSheetAudioSource;
+        const source=audioSource.parse(value);
         if(!source)throw new Error('Colle un lien HTTPS valide.');
         if(source.provider==='YouTube'&&!source.youtubeId)throw new Error('Colle le lien d’une vidéo YouTube.');
         const draft={audioUrl:source.url.href,instrument};
-        if(source.youtubeId||!source.provider)selectHeroExcerpt(draft);
+        if(audioSource.needsVersion(source)){
+          window.SongToSheetFlow.sourceError('');
+          const version=await audioSource.resolveVersion(source);
+          if(version)selectHeroExcerpt({...draft,...version});
+          else openTrackDraft(draft);
+        }else if(source.youtubeId||!source.provider)selectHeroExcerpt(draft);
         else openTrackDraft(draft);
       }else{
         const file=$('hero-file').files[0]||state.file;

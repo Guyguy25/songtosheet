@@ -127,6 +127,62 @@ function parseSource(raw) {
   throw Object.assign(new Error('Plateforme non reconnue : utilise YouTube, Spotify, Deezer, SoundCloud ou Apple Music.'),{status:400});
 }
 
+const shareHosts=new Map([
+  ['spotify.link','Spotify'],
+  ['link.deezer.com','Deezer'],
+  ['deezer.page.link','Deezer']
+]);
+
+async function resolveSource(raw){
+  let url;
+  try{url=new URL(raw);}catch{return parseSource(raw);}
+  const provider=shareHosts.get(url.hostname);
+  if(!provider)return parseSource(raw);
+  for(let hop=0;hop<4;hop++){
+    if(url.protocol!=='https:'||url.username||url.password||url.port||shareHosts.get(url.hostname)!==provider)break;
+    try{
+      const response=await fetch(url,{redirect:'manual',signal:AbortSignal.timeout(1800)});
+      const location=response.headers.get('location');
+      await response.body?.cancel();
+      if(![301,302,303,307,308].includes(response.status)||!location)break;
+      url=new URL(location,url);
+      if(!shareHosts.has(url.hostname)){
+        const source=parseSource(url.href);
+        if(source.provider===provider&&source.id)return source;
+        break;
+      }
+    }catch{break;}
+  }
+  throw Object.assign(new Error('Ouvre le lien de partage et copie le lien direct du morceau.'),{status:400});
+}
+
+async function findYouTubeVersion(info){
+  const key=process.env.YOUTUBE_DATA_API_KEY;
+  if(!key||!info.title)return null;
+  const query=[info.artist,info.title,'official audio'].filter(Boolean).join(' ');
+  const params=new URLSearchParams({
+    part:'snippet',type:'video',videoEmbeddable:'true',maxResults:'5',q:query,key
+  });
+  try{
+    const result=await fetchData('https://www.googleapis.com/youtube/v3/search?'+params);
+    const normalize=value=>String(value||'').normalize('NFD').replace(/\p{M}/gu,'')
+      .toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
+    const title=normalize(info.title);
+    if(!title)return null;
+    for(const item of result.items||[]){
+      const id=item.id?.videoId;
+      const label=clean(item.snippet?.title);
+      const candidate=normalize(label);
+      if(!/^[\w-]{11}$/.test(id||'')||!(' '+candidate+' ').includes(' '+title+' '))continue;
+      if(info.artist&&!normalize(label+' '+item.snippet?.channelTitle).includes(normalize(info.artist)))continue;
+      if(/\b(cover|karaoke|tutorial|reaction|sped up|slowed)\b/.test(candidate)&&
+        !/\b(cover|karaoke|tutorial|reaction|sped up|slowed)\b/.test(title))continue;
+      return {url:'https://www.youtube.com/watch?v='+id,title:label};
+    }
+  }catch{}
+  return null;
+}
+
 async function getInfo(src) {
   const result={provider:src.provider,title:null,artist:null,thumbnail_url:null,duration_seconds:null,duration_verified:false};
   if(src.provider==='YouTube'){
@@ -196,8 +252,18 @@ module.exports=async function handler(req,res){
   res.setHeader('X-Content-Type-Options','nosniff');
   if(req.method!=='GET'){res.setHeader('Allow','GET');return res.status(405).json({error:'Méthode non autorisée.'});}
   try{
-    const src=parseSource(req.query?.url);
+    const raw=req.query?.url;
+    if(typeof raw!=='string'||raw.length>1800)parseSource(raw);
+    const resolve=req.query?.resolve==='youtube';
+    const src=resolve?await resolveSource(raw):parseSource(raw);
+    if(resolve&&!['Spotify','Deezer'].includes(src.provider)){
+      return res.status(400).json({error:'Colle le lien d’un morceau Spotify ou Deezer.'});
+    }
     const result=await getInfo(src);
+    if(resolve){
+      const version=await findYouTubeVersion(result);
+      return res.status(200).json({...result,version});
+    }
     if(!result.duration_verified){
       return res.status(424).json({
         error:'Impossible de vérifier la durée de cette vidéo ou de ce morceau.',

@@ -127,14 +127,15 @@
                        findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false,comparison=false,onReady,onNotation,loadVocals}){
     const controller=new AbortController();
     const {signal}=controller;
-    const guitar=instrument==='guitare';
+    const guitar=instrument==='guitare',piano=instrument==='piano';
+    const showRoll=!guitar&&!(piano&&comparison);
     root.innerHTML=`
       <div class="sp-toolbar">
-        ${guitar?'':`<div class="sp-tabs" role="group" aria-label="Affichage">
+        ${showRoll?`<div class="sp-tabs" role="group" aria-label="Affichage">
           <button type="button" data-view="both" aria-pressed="true">Les deux</button>
           <button type="button" data-view="score" aria-pressed="false">Partition</button>
           <button type="button" data-view="roll" aria-pressed="false">Piano roll</button>
-        </div>`}
+        </div>`:''}
         <div class="sp-tools">
           <span class="sp-instrument" hidden></span>
           ${tabUrl?'<label class="sp-kind"><span class="sp-sr">Notation</span><select><option value="score">Partition</option><option value="tab">Tablature</option></select></label>':''}
@@ -150,10 +151,11 @@
           <div class="sp-continuation" hidden><div class="sp-continuation-notation" aria-hidden="true"></div>
           <div class="sp-continuation-label"><strong>Suite verrouillée</strong><span>Les 30 premières secondes sont gratuites. La suite floutée est illustrative.</span></div></div>
         </div>
-        ${guitar?'':`<div class="sp-roll">
+        ${piano?`<div class="sp-keyboard" aria-hidden="true"></div>`:''}
+        ${showRoll?`<div class="sp-roll">
           <div class="sp-roll-heading"><span aria-hidden="true">●</span> Piano roll <small>Clique dans la grille pour te déplacer</small></div>
           <div class="sp-roll-scroll" tabindex="0" aria-label="Grille des notes"><p>Chargement des notes…</p></div>
-        </div>`}
+        </div>`:''}
       </div>
       <div class="sp-controls">
         <button type="button" class="sp-restart" aria-label="Revenir au début" disabled>↶</button>
@@ -173,7 +175,7 @@
     const body=get('.sp-body'),pageScroll=root.closest('.app-scroll'),controls=get('.sp-controls');
     const sheet=get('.sp-sheet'),engraving=get('.sp-engraving'),sheetStatus=get('.sp-sheet p');
     const roll=get('.sp-roll'),scroll=get('.sp-roll-scroll'),play=get('.sp-play'),seek=get('.sp-seek');
-    const piano=instrument==='piano'&&Boolean(scroll);
+    const keyboard=get('.sp-keyboard');
     const speed=get('.sp-speed select'),restart=get('.sp-restart'),kind=get('.sp-kind select');
     const zoomButtons=[...root.querySelectorAll('[data-zoom]')];
     const full=get('.sp-full');
@@ -191,11 +193,11 @@
 
     let notes=[],duration=0,midi,position=startAt,rate=1,context,playing=false,starting=false,anchor=0,next=0,frame;
     let entry=0,playbackStart=0,initializedPosition=false;
-    let score,scoreSystems=[],scoreLine,activeSystem,zoom=1,loadId=0,audioLoadId=0,resizeTimer;
+    let score,scoreSystems=[],scoreLine,activeSystem,zoom=piano&&comparison ? .68 : 1,loadId=0,audioLoadId=0,resizeTimer;
     let playRequest=0;
-    let chart,playhead,pixelsPerSecond=1,keyboard,keys=new Map(),activeKeys=new Set();
-    let pianoLow=0,pianoHigh=0;
-    const rollInset=piano?0:43;
+    let chart,playhead,pixelsPerSecond=1;
+    const keys=new Map(),rollInset=43;
+    let activeKeys=new Set();
     const sounds=new Set();
     let sampleBuffers;
     let vocalsEnabled=false,vocalsBuffer,vocalsSource,vocalsDecode,vocalsGain,voiceVolume=.65;
@@ -361,7 +363,7 @@
           scroll.scrollLeft=Math.max(0,x-80);
         }
       }
-      if(piano&&keys.size)updateKeys(value,follow);
+      if(keys.size)updateKeys(value,follow);
       syncScore(value,follow);
     }
     function pause(){
@@ -437,10 +439,10 @@
     speed.onchange=()=>{position=now();rate=Number(speed.value);if(playing)schedule();};
 
     function drawRoll(){
-      const high=piano?108:Math.min(127,notes.reduce((max,note)=>Math.max(max,note.midi),0)+2);
-      const low=piano?21:Math.max(0,Math.min(notes.reduce((min,note)=>Math.min(min,note.midi),127)-2,high-14));
+      const high=Math.min(127,notes.reduce((max,note)=>Math.max(max,note.midi),0)+2);
+      const low=Math.max(0,Math.min(notes.reduce((min,note)=>Math.min(min,note.midi),127)-2,high-14));
       const rows=high-low+1;
-      const row=piano?12:Math.max(6,Math.min(13,Math.floor((Math.min(255,window.innerHeight*.25)-27)/rows)));
+      const row=Math.max(6,Math.min(13,Math.floor((Math.min(255,window.innerHeight*.25)-27)/rows)));
       const height=rows*row+26;
       pixelsPerSecond=Math.max(75,(scroll.clientWidth-rollInset)/duration);
       const rollWidth=Math.ceil(duration*pixelsPerSecond)+rollInset+1;
@@ -449,7 +451,7 @@
         const y=26+(high-pitch)*row;
         const dark=[1,3,6,8,10].includes(pitch%12);
         chart.append(svg('rect',{x:0,y,width:rollWidth,height:row,class:dark?'sp-grid-dark':'sp-grid-light'}));
-        if(!piano&&pitch%12===0){
+        if(pitch%12===0){
           const label=svg('text',{x:8,y:y+10,class:'sp-grid-label'});
           label.textContent=`Do${Math.floor(pitch/12)-1}`;chart.append(label);
         }
@@ -467,52 +469,52 @@
       playhead=svg('line',{x1:rollInset,y1:25,x2:rollInset,y2:height,class:'sp-playhead'});
       chart.append(playhead);scroll.replaceChildren(chart);
       chart.addEventListener('click',event=>jump((event.clientX-chart.getBoundingClientRect().left-rollInset)/pixelsPerSecond));
-      if(piano&&!keyboard){
-        pianoLow=low;pianoHigh=high;
-        const panel=document.createElement('div');
-        panel.className='sp-keyboard';
-        panel.setAttribute('aria-hidden','true');
-        keyboard=svg('svg',{width:54,height});
-        panel.append(keyboard);
-        scroll.before(panel);
-        roll.classList.add('sp-roll-piano');
-        for(let pitch=high;pitch>=low;pitch--){
-          const y=26+(high-pitch)*row;
-          const dark=[1,3,6,8,10].includes(pitch%12);
-          const key=svg('rect',{x:0,y,width:dark?34:53,height:row-1,rx:1,
-            class:dark?'sp-key-dark':'sp-key-light','data-midi':pitch});
-          keys.set(pitch,key);
-          keyboard.append(key);
-          if(pitch%12===0){
-            const label=svg('text',{x:38,y:y+9,class:'sp-key-label'});
-            label.textContent='C'+(pitch/12-1);
-            keyboard.append(label);
-          }
-        }
-        scroll.addEventListener('scroll',()=>keyboard.style.transform=`translateY(${-scroll.scrollTop}px)`);
-        const opening=notes.filter(note=>note.time<4).map(note=>note.midi).sort((a,b)=>a-b);
-        const center=opening[Math.floor(opening.length/2)]??notes[0].midi;
-        scroll.scrollTop=Math.max(0,26+(high-center)*row-scroll.clientHeight/2);
-      }
       update(now());
     }
 
+    function drawKeyboard(){
+      const drawing=svg('svg',{viewBox:'0 0 728 86',width:728,height:86});
+      const sharps=[],labels=[];
+      let x=0;
+      for(let pitch=21;pitch<=108;pitch++){
+        const dark=[1,3,6,8,10].includes(pitch%12);
+        const key=svg('rect',{x:dark?x-4.5:x,y:0,width:dark?9:14,height:dark?51:85,rx:2,
+          class:dark?'sp-key-dark':'sp-key-light','data-midi':pitch});
+        keys.set(pitch,key);
+        if(dark)sharps.push(key);
+        else{
+          drawing.append(key);
+          if(pitch%12===0){
+            const label=svg('text',{x:x+7,y:76,'text-anchor':'middle',class:'sp-key-label'});
+            label.textContent='Do'+(pitch/12-1);
+            labels.push(label);
+          }
+          x+=14;
+        }
+      }
+      drawing.append(...sharps,...labels);
+      keyboard.append(drawing);
+    }
+
     function updateKeys(value,follow){
+      if(!keyboard?.clientWidth)return;
       const lit=new Set();
       if(playing){
         for(const note of notes){
           if(note.time>value)break;
-          if(noteEnd(note)>value&&note.midi>=pianoLow&&note.midi<=pianoHigh)lit.add(note.midi);
+          if(noteEnd(note)>value&&keys.has(note.midi))lit.add(note.midi);
         }
       }
       for(const pitch of activeKeys)if(!lit.has(pitch))keys.get(pitch).classList.remove('is-playing');
       for(const pitch of lit)if(!activeKeys.has(pitch))keys.get(pitch).classList.add('is-playing');
       activeKeys=lit;
-      if(!follow||!lit.size)return;
-      const positions=[...lit].map(pitch=>26+(pianoHigh-pitch)*12);
-      if(positions.some(y=>y>=scroll.scrollTop+12&&y<=scroll.scrollTop+scroll.clientHeight-24))return;
-      scroll.scrollTop=Math.max(0,positions[0]-scroll.clientHeight/2);
+      if(!follow||!lit.size||keyboard.scrollWidth<=keyboard.clientWidth)return;
+      const left=Math.min(...[...lit].map(pitch=>Number(keys.get(pitch).getAttribute('x'))));
+      const right=Math.max(...[...lit].map(pitch=>Number(keys.get(pitch).getAttribute('x'))))+14;
+      if(left<keyboard.scrollLeft||right>keyboard.scrollLeft+keyboard.clientWidth)
+        keyboard.scrollLeft=(left+right-keyboard.clientWidth)/2;
     }
+    if(keyboard)drawKeyboard();
 
     const xml=new Map();
     let tabMidi;
@@ -627,6 +629,7 @@
     for(const button of buttons)button.onclick=()=>{
       const view=button.dataset.view;
       sheet.hidden=view==='roll';roll.hidden=view==='score';
+      if(keyboard)keyboard.hidden=view==='roll';
       for(const item of buttons)item.setAttribute('aria-pressed',String(item===button));
       if(!sheet.hidden){if(score)syncScore(now(),false);else drawSheet();}
     };

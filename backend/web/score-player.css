@@ -26,12 +26,9 @@
 .sp-roll-heading small{margin-left:auto;color:#b6afc8;font-weight:500}
 .sp-roll-scroll{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-color:#504068 #151725}
 .sp-roll-scroll svg{display:block;cursor:crosshair;max-width:none}
-.sp-roll-piano{display:grid;grid-template-columns:54px minmax(0,1fr);grid-template-rows:auto minmax(0,245px)}
-.sp-roll-piano .sp-roll-heading{grid-column:1/-1}
-.sp-roll-piano .sp-roll-scroll{height:245px;overflow:auto;overscroll-behavior:contain}
-.sp-keyboard{overflow:hidden;background:#101322;border-right:1px solid #363650}
-.sp-keyboard svg{display:block}
-.sp-key-light{fill:#f1eff7}
+.sp-keyboard{overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;background:#161220;padding-block:8px}
+.sp-keyboard svg{display:block;width:100%;min-width:728px;height:auto}
+.sp-key-light{fill:#f1eff7;stroke:#6a6577;stroke-width:.65}
 .sp-key-dark{fill:#37354a;stroke:#625976;stroke-width:.65}
 .sp-key-light.is-playing,.sp-key-dark.is-playing{fill:#a567ff;stroke:#efe3ff;stroke-width:1}
 .sp-key-label{fill:#362d4b;font:8px ui-monospace,monospace;pointer-events:none}

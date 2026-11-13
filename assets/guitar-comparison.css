@@ -31,12 +31,15 @@
 .comparison-voice-volume input { width:100%; accent-color:#7549eb; }
 .piano-comparison-grid .guitar-option { display:flex; flex-direction:column; }
 .piano-comparison-grid .guitar-option-header { min-height:42px; }
-.piano-comparison-grid .sp-sheet { height:clamp(220px,34vh,315px); min-height:0; max-height:none; }
-.piano-comparison-grid.is-focused .sp-sheet { height:min(60vh,600px); }
+.piano-comparison-grid .sp-sheet { height:clamp(340px,62vh,570px); min-height:0; max-height:none; }
+.piano-comparison-grid.is-focused .sp-sheet,.piano-comparison-grid[data-count="1"] .sp-sheet { height:auto; min-height:220px; }
+.piano-comparison-grid:not(.is-focused):not([data-count="1"]) .sp-keyboard { display:none; }
+.piano-comparison-grid .sp-engraving { padding:5px; }
 .piano-comparison-grid .guitar-option-vote { margin-top:auto; }
 .guitar-comparison [hidden] { display: none !important; }
 @media (min-width: 1450px) {
   .guitar-comparison-grid[data-count="3"] { grid-template-columns: repeat(3,minmax(0,1fr)); }
+  .piano-comparison-grid[data-count="3"] { grid-template-columns: repeat(2,minmax(0,1fr)); }
 }
 @media (max-width: 720px) {
   .guitar-comparison-grid { grid-template-columns: minmax(0,1fr); }

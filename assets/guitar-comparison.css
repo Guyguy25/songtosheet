@@ -36,3 +36,13 @@
   .guitar-comparison-grid { grid-template-columns: minmax(0,1fr); }
   .guitar-option-player .sp-sheet { max-height: 310px; }
 }
+
+.guitar-chords { margin: 16px 0 8px; }
+.guitar-chords h3 { margin: 0 0 8px; font-size: 15px; }
+.guitar-chord-list { display: flex; gap: 8px; overflow-x: auto; list-style: none; margin: 0; padding: 0 0 5px; }
+.guitar-chord { flex: 0 0 92px; padding: 7px 3px 2px; text-align: center; border: 1px solid #e6ddf3; background: #fdfbff; border-radius: 10px; color: #392949; }
+.guitar-chord strong { font-size: 14px; }
+.guitar-chord svg { display: block; width: 100%; }
+.guitar-chord line, .guitar-chord .open-string { stroke: #635575; fill: none; }
+.guitar-chord text { fill: #392949; font-size: 11px; text-anchor: middle; dominant-baseline: central; }
+.guitar-chord .fretted-string { fill: #7549eb; }

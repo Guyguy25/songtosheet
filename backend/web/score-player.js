@@ -124,7 +124,7 @@
   }
 
   function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,preferTab=false,startAt=0,
-                       findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false,comparison=false,onReady,loadVocals}){
+                       findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false,comparison=false,onReady,onNotation,loadVocals}){
     const controller=new AbortController();
     const {signal}=controller;
     const guitar=instrument==='guitare';
@@ -548,6 +548,7 @@
       try{
         const [,source]=await Promise.all([loadScript('score','2.3.0'),loadXml(url)]);
         if(current!==loadId||signal.aborted||sheet.hidden)return;
+        onNotation?.(source);
         scoreLine=null;
         engraving.replaceChildren();
         const display=new window.opensheetmusicdisplay.OpenSheetMusicDisplay(engraving,{

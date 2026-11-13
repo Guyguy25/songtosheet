@@ -93,7 +93,7 @@ async function begin(db,res,user,body){
       link?{audio_url:link.href,source_kind:'link'}:{extension,size};
     const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
       ...(excerpt?{excerpt:{start_ms:excerpt.start_ms,end_ms:excerpt.end_ms}}:{}),
-      ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence,guitar_compare:true,guitar_judge:true,
+      ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence,guitar_compare:true,guitar_judge:true,guitar_choice:null,
         ...(body.source==='mixed'?{guitar_vocals:true}:{}),
         ...(link?{song_key:sourceKey(source)+excerptKey}:{})}:{}),
       source_content:body.source||null,

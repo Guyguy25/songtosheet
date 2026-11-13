@@ -7,7 +7,7 @@
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-wave-32.png?v=1" />
   <meta name="description" content="SongToSheet.ai : obtenez des partitions et, prochainement, des tablatures de vos musiques préférées depuis un lien ou un fichier audio. Découvrez la V1." />
   <title>SongToSheet.ai — Partitions et tablatures de vos musiques préférées</title>
-  <script>document.documentElement.classList.toggle('is-landing', location.pathname === '/');</script>
+  <script>document.documentElement.classList.toggle('has-overlay-header', /^\/(?:tarifs\/?|upgrade\/?)?$/.test(location.pathname.toLowerCase()));</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=12" />
@@ -181,7 +181,8 @@
 #public-header .nav-actions{gap:10px}
 #public-header .nav-link-btn{border:1px solid #e8dafa;color:#55318f;background:#fff;border-radius:100px;min-height:43px;padding:0 20px;font-size:12px}
 #public-header .btn-nav{min-height:43px;border-radius:100px;padding:0 21px;background:linear-gradient(110deg,#7255eb,#9262fc);font-size:12px;box-shadow:0 9px 25px #7442e63a}
-.split-hero{position:relative;background:radial-gradient(ellipse 60% 60% at 82% 47%,#27154f 0%,transparent 66%),linear-gradient(130deg,#090712 12%,#130b2d 64%,#0a0616 100%);color:#fff;overflow:hidden}
+:root{--public-hero-background:radial-gradient(ellipse 60% 60% at 82% 47%,#27154f 0%,transparent 66%),linear-gradient(130deg,#090712 12%,#130b2d 64%,#0a0616 100%)}
+.split-hero{position:relative;background:var(--public-hero-background);color:#fff;overflow:hidden}
 .split-hero .hero-gridlines{position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(#ae8af60b 1px,transparent 1px),linear-gradient(90deg,#ae8af60b 1px,transparent 1px);background-size:50px 50px;mask-image:linear-gradient(90deg,#000 30%,transparent 96%)}
 .split-hero .hero-light{position:absolute;width:600px;height:550px;right:-100px;top:70px;background:#7040df20;filter:blur(100px);border-radius:50%;pointer-events:none}
 .split-inner{display:grid;grid-template-columns:52% 48%;gap:0;align-items:center;min-height:620px;padding:25px 0 60px;position:relative;z-index:1}
@@ -443,13 +444,13 @@
 
 /* Desktop home: the hero continues behind the floating navigation. */
 @media (min-width:1101px){
-  .is-landing #public-header{
+  .has-overlay-header #public-header{
     margin-bottom:-96px;
     background:transparent;
     backdrop-filter:none;
     pointer-events:none;
   }
-  .is-landing #public-header .nav-inner{
+  .has-overlay-header #public-header .nav-inner{
     width:calc(100% - 64px);
     max-width:1480px;
     height:80px;
@@ -462,7 +463,7 @@
     transition:max-width .32s ease,height .32s ease,transform .32s ease,
       border-radius .32s ease,border-color .32s ease,background-color .32s ease,box-shadow .32s ease;
   }
-  .is-landing #public-header.is-compact .nav-inner{
+  .has-overlay-header #public-header.is-compact .nav-inner{
     max-width:1240px;
     height:60px;
     transform:translateY(8px);
@@ -472,8 +473,8 @@
     backdrop-filter:blur(14px);
     box-shadow:0 8px 28px #09061229;
   }
-  .is-landing #public-header .top-nav a{position:relative}
-  .is-landing #public-header .top-nav a.active::after{position:absolute;inset:auto 0 -8px}
+  .has-overlay-header #public-header .top-nav a{position:relative}
+  .has-overlay-header #public-header .top-nav a.active::after{position:absolute;inset:auto 0 -8px}
   #landing .split-inner{padding-top:121px}
   #landing .split-subtitle{margin-bottom:30px}
 }
@@ -499,7 +500,7 @@
   #landing .hero-morph{height:600px}
 }
 @media (min-width:1101px) and (prefers-reduced-motion:reduce){
-  .is-landing #public-header .nav-inner{transition:none}
+  .has-overlay-header #public-header .nav-inner{transition:none}
 }
 
 /* Guided, interactive "Comment ça marche" onboarding */
@@ -612,7 +613,7 @@
 </style>
 
 
-<link rel="stylesheet" href="/assets/upgrade.css?v=2">
+<link rel="stylesheet" href="/assets/upgrade.css?v=3">
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -780,6 +781,7 @@
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Accès sans renouvellement</span></li>
           </ul>
+          <button type="button" class="upgrade-plan-action" aria-describedby="upgrade-availability" disabled>Choisir Essentiel</button>
         </article>
         <article class="upgrade-card upgrade-featured" aria-labelledby="upgrade-unlimited">
           <div class="upgrade-plan-heading"><h2 id="upgrade-unlimited">Illimité</h2><span class="upgrade-recommended">Recommandé</span></div>
@@ -794,6 +796,7 @@
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Accès sans renouvellement</span></li>
           </ul>
+          <button type="button" class="upgrade-plan-action" aria-describedby="upgrade-availability" disabled>Choisir Illimité</button>
         </article>
         <article class="upgrade-card" aria-labelledby="upgrade-lifetime">
           <div class="upgrade-plan-heading"><h2 id="upgrade-lifetime">À vie</h2></div>
@@ -807,9 +810,10 @@
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Accès sans renouvellement</span></li>
           </ul>
+          <button type="button" class="upgrade-plan-action" aria-describedby="upgrade-availability" disabled>Choisir l’accès à vie</button>
         </article>
       </div>
-      <p class="upgrade-availability">Les abonnements ne sont pas encore ouverts à l’achat.</p>
+      <p class="upgrade-availability" id="upgrade-availability">Les abonnements ne sont pas encore ouverts à l’achat.</p>
       <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Le quota Essentiel est non cumulable.</p>
     </div>
   </section>
@@ -1066,7 +1070,7 @@
     const authPage=pathname==='/connexion'||pathname==='/inscription';
     show('public-header',marketing);
     document.body.classList.toggle('has-public-header',marketing);
-    document.documentElement.classList.toggle('is-landing',activePublic==='landing');
+    document.documentElement.classList.toggle('has-overlay-header',activePublic==='landing'||activePublic==='pricing-view');
     updatePublicHeader();
     show('public-footer',marketing);
     for(const id of ['landing','features-view','results-view','pricing-view','faq-view'])show(id,activePublic===id);

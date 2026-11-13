@@ -1,5 +1,5 @@
 .upgrade-pricing {
-  background: radial-gradient(ellipse at 50% 0, #312052, transparent 64%), #15111f;
+  background: var(--public-hero-background);
   color: #fff;
   padding: 34px 24px 46px;
 }
@@ -63,6 +63,8 @@
 
 .upgrade-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .upgrade-card {
+  display: flex;
+  flex-direction: column;
   --upgrade-muted: #d2c9df;
   --upgrade-rule: #544365;
   --upgrade-mark: #cfb7ff;
@@ -128,4 +130,22 @@
 
 @media (max-width: 650px) {
   .upgrade-pricing { padding-top: 96px; }
+}
+
+.upgrade-plan-action {
+  width: 100%;
+  min-height: 44px;
+  margin-top: auto;
+  padding: 10px 14px;
+  border: 1px solid #65527e;
+  border-radius: 12px;
+  background: #312542;
+  color: #e7dcf9;
+  font-size: 14px;
+  font-weight: 750;
+}
+.upgrade-features { margin-bottom: 22px; }
+.upgrade-featured .upgrade-plan-action { background: #6940c8; border-color: #6940c8; color: #fff; }
+@media (min-width: 1101px) {
+  .upgrade-pricing { padding-top: 130px; }
 }

@@ -648,7 +648,7 @@
     return {
       pause(){media.pause();stopClip();},
       dispose(){resetClip();lookup?.controller.abort();},
-      prefill({instrument,file,name,audioUrl,excerpt}){
+      prefill({instrument,file,name,audioUrl,excerpt},{focus=true}={}){
         if(busy)return;
         if(file!==undefined||audioUrl!==undefined){
           Object.assign(draft,{instrument:'',format:'',source:'',capo:null,guitarPresence:null,guitarGoal:null});
@@ -677,7 +677,7 @@
         }
         current=prefilledSource?(mode==='link'&&!excerpt?'excerpt':'instrument'):'import';
         editing=false;
-        render(true);
+        render(focus);
       }
     };
   }

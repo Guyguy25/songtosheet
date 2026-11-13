@@ -450,7 +450,9 @@
         :'Je dispose des droits nécessaires pour transcrire cet audio.';
       if(confirming){showTitle();renderRecap();}
       choices.innerHTML=options?options.map(([value,icon,name,detail])=>
-        `<button type="button" class="track-choice" value="${value}" aria-pressed="${draft[field]===value}">
+        field==='guitarPresence'&&value==='unknown'
+          ?`<button type="button" class="track-choice-text" value="${value}" aria-pressed="${draft[field]===value}">${name}</button>`
+          :        `<button type="button" class="track-choice" value="${value}" aria-pressed="${draft[field]===value}">
           <span class="track-choice-icon" aria-hidden="true">${icon}</span>
           <span><strong>${name}</strong>${detail?`<small>${detail}</small>`:''}</span>
           <span class="track-choice-arrow" aria-hidden="true">→</span></button>`).join(''):'';
@@ -477,7 +479,7 @@
     }
 
     choices.addEventListener('click',event=>{
-      const button=event.target.closest('.track-choice');
+      const button=event.target.closest('.track-choice,.track-choice-text');
       if(!button||busy)return;
       const options=activeSteps().find(([field])=>field===current)[3];
       draft[current]=options.find(([value])=>String(value)===button.value)[0];

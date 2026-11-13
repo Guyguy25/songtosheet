@@ -89,6 +89,9 @@
 .track-excerpt-limit{text-align:center;font-size:13px}
 .track-excerpt-timeline{position:relative;height:54px;margin:0 11px;border-radius:8px;background:#eae4f8}
 .track-excerpt-timeline span{position:absolute;inset-block:0;border:2px solid #8054e0;border-radius:8px;background:#b9a1f466}
+.track-excerpt-wave{position:absolute;inset:5px 0;width:100%;height:calc(100% - 10px);pointer-events:none;color:#ac9aca}
+.track-excerpt-wave path{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+.track-excerpt-wave-selected{color:#6740bd;clip-path:inset(0 var(--wave-end,100%) 0 var(--wave-start,0%))}
 .track-excerpt-timeline input{position:absolute;inset:-1px -11px;width:calc(100% + 22px);height:56px;margin:0;appearance:none;background:transparent;pointer-events:none}
 .track-excerpt-timeline input::-webkit-slider-thumb{appearance:none;width:22px;height:54px;border:6px solid transparent;border-radius:12px;background:#8054e0;background-clip:content-box;cursor:ew-resize;pointer-events:auto}
 .track-excerpt-timeline input::-moz-range-thumb{width:10px;height:42px;border:6px solid transparent;border-radius:12px;background:#8054e0;background-clip:padding-box;cursor:ew-resize;pointer-events:auto}

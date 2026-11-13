@@ -98,7 +98,9 @@
           <p class="track-excerpt-hint" aria-live="polite"></p>
           <div class="track-excerpt-controls hidden">
             <div class="track-excerpt-timeline">
+              <svg class="track-excerpt-wave" viewBox="0 0 448 42" preserveAspectRatio="none" aria-hidden="true"><path d="M2 16.5v9M6 14v14M10 11.5v19M14 11v20M18 13.5v15M22 12v18M26 7.5v27M30 6.5v29M34 10v22M38 13.5v15M42 8.5v25M46 7v28M50 9.5v23M54 14v14M58 12.5v17M62 11v20M66 12v18M70 15v12M74 16v10M78 14.5v13M82 13.5v15M86 14v14M90 16v10M94 14v14M98 12.5v17M102 13v16M106 15.5v11M110 15.5v11M114 14.5v13M118 14v14M122 15v12M126 16.5v9M130 14v14M134 13v16M138 13.5v15M142 16v10M146 15.5v11M150 14.5v13M154 13.5v15M158 14.5v13M162 15.5v11M166 11.5v19M170 9.5v23M174 10.5v21M178 14.5v13M182 10.5v21M186 7v28M190 7.5v27M194 11.5v19M198 12.5v17M202 8.5v25M206 8.5v25M210 11.5v19M214 16v10M218 13.5v15M222 13.5v15M226 14v14M230 15v12M234 13.5v15M238 9.5v23M242 8v26M246 10.5v21M250 13.5v15M254 8v26M258 5.5v31M262 8v26M266 13.5v15M270 11v20M274 8v26M278 9.5v23M282 13v16M286 14.5v13M290 13v16M294 13.5v15M298 15v12M302 16.5v9M306 14v14M310 12.5v17M314 12.5v17M318 14.5v13M322 14.5v13M326 12.5v17M330 12.5v17M334 14.5v13M338 16.5v9M342 15v12M346 14v14M350 14.5v13M354 16v10M358 15v12M362 13.5v15M366 14v14M370 15.5v11M374 16v10M378 14v14M382 12.5v17M386 13v16M390 15.5v11M394 12v18M398 9v24M402 9v24M406 12v18M410 12.5v17M414 8v26M418 7v28M422 10.5v21M426 15v12M430 11v20M434 10.5v21M438 12.5v17M442 15.5v11M446 15.5v11"/></svg>
               <span aria-hidden="true"></span>
+              <svg class="track-excerpt-wave track-excerpt-wave-selected" viewBox="0 0 448 42" preserveAspectRatio="none" aria-hidden="true"><path d="M2 16.5v9M6 14v14M10 11.5v19M14 11v20M18 13.5v15M22 12v18M26 7.5v27M30 6.5v29M34 10v22M38 13.5v15M42 8.5v25M46 7v28M50 9.5v23M54 14v14M58 12.5v17M62 11v20M66 12v18M70 15v12M74 16v10M78 14.5v13M82 13.5v15M86 14v14M90 16v10M94 14v14M98 12.5v17M102 13v16M106 15.5v11M110 15.5v11M114 14.5v13M118 14v14M122 15v12M126 16.5v9M130 14v14M134 13v16M138 13.5v15M142 16v10M146 15.5v11M150 14.5v13M154 13.5v15M158 14.5v13M162 15.5v11M166 11.5v19M170 9.5v23M174 10.5v21M178 14.5v13M182 10.5v21M186 7v28M190 7.5v27M194 11.5v19M198 12.5v17M202 8.5v25M206 8.5v25M210 11.5v19M214 16v10M218 13.5v15M222 13.5v15M226 14v14M230 15v12M234 13.5v15M238 9.5v23M242 8v26M246 10.5v21M250 13.5v15M254 8v26M258 5.5v31M262 8v26M266 13.5v15M270 11v20M274 8v26M278 9.5v23M282 13v16M286 14.5v13M290 13v16M294 13.5v15M298 15v12M302 16.5v9M306 14v14M310 12.5v17M314 12.5v17M318 14.5v13M322 14.5v13M326 12.5v17M330 12.5v17M334 14.5v13M338 16.5v9M342 15v12M346 14v14M350 14.5v13M354 16v10M358 15v12M362 13.5v15M366 14v14M370 15.5v11M374 16v10M378 14v14M382 12.5v17M386 13v16M390 15.5v11M394 12v18M398 9v24M402 9v24M406 12v18M410 12.5v17M414 8v26M418 7v28M422 10.5v21M426 15v12M430 11v20M434 10.5v21M438 12.5v17M442 15.5v11M446 15.5v11"/></svg>
               <input type="range" min="0" step="1" aria-label="Début de l’extrait">
               <input type="range" min="0" step="1" aria-label="Fin de l’extrait">
             </div>
@@ -168,8 +170,12 @@
       clipStart.setAttribute('aria-valuetext',startLabel.textContent);
       clipEnd.setAttribute('aria-valuetext',endLabel.textContent);
       const selection=clip.querySelector('.track-excerpt-timeline span');
-      selection.style.left=100*start/clipDuration+'%';
-      selection.style.right=100*(clipDuration-end)/clipDuration+'%';
+      const left=100*start/clipDuration+'%';
+      const right=100*(clipDuration-end)/clipDuration+'%';
+      selection.style.left=left;
+      selection.style.right=right;
+      selection.parentElement.style.setProperty('--wave-start',left);
+      selection.parentElement.style.setProperty('--wave-end',right);
     }
 
     function resetClip(){

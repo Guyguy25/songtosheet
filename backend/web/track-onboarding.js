@@ -459,13 +459,22 @@
         ?'Je dispose des autorisations pour récupérer l’audio de cette vidéo et le transcrire.'
         :'Je dispose des droits nécessaires pour transcrire cet audio.';
       if(confirming){showTitle();renderRecap();}
+      choices.classList.toggle('track-instruments',field==='instrument');
       choices.innerHTML=options?options.map(([value,icon,name,detail])=>
         field==='guitarPresence'&&value==='unknown'
           ?`<button type="button" class="track-choice-text" value="${value}" aria-pressed="${draft[field]===value}">${name}</button>`
           :        `<button type="button" class="track-choice" value="${value}" aria-pressed="${draft[field]===value}">
           <span class="track-choice-icon" aria-hidden="true">${icon}</span>
-          <span><strong>${name}</strong>${detail?`<small>${detail}</small>`:''}</span>
+          <span><strong>${name}${field==='instrument'&&value==='basse'?' <span class="track-beta">Bêta</span>':''}</strong>${detail?`<small>${detail}</small>`:''}</span>
           <span class="track-choice-arrow" aria-hidden="true">→</span></button>`).join(''):'';
+      if(field==='instrument'){
+        choices.insertAdjacentHTML('beforeend',[
+          ['🎻','Violon'],['🥁','Batterie']
+        ].map(([icon,name])=>`<div class="track-choice track-instrument-preview">
+          <span class="track-choice-icon" aria-hidden="true">${icon}</span>
+          <span><strong>${name} <span class="track-beta">Bêta</span></strong><small>Bientôt disponible</small></span>
+        </div>`).join(''));
+      }
       back.classList.toggle('hidden',index===0&&!onExcerptBack);
       next.classList.toggle('hidden',!confirming&&!clipping);
       next.disabled=clipping&&!draft.excerpt;
@@ -489,7 +498,7 @@
     }
 
     choices.addEventListener('click',event=>{
-      const button=event.target.closest('.track-choice,.track-choice-text');
+      const button=event.target.closest('button.track-choice,button.track-choice-text');
       if(!button||busy)return;
       const options=activeSteps().find(([field])=>field===current)[3];
       draft[current]=options.find(([value])=>String(value)===button.value)[0];

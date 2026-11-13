@@ -173,6 +173,7 @@
     const body=get('.sp-body'),pageScroll=root.closest('.app-scroll'),controls=get('.sp-controls');
     const sheet=get('.sp-sheet'),engraving=get('.sp-engraving'),sheetStatus=get('.sp-sheet p');
     const roll=get('.sp-roll'),scroll=get('.sp-roll-scroll'),play=get('.sp-play'),seek=get('.sp-seek');
+    const piano=instrument==='piano'&&Boolean(scroll);
     const speed=get('.sp-speed select'),restart=get('.sp-restart'),kind=get('.sp-kind select');
     const zoomButtons=[...root.querySelectorAll('[data-zoom]')];
     const full=get('.sp-full');
@@ -192,17 +193,23 @@
     let entry=0,playbackStart=0,initializedPosition=false;
     let score,scoreSystems=[],scoreLine,activeSystem,zoom=1,loadId=0,audioLoadId=0,resizeTimer;
     let playRequest=0;
-    let chart,playhead,pixelsPerSecond=1;
+    let chart,playhead,pixelsPerSecond=1,keyboard,keys=new Map(),activeKeys=new Set();
+    let pianoLow=0,pianoHigh=0;
+    const rollInset=piano?0:43;
     const sounds=new Set();
     let sampleBuffers;
-    let vocalsEnabled=false,vocalsBuffer,vocalsSource,vocalsDecode;
+    let vocalsEnabled=false,vocalsBuffer,vocalsSource,vocalsDecode,vocalsGain,voiceVolume=.65;
     const now=()=>playing?Math.min(duration,Math.max(0,(context.currentTime-anchor)*rate)):position;
     const noteEnd=note=>note.time+(note.ringDuration??note.duration);
 
     function stopSounds(){
       for(const sound of sounds)sound.stop();
       sounds.clear();
+      stopVocals();
+    }
+    function stopVocals(){
       if(vocalsSource){vocalsSource.stop();vocalsSource.disconnect();vocalsSource=null;}
+      vocalsGain=null;
     }
     function scheduleVocals(from=now()){
       if(!vocalsEnabled||!vocalsBuffer||!playing)return;
@@ -212,15 +219,16 @@
       if(length<=0)return;
       const source=context.createBufferSource();
       const gain=context.createGain();
-      gain.gain.value=.65;
+      gain.gain.value=voiceVolume;
       source.buffer=vocalsBuffer;
       source.playbackRate.value=rate;
       source.connect(gain).connect(context.destination);
       source.onended=()=>{
-        if(vocalsSource===source)vocalsSource=null;
+        if(vocalsSource===source){vocalsSource=null;vocalsGain=null;}
         source.disconnect();gain.disconnect();
       };
       vocalsSource=source;
+      vocalsGain=gain;
       source.start(when,offset,length);
     }
     function scheduleNote(note,offset){
@@ -347,18 +355,20 @@
       seek.value=value;
       get('.sp-time').textContent=`${time(value)} / ${time(duration)}`;
       if(playhead){
-        const x=value*pixelsPerSecond+43;
+        const x=value*pixelsPerSecond+rollInset;
         playhead.setAttribute('x1',x);playhead.setAttribute('x2',x);
         if(follow&&(x>scroll.scrollLeft+scroll.clientWidth-40||x<scroll.scrollLeft)){
           scroll.scrollLeft=Math.max(0,x-80);
         }
       }
+      if(piano&&keys.size)updateKeys(value,follow);
       syncScore(value,follow);
     }
     function pause(){
       playRequest++;
       position=now();playing=false;
       cancelAnimationFrame(frame);stopSounds();
+      if(piano)updateKeys(position,false);
       play.textContent='▶';play.setAttribute('aria-label','Lire la transcription');
     }
     function tick(){
@@ -427,37 +437,81 @@
     speed.onchange=()=>{position=now();rate=Number(speed.value);if(playing)schedule();};
 
     function drawRoll(){
-      const high=Math.min(127,Math.max(...notes.map(note=>note.midi))+2);
-      const low=Math.max(0,Math.min(Math.min(...notes.map(note=>note.midi))-2,high-14));
+      const high=piano?108:Math.min(127,notes.reduce((max,note)=>Math.max(max,note.midi),0)+2);
+      const low=piano?21:Math.max(0,Math.min(notes.reduce((min,note)=>Math.min(min,note.midi),127)-2,high-14));
       const rows=high-low+1;
-      const row=Math.max(6,Math.min(13,Math.floor((Math.min(255,window.innerHeight*.25)-27)/rows)));
+      const row=piano?12:Math.max(6,Math.min(13,Math.floor((Math.min(255,window.innerHeight*.25)-27)/rows)));
       const height=rows*row+26;
-      pixelsPerSecond=Math.max(75,(scroll.clientWidth-43)/duration);
-      const rollWidth=Math.ceil(duration*pixelsPerSecond)+44;
+      pixelsPerSecond=Math.max(75,(scroll.clientWidth-rollInset)/duration);
+      const rollWidth=Math.ceil(duration*pixelsPerSecond)+rollInset+1;
       chart=svg('svg',{width:rollWidth,height,role:'img','aria-label':'Hauteur et durée des notes MIDI'});
       for(let pitch=high;pitch>=low;pitch--){
         const y=26+(high-pitch)*row;
         const dark=[1,3,6,8,10].includes(pitch%12);
         chart.append(svg('rect',{x:0,y,width:rollWidth,height:row,class:dark?'sp-grid-dark':'sp-grid-light'}));
-        if(pitch%12===0){
+        if(!piano&&pitch%12===0){
           const label=svg('text',{x:8,y:y+10,class:'sp-grid-label'});
           label.textContent=`Do${Math.floor(pitch/12)-1}`;chart.append(label);
         }
       }
       const unit=duration>90?4:duration>24?2:1;
       for(let second=0;second<duration;second+=unit){
-        const x=43+second*pixelsPerSecond,label=svg('text',{x:x+5,y:17,class:'sp-grid-label'});
+        const x=rollInset+second*pixelsPerSecond,label=svg('text',{x:x+5,y:17,class:'sp-grid-label'});
         label.textContent=time(second);
         chart.append(svg('line',{x1:x,y1:0,x2:x,y2:height,class:'sp-grid-line'}),label);
       }
       for(const note of notes)chart.append(svg('rect',{
-        x:43+note.time*pixelsPerSecond,y:27+(high-note.midi)*row,
+        x:rollInset+note.time*pixelsPerSecond,y:27+(high-note.midi)*row,
         width:Math.max(3,note.duration*pixelsPerSecond-1),height:row-2,rx:2,class:'sp-note'
       }));
-      playhead=svg('line',{x1:43,y1:25,x2:43,y2:height,class:'sp-playhead'});
+      playhead=svg('line',{x1:rollInset,y1:25,x2:rollInset,y2:height,class:'sp-playhead'});
       chart.append(playhead);scroll.replaceChildren(chart);
-      chart.addEventListener('click',event=>jump((event.clientX-chart.getBoundingClientRect().left-43)/pixelsPerSecond));
+      chart.addEventListener('click',event=>jump((event.clientX-chart.getBoundingClientRect().left-rollInset)/pixelsPerSecond));
+      if(piano&&!keyboard){
+        pianoLow=low;pianoHigh=high;
+        const panel=document.createElement('div');
+        panel.className='sp-keyboard';
+        panel.setAttribute('aria-hidden','true');
+        keyboard=svg('svg',{width:54,height});
+        panel.append(keyboard);
+        scroll.before(panel);
+        roll.classList.add('sp-roll-piano');
+        for(let pitch=high;pitch>=low;pitch--){
+          const y=26+(high-pitch)*row;
+          const dark=[1,3,6,8,10].includes(pitch%12);
+          const key=svg('rect',{x:0,y,width:dark?34:53,height:row-1,rx:1,
+            class:dark?'sp-key-dark':'sp-key-light','data-midi':pitch});
+          keys.set(pitch,key);
+          keyboard.append(key);
+          if(pitch%12===0){
+            const label=svg('text',{x:38,y:y+9,class:'sp-key-label'});
+            label.textContent='C'+(pitch/12-1);
+            keyboard.append(label);
+          }
+        }
+        scroll.addEventListener('scroll',()=>keyboard.style.transform=`translateY(${-scroll.scrollTop}px)`);
+        const opening=notes.filter(note=>note.time<4).map(note=>note.midi).sort((a,b)=>a-b);
+        const center=opening[Math.floor(opening.length/2)]??notes[0].midi;
+        scroll.scrollTop=Math.max(0,26+(high-center)*row-scroll.clientHeight/2);
+      }
       update(now());
+    }
+
+    function updateKeys(value,follow){
+      const lit=new Set();
+      if(playing){
+        for(const note of notes){
+          if(note.time>value)break;
+          if(noteEnd(note)>value&&note.midi>=pianoLow&&note.midi<=pianoHigh)lit.add(note.midi);
+        }
+      }
+      for(const pitch of activeKeys)if(!lit.has(pitch))keys.get(pitch).classList.remove('is-playing');
+      for(const pitch of lit)if(!activeKeys.has(pitch))keys.get(pitch).classList.add('is-playing');
+      activeKeys=lit;
+      if(!follow||!lit.size)return;
+      const positions=[...lit].map(pitch=>26+(pianoHigh-pitch)*12);
+      if(positions.some(y=>y>=scroll.scrollTop+12&&y<=scroll.scrollTop+scroll.clientHeight-24))return;
+      scroll.scrollTop=Math.max(0,positions[0]-scroll.clientHeight/2);
     }
 
     const xml=new Map();
@@ -615,7 +669,7 @@
     async function setVocals(enabled){
       vocalsEnabled=enabled&&Boolean(loadVocals);
       if(!vocalsEnabled){
-        if(vocalsSource){vocalsSource.stop();vocalsSource.disconnect();vocalsSource=null;}
+        stopVocals();
         return;
       }
       if(!context)return;
@@ -634,6 +688,10 @@
     dispose.pause=pause;
     dispose.playing=()=>playing;
     dispose.setVocals=setVocals;
+    dispose.setVocalVolume=value=>{
+      voiceVolume=Math.min(1,Math.max(0,value));
+      if(vocalsGain)vocalsGain.gain.setTargetAtTime(voiceVolume,context.currentTime,.025);
+    };
     return dispose;
   }
   window.SongToSheetPlayer={mount};

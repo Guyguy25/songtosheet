@@ -21,11 +21,20 @@
 .sp-continuation-label strong{font-size:1.05rem}
 .sp-continuation-label span{font-size:.78rem}
 .sp-roll{border-top:1px solid #35294c;background:#0d101b}
-.sp-roll-heading{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#151725;border-bottom:1px solid #25293e;font-size:12px;font-weight:750}
+.sp-roll-heading{display:flex;align-items:center;gap:8px;padding:9px 13px;background:#151725;color:#f3edff;border-bottom:1px solid #25293e;font-size:12px;font-weight:750}
 .sp-roll-heading>span{color:#9f65ff}
 .sp-roll-heading small{margin-left:auto;color:#b6afc8;font-weight:500}
 .sp-roll-scroll{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-color:#504068 #151725}
 .sp-roll-scroll svg{display:block;cursor:crosshair;max-width:none}
+.sp-roll-piano{display:grid;grid-template-columns:54px minmax(0,1fr);grid-template-rows:auto minmax(0,245px)}
+.sp-roll-piano .sp-roll-heading{grid-column:1/-1}
+.sp-roll-piano .sp-roll-scroll{height:245px;overflow:auto;overscroll-behavior:contain}
+.sp-keyboard{overflow:hidden;background:#101322;border-right:1px solid #363650}
+.sp-keyboard svg{display:block}
+.sp-key-light{fill:#f1eff7}
+.sp-key-dark{fill:#37354a;stroke:#625976;stroke-width:.65}
+.sp-key-light.is-playing,.sp-key-dark.is-playing{fill:#a567ff;stroke:#efe3ff;stroke-width:1}
+.sp-key-label{fill:#362d4b;font:8px ui-monospace,monospace;pointer-events:none}
 .sp-grid-dark{fill:#101322}
 .sp-grid-light{fill:#181e31;stroke:#20263a;stroke-width:.5}
 .sp-grid-label{fill:#a8b4d3;font-size:10px;font-family:ui-monospace,monospace}

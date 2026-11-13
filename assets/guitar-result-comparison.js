@@ -136,7 +136,7 @@
     status.setAttribute('role', 'status');
     const cards = [];
     let active, frame, position = 0, token, saving = false;
-    let voiceEnabled = false, voiceRequest;
+    let voiceEnabled = false, voiceRequest, voiceVolume = .4;
     const loadVocals = job.downloads?.includes('vocals') ? () => {
       voiceRequest ??= fetch(exportUrl('vocals'), {signal}).then(response => {
         if (!response.ok) throw new Error('La piste voix est indisponible.');
@@ -183,7 +183,7 @@
         diagrams.replaceChildren(...shapes.map(chordDiagram));
         chords.hidden = !shapes.length;
       };
-      const grid = add(root, 'div', 'guitar-comparison-grid');
+      const grid = add(root, 'div', 'guitar-comparison-grid' + (piano ? ' piano-comparison-grid' : ''));
       grid.dataset.count = data.versions.length;
       const back = add(root, 'button', 'btn btn-outline guitar-comparison-back', '← Comparer les versions');
       back.type = 'button';
@@ -199,22 +199,47 @@
       seek.value = 0;
       seek.disabled = true;
       seek.setAttribute('aria-label', 'Position commune de lecture');
-      const voice = loadVocals ? add(transport, 'button', 'guitar-comparison-voice', '🎙 Voix isolée') : null;
+      const mix = loadVocals ? add(root, 'div', 'comparison-voice-mix') : null;
+      if (mix) root.insertBefore(mix, grid);
+      const voice = mix ? add(mix, 'button', 'guitar-comparison-voice', 'Ajouter la voix isolée') : null;
       if (voice) {
+        const copy = add(mix, 'div', 'comparison-voice-copy');
+        add(copy, 'strong', '', 'Voix originale');
+        add(copy, 'span', '', 'Écoute la voix du morceau avec la version en cours.');
+        const volume = add(mix, 'label', 'comparison-voice-volume');
+        const value = add(volume, 'span', '', 'Volume voix · 40 %');
+        const slider = add(volume, 'input', '');
+        slider.type = 'range';
+        slider.min = 0;
+        slider.max = 100;
+        slider.step = 1;
+        slider.value = 40;
+        slider.setAttribute('aria-label', 'Volume de la voix');
+        slider.disabled = true;
+        slider.oninput = () => {
+          voiceVolume = Number(slider.value) / 100;
+          value.textContent = `Volume voix · ${slider.value} %`;
+          active?.player.setVocalVolume(voiceVolume);
+        };
+        function showVoice() {
+          voice.setAttribute('aria-pressed', String(voiceEnabled));
+          voice.textContent = voiceEnabled ? 'Retirer la voix isolée' : 'Ajouter la voix isolée';
+          slider.disabled = !voiceEnabled;
+        }
         voice.type = 'button';
-        voice.setAttribute('aria-label', piano ? 'Écouter la voix isolée avec la partition piano' : 'Écouter la voix isolée avec la tablature');
-        voice.setAttribute('aria-pressed', 'false');
+        showVoice();
         voice.onclick = async () => {
           voiceEnabled = !voiceEnabled;
-          voice.setAttribute('aria-pressed', String(voiceEnabled));
+          showVoice();
           try {
             if (voiceEnabled) await loadVocals();
             if (signal.aborted) return;
+            active?.player.setVocalVolume(voiceVolume);
             await active?.player.setVocals(voiceEnabled);
           } catch {
             if (signal.aborted) return;
             voiceEnabled = false;
-            voice.setAttribute('aria-pressed', 'false');
+            showVoice();
             status.textContent = 'La piste voix est indisponible.';
           }
         };
@@ -303,10 +328,13 @@
           active = same ? null : item;
           if (same) { update(position); return; }
           item.player.seek(position);
+          item.player.setVocalVolume(voiceVolume);
           const vocals = item.player.setVocals(voiceEnabled).catch(() => {
             if (signal.aborted || active !== item || !voice) return;
             voiceEnabled = false;
             voice.setAttribute('aria-pressed', 'false');
+            voice.textContent = 'Ajouter la voix isolée';
+            mix.querySelector('input').disabled = true;
             status.textContent = 'La piste voix est indisponible.';
           });
           listen.textContent = 'Pause';

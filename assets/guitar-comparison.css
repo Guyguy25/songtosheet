@@ -24,6 +24,16 @@
 .guitar-comparison-transport { display: flex; align-items: center; gap: 12px; margin: 12px 0; padding: 8px 14px; border-radius: 10px; background: #211a2d; color: #fff; }
 .guitar-comparison-transport span { font-size: 12px; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .guitar-comparison-transport input { flex: 1; min-width: 0; accent-color: #a979fc; }
+.comparison-voice-mix { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin:0 0 12px; padding:12px 14px; border:1px solid #e6ddf3; border-radius:10px; background:#f7f2ff; color:#302047; }
+.comparison-voice-copy { order:-1; flex:1 1 180px; display:grid; gap:2px; font-size:13px; }
+.comparison-voice-copy span { color:#594872; font-size:12px; }
+.comparison-voice-volume { display:grid; gap:3px; min-width:122px; color:#45335e; font-size:12px; font-weight:650; }
+.comparison-voice-volume input { width:100%; accent-color:#7549eb; }
+.piano-comparison-grid .guitar-option { display:flex; flex-direction:column; }
+.piano-comparison-grid .guitar-option-header { min-height:42px; }
+.piano-comparison-grid .sp-sheet { height:clamp(220px,34vh,315px); min-height:0; max-height:none; }
+.piano-comparison-grid.is-focused .sp-sheet { height:min(60vh,600px); }
+.piano-comparison-grid .guitar-option-vote { margin-top:auto; }
 .guitar-comparison [hidden] { display: none !important; }
 @media (min-width: 1450px) {
   .guitar-comparison-grid[data-count="3"] { grid-template-columns: repeat(3,minmax(0,1fr)); }

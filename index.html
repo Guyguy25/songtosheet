@@ -1759,8 +1759,9 @@
     $('how-back-instrument').onclick=()=>howShowStep(2);
     $('how-view-demo').onclick=()=>{state.resultId='preview-melody';startApp('result');};
 
-    $('hero-link').insertAdjacentHTML('afterend',window.SongToSheetAudioSource.platformLogos);
-    window.SongToSheetAudioSource.advanceOnPaste($('hero-link'),heroGenerate);
+    const audioSource=window.SongToSheetAudioSource;
+    if(audioSource?.platformLogos)$('hero-link').insertAdjacentHTML('afterend',audioSource.platformLogos);
+    audioSource?.advanceOnPaste?.($('hero-link'),heroGenerate);
     $('hero-link').addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();heroGenerate();}});
     $('hero-file').onchange=e=>{const file=e.target.files[0];if(file){state.file=file;$('hero-file-label').textContent=file.name;}};
     $('workspace-file').onchange=e=>{const file=e.target.files[0];if(file){state.file=file;$('workspace-file-name').textContent=file.name;}};
@@ -1786,7 +1787,7 @@
     if(audioUrl&&location.pathname==='/'&&!$('hero-link').value)$('hero-link').value=audioUrl;
 
     renderRoute();if(state.user)await refresh();}
-  init();
+  document.addEventListener('DOMContentLoaded',init,{once:true});
 })();
 
 </script><script>

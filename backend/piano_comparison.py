@@ -33,7 +33,7 @@ def reduce_notes(notes):
     return sorted(reduced, key=lambda note: (note["start"], note["pitch"]))
 
 
-def generate(audio, directory, title, report, piano_engine):
+def generate(audio, directory, title, report, piano_engine, *, vocals=None):
     from basic_pitch.inference import predict
 
     duration = float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
@@ -82,7 +82,7 @@ def generate(audio, directory, title, report, piano_engine):
         try:
             from evaluate_piano_options import recommend
 
-            recommendation = recommend(audio, {key: values[1] for key, values in files.items()})
+            recommendation = recommend(audio, {key: values[1] for key, values in files.items()}, vocals)
         except Exception as error:
             print(f"Comparaison audio piano indisponible : {error}", flush=True)
     return duration, files, recommendation

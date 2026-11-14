@@ -158,7 +158,11 @@
         card.vote.disabled = chosen || (!piano && !data.token) || saving || card.listen.disabled;
       }
       status.textContent = data.selected ? 'Ton choix a été enregistré.' :
-        data.votingUnavailable ? 'Le vote est momentanément indisponible. Tu peux écouter les versions.' : '';
+        data.votingUnavailable ? 'Le vote est momentanément indisponible. Tu peux écouter les versions.' :
+        data.recommendationStatus === 'close' ? 'Versions proches selon l’analyse audio. Écoute-les pour choisir.' :
+        data.recommendationStatus === 'uncertain' ? 'Analyse audio incertaine. Écoute les versions pour choisir.' :
+        piano && data.versions.some(version => version.recommended) ?
+          'Le badge indique la version qui se rapproche le plus du morceau selon l’analyse audio.' : '';
     }
 
     function display(data) {
@@ -381,7 +385,8 @@
 
     if (piano) display({
       versions: job.piano_versions.map(version => ({...version, recommendation_source: 'ai'})),
-      selected: job.piano_choice
+      selected: job.piano_choice,
+      recommendationStatus: job.piano_recommendation_status
     });
     else api(`/api/track?id=${encodeURIComponent(job.id)}&comparison=1`, {signal}).then(display).catch(() => {
       if (!signal.aborted) status.textContent = 'Comparaison indisponible. Actualise cette page pour réessayer.';

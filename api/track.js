@@ -152,11 +152,11 @@ async function worker(db,res,body){
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
     if(body.excerpts!==true)compatible.excerpt={$exists:false};
     if(body.piano_only===true){
-      if(process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_playable!==true)return json(res,200,{job:null});
+      if(process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_judge_version!==2)return json(res,200,{job:null});
       compatible.instrument='piano';
       compatible.preview_limit=PREVIEW_SECONDS;
     }else if(process.env.TRACK_PIANO_COMPARISON!=='0'&&
-      (body.piano_compare!==true||body.piano_playable!==true)){
+      (body.piano_compare!==true||body.piano_playable!==true||body.piano_judge_version!==2)){
       compatible.$and=[{$or:[{instrument:{$ne:'piano'}},{preview_limit:{$ne:PREVIEW_SECONDS}}]}];
     }
     if(body.preview!==true)compatible.preview_limit={$exists:false};
@@ -282,14 +282,14 @@ async function worker(db,res,body){
     const preview=job.preview_limit?{preview_duration:Math.min(previewDuration,job.preview_limit)}:{};
     const pianoData=hasPianoFiles?{piano_primary:body.piano_primary}:{};
     const pianoSuggestion=body.piano_recommendation;
-    if(hasPianoFiles&&pianoSuggestion?.version===1&&pianoSuggestion.recommended===body.piano_primary){
+    if(hasPianoFiles&&[1,2].includes(pianoSuggestion?.version)&&pianoSuggestion.recommended===body.piano_primary){
       const available=Object.entries(PIANO_VARIANTS).filter(([,v])=>exports[v.score]&&exports[v.midi]);
       const scores=Object.fromEntries(available
         .map(([key])=>[key,pianoSuggestion.scores?.[key]])
         .filter(([,score])=>Number.isInteger(score)&&score>=0&&score<=100));
       if(available.length>=2&&Object.keys(scores).length===available.length&&
         scores[body.piano_primary]===Math.max(...Object.values(scores))){
-        pianoData.piano_recommendation={version:1,recommended:body.piano_primary,scores};
+        pianoData.piano_recommendation={version:pianoSuggestion.version,recommended:body.piano_primary,scores};
       }
     }
     const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo,...engine,...preview,...comparisonData,...pianoData},

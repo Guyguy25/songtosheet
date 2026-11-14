@@ -223,7 +223,8 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                     except Exception as error:
                         vocals.unlink(missing_ok=True)
                         print(f"{job['id']}: piste voix piano indisponible : {error}", flush=True)
-                duration, variants, recommendation = generate(audio, directory, job["title"], report, piano_engine)
+                duration, variants, recommendation = generate(audio, directory, job["title"], report, piano_engine,
+                                                               vocals=vocals)
                 primary = recommendation["recommended"] if recommendation else next(iter(variants))
                 score, midi, count = variants[primary]
                 exports = {}
@@ -381,6 +382,7 @@ def main():
                            guided_guitar_only=args.guided_guitar_only,
                            piano_only=args.piano_only, piano_compare=piano_engine is not None,
                            piano_playable=piano_engine is not None,
+                           piano_judge_version=2 if piano_engine is not None else None,
                            piano_vocals=piano_engine is not None and find_spec("demucs") is not None,
                            excerpts=True, preview=args.piano_only or (guitar_engine is not None and solo_engine is not None))["job"]
                 if not connected:

@@ -1,4 +1,4 @@
-"""Rank piano exports using sparse pitch estimation from the original mix."""
+"""Rank piano exports by musical fidelity to the source audio."""
 import numpy as np
 from scipy.ndimage import maximum_filter1d
 
@@ -40,7 +40,7 @@ def pitch_evidence(audio):
     return confidence, hop / rate
 
 
-def score_notes(evidence, step, notes):
+def note_grid(evidence, step, notes):
     if not evidence.size or not np.any(evidence) or not notes:
         return None
     mask = np.zeros(evidence.shape, dtype=bool)
@@ -54,6 +54,17 @@ def score_notes(evidence, step, notes):
             starts.append((pitch, start))
     if not starts:
         return None
+    return mask, starts
+
+
+def score_notes(evidence, step, notes):
+    grid = note_grid(evidence, step, notes)
+    if grid is None:
+        return None
+    return pitch_score(evidence, *grid)
+
+
+def pitch_score(evidence, mask, starts):
     near_evidence = maximum_filter1d(evidence, size=7, axis=1)
     near_played = maximum_filter1d(mask, size=7, axis=1)
     precision = near_evidence[mask].mean()
@@ -63,18 +74,89 @@ def score_notes(evidence, step, notes):
     return float(.8 * match + .2 * attack)
 
 
-def recommend(audio, candidates):
+def chroma_grid(grid):
+    chroma = np.zeros((12, grid.shape[1]), dtype=np.float32)
+    for pitch, frames in enumerate(grid, start=21):
+        chroma[pitch % 12] = np.maximum(chroma[pitch % 12], frames)
+    return chroma
+
+
+def coverage(reference, candidate):
+    """Compare time-aligned profiles while allowing slight attack jitter."""
+    if not reference.any():
+        return None
+    near = maximum_filter1d(candidate, size=7, axis=1)
+    return float((reference * near).sum() / reference.sum())
+
+
+def harmony_score(evidence, played):
+    first, second = chroma_grid(evidence), chroma_grid(played)
+    recall = coverage(first, second)
+    active = first.any(axis=0)
+    second[:, ~active] = 0
+    precision = coverage(second, first) or 0
+    return 2 * precision * recall / max(precision + recall, 1e-8)
+
+
+def register_line(evidence):
+    """Keep the strongest supported pitch in each frame."""
+    strongest = evidence.argmax(axis=0)
+    line = np.zeros_like(evidence)
+    columns = np.arange(evidence.shape[1])
+    line[strongest, columns] = evidence[strongest, columns]
+    return line
+
+
+def similarity(evidence, step, notes, vocal_evidence=None):
+    grid = note_grid(evidence, step, notes)
+    if grid is None:
+        return None
+    played, starts = grid
+    score = .34 * pitch_score(evidence, played, starts) + .28 * harmony_score(evidence, played)
+    weight = .62
+    bass = coverage(register_line(evidence[:36]), played[:36])
+    if bass is not None:
+        score += .14 * bass
+        weight += .14
+    melodic_reference = vocal_evidence
+    if melodic_reference is None or not melodic_reference.any():
+        melodic_reference = evidence.copy()
+        melodic_reference[:39] = 0
+    length = min(evidence.shape[1], melodic_reference.shape[1])
+    melody = coverage(chroma_grid(register_line(melodic_reference[:, :length])),
+                      chroma_grid(played[:, :length]))
+    if melody is not None:
+        score += .16 * melody
+        weight += .16
+    attacks = np.maximum(0, np.diff(evidence, axis=1, prepend=0))
+    predicted = np.zeros_like(played)
+    for pitch, start in starts:
+        predicted[pitch, start] = True
+    timing = coverage(attacks, predicted)
+    if timing is not None:
+        score += .08 * timing
+        weight += .08
+    return score / weight
+
+
+def recommend(audio, candidates, vocals=None):
     from pretty_midi import PrettyMIDI
     from transcribe_track import midi_events
 
     evidence, step = pitch_evidence(audio)
+    vocal_evidence = None
+    if vocals is not None and vocals.is_file():
+        try:
+            vocal_evidence, _ = pitch_evidence(vocals)
+        except (OSError, ValueError):
+            pass
     scores = {}
     for key, path in candidates.items():
-        score = score_notes(evidence, step, midi_events(PrettyMIDI(str(path)), float("inf")))
+        score = similarity(evidence, step, midi_events(PrettyMIDI(str(path)), float("inf")), vocal_evidence)
         if score is not None:
             scores[key] = score
     if len(scores) < 2 or len(scores) != len(candidates) or max(scores.values()) <= 0:
         return None
     best = max(scores, key=scores.get)
-    return {"version": 1, "recommended": best,
+    return {"version": 2, "recommended": best,
             "scores": {key: round(100 * score) for key, score in scores.items()}}

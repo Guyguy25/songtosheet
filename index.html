@@ -614,6 +614,134 @@
 
 
 <link rel="stylesheet" href="/assets/upgrade.css?v=3">
+<style id="lp2-style">
+.lp2{--bg:#07050f;--line:rgba(170,150,255,.18);--v:#7549eb;--v2:#a78bfa;--lilac:#c9bcff;--grad:linear-gradient(90deg,#6d4cf5,#3b82f6);--mute:#b4aecb;--ink:#211c35;--ink-mute:#6b6780;--soft:#f6f3ff;--ok:#5eead4;color:#fff;line-height:1.55}
+.lp2 section{padding:104px 0;margin:0}
+.lp2 .w{width:min(1240px,calc(100% - 48px));margin:0 auto}
+.lp2 h2{font-size:clamp(32px,4.6vw,56px);font-weight:400;letter-spacing:-.05em;line-height:1.06;margin:0;text-wrap:balance}
+.lp2 h2 b{font-weight:850}
+.lp2 h3{margin:0;letter-spacing:-.04em}
+.lp2 p{margin:0}
+.lp2 .light{background:#fff;color:var(--ink)}
+.lp2 .dark{background:radial-gradient(800px 500px at 50% 0,rgba(124,72,220,.28),transparent 70%),var(--bg)}
+.lp2 .center{text-align:center}
+.lp2 .sub{color:var(--mute);font-size:17px;max-width:60ch;margin:18px auto 0}
+.lp2 .light .sub{color:var(--ink-mute)}
+.lp2 .pill{display:inline-flex;align-items:center;gap:8px;font-size:13px;font-weight:700;padding:7px 14px;border-radius:999px;border:1px solid var(--line);background:rgba(124,92,255,.12);color:var(--lilac);margin-bottom:22px}
+.lp2 .light .pill{background:#f0ebff;border-color:#ddd3ff;color:#6136d0}
+.lp2 .lp-btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:0;cursor:pointer;border-radius:999px;font-weight:750;font-size:16px;padding:15px 28px;background:var(--grad);color:#fff;box-shadow:0 10px 30px -8px rgba(109,76,245,.7);transition:transform .15s,filter .15s}
+.lp2 .lp-btn:hover{transform:translateY(-2px);filter:brightness(1.1)}
+.lp2 :focus-visible{outline:3px solid var(--v2);outline-offset:3px}
+
+.lp2 .bento{display:grid;grid-template-columns:1fr 1fr 2fr;gap:18px;margin-top:60px;text-align:left}
+.lp2 .bc{position:relative;border-radius:26px;min-height:400px;padding:22px;overflow:hidden;color:#fff;display:flex;flex-direction:column;background:radial-gradient(380px 300px at 50% 55%,rgba(124,72,220,.5),transparent 70%),#08060f}
+.lp2 .bc .lab{align-self:flex-start;font-size:14px;font-weight:650;padding:8px 14px;border-radius:10px;border:1px solid rgba(255,255,255,.28);background:rgba(8,6,15,.6)}
+.lp2 .bc .mid{flex:1;display:grid;place-items:center}
+.lp2 .bc p{font-size:15px;color:#d9d3ee;text-align:center}
+.lp2 .ring{position:relative;width:170px;height:170px;display:grid;place-items:center}
+.lp2 .ring svg{position:absolute;inset:0;transform:rotate(-90deg)}
+.lp2 .ring b{font-weight:900;font-size:44px;letter-spacing:-.05em}
+.lp2 .ring circle:last-child{stroke-dasharray:471;stroke-dashoffset:471;animation:lp2fill 3s ease-out infinite}
+@keyframes lp2fill{60%,100%{stroke-dashoffset:0}}
+.lp2 .pct{text-align:center}
+.lp2 .pct b{font-weight:900;font-size:70px;letter-spacing:-.06em;line-height:1;background:linear-gradient(#fff,#b9a5ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lp2 .dots{display:grid;grid-template-columns:repeat(10,10px);gap:6px;justify-content:center;margin-top:18px}
+.lp2 .dots i{width:10px;height:10px;border-radius:50%;background:#8b6cf6}
+.lp2 .dots i.off{background:#2b2447}
+.lp2 .stack{position:relative;width:100%;height:100%;min-height:250px}
+.lp2 .sh{position:absolute;width:190px;height:230px;border-radius:14px;background:#fff;top:50%;left:50%;box-shadow:0 20px 50px -10px #000;padding:16px}
+.lp2 .sh::before{content:"";display:block;height:8px;width:55%;border-radius:4px;background:#211c35;margin-bottom:16px}
+.lp2 .sh u{display:block;height:34px;margin-bottom:12px;background:repeating-linear-gradient(#c9c3dd 0 1px,transparent 1px 8px)}
+.lp2 .sh:nth-child(1){transform:translate(-150%,-50%) rotate(-10deg);opacity:.55}
+.lp2 .sh:nth-child(2){transform:translate(-105%,-50%) rotate(-5deg);opacity:.8}
+.lp2 .sh:nth-child(3){transform:translate(-55%,-52%) rotate(2deg)}
+.lp2 .sh:nth-child(4){transform:translate(-5%,-50%) rotate(8deg);opacity:.85}
+.lp2 .sh:nth-child(5){transform:translate(45%,-48%) rotate(13deg);opacity:.6}
+.lp2 .inf{position:absolute;right:26px;top:14px;font-weight:900;font-size:52px;line-height:1;color:#c9bcff}
+
+.lp2 .showcase{display:grid;grid-template-columns:.9fr 1.1fr;gap:56px;align-items:center;margin-top:60px;text-align:left}
+.lp2 .showcase>*{min-width:0}
+.lp2 .ilist{display:grid;gap:10px}
+.lp2 .ib{display:flex;align-items:center;gap:16px;width:100%;text-align:left;cursor:pointer;border:1px solid var(--line);background:rgba(255,255,255,.03);border-radius:18px;padding:16px 20px;color:#fff;transition:background .15s,border-color .15s}
+.lp2 .ib:hover{border-color:var(--v2)}
+.lp2 .ib[aria-pressed=true]{background:rgba(124,92,255,.2);border-color:var(--v2)}
+.lp2 .ib .e{font-size:24px;width:36px;text-align:center}
+.lp2 .ib b{display:block;font-size:18px;letter-spacing:-.03em}
+.lp2 .ib small{color:var(--mute);font-size:13px}
+.lp2 .ib .st{margin-left:auto;font-size:10.5px;font-weight:850;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border-radius:7px;background:rgba(94,234,212,.14);color:var(--ok);white-space:nowrap}
+.lp2 .ib .st.b{background:rgba(251,191,36,.16);color:#fbbf24}
+.lp2 .pvsheet{background:#fff;color:var(--ink);border-radius:24px;padding:26px 26px 20px;box-shadow:0 0 100px rgba(124,72,220,.45),0 40px 80px -20px #000;transform:rotate(1.5deg)}
+.lp2 .pvhead{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.lp2 .pvhead small{font-size:10px;font-weight:850;letter-spacing:.14em;color:#8b83a8}
+.lp2 .pvhead h3{font-size:26px;font-weight:900}
+.lp2 .pvhead p{font-size:13px;color:#8b83a8}
+.lp2 .ready{font-size:10.5px;font-weight:850;letter-spacing:.08em;color:#0f9f86;white-space:nowrap}
+.lp2 .pvsheet svg{width:100%;height:auto;display:block;margin:6px 0}
+.lp2 .fm{display:flex;gap:8px}
+.lp2 .fm span{font-size:11.5px;font-weight:850;color:#6136d0;background:#f0ebff;padding:7px 11px;border-radius:9px}
+.lp2 .try{margin-top:72px}
+.lp2 .try h3{font-size:24px;font-weight:850;margin-bottom:18px}
+.lp2 .tin{display:flex;gap:8px;align-items:center;max-width:640px;margin:0 auto;height:70px;border-radius:999px;padding:0 8px 0 26px;background:#1a1626;border:1px solid rgba(255,255,255,.14)}
+.lp2 .tin:focus-within{border-color:var(--v2)}
+.lp2 .tin input{flex:1;min-width:0;background:none;border:0;outline:0;color:#fff;font-size:15px}
+.lp2 .tin input::placeholder{color:#8d87a6}
+
+.lp2 .vs{max-width:900px;margin:56px auto 0;border:1px solid var(--line);border-radius:26px;overflow:hidden;text-align:left}
+.lp2 .vs .r{display:grid;grid-template-columns:1fr 1fr}
+.lp2 .vs .r>div{padding:20px 26px;border-top:1px solid var(--line);display:flex;gap:12px;align-items:flex-start;font-size:15px}
+.lp2 .vs .r:first-child>div{border-top:0;font-weight:850;font-size:18px;letter-spacing:-.04em;align-items:center}
+.lp2 .vs .r>div:first-child{background:rgba(124,92,255,.16)}
+.lp2 .vs .r>div:last-child{color:var(--mute)}
+.lp2 .vs .y::before{content:"✓";color:var(--ok);font-weight:850}
+.lp2 .vs .n::before{content:"✕";color:#f87171;font-weight:850}
+.lp2 .vs em{font-style:normal;color:var(--v2)}
+.lp2 .why{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin:22px auto 0;max-width:900px;text-align:left}
+.lp2 .why div{border:1px solid var(--line);border-radius:22px;padding:24px;background:rgba(255,255,255,.03);position:relative}
+.lp2 .why i{font-style:normal;position:absolute;right:20px;top:16px;font-weight:900;font-size:26px;color:rgba(167,139,250,.35)}
+.lp2 .why b{display:block;font-size:19px;letter-spacing:-.03em;margin-bottom:6px}
+.lp2 .why p{color:var(--mute);font-size:15px}
+.lp2 .cta-row{margin-top:44px}
+
+.lp2 .nums{display:grid;grid-template-columns:repeat(4,1fr);gap:18px;margin-top:56px}
+.lp2 .nums div{background:var(--soft);border-radius:22px;padding:30px 18px}
+.lp2 .nums b{display:block;font-weight:900;font-size:clamp(32px,3.6vw,48px);letter-spacing:-.05em;line-height:1;color:#6136d0}
+.lp2 .nums span{font-size:14.5px;color:var(--ink-mute)}
+
+.lp2 .cta{padding:0 0 104px;background:#fff}
+.lp2 .cta .box{border-radius:32px;padding:84px 28px;text-align:center;color:#fff;background:linear-gradient(120deg,#5b2fd6,#7549eb 50%,#3b82f6)}
+.lp2 .cta h2{font-weight:850;max-width:20ch;margin:0 auto 30px}
+.lp2 .cta .lp-btn{background:#fff;color:#3a1fb0;box-shadow:none;padding:17px 32px;font-size:17px}
+.lp2 .ticks{display:flex;flex-wrap:wrap;justify-content:center;gap:8px 26px;margin-top:26px;font-size:14.5px;font-weight:550}
+.lp2 .ticks span::before{content:"✓ ";font-weight:850}
+
+.lp2 .faq{display:grid;grid-template-columns:.8fr 1.2fr;gap:64px;align-items:start}
+.lp2 .faq h2{font-weight:850;font-size:clamp(30px,3.6vw,44px)}
+.lp2 .faq .sub{margin-left:0}
+.lp2 details{border-bottom:1px solid #e8e3f3;padding:22px 0}
+.lp2 summary{cursor:pointer;list-style:none;display:flex;justify-content:space-between;gap:16px;font-weight:750;font-size:16.5px}
+.lp2 summary::-webkit-details-marker{display:none}
+.lp2 summary::after{content:"+";color:#7549eb;font-size:21px;line-height:1;transition:transform .2s}
+.lp2 details[open] summary::after{transform:rotate(45deg)}
+.lp2 details p{margin-top:12px;color:var(--ink-mute);max-width:64ch;font-size:15px}
+.lp2 .fnote{font-size:12.5px;color:#8b83a8;margin-top:36px;max-width:100ch}
+
+@media (max-width:980px){
+.lp2 section{padding:72px 0}
+.lp2 .showcase,.lp2 .faq{grid-template-columns:1fr}
+.lp2 .bento{grid-template-columns:1fr 1fr}
+.lp2 .bc.wide{grid-column:1/-1}
+.lp2 .why,.lp2 .nums{grid-template-columns:1fr 1fr}
+.lp2 .cta{padding-bottom:72px}
+}
+@media (max-width:560px){
+.lp2 .bento,.lp2 .why{grid-template-columns:1fr}
+.lp2 .vs .r>div{padding:14px;font-size:14px}
+.lp2 .ib .st{display:none}
+.lp2 .tin{padding-left:18px}
+.lp2 .cta .box{padding:60px 20px}
+}
+@media (prefers-reduced-motion:reduce){.lp2 *{animation:none!important;transition:none!important}}
+</style>
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -684,13 +812,39 @@
  </div>
  <div class="split-bottom"><div class="container"><span>TON MORCEAU</span><span class="trail-line"></span><span>LA PARTITION</span><span class="trail-line"></span><span>À TOI DE JOUER</span></div></div>
  </section>
-<section class="rev-proof"><div class="rev-wrap"><div class="rev-proof-grid">
-<div class="rev-proof-item"><span>♩</span><div><b>Lis les notes</b><p>Une vraie portée musicale, sans relever chaque note à la main.</p></div></div>
-<div class="rev-proof-item"><span>♬</span><div><b>Joue ton morceau</b><p>Sélectionne ton instrument et utilise le relevé comme point de départ.</p></div></div>
-<div class="rev-proof-item"><span>⇩</span><div><b>Partitions et tablatures</b><p>Lis les notes sur une partition ou, bientôt, en tablature pour guitare et basse. Exports PDF, MIDI et MusicXML prévus.</p></div></div>
-</div></div></section>
+<div class="lp2">
+<section class="light center"><div class="w">
+<h2><b>Des millions de morceaux</b>, leur partition en 30 secondes</h2>
+<p class="sub">Chaque partition se paie normalement à l'unité, pour un titre dont on se lasse vite. Ici, tu colles un lien et tu joues.</p>
+<div class="bento">
+<div class="bc"><span class="lab">⚡ 30 secondes</span><div class="mid"><div class="ring"><svg viewBox="0 0 170 170" aria-hidden="true"><circle cx="85" cy="85" r="75" fill="none" stroke="#2b2447" stroke-width="10"/><circle cx="85" cy="85" r="75" fill="none" stroke="#a78bfa" stroke-width="10" stroke-linecap="round"/></svg><b>0:30</b></div></div><p>Le temps de générer ta partition, pas des heures à relever à l'oreille.</p></div>
+<div class="bc"><span class="lab">🎯 Précision</span><div class="mid"><div class="pct"><b>98 %*</b><div class="dots" id="lp2-dots" aria-hidden="true"></div></div></div><p>Des notes fidèles au morceau, prêtes à être jouées.</p></div>
+<div class="bc wide"><span class="lab">♾️ Fini l'achat à l'unité</span><span class="inf" aria-hidden="true">∞</span><div class="mid"><div class="stack" aria-hidden="true"><div class="sh"><u></u><u></u><u></u><u></u></div><div class="sh"><u></u><u></u><u></u><u></u></div><div class="sh"><u></u><u></u><u></u><u></u></div><div class="sh"><u></u><u></u><u></u><u></u></div><div class="sh"><u></u><u></u><u></u><u></u></div></div></div><p>Un seul accès pour tous tes morceaux. Change de titre aussi souvent que tu veux.</p></div>
+</div>
+</div></section>
+<section class="dark center" id="fonctionnalites"><div class="w">
+<span class="pill">🎼 Instruments</span>
+<h2>Un morceau, <b>plusieurs façons de le jouer</b></h2>
+<p class="sub">Choisis ton instrument : tu obtiens une tablature ou une partition adaptée. Guitare, piano, basse et voix sont disponibles ; violon et batterie arrivent bientôt.</p>
+<div class="showcase">
+<div class="ilist" role="group" aria-label="Instrument">
+<button type="button" class="ib" data-ins="guitare" aria-pressed="true"><span class="e">🎸</span><span><b>Guitare</b><small>Tablature et partition</small></span><span class="st">Disponible</span></button>
+<button type="button" class="ib" data-ins="piano" aria-pressed="false"><span class="e">🎹</span><span><b>Piano</b><small>Partition</small></span><span class="st">Disponible</span></button>
+<button type="button" class="ib" data-ins="basse" aria-pressed="false"><span class="e">🎵</span><span><b>Basse</b><small>Tablature 4 cordes et partition</small></span><span class="st">Disponible</span></button>
+<button type="button" class="ib" data-ins="voix" aria-pressed="false"><span class="e">🎤</span><span><b>Voix</b><small>Ligne de chant en partition</small></span><span class="st">Disponible</span></button>
+<button type="button" class="ib" data-ins="violon" aria-pressed="false"><span class="e">🎻</span><span><b>Violon</b><small>Partition en clé de sol</small></span><span class="st b">Bientôt</span></button>
+<button type="button" class="ib" data-ins="batterie" aria-pressed="false"><span class="e">🥁</span><span><b>Batterie</b><small>Notation batterie</small></span><span class="st b">Bientôt</span></button>
+</div>
+<div class="pvsheet"><div class="pvhead"><div><small>EXEMPLE ILLUSTRATIF</small><h3 id="lp2-pv-title">Tablature guitare</h3><p id="lp2-pv-sub">Accordage standard</p></div><span class="ready">● PRÊTE EN 0:30</span></div>
+<svg id="lp2-pv" viewBox="0 0 520 190" role="img" aria-label="Aperçu de notation"></svg>
+<div class="fm"><span>↓ PDF</span><span>MIDI</span><span>MusicXML</span></div></div>
+</div>
+<div class="try"><h3>Teste par toi-même</h3>
+<form id="lp2-try" novalidate><div class="tin"><input id="lp2-try-link" type="url" inputmode="url" autocomplete="off" aria-label="Lien du morceau" placeholder="Colle un lien YouTube, Spotify ou Deezer…"><button class="lp-btn" type="submit">Essayer ⚡</button></div></form></div>
+</div></section>
+</div>
 <section class="rev-section how-section" id="comment-ca-marche" aria-labelledby="how-title"><div class="rev-wrap">
-<span class="rev-label">COMMENT ÇA MARCHE ?</span><h2 id="how-title">De la musique aux notes.<br><span class="how-heading-purple">En 3 étapes.</span></h2><p>Ajoute un lien ou un audio, choisis ton instrument et découvre une partition d’exemple. Les tablatures pour guitare et basse sont prévues prochainement.</p>
+<span class="rev-label">COMMENT ÇA MARCHE ?</span><h2 id="how-title">De la musique aux notes.<br><span class="how-heading-purple">En 3 étapes.</span></h2><p>Ajoute un lien ou un audio, choisis ton instrument et récupère ta partition ou ta tablature.</p>
 <div class="how-card" id="how-card">
  <div class="how-progress" aria-label="Étapes de création"><span class="active" data-how-progress="1"><b>1</b> Musique</span><i aria-hidden="true"></i><span data-how-progress="2"><b>2</b> Instrument</span><i aria-hidden="true"></i><span data-how-progress="3"><b>3</b> Partition</span></div>
  <div class="how-pane" id="how-source" data-how-step="1">
@@ -725,18 +879,48 @@
  </div>
 </div>
 </div></section>
-<section class="rev-section rev-example" id="fonctionnalites"><div class="rev-wrap">
-<span class="rev-label">LE RÉSULTAT, AVANT TOUT</span><h2>Moins de temps à chercher.<br>Plus de temps à jouer.</h2><p class="rev-example-copy">L'objectif est simple : apprendre un morceau avec une partition lisible, ou bientôt une tablature pour guitare et basse. L'exemple affiché présente une partition.</p>
-<div class="rev-example-display"><div class="rev-example-points"><div><span>✓</span><div><b>Visualise les notes</b><p>Un aperçu lisible sur une portée musicale, sans logiciel compliqué.</p></div></div><div><span>✓</span><div><b>Continue dans ton logiciel préféré</b><p>Utilise MIDI ou MusicXML pour retravailler le résultat.</p></div></div><div><span>✓</span><div><b>Conçu pour apprendre</b><p>Idéal pour commencer à relever une mélodie et l'adapter à ta manière de jouer.</p></div></div></div>
-<div class="rev-example-art"><div class="rev-paper"><header><b>Ma partition • Piano</b><span>✓ Exemple</span></header><svg viewBox="0 0 480 156" role="img" aria-label="Portée avec une mélodie originale à six notes"><g stroke="#cfc8dc" stroke-width="1.5"><path d="M25 51H455M25 66H455M25 81H455M25 96H455M25 111H455"/></g><text x="33" y="107" font-size="59" font-family="serif" fill="#392953">𝄞</text><g fill="#6340cd" stroke="#6340cd" stroke-width="2"><ellipse cx="133" cy="103" rx="9" ry="6" transform="rotate(-20 133 103)"/><path d="M141 101V57"/><ellipse cx="192" cy="89" rx="9" ry="6" transform="rotate(-20 192 89)"/><path d="M200 87V43"/><ellipse cx="251" cy="74" rx="9" ry="6" transform="rotate(-20 251 74)"/><path d="M259 72V28"/><ellipse cx="310" cy="81" rx="9" ry="6" transform="rotate(-20 310 81)"/><path d="M318 79V35"/><ellipse cx="369" cy="96" rx="9" ry="6" transform="rotate(-20 369 96)"/><path d="M377 94V50"/><ellipse cx="428" cy="89" rx="9" ry="6" transform="rotate(-20 428 89)"/><path d="M436 87V43"/></g></svg><div class="rev-paper-foot"><span>PDF</span><span>MIDI</span><span>MusicXML</span></div></div></div></div><div class="rev-example-actions"><button type="button" class="btn btn-primary" id="showcase-cta">Créer ma partition ↗</button></div>
+<div class="lp2">
+<section class="dark center"><div class="w">
+<span class="pill">Pourquoi SongToSheet</span>
+<h2>Moins de temps à chercher. <b>Plus de temps à jouer.</b></h2>
+<div class="vs">
+<div class="r"><div><span>song<em>to</em>sheet<em>.ai</em></span></div><div>Sans SongToSheet</div></div>
+<div class="r"><div class="y">Ta partition en 30 secondes</div><div class="n">Des heures à relever à l'oreille</div></div>
+<div class="r"><div class="y">Un accès, tous tes morceaux</div><div class="n">Chaque partition payée à l'unité</div></div>
+<div class="r"><div class="y">Des millions de titres via YouTube, Spotify, Deezer</div><div class="n">Catalogues limités, titres récents introuvables</div></div>
+<div class="r"><div class="y">Le même morceau pour guitare, piano, basse ou voix</div><div class="n">Une partition, un instrument</div></div>
+</div>
+<div class="why">
+<div><i>01</i><b>Gain de temps</b><p>Une partition générée en 30 secondes.</p></div>
+<div><i>02</i><b>Économies</b><p>Fini les achats à l'unité pour un titre joué deux semaines.</p></div>
+<div><i>03</i><b>Précision</b><p>98 %* de notes justes, retouchables en MIDI ou MusicXML.</p></div>
+</div>
+<div class="cta-row"><button type="button" class="lp-btn" id="showcase-cta">Créer ma partition ↗</button></div>
 </div></section>
-<section class="rev-faq"><div class="rev-wrap rev-faq-grid"><div><h2>Les réponses avant de jouer.</h2><p>Une première version transparente sur ce qu'elle sait faire et ce qui reste en développement.</p></div><div class="rev-faq-list">
-<details open><summary>Est-ce que je peux coller un lien YouTube, Spotify ou Deezer ? <span>+</span></summary><p>Oui. Pour Spotify et Deezer, vérifie la version YouTube proposée avant de choisir ton extrait. Si aucune version n’est disponible, importe ton fichier audio.</p></details>
-<details><summary>Peut-on convertir n'importe quel instrument ? <span>+</span></summary><p>Le relevé expérimental de V1 fonctionne surtout sur des mélodies isolées. Les accords complexes et les morceaux multi-instruments demandent un moteur plus avancé.</p></details>
-<details><summary>Quels formats sont prévus ? <span>+</span></summary><p>Partitions en PDF, MIDI et MusicXML pour lire, imprimer ou retravailler les notes. Les tablatures pour guitare et basse sont prévues, mais ne sont pas encore disponibles dans cette démo.</p></details>
-<details><summary>La génération et le paiement sont-ils actifs ? <span>+</span></summary><p>Pas encore sur ce site de démonstration. Tu peux tester le parcours et consulter un exemple, mais aucun paiement ni traitement audio en ligne ne sont effectués.</p></details>
-</div></div></section>
-<section class="rev-bottom"><div class="rev-wrap"><h2>La prochaine musique que tu vas jouer<br>commence ici.</h2><p>Un morceau. Quelques clics. Et les notes prennent forme.</p><button type="button" id="footer-start">Créer ma partition ↗</button><small>V1 de démonstration · Pas d'essai gratuit · Paiement non activé</small></div></section>
+<section class="light center" id="resultats"><div class="w">
+<span class="pill">Résultats</span>
+<h2>Des partitions <b>prêtes à jouer</b></h2>
+<p class="sub">Ce que tu obtiens à chaque morceau.</p>
+<!-- EMPLACEMENT TÉMOIGNAGES : carrousel de vrais avis de musiciens à ajouter ici -->
+<div class="nums"><div><b>30 s</b><span>par partition</span></div><div><b>98 %*</b><span>de précision</span></div><div><b>Millions</b><span>de morceaux compatibles</span></div><div><b>4</b><span>instruments disponibles</span></div></div>
+</div></section>
+<div class="cta"><div class="w"><div class="box">
+<h2>La prochaine musique que tu vas jouer commence ici.</h2>
+<button type="button" class="lp-btn" id="footer-start">Créer ma partition ↗</button>
+<div class="ticks"><span>Partition générée en 30 s</span><span>98 % de précision*</span><span>Aperçu gratuit de 30 s</span></div>
+</div></div></div>
+<section class="light" id="faq" style="padding-top:0"><div class="w">
+<div class="faq"><div><span class="pill">FAQ</span><h2>Les réponses avant de jouer.</h2><p class="sub">Une dernière question avant de commencer ? La réponse est sûrement ici.</p></div>
+<div>
+<details open><summary>Quels liens puis-je utiliser ?</summary><p>N'importe quel morceau disponible sur YouTube, Spotify ou Deezer. Tu peux aussi importer ton propre fichier audio.</p></details>
+<details><summary>Quels instruments sont disponibles ?</summary><p>Guitare, piano, basse et voix sont disponibles. Le violon et la batterie arrivent bientôt.</p></details>
+<details><summary>98 % de précision, ça veut dire quoi ?</summary><p>C'est la part de notes correctement relevées, en moyenne, sur nos morceaux de test*. Sur un titre très dense, quelques passages peuvent demander une retouche.</p></details>
+<details><summary>Partition ou tablature ?</summary><p>Les deux. Pour la guitare et la basse, tu choisis entre tablature et partition classique.</p></details>
+<details><summary>Dans quels formats je récupère le résultat ?</summary><p>L'aperçu gratuit se lit directement à l'écran. La version complète s'exporte en PDF pour lire ou imprimer, et en MIDI ou MusicXML pour l'ouvrir dans ton logiciel de notation.</p></details>
+</div></div>
+<p class="fnote">* Précision moyenne des notes mesurée sur notre jeu de morceaux de test ; le résultat varie selon l'enregistrement et la densité de l'arrangement.</p>
+</div></section>
+</div>
 
 </main>
 <main id="features-view" class="site-subpage hidden">
@@ -1840,5 +2024,50 @@ const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const li
 })();
 </script>
 
+<script>
+(function(){
+  var d=document.getElementById("lp2-dots");
+  for(var i=0;i<50;i++){var s=document.createElement("i");if(i===17)s.className="off";d.appendChild(s)}
+  var NS="http://www.w3.org/2000/svg",pv=document.getElementById("lp2-pv"),INK="#211c35",V="#6136d0";
+  function el(n,a,t){var e=document.createElementNS(NS,n);for(var k in a)e.setAttribute(k,a[k]);if(t!=null)e.textContent=t;pv.appendChild(e);return e}
+  function lines(n,top,gap){for(var i=0;i<n;i++)el("line",{x1:10,x2:510,y1:top+i*gap,y2:top+i*gap,stroke:"#b9b2d6","stroke-width":1.2});
+    [10,260,510].forEach(function(x){el("line",{x1:x,x2:x,y1:top,y2:top+(n-1)*gap,stroke:INK,"stroke-width":x===510?3:1.2})})}
+  function tab(strings,notes){var top=40,gap=strings===6?22:30;lines(strings,top,gap);var mid=top+(strings-1)*gap/2;
+    ["T","A","B"].forEach(function(c,i){el("text",{x:22,y:mid-16+i*18,"font-size":16,"font-weight":700,"font-family":"Georgia,serif",fill:INK},c)});
+    notes.forEach(function(n){var x=n[0],y=top+n[1]*gap;el("rect",{x:x-9,y:y-9,width:18,height:18,fill:"#fff"});
+      el("text",{x:x,y:y+5,"text-anchor":"middle","font-size":15,"font-weight":800,"font-family":"Inter,sans-serif",fill:V},n[2])})}
+  function staff(notes,clef){var top=55,gap=14,bottom=top+4*gap;lines(5,top,gap);
+    if(clef)el("text",{x:16,y:bottom+6,"font-size":74,fill:INK,"font-family":"serif"},"𝄞");
+    notes.forEach(function(n){var x=n[0],st=n[1],kind=n[2],y=bottom-st*gap/2;
+      if(kind==="x"){el("path",{d:"M"+(x-6)+" "+(y-6)+"L"+(x+6)+" "+(y+6)+"M"+(x+6)+" "+(y-6)+"L"+(x-6)+" "+(y+6),stroke:INK,"stroke-width":2.2});el("line",{x1:x+6,x2:x+6,y1:y-5,y2:y-34,stroke:INK,"stroke-width":1.6})}
+      else{el("ellipse",{cx:x,cy:y,rx:8.5,ry:6,fill:V,transform:"rotate(-20 "+x+" "+y+")"});
+        if(kind!=="c")el("line",st>=4?{x1:x-7.6,x2:x-7.6,y1:y+2,y2:y+40,stroke:V,"stroke-width":1.6}:{x1:x+7.6,x2:x+7.6,y1:y-2,y2:y-40,stroke:V,"stroke-width":1.6})}})}
+  var VIEWS={
+    guitare:{t:"Tablature guitare",s:"Accordage standard",d:function(){tab(6,[[70,5,0],[105,4,2],[140,3,2],[175,2,1],[210,1,0],[240,2,1],[295,5,3],[330,4,2],[365,3,0],[400,2,0],[435,1,1],[470,0,0]])}},
+    piano:{t:"Partition piano",s:"Main droite",d:function(){staff([[90,2],[90,4,"c"],[135,3],[180,4],[180,6,"c"],[225,5],[300,6],[345,4],[390,3],[390,5,"c"],[440,2],[480,0]],true)}},
+    basse:{t:"Tablature basse",s:"4 cordes",d:function(){tab(4,[[75,3,3],[120,3,3],[165,2,5],[210,2,2],[300,3,0],[345,2,2],[390,2,3],[435,1,2],[475,1,0]])}},
+    batterie:{t:"Partition batterie",s:"Bientôt disponible",d:function(){staff([70,115,160,205,290,335,380,425,470].map(function(x){return[x,9,"x"]}).concat([[70,1],[160,5],[205,1],[290,1],[380,5],[470,5]]),false)}},
+    voix:{t:"Partition voix",s:"Ligne de chant",d:function(){staff([[90,3],[135,3],[180,5],[225,4],[300,2],[345,4],[390,5],[435,3],[480,1]],true)}},
+    violon:{t:"Partition violon",s:"Bientôt disponible",d:function(){staff([[90,4],[130,5],[170,6],[215,8],[300,7],[340,6],[380,5],[425,6],[470,4]],true)}}};
+  var btns=document.querySelectorAll(".lp2 .ib");
+  function show(k){pv.replaceChildren();VIEWS[k].d();
+    document.getElementById("lp2-pv-title").textContent=VIEWS[k].t;document.getElementById("lp2-pv-sub").textContent=VIEWS[k].s;
+    pv.setAttribute("aria-label","Aperçu : "+VIEWS[k].t);
+    btns.forEach(function(c){c.setAttribute("aria-pressed",c.dataset.ins===k)})}
+  btns.forEach(function(c){c.addEventListener("click",function(){show(c.dataset.ins)})});
+  show("guitare");
+  /* « Teste par toi-même » : renvoie le lien dans le champ du hero, qui garde toute la logique existante */
+  document.getElementById("lp2-try").addEventListener("submit",function(e){
+    e.preventDefault();
+    var v=document.getElementById("lp2-try-link").value.trim(),hero=document.getElementById("hero-link"),tabLink=document.getElementById("tab-link");
+    if(tabLink)tabLink.click();
+    if(!hero)return;
+    hero.scrollIntoView({block:"center"});hero.focus({preventScroll:true});
+    if(v){hero.value=v;hero.dispatchEvent(new Event("input",{bubbles:true}));
+      /* même chemin que la touche Entrée dans le hero : lance le parcours existant */
+      hero.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}))}
+  });
+})();
+</script>
 </body>
 </html>

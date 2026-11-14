@@ -237,7 +237,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                 include_vocals(exports, vocals)
                 call("preview", **identity, duration=source_duration or duration,
                      preview_duration=duration, note_count=count, exports=exports,
-                     engine="yourmt3-plus-moe-nops" if primary == DEFAULT else "basic-pitch-0.4.0",
+                     engine="yourmt3-plus-moe-nops" if primary in (DEFAULT, "playable") else "basic-pitch-0.4.0",
                      piano_primary=primary, piano_recommendation=recommendation)
                 direct_published = True
                 payload = {"ok": True, "preview": True, "exports": {}}
@@ -380,6 +380,7 @@ def main():
                            guitar_vocals=True,
                            guided_guitar_only=args.guided_guitar_only,
                            piano_only=args.piano_only, piano_compare=piano_engine is not None,
+                           piano_playable=piano_engine is not None,
                            piano_vocals=piano_engine is not None and find_spec("demucs") is not None,
                            excerpts=True, preview=args.piano_only or (guitar_engine is not None and solo_engine is not None))["job"]
                 if not connected:

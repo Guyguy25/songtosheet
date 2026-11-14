@@ -1,12 +1,14 @@
-"""Generate SongToSheet's three piano variants from a common preview."""
+"""Generate SongToSheet's piano variants from a common preview."""
 import math
 
 from piano_score import estimate_piano_grid, write_piano_score
+from piano_playable import arrange
 from transcribe_track import load_note_model, piano_midi_events, run, write_midi
 
 DEFAULT = "yourmt3"
 EXPORTS = {
     "yourmt3": ("pianoyourxml", "pianoyourmid"),
+    "playable": ("pianoeasyxml", "pianoeasymid"),
     "basic": ("pianobasicxml", "pianobasicmid"),
     "reduction": ("pianoredxml", "pianoredmid"),
 }
@@ -41,10 +43,16 @@ def generate(audio, directory, title, report, piano_engine):
     report("detect")
     versions = {}
     try:
-        versions["yourmt3"] = piano_midi_events(piano_engine.transcribe(audio, directory / "yourmt3-native.mid"),
-                                               duration)
+        original = piano_engine.transcribe(audio, directory / "yourmt3-native.mid")
+        versions["yourmt3"] = piano_midi_events(original, duration)
     except Exception as error:
         print(f"YourMT3+ indisponible : {error}", flush=True)
+    if versions.get("yourmt3"):
+        try:
+            bpm, _ = estimate_piano_grid(versions["yourmt3"], 120)
+            versions["playable"] = arrange(original, duration, bpm)
+        except Exception as error:
+            print(f"Arrangement piano simplifié indisponible : {error}", flush=True)
     try:
         _, midi, _ = predict(audio, load_note_model())
         versions["basic"] = piano_midi_events(midi, duration)

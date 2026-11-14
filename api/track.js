@@ -152,9 +152,11 @@ async function worker(db,res,body){
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
     if(body.excerpts!==true)compatible.excerpt={$exists:false};
     if(body.piano_only===true){
+      if(process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_playable!==true)return json(res,200,{job:null});
       compatible.instrument='piano';
       compatible.preview_limit=PREVIEW_SECONDS;
-    }else if(process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_compare!==true){
+    }else if(process.env.TRACK_PIANO_COMPARISON!=='0'&&
+      (body.piano_compare!==true||body.piano_playable!==true)){
       compatible.$and=[{$or:[{instrument:{$ne:'piano'}},{preview_limit:{$ne:PREVIEW_SECONDS}}]}];
     }
     if(body.preview!==true)compatible.preview_limit={$exists:false};

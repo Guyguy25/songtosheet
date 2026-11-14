@@ -51,14 +51,21 @@
   }
 
   async function resolveVersion(source){
-    const response=await fetch('/api/media-info?resolve=youtube&url='+encodeURIComponent(source.url.href),{
+    const deezer=source.provider==='Deezer';
+    const resolver=deezer?'deezer':'youtube';
+    const response=await fetch('/api/media-info?resolve='+resolver+'&url='+encodeURIComponent(source.url.href),{
       signal:AbortSignal.timeout(20000)
     });
     const info=await response.json();
     if(response.status===400)throw new Error(info.error);
     if(!response.ok)throw new Error('La recherche du morceau a échoué. Réessaie ou importe ton fichier audio.');
+    if(deezer){
+      const preview=parse(info.preview_url);
+      if(!preview||!preview.url.hostname.endsWith('.dzcdn.net'))return null;
+      return {audioUrl:preview.url.href,name:info.title,versionLabel:'Extrait Deezer'};
+    }
     const version=parse(info.version?.url);
-    return version?.youtubeId?{audioUrl:version.url.href,versionLabel:info.version.title}:null;
+    return version?.youtubeId?{audioUrl:version.url.href,versionLabel:'Version proposée sur YouTube · '+info.version.title}:null;
   }
 
   if(typeof module==='object')module.exports={parse,importHint,needsVersion,resolveVersion,platformLogos,advanceOnPaste};

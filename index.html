@@ -11,8 +11,8 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=13" />
-  <script src="/assets/audio-source.js?v=5" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=30" defer></script>
+  <script src="/assets/audio-source.js?v=6" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=31" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=13" />
   <script src="/backend/web/score-player.js?v=18" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=8" />
@@ -1507,13 +1507,13 @@
       reader.readAsDataURL(blob);
     });
   }
-  async function submitTrack({file,audioUrl,title,instrument,format,source,capo,guitarGoal,guitarPresence,excerpt},setStatus){
+  async function submitTrack({file,audioUrl,title,instrument,format,source,capo,guitarGoal,guitarPresence,excerpt,authorized},setStatus){
     setStatus(audioUrl?'Mise en file du lien audio…':'Préparation de l’envoi…');
     let id,queued=false;
     try{
       const input=audioUrl?{audioUrl}:{extension:file.name.split('.').at(-1).toLowerCase(),size:file.size,sourceName:file.name};
       const guidance=guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence}:{};
-      const result=await post('/api/track',{action:'begin',title,authorized:true,instrument,format,source,capo,excerpt,...guidance,...input});
+      const result=await post('/api/track',{action:'begin',title,authorized,instrument,format,source,capo,excerpt,...guidance,...input});
       id=result.id;
       if(!audioUrl){
         const count=Math.ceil(file.size/result.chunk_bytes);

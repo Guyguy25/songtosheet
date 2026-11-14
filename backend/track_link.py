@@ -116,9 +116,9 @@ def download_youtube(video_id, directory):
     command = [
         sys.executable, "-m", "yt_dlp", "--ignore-config", "--no-plugin-dirs", "--no-cache-dir",
         "--no-playlist", "--js-runtimes", "node", "--socket-timeout", "12",
-        "--extractor-retries", "0", "--retries", "0", "--fragment-retries", "0",
+        "--extractor-retries", "2", "--retries", "2", "--fragment-retries", "2",
         "--max-filesize", "25M", "--match-filter", "!is_live",
-        "--format", "bestaudio[ext=m4a]/bestaudio", "--extract-audio", "--audio-format", "m4a",
+        "--format", "bestaudio[ext=m4a]/bestaudio/best[acodec!=none]", "--extract-audio", "--audio-format", "m4a",
         "--no-progress", "-o", str(directory / "input.%(ext)s"),
         "--", "https://www.youtube.com/watch?v=" + video_id,
     ]
@@ -129,7 +129,14 @@ def download_youtube(video_id, directory):
         raise TrackLinkError("La récupération de l’audio YouTube a échoué. Réessaie dans un instant.") from error
     audio = directory / "input.m4a"
     if result.returncode or not audio.is_file():
-        raise TrackLinkError("Impossible de récupérer cette vidéo YouTube. Utilise une vidéo publique accessible.")
+        details = (result.stderr + result.stdout).decode("utf-8", errors="replace").lower()
+        if "private video" in details or "video unavailable" in details:
+            raise TrackLinkError("Cette vidéo YouTube est privée ou indisponible. Vérifie que le lien s’ouvre sans connexion.")
+        if "sign in to confirm" in details:
+            raise TrackLinkError("YouTube bloque l’accès à l’audio de cette vidéo. Tu peux importer le fichier audio directement.")
+        if "larger than max-filesize" in details or "file is larger than" in details:
+            raise TrackLinkError("L’audio YouTube dépasse la limite de 25 Mo.")
+        raise TrackLinkError("Impossible de récupérer l’audio YouTube pour le moment. Réessaie ou importe le fichier audio.")
     if not 1024 <= audio.stat().st_size <= MAX_BYTES:
         raise TrackLinkError("La taille de l’audio YouTube doit être comprise entre 1 Ko et 25 Mo.")
     return audio

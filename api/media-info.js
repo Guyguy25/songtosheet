@@ -221,6 +221,13 @@ async function getInfo(src) {
       result.title=clean(data.title);
       result.artist=clean(data.artist?.name,80);
       result.duration_seconds=safeSeconds(data.duration);
+      if(process.env.DEEZER_PREVIEW_AUTHORIZED==='1'&&typeof data.preview==='string'){
+        const preview=new URL(data.preview);
+        if(preview.protocol==='https:'&&!preview.username&&!preview.password&&!preview.port&&
+          preview.hostname.endsWith('.dzcdn.net')&&/\.mp3$/i.test(preview.pathname)){
+          result.preview_url=preview.href;
+        }
+      }
       if(typeof data.album?.cover_medium==='string'&&data.album.cover_medium.startsWith('https://e-cdns-images.dzcdn.net/'))result.thumbnail_url=data.album.cover_medium;
     }catch{}
   }else if(src.provider==='Apple Music'){
@@ -254,14 +261,14 @@ module.exports=async function handler(req,res){
   try{
     const raw=req.query?.url;
     if(typeof raw!=='string'||raw.length>1800)parseSource(raw);
-    const resolve=req.query?.resolve==='youtube';
+    const resolve=req.query?.resolve==='youtube'||req.query?.resolve==='deezer';
     const src=resolve?await resolveSource(raw):parseSource(raw);
     if(resolve&&!['Spotify','Deezer'].includes(src.provider)){
       return res.status(400).json({error:'Colle le lien d’un morceau Spotify ou Deezer.'});
     }
     const result=await getInfo(src);
     if(resolve){
-      const version=await findYouTubeVersion(result);
+      const version=src.provider==='Spotify'&&req.query.resolve==='youtube'?await findYouTubeVersion(result):null;
       return res.status(200).json({...result,version});
     }
     if(!result.duration_verified){

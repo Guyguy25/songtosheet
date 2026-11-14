@@ -440,7 +440,7 @@
       clip.classList.toggle('hidden',!clipping);
       const versionLabel=get('.track-version-label');
       versionLabel.hidden=!link?.versionLabel;
-      versionLabel.textContent=link?.versionLabel?'Version proposée sur YouTube · '+link.versionLabel:'';
+      versionLabel.textContent=link?.versionLabel||'';
       if(clipping)loadClip();
       else stopClip();
       if(!importing)media.pause();
@@ -601,14 +601,17 @@
       }
       if(audioSource.needsVersion(source)){
         setStatus('Recherche d’une version YouTube du morceau…');
+        const isDeezer=source.provider==='Deezer';
+        if(isDeezer)setStatus('Récupération de l’extrait Deezer…');
         const version=await audioSource.resolveVersion(source);
         if(mode!=='link'||linkInput.value.trim()!==rawLink)return false;
         if(version){
-          source={...audioSource.parse(version.audioUrl),versionLabel:version.versionLabel};
+          source={...audioSource.parse(version.audioUrl),versionLabel:version.versionLabel,name:version.name};
         }else{
           setMode('file',source);
           render();
-          setStatus('Aucune version YouTube trouvée. Ajoute ton fichier audio pour continuer.',true);
+          setStatus(isDeezer?'Extrait Deezer indisponible. Ajoute ton fichier audio pour continuer.':
+            'Aucune version YouTube trouvée. Ajoute ton fichier audio pour continuer.',true);
           fileInput.focus();
           return false;
         }
@@ -626,6 +629,7 @@
         link=source;
         titleEdited=false;
         fetchMetadata(link);
+        if(source.name){title.value=source.name;titleEdited=true;}
       }
       onLinkChange?.(link.url.href);
       return true;
@@ -666,7 +670,7 @@
           await lookup.request;
         }
         const source=solo.checked&&draft.source==='instrumental'?'instrument':draft.source;
-        await onSubmit({...draft,capo:draft.capo??0,source,
+        await onSubmit({...draft,capo:draft.capo??0,source,authorized:rights.checked,
           file:mode==='file'?draft.file:null,audioUrl:mode==='link'?link?.url.href:undefined,
           title:title.value.trim()||sourceTitle()},setStatus);
         setMode(allowLink?'link':'file');

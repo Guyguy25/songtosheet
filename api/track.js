@@ -1,12 +1,12 @@
 'use strict';
-const {createHash,randomUUID,timingSafeEqual}=require('node:crypto');
+const {createHash,createHmac,randomBytes,randomUUID,timingSafeEqual}=require('node:crypto');
 const {compareGuitar,sourceKey,candidates}=require('../lib/guitar-comparison');
 const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks}=require('../lib/track-jobs');
+const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
@@ -14,6 +14,64 @@ const REVIEW_MS=24*60*60*1000;
 const WORKER_ACTIONS=new Set(['claim','read','progress','preview','solo','review_audio','finish']);
 const PROGRESS_STAGES=new Set(['decode','isolate','detect','arrange','cached','judge']);
 const PIANO_FILES=Object.values(PIANO_VARIANTS).flatMap(({score,midi})=>[score,midi]);
+
+const GUEST_COOKIE='sts_track_guest';
+const GUEST_MS=24*60*60*1000;
+const GUEST_HOUR_MS=60*60*1000;
+const GUEST_HOURLY_LIMIT=5;
+
+function guestSession(req,res,create=false){
+  const cookie=String(req.headers.cookie||'').split(';').map(value=>value.trim())
+    .find(value=>value.startsWith(GUEST_COOKIE+'='));
+  let token=cookie?.slice(GUEST_COOKIE.length+1);
+  if(!/^[a-f0-9]{64}$/.test(token||'')){
+    if(!create)return null;
+    token=randomBytes(32).toString('hex');
+    res.setHeader('Set-Cookie',`${GUEST_COOKIE}=${token}; Path=/api/track; Max-Age=${GUEST_MS/1000}; HttpOnly; Secure; SameSite=Lax`);
+  }
+  const owner=createHash('sha256').update('songtosheet-track-guest:'+token).digest('hex');
+  return {_id:new ObjectId(owner.slice(0,24)),guest:true};
+}
+
+async function reserveGuestGeneration(db,req,now){
+  const forwarded=process.env.VERCEL==='1'?req.headers['x-vercel-forwarded-for']:null;
+  const ip=forwarded||req.socket?.remoteAddress||'unknown';
+  const hour=Math.floor(now.getTime()/GUEST_HOUR_MS);
+  const key=createHmac('sha256',process.env.TRACK_WORKER_DIGEST).update(`guest-rate:${hour}:${ip}`).digest('hex');
+  const limits=db.collection('track_guest_limits');
+  try{
+    await limits.updateOne({_id:key,count:{$lt:GUEST_HOURLY_LIMIT}},
+      {$inc:{count:1},$setOnInsert:{expires_at:new Date((hour+1)*GUEST_HOUR_MS)}},{upsert:true});
+    return true;
+  }catch(error){
+    if(error.code===11000)return false;
+    throw error;
+  }
+}
+
+async function guestStatus(db,req,res,guest){
+  const {id}=req.query;
+  if(!guest||!isId(id))return json(res,404,{detail:'Aperçu introuvable ou expiré.'});
+  const job=await db.collection('track_jobs').findOne(trackFilter(id,guest),{projection:{
+    title:1,instrument:1,format:1,status:1,stage:1,stages:1,source_name:1,preview_limit:1,
+    active:1,created_at:1,queued_at:1,expires_at:1,processing_deadline:1,lease_until:1,error_message:1,
+  }});
+  if(!job)return json(res,404,{detail:'Aperçu introuvable ou expiré.'});
+  const {title,instrument,format,status,stage,stages,source_name,preview_limit,error_message}=serialTrack(job);
+  return json(res,200,{track:true,title,instrument,format,status,stage,stages,source_name,preview_limit,error_message,downloads:[]});
+}
+
+async function claimGuestTrack(db,res,user,guest,id){
+  if(!isId(id))return json(res,404,{detail:'Aperçu introuvable ou expiré.'});
+  const jobs=db.collection('track_jobs');
+  if(guest){
+    const claimed=await jobs.updateOne({...trackFilter(id,guest),status:'completed',active:false},
+      {$set:{user_id:user._id},$unset:{guest_expires_at:''}});
+    if(claimed.matchedCount)return json(res,200,{id});
+  }
+  const owned=await jobs.findOne({...trackFilter(id,user),status:'completed'},{projection:{_id:1}});
+  return owned?json(res,200,{id}):json(res,404,{detail:'Aperçu introuvable ou expiré.'});
+}
 
 function validExports(exports){
   return exports&&typeof exports==='object'&&!Array.isArray(exports)&&
@@ -38,7 +96,7 @@ function workerAuthorized(req){
   return timingSafeEqual(createHash('sha256').update(token.slice(7)).digest(),Buffer.from(expected,'hex'));
 }
 
-async function begin(db,res,user,body){
+async function begin(db,req,res,user,body){
   const {size,extension,instrument}=body;
   const title=typeof body.title==='string'?body.title.trim().slice(0,110):'';
   const source=audioSource.parse(body.audioUrl);
@@ -88,10 +146,18 @@ async function begin(db,res,user,body){
       $unset:{lease:'',lease_until:'',audio_url:''}});
   await jobs.updateMany({user_id:user._id,active:true,expires_at:{$lte:now}},
     {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'},$unset:{audio_url:''}});
+  if(user.guest){
+    const existing=await jobs.findOne({user_id:user._id,active:true},{projection:{_id:1}});
+    if(existing)return json(res,409,{detail:'Une transcription est déjà en cours.'});
+    if(!await reserveGuestGeneration(db,req,now)){
+      return json(res,429,{detail:'Trop de générations récentes. Réessaie dans une heure.'});
+    }
+  }
   try{
     const input=source?.youtubeId?{youtube_id:source.youtubeId,source_kind:'link'}:
       link?{audio_url:link.href,source_kind:'link'}:{extension,size};
     const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
+      ...(user.guest?{guest_expires_at:new Date(now.getTime()+GUEST_MS)}:{}),
       ...(excerpt?{excerpt:{start_ms:excerpt.start_ms,end_ms:excerpt.end_ms}}:{}),
       ...(instrument==='piano'&&body.source==='mixed'&&process.env.TRACK_PIANO_COMPARISON!=='0'?{piano_vocals:true}:{}),
       ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence,guitar_compare:true,guitar_judge:true,guitar_choice:null,
@@ -375,7 +441,15 @@ module.exports=async(req,res)=>{
       return await worker(await database(),res,body);
     }
     const user=await authenticated(req);
-    if(!user)return json(res,401,{detail:'Connexion requise.'});
+    if(req.method==='GET'&&req.query.guest==='1'){
+      return await guestStatus(await database(),req,res,guestSession(req,res));
+    }
+    if(req.method==='POST'&&body.action==='claim_guest'&&user){
+      return await claimGuestTrack(await database(),res,user,guestSession(req,res),body.id);
+    }
+    const uploadAction=req.method==='POST'&&['begin','chunk','queue','cancel'].includes(body.action);
+    const owner=user||(uploadAction&&guestSession(req,res,body.action==='begin'));
+    if(!owner)return json(res,401,{detail:'Connexion requise.'});
     if((req.method==='GET'&&req.query.comparison==='1')||(req.method==='POST'&&body.action==='guitar_vote')){
       return await compareGuitar(await database(),req,res,user);
     }
@@ -394,8 +468,8 @@ module.exports=async(req,res)=>{
     if(req.method==='GET')return req.query.audio===undefined
       ?await download(await database(),req,res,user):await reviewAudio(await database(),req,res,user);
     if(!process.env.TRACK_WORKER_DIGEST)return json(res,503,{detail:'Le moteur de transcription est indisponible.'});
-    if(body.action==='begin')return await begin(await database(),res,user,body);
-    if(['chunk','queue','cancel'].includes(body.action))return await upload(await database(),res,user,body);
+    if(body.action==='begin')return await begin(await database(),req,res,owner,body);
+    if(['chunk','queue','cancel'].includes(body.action))return await upload(await database(),res,owner,body);
     return json(res,400,{detail:'Action invalide.'});
   }catch(error){return fail(res,error);}
 };

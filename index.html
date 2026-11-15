@@ -742,6 +742,19 @@
 }
 @media (prefers-reduced-motion:reduce){.lp2 *{animation:none!important;transition:none!important}}
 </style>
+<style>
+#workspace.track-guest .sidebar,#workspace.track-guest .app-header-right,#workspace.track-guest #back-to-library,#workspace.track-guest .create-aside{display:none}
+#workspace.track-guest .create-grid{grid-template-columns:minmax(0,1fr)}
+#workspace.track-guest #create-page,#workspace.track-guest #result-page{max-width:920px}
+.track-guest-brand{display:none}
+.track-guest .track-guest-brand{display:inline-flex}
+.track-guest .app-breadcrumb{display:none}
+.track-guest-lock{position:relative;display:grid;min-height:300px;place-items:center;isolation:isolate;overflow:hidden;border:1px solid #e8e0f9;border-radius:22px;background:white}
+.track-guest-notation{position:absolute;inset:20px;display:grid;place-items:center;pointer-events:none;filter:blur(7px);opacity:.45;z-index:-1}
+.track-guest-notation svg{width:100%;max-height:280px}
+.track-guest-lock-content{display:grid;justify-items:center;gap:14px;padding:24px;text-align:center}
+.track-guest-lock-content .btn{white-space:normal}
+</style>
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -1020,7 +1033,7 @@
 </div></div></section></main>
 <main id="workspace" class="hidden">
     <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><span class="sidebar-label">TON ESPACE</span><nav class="side-nav"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-create"><span>✦</span> Nouvelle partition</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Démo</strong><small>Offre de démonstration</small><a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
-    <div class="app-layout"><header class="app-header"><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><span class="small-credit"><span>◇</span> <b id="top-credits">Démo</b> · accès</span><div class="user-avatar" id="user-avatar">S</div></div></header><div class="app-scroll">
+    <div class="app-layout"><header class="app-header"><a href="/" class="brand track-guest-brand" data-nav="home" aria-label="SongToSheet, accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><span class="small-credit"><span>◇</span> <b id="top-credits">Démo</b> · accès</span><div class="user-avatar" id="user-avatar">S</div></div></header><div class="app-scroll">
       <section id="dashboard-page" class="app-page"><div class="app-welcome"><div><span class="dashboard-kicker">TON STUDIO PERSONNEL ✦</span><h1>Prêt à jouer quelque chose<br/><span>de nouveau ?</span></h1><p>Transforme tes enregistrements en partitions en quelques étapes.</p></div><div class="welcome-decor">♫</div></div><div class="overview-cards"><div class="overview-card"><span class="metric-symbol purple">◇</span><div><strong id="metric-credits">Démo</strong><small>Accès actuel</small></div></div><div class="overview-card"><span class="metric-symbol green">▤</span><div><strong id="metric-total">0</strong><small>Partitions générées</small></div></div><div class="overview-card"><span class="metric-symbol orange">✧</span><div><strong id="metric-progress">0</strong><small>Générations en cours</small></div></div></div><div class="dashboard-grid"><div class="dashboard-create"><div><span class="section-label">CRÉATION RAPIDE</span><h2>Ta prochaine partition est à un clic.</h2><p>Dépose un morceau et laisse SongToSheet faire le premier relevé.</p><button id="dashboard-start" class="btn btn-primary">Nouvelle partition <span>↗</span></button></div><div class="dashboard-illustration">♬</div></div><div class="dashboard-helper"><span class="helper-symbol">✦</span><h3>Comment ça marche ?</h3><p>Importe ton fichier audio, choisis ton instrument, puis lance la génération. Le résultat sera sauvegardé dans ta bibliothèque.</p><a href="/#comment-ca-marche" id="learn-more">Voir les étapes <span>↗</span></a></div></div><div class="list-heading"><h2>Dernières partitions</h2><button id="view-all">Tout voir →</button></div><div id="recent-jobs" class="jobs-list"></div><p id="admin-guitar-comparison" hidden><a class="btn btn-outline" href="/comparatif.html">Comparer les tablatures guitare</a></p></section>
 
       <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><div id="track-onboarding"></div><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Essentiel : 1 musique tous les 7 jours.</p></div><div class="tip-line"><i>✓</i><p>L'illimité prévoit un usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><a class="btn btn-outline" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></aside></div></section>
@@ -1243,6 +1256,20 @@
     window.SongToSheetFlow.chooseInstrument(instrument);
   }
 
+  const guestTrackKey='sts_guest_track';
+  function guestTrackId(){
+    try{return sessionStorage.getItem(guestTrackKey);}catch{return null;}
+  }
+  function rememberGuestTrack(id){
+    try{
+      if(id)sessionStorage.setItem(guestTrackKey,id);
+      else sessionStorage.removeItem(guestTrackKey);
+    }catch{}
+  }
+  function canOpenStudio(page){
+    return Boolean(state.user||(state.guestStudio&&['create','result'].includes(page)));
+  }
+
   function renderRoute(){
     clearInterval(state.poll);state.poll=null;menuClose();
     const pathname=(location.pathname.replace(/\/$/,'')||'/').toLowerCase();
@@ -1272,7 +1299,17 @@
       a.classList.toggle('active',current);
       if(current)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');
     });
-    if(app){if(!state.user){go('/inscription',true);return;}showAppPage(state.activePage);}
+    if(app){
+      const guestId=!state.user&&guestTrackId();
+      if(guestId&&!state.guestStudio){
+        state.guestStudio=true;
+        state.activePage='result';
+        state.resultId=guestId;
+      }
+      if(!canOpenStudio(state.activePage)){go('/inscription',true);return;}
+      $('workspace').classList.toggle('track-guest',!state.user);
+      showAppPage(state.activePage);
+    }
     if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth();}
     if(window.SongToSheetFlow)window.SongToSheetFlow.render(pathname);
     window.SongToSheetWaitSurvey?.mount($('demo-wait-survey'),state.user?.id,pathname==='/generation');
@@ -1303,6 +1340,10 @@
     $('auth-password').setAttribute('autocomplete',login?'current-password':'new-password');
     $('auth-password').required=true;
     $('auth-password').minLength=8;
+    const claimOnly=Boolean(state.user&&guestTrackId());
+    $('auth-email').required=!claimOnly;
+    $('auth-password').required=!claimOnly;
+    if(claimOnly)$('auth-submit').textContent='Réessayer d’ouvrir mon aperçu';
     $('auth-password-hint').textContent=login?'Connecte-toi avec le mot de passe de ton compte.':'8 caractères minimum. Ton mot de passe est haché de façon sécurisée sur le serveur.';
     show('auth-error',false);
     if(window.SongToSheetFlow)window.SongToSheetFlow.configureAuth(login);
@@ -1381,7 +1422,7 @@
   }
   let closePlayer;
   function stopPlayer(){closePlayer?.();closePlayer=undefined;}
-  function showAppPage(page){if(!state.user)return go('/inscription');
+  function showAppPage(page){if(!canOpenStudio(page))return go('/inscription');
     if(page!=='result')stopPlayer();
     if(page!=='create')trackWizard?.pause();
     state.activePage=page;
@@ -1419,7 +1460,7 @@
     }catch(e){toast(e.message||'Impossible de sauvegarder ta création.',true);}
   };
   function startApp(page='create'){
-    if(!state.user){state.activePage=page;go('/inscription');return;}
+    if(!canOpenStudio(page)){state.activePage=page;go('/inscription');return;}
     if(location.pathname!=='/app'){state.activePage=page;go('/app');}
     else showAppPage(page);
   }
@@ -1490,11 +1531,7 @@
     catch(e){toast(e.message||'Import impossible.',true);}
   }
   function openTrackDraft(draft){
-    if(!state.user){
-      state.pendingTrack=draft;
-      go('/inscription');
-      return;
-    }
+    if(!state.user)state.guestStudio=true;
     startApp('create');
     trackWizard.prefill(draft);
     rememberTrackLink(draft.audioUrl);
@@ -1529,7 +1566,8 @@
       rememberTrackLink();
       state.file=null;$('workspace-file').value='';
       $('workspace-file-name').textContent='Glisse un fichier ici, ou clique pour choisir';
-      await refresh();
+      if(state.user)await refresh();
+      else rememberGuestTrack(id);
       openResult(id);
     }catch(error){
       if(id&&!queued)await post('/api/track',{action:'cancel',id}).catch(()=>{});
@@ -1698,13 +1736,39 @@
     select.addEventListener('change',switchTrack);
     switchTrack();
   }
+  function showLockedTrack(job){
+    const kind=job.format==='tablature'?'Ta tablature':'Ta partition';
+    const notation=window.SongToSheetFlow?.placeholderNotation(job.instrument,job.format==='tablature')||'';
+    $('result-content').innerHTML=`<div class="result-hero">
+      <span class="dashboard-kicker">${kind.toUpperCase()} EST PRÊTE</span>
+      <h1>${safe(job.title)}</h1><p class="result-meta">${safe(job.instrument)}</p>
+    </div><section class="track-guest-lock" aria-label="Aperçu à débloquer">
+      <div class="track-guest-notation" aria-hidden="true" inert>${notation}</div>
+      <div class="track-guest-lock-content">
+        <a class="btn btn-primary" data-nav="signup" href="/inscription">Inscris-toi pour voir tes 30 s gratuites</a>
+        <a href="/connexion" data-nav="login">J’ai déjà un compte</a>
+      </div>
+    </section>`;
+  }
   async function loadResult(id){
-    try{const j=await api(`/api/jobs/${encodeURIComponent(id)}`);if(state.activePage!=='result'||state.resultId!==id)return;
+    const guest=!state.user;
+    const current=()=>location.pathname==='/app'&&state.activePage==='result'&&state.resultId===id&&guest===!state.user;
+    try{
+      const key=encodeURIComponent(id);
+      const j=await api(guest?`/api/track?guest=1&id=${key}`:`/api/jobs/${key}`);
+      if(!current())return;
+      if(guest&&j.status==='completed'){
+        clearTimeout(state.poll);state.poll=null;
+        cancelAnimationFrame(trackProgressFrame);
+        showLockedTrack(j);
+        return;
+      }
+      if(guest&&j.status==='failed')rememberGuestTrack(null);
       if(j.track){
         const links={pdf:'Télécharger le PDF',musicxml:'Partition MusicXML',tab:'Tablature MusicXML',mid:'MIDI'};
         const completed=j.status==='completed';
         const waiting=['queued','processing'].includes(j.status);
-        const ready=j.downloads.includes('mid')&&j.downloads.includes('musicxml');
+        const ready=!guest&&j.downloads.includes('mid')&&j.downloads.includes('musicxml');
         const downloads=Object.entries(links).filter(([key])=>!j.preview_limit&&j.downloads.includes(key)).map(([key,label])=>
           `<a class="btn ${key==='pdf'?'btn-primary':'btn-outline'}" href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}">↓ ${label}</a>`).join('');
         const tab=j.format==='tablature'&&j.downloads.includes('tab');
@@ -1850,7 +1914,7 @@
         }
         clearInterval(state.poll);state.poll=null;
         if(waiting)state.poll=setTimeout(()=>{
-          if(state.activePage==='result'&&state.resultId===id)loadResult(id);
+          if(current())loadResult(id);
           else{clearInterval(state.poll);state.poll=null;}
         },2000);
         else await refresh();
@@ -1871,12 +1935,38 @@
       $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">${completed?'TA PARTITION EST PRÊTE ✦':processing?'GÉNÉRATION EN COURS':'TRANSCRIPTION IMPOSSIBLE'}</span><h1>${safe(j.title)}</h1><p class="result-meta">${details}</p>${completed?`<div class="result-actions"><a class="btn btn-primary" href="/api/jobs/${encodeURIComponent(id)}/download/pdf">↓ Télécharger PDF</a><a class="btn btn-outline" href="/api/jobs/${encodeURIComponent(id)}/download/mid">↓ MIDI</a><a class="btn btn-outline" href="/api/jobs/${encodeURIComponent(id)}/download/musicxml">↓ MusicXML</a></div>`:''}</div>${completed?`<div class="note-notation"><h3>Aperçu de la mélodie</h3>${notesSvg(j.notes||[])}<p class="result-note">${j.note_count} notes estimées · Tempo indicatif ${j.bpm} BPM. Le relevé est expérimental : vérifie les hauteurs, rythmes et harmonies. Un export MusicXML est fourni pour tes corrections.</p></div>`:processing?`<div class="note-notation"><h3>✦ On décode ta musique…</h3><p class="result-note">Le fichier est analysé en arrière-plan. Les crédits ne seront consommés que si tout se passe bien. Cette page se met à jour automatiquement.</p></div>`:`<div class="note-notation"><h3>Le relevé n'a pas abouti</h3><p class="result-note">${safe(j.error_message||'Une erreur de génération est survenue.')}<br/>Aucun crédit débité pour ce traitement.</p><button class="btn btn-outline" data-start>Réessayer avec un autre audio ↗</button></div>`}`;
       if(processing){clearInterval(state.poll);state.poll=setInterval(async()=>{if(state.activePage==='result'&&state.resultId===id){await loadResult(id);}else clearInterval(state.poll);},4500);}
       else{clearInterval(state.poll);state.poll=null;await refresh();}
-    }catch(e){toast(e.message,true);}
+    }catch(e){
+      if(!current())return;
+      if(!guest){toast(e.message,true);return;}
+      if(e.status===404)rememberGuestTrack(null);
+      $('result-content').innerHTML=`<div class="result-hero"><p role="alert">${safe(e.message)}</p>
+        <button type="button" class="btn btn-outline" ${e.status===404?'data-start':'data-retry-guest'}>Réessayer</button>
+      </div>`;
+    }
+  }
+  async function finishAuth(){
+    const id=guestTrackId();
+    if(id){
+      try{
+        await post('/api/track',{action:'claim_guest',id});
+        rememberGuestTrack(null);
+        openResult(id);
+        await refresh();
+        return;
+      }catch(error){
+        if(error.status!==404)throw error;
+        rememberGuestTrack(null);
+        toast(error.message,true);
+      }
+    }
+    startApp('library');
+    await refresh();
   }
   async function submitAuth(e){e.preventDefault();
     const email=$('auth-email').value.trim(),password=$('auth-password').value;
     const btn=$('auth-submit');btn.disabled=true;btn.textContent='Un instant…';show('auth-error',false);
     try{
+      if(state.user&&guestTrackId()){await finishAuth();return;}
       if(password.length<8)throw new Error('Le mot de passe doit contenir au moins 8 caractères.');
       const pending=window.SongToSheetFlow?.pendingData?.();
       const payload={email,password};
@@ -1885,13 +1975,11 @@
       setCurrentUser(result.user);
       $('auth-password').value='';
       if(pending&&pending.completed===true)window.SongToSheetFlow.clearPending();
-      await refresh();
-      if(state.pendingTrack){const draft=state.pendingTrack;state.pendingTrack=null;openTrackDraft(draft);}
-      else{state.activePage='library';startApp('library');}
+      await finishAuth();
     }catch(err){$('auth-error').textContent=err.message;show('auth-error',true);}
     finally{btn.disabled=false;renderAuth();}
   }
-  async function logout(){try{await post('/api/auth/logout',{});}catch(e){toast(e.message,true);return;}window.SongToSheetFlow?.clearPending();rememberTrackLink();trackWizard?.pause();trackWizard=null;setCurrentUser(null);state.jobs=[];state.activePage='dashboard';state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
+  async function logout(){try{await post('/api/auth/logout',{});}catch(e){toast(e.message,true);return;}window.SongToSheetFlow?.clearPending();rememberTrackLink();trackWizard?.pause();trackWizard=null;setCurrentUser(null);state.jobs=[];state.activePage='dashboard';state.guestStudio=false;state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
   function wire(){
     document.addEventListener('click',async(e)=>{
       const nav=e.target.closest('[data-nav]');if(nav){
@@ -1903,7 +1991,11 @@
         }
         go(target);return;
       }
-      if(e.target.closest('[data-start]')){startApp('create');return;}
+      if(e.target.closest('[data-retry-guest]')){loadResult(state.resultId);return;}
+      if(e.target.closest('[data-start]')){
+        if(!state.user)state.guestStudio=true;
+        startApp('create');return;
+      }
       const demoGenerate=e.target.closest('[data-demo-generate]');
       if(demoGenerate){e.preventDefault();await revealDemo(demoGenerate.dataset.demoGenerate);return;}
       const job=e.target.closest('button[data-job]');if(job){openResult(job.dataset.job);return;}
@@ -1983,6 +2075,11 @@
   async function init(){wire();howShowStep(1);await sessionReady;
     const audioUrl=rememberedTrackLink();
     if(audioUrl&&location.pathname==='/app')state.activePage='create';
+    const guestId=guestTrackId();
+    if(state.user&&guestId&&['/app','/inscription','/connexion'].includes(location.pathname)){
+      try{await finishAuth();}catch(error){toast(error.message,true);go('/inscription',true);}
+      return;
+    }
     if(audioUrl&&location.pathname==='/'&&!$('hero-link').value)$('hero-link').value=audioUrl;
 
     renderRoute();if(state.user)await refresh();}

@@ -149,7 +149,9 @@
       <div class="sp-body">
         <div class="sp-sheet" tabindex="0" aria-label="Notation musicale"><p>Chargement de la partition…</p><div class="sp-engraving"></div>
           <div class="sp-continuation" hidden><div class="sp-continuation-notation" aria-hidden="true"></div>
-          <div class="sp-continuation-label"><strong>Suite verrouillée</strong><span>Les 30 premières secondes sont gratuites. La suite floutée est illustrative.</span></div></div>
+          <div class="sp-continuation-label"><span class="sp-lock-badge"><span aria-hidden="true">🔒</span> Suite masquée</span>
+            <strong></strong><div class="sp-lock-progress" aria-hidden="true"><span></span></div><p></p>
+            <a class="sp-lock-cta" href="/upgrade" data-nav="upgrade">Débloquer la suite du morceau <span aria-hidden="true">↗</span></a></div></div>
         </div>
         ${piano?`<div class="sp-keyboard" aria-hidden="true"></div>`:''}
         ${showRoll?`<div class="sp-roll">
@@ -597,8 +599,14 @@
       const continuation=get('.sp-continuation');
       continuation.hidden=!(previewDuration&&sourceDuration>previewDuration+.05);
       if(!continuation.hidden){
-        get('.sp-continuation-notation').innerHTML=window.SongToSheetFlow?.placeholderNotation(
-          instrument,kind?kind.value==='tab':preferTab)||'';
+        // Décor flouté uniquement : la suite du relevé n'est jamais envoyée au navigateur.
+        get('.sp-continuation-notation').innerHTML=(window.SongToSheetFlow?.placeholderNotation(
+          instrument,kind?kind.value==='tab':preferTab)||'').repeat(3);
+        const seconds=Math.round(previewDuration);
+        get('.sp-continuation-label strong').textContent=`Tu n’as accès qu’aux ${seconds} premières secondes`;
+        get('.sp-lock-progress span').style.width=Math.max(4,Math.min(100,previewDuration/sourceDuration*100))+'%';
+        get('.sp-continuation-label p').textContent=
+          `Ton aperçu couvre ${time(seconds)} sur ${time(Math.round(sourceDuration))}. Découvre les offres pour accéder au morceau complet.`;
       }
       if(sheet.hidden||signal.aborted)return;
       const current=++loadId,url=kind?.value==='tab'?tabUrl:scoreUrl;

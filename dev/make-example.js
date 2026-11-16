@@ -13,17 +13,20 @@ const SHAPES={
   Dm:{root:['D',0],kind:'minor',frets:{4:0,3:2,2:3,1:1}},
   Em:{root:['E',0],kind:'minor',frets:{6:0,5:2,4:2,3:0,2:0,1:0}}
 };
-const BARS=['Am','F','C','G','Am','F','C','G','Dm','G','C','Am','F','G','Am','Am'];
+const THEME=['Am','F','C','G','Am','F','C','G','Dm','G','C','Am','F','G','Am','Am'];
+// Morceau complet (32 mesures) et aperçu gratuit (les 30 premières secondes).
+const FULL=[...THEME,...THEME];
+const PREVIEW=FULL.slice(0,11);
 const NAMES=[['C',0],['C',1],['D',0],['D',1],['E',0],['F',0],['F',1],['G',0],['G',1],['A',0],['A',1],['B',0]];
 const TYPES={240:'eighth',480:'quarter',960:'half',1920:'whole'};
 
 // events: {bar, at (divisions in bar), dur, notes:[{string,fret}]}
-function arpeggio(){
+function arpeggio(BARS,ending){
   const events=[];
   BARS.forEach((name,bar)=>{
     const frets=SHAPES[name].frets;
     const strings=Object.keys(frets).map(Number).sort((a,b)=>b-a);
-    const bass=strings[0],last=bar===BARS.length-1;
+    const bass=strings[0],last=ending&&bar===BARS.length-1;
     if(last){events.push({bar,at:0,dur:1920,notes:strings.map(string=>({string,fret:frets[string]}))});return;}
     const order=[bass,3,2,1,2,3,2,1];
     order.forEach((string,index)=>{
@@ -34,17 +37,17 @@ function arpeggio(){
   });
   return events;
 }
-function strummed(){
+function strummed(BARS,ending){
   const events=[];
   BARS.forEach((name,bar)=>{
     const frets=SHAPES[name].frets;
     const notes=Object.keys(frets).map(Number).sort((a,b)=>b-a).map(string=>({string,fret:frets[string]}));
-    if(bar===BARS.length-1){events.push({bar,at:0,dur:1920,notes});return;}
+    if(ending&&bar===BARS.length-1){events.push({bar,at:0,dur:1920,notes});return;}
     events.push({bar,at:0,dur:960,notes},{bar,at:960,dur:480,notes},{bar,at:1440,dur:480,notes:notes.slice(-3)});
   });
   return events;
 }
-function xml(events){
+function xml(events,BARS){
   let body='';
   BARS.forEach((name,bar)=>{
     const {root,kind}=SHAPES[name];
@@ -78,7 +81,7 @@ function midi(events){
   return Buffer.from(file.toArray());
 }
 // Petite piste « voix » synthétique pour montrer le réglage de voix dans la démo.
-function vocals(){
+function vocals(BARS=FULL){
   const rate=11025,total=Math.ceil(BARS.length*4*60/BPM*rate),data=Buffer.alloc(total*2);
   BARS.forEach((name,bar)=>{
     const frets=SHAPES[name].frets,note=OPEN[2]+frets[2]+12;
@@ -96,8 +99,9 @@ function vocals(){
   return Buffer.concat([header,data]);
 }
 fs.mkdirSync(out,{recursive:true});
-for(const [name,events] of [['arpege',arpeggio()],['accords',strummed()]]){
-  fs.writeFileSync(path.join(out,name+'.musicxml'),xml(events));
+for(const [name,events,bars] of [['arpege',arpeggio(FULL,true),FULL],['accords',strummed(FULL,true),FULL],
+  ['arpege-apercu',arpeggio(PREVIEW,false),PREVIEW],['accords-apercu',strummed(PREVIEW,false),PREVIEW]]){
+  fs.writeFileSync(path.join(out,name+'.musicxml'),xml(events,bars));
   fs.writeFileSync(path.join(out,name+'.mid'),midi(events));
 }
 fs.writeFileSync(path.join(out,'voix.wav'),vocals());

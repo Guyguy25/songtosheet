@@ -12,7 +12,7 @@ const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; c
   '.svg':'image/svg+xml','.png':'image/png','.mp3':'audio/mpeg','.wav':'audio/wav','.txt':'text/plain; charset=utf-8',
   '.mid':'audio/midi','.musicxml':'application/xml; charset=utf-8','.pdf':'application/pdf'};
 const pages=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).rewrites.map(item=>item.source);
-const duration=16*4*60/92;
+const duration=32*4*60/92;
 const now=Math.floor(Date.now()/1000);
 const files={
   solotab:'arpege.musicxml',solomid:'arpege.mid',rhythmtab:'accords.musicxml',rhythmmid:'accords.mid',
@@ -23,10 +23,10 @@ const base={track:true,instrument:'guitare',format:'tablature',status:'completed
   duration,note_count:142,guitar_compare:true,guitar_goal:'solo',capo:0,
   diagnostic:{matched_attacks:131,total_attacks:142,filtered_notes:3,tab_chords:16,tab_notes:142,review_seconds:[7,13,25]}};
 const jobs=[
-  {...base,id:'exemple-complet',title:'Balade d’exemple (accès complet)',created_at:now-3600,
-    downloads:['mid','musicxml','tab','pdf','solotab','solomid','rhythmtab','rhythmmid','vocals']},
-  {...base,id:'exemple-apercu',title:'Balade d’exemple (aperçu gratuit 30 s)',created_at:now-86400,preview_limit:30,preview_duration:30,
+  {...base,id:'exemple-apercu',title:'Balade d’exemple (compte gratuit, suite masquée)',created_at:now-3600,preview_limit:30,preview_duration:30,
     downloads:['mid','musicxml','tab','solotab','solomid','rhythmtab','rhythmmid','vocals']},
+  {...base,id:'exemple-complet',title:'Balade d’exemple (accès complet)',created_at:now-86400,
+    downloads:['mid','musicxml','tab','pdf','solotab','solomid','rhythmtab','rhythmmid','vocals']},
   {...base,id:'exemple-choisi',title:'Balade d’exemple (version déjà choisie)',created_at:now-172800,
     downloads:['mid','musicxml','tab','pdf','solotab','solomid','rhythmtab','rhythmmid']},
   {...base,id:'exemple-en-cours',title:'Balade d’exemple (transcription en cours)',created_at:now-300,status:'processing',
@@ -67,7 +67,10 @@ http.createServer(async(req,res)=>{
     if(url.searchParams.get('comparison')==='1')return json(res,200,{token:'demo',versions,selected:choices[id]||null});
     const kind=url.searchParams.get('download');
     if(Object.hasOwn(files,kind)){
-      const file=path.isAbsolute(files[kind])?files[kind]:path.join(example,files[kind]);
+      // Compte gratuit : seul le relevé des 30 premières secondes est servi, jamais la suite.
+      const limited=jobs.find(item=>item.id===id)?.preview_limit&&/\.(musicxml|mid)$/.test(files[kind]);
+      const name=limited?files[kind].replace('.','-apercu.'):files[kind];
+      const file=path.isAbsolute(name)?name:path.join(example,name);
       return send(res,file,req.headers['sec-fetch-dest']==='empty'?null:'exemple-'+kind+path.extname(file));
     }
     return json(res,404,{detail:'Export indisponible.'});

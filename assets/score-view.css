@@ -128,3 +128,11 @@
 }
 #result-page.is-score .is-single .guitar-option.is-playing{border-color:#e6e1ee;box-shadow:none}
 #result-page.is-score .is-single .guitar-comparison-status{margin:0 0 12px}
+
+/* Suite masquée : version compacte tant que deux options sont côte à côte */
+#result-page.is-score .guitar-comparison:not(.is-single) .sp-continuation{height:215px}
+#result-page.is-score .guitar-comparison:not(.is-single) .sp-continuation-label{padding:16px 18px}
+#result-page.is-score .guitar-comparison:not(.is-single) :is(.sp-lock-progress,.sp-continuation-label p){display:none}
+#result-page.is-score .guitar-comparison:not(.is-single) .sp-continuation-label strong{margin-bottom:12px;font-size:1rem}
+#result-page.is-score .guitar-comparison:not(.is-single) .sp-lock-badge{margin-bottom:9px}
+#result-page.is-score .guitar-comparison:not(.is-single) .sp-lock-cta{min-height:38px;font-size:.8rem}

@@ -25,6 +25,10 @@ const files={
   arpegeMid:['audio/midi',b64(path.join(example,'arpege.mid'))],
   accordsXml:['application/xml',b64(path.join(example,'accords.musicxml'))],
   accordsMid:['audio/midi',b64(path.join(example,'accords.mid'))],
+  arpegeXmlApercu:['application/xml',b64(path.join(example,'arpege-apercu.musicxml'))],
+  arpegeMidApercu:['audio/midi',b64(path.join(example,'arpege-apercu.mid'))],
+  accordsXmlApercu:['application/xml',b64(path.join(example,'accords-apercu.musicxml'))],
+  accordsMidApercu:['audio/midi',b64(path.join(example,'accords-apercu.mid'))],
   voix:['audio/wav',lightVoice()],
   pdf:['application/pdf',b64(path.join(root,'backend/web/demo/score.pdf'))]
 };
@@ -47,15 +51,15 @@ const shim=`
     },150);
   });
   window.__demoRoute={pathname:'/app',push(path){this.pathname=String(path).split(/[?#]/)[0]||'/';}};
-  const duration=16*4*60/92,now=Math.floor(Date.now()/1000);
+  const duration=32*4*60/92,now=Math.floor(Date.now()/1000);
   const base={track:true,instrument:'guitare',format:'tablature',status:'completed',source_type:'link',source_name:'YouTube',
     duration,note_count:142,guitar_compare:true,guitar_goal:'solo',capo:0,
     diagnostic:{matched_attacks:131,total_attacks:142,filtered_notes:3,tab_chords:16,tab_notes:142,review_seconds:[7,13,25]}};
   const all=['mid','musicxml','tab','pdf','solotab','solomid','rhythmtab','rhythmmid','vocals'];
   const jobs=[
-    {...base,id:'exemple-complet',title:'Balade d’exemple (accès complet)',created_at:now-3600,downloads:all},
-    {...base,id:'exemple-apercu',title:'Balade d’exemple (aperçu gratuit 30 s)',created_at:now-86400,preview_limit:30,preview_duration:30,
+    {...base,id:'exemple-apercu',title:'Balade d’exemple (compte gratuit, suite masquée)',created_at:now-3600,preview_limit:30,preview_duration:30,
       downloads:all.filter(key=>key!=='pdf')},
+    {...base,id:'exemple-complet',title:'Balade d’exemple (accès complet)',created_at:now-86400,downloads:all},
     {...base,id:'exemple-choisi',title:'Balade d’exemple (version déjà choisie)',created_at:now-172800,downloads:all}
   ];
   const choices={'exemple-choisi':'solo-demo'};
@@ -85,7 +89,9 @@ const shim=`
       }
       const id=url.searchParams.get('id');
       if(url.searchParams.get('comparison')==='1')return json(200,{token:'demo',versions,selected:choices[id]||null});
-      const key=exportsMap[url.searchParams.get('download')];
+      // Compte gratuit : seul le relevé des 30 premières secondes est servi, jamais la suite.
+      let key=exportsMap[url.searchParams.get('download')];
+      if(key&&jobs.find(item=>item.id===id)?.preview_limit&&FILES[key+'Apercu'])key+='Apercu';
       return key?file(key):json(404,{detail:'Export indisponible.'});
     }
     const sound=route.match(/\\/sounds\\/guitar-steel\\/(\\d+\\.mp3)$/);

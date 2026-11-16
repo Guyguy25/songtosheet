@@ -374,7 +374,7 @@
         cards.push(item);
         item.player = window.SongToSheetPlayer.mount(score, {
           scoreUrl: exportUrl(version.score), midiUrl: exportUrl(version.midi),
-          instrument: job.instrument, sourceDuration: job.duration, previewDuration: job.preview_duration,
+          instrument: job.instrument, sourceDuration: job.duration, previewDuration: job.preview_duration, excerpt: Boolean(job.preview_limit && job.excerpt),
           preferTab: !piano, soloSustain: version.key.startsWith('solo-'),
           accompaniment: /^(held|rhythm)-/.test(version.key), comparison: piano || !single, loadVocals,
           onNotation: piano ? undefined : function(source) {

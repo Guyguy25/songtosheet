@@ -25,6 +25,8 @@ const base={track:true,instrument:'guitare',format:'tablature',status:'completed
 const jobs=[
   {...base,id:'exemple-apercu',title:'Balade d’exemple (compte gratuit, suite masquée)',created_at:now-3600,preview_limit:30,preview_duration:30,
     downloads:['mid','musicxml','tab','solotab','solomid','rhythmtab','rhythmmid','vocals']},
+  {...base,id:'exemple-extrait',title:'Balade d’exemple (extrait d’un lien, durée totale inconnue)',created_at:now-7200,preview_limit:30,preview_duration:28.7,
+    duration:28.7,excerpt:true,downloads:['mid','musicxml','tab','solotab','solomid','rhythmtab','rhythmmid','vocals']},
   {...base,id:'exemple-complet',title:'Balade d’exemple (accès complet)',created_at:now-86400,
     downloads:['mid','musicxml','tab','pdf','solotab','solomid','rhythmtab','rhythmmid','vocals']},
   {...base,id:'exemple-choisi',title:'Balade d’exemple (version déjà choisie)',created_at:now-172800,

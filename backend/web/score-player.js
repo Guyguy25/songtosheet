@@ -123,7 +123,7 @@
     return new XMLSerializer().serializeToString(xml);
   }
 
-  function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,preferTab=false,startAt=0,
+  function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,excerpt=false,preferTab=false,startAt=0,
                        findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false,comparison=false,onReady,onNotation,loadVocals}){
     const controller=new AbortController();
     const {signal}=controller;
@@ -597,16 +597,21 @@
     async function drawSheet(){
       get('.sp-technique-key').hidden=!guitar||kind?.value!=='tab';
       const continuation=get('.sp-continuation');
-      continuation.hidden=!(previewDuration&&sourceDuration>previewDuration+.05);
+      // Un extrait choisi dans un lien ne donne pas la durée totale du morceau : la suite existe quand même.
+      const longer=sourceDuration>previewDuration+.05;
+      continuation.hidden=!(previewDuration&&(longer||excerpt));
       if(!continuation.hidden){
         // Décor flouté uniquement : la suite du relevé n'est jamais envoyée au navigateur.
         get('.sp-continuation-notation').innerHTML=(window.SongToSheetFlow?.placeholderNotation(
           instrument,kind?kind.value==='tab':preferTab)||'').repeat(3);
         const seconds=Math.round(previewDuration);
-        get('.sp-continuation-label strong').textContent=`Tu n’as accès qu’aux ${seconds} premières secondes`;
-        get('.sp-lock-progress span').style.width=Math.max(4,Math.min(100,previewDuration/sourceDuration*100))+'%';
-        get('.sp-continuation-label p').textContent=
-          `Ton aperçu couvre ${time(seconds)} sur ${time(Math.round(sourceDuration))}. Découvre les offres pour accéder au morceau complet.`;
+        get('.sp-continuation-label strong').textContent=longer
+          ?`Tu n’as accès qu’aux ${seconds} premières secondes`:`Tu n’as accès qu’à un extrait de ${seconds} secondes`;
+        get('.sp-lock-progress').hidden=!longer;
+        if(longer)get('.sp-lock-progress span').style.width=Math.max(4,Math.min(100,previewDuration/sourceDuration*100))+'%';
+        get('.sp-continuation-label p').textContent=(longer
+          ?`Ton aperçu couvre ${time(seconds)} sur ${time(Math.round(sourceDuration))}.`:'La suite du morceau est masquée.')+
+          ' Découvre les offres pour accéder au morceau complet.';
       }
       if(sheet.hidden||signal.aborted)return;
       const current=++loadId,url=kind?.value==='tab'?tabUrl:scoreUrl;

@@ -337,14 +337,15 @@
       if(follow&&(left>sheet.scrollLeft+sheet.clientWidth-20||left<sheet.scrollLeft)){
         sheet.scrollLeft=Math.max(0,left-55);
       }
-      if(follow&&changed&&comparison){
+      if(follow&&changed&&comparison&&sheet.scrollHeight>sheet.clientHeight+1){
         if(line.top<sheet.scrollTop||line.top+line.height>sheet.scrollTop+sheet.clientHeight)
           sheet.scrollTop=Math.max(0,line.top-24);
       }else if(follow&&changed){
         const viewport=document.fullscreenElement===root?body:pageScroll;
         const bounds=viewport?.getBoundingClientRect();
-        const top=bounds?.top??0;
-        const bottom=Math.min(bounds?.bottom??window.innerHeight,controls.getBoundingClientRect().top);
+        const header=viewport===pageScroll?pageScroll?.querySelector('.score-bar'):null;
+        const top=(bounds?.top??0)+(header?.offsetHeight??0);
+        const bottom=Math.min(bounds?.bottom??window.innerHeight,controls.offsetParent?controls.getBoundingClientRect().top:Infinity);
         const sheetBounds=sheet.getBoundingClientRect();
         if(sheetBounds.bottom<=top||sheetBounds.top>=bottom)return;
         const cursorBounds=scoreLine.getBoundingClientRect();
@@ -691,6 +692,11 @@
     dispose.pause=pause;
     dispose.playing=()=>playing;
     dispose.setVocals=setVocals;
+    dispose.setZoom=value=>{
+      const next=Math.min(1.7,Math.max(.65,value));
+      if(next===zoom)return;
+      zoom=next;drawSheet();
+    };
     dispose.setVocalVolume=value=>{
       voiceVolume=Math.min(1,Math.max(0,value));
       if(vocalsGain)vocalsGain.gain.setTargetAtTime(voiceVolume,context.currentTime,.025);

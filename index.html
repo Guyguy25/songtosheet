@@ -14,9 +14,9 @@
   <script src="/assets/audio-source.js?v=6" defer></script>
   <script src="/backend/web/track-onboarding.js?v=31" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=13" />
-  <script src="/backend/web/score-player.js?v=18" defer></script>
+  <script src="/backend/web/score-player.js?v=19" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=8" />
-  <script src="/assets/guitar-result-comparison.js?v=8" defer></script>
+  <script src="/assets/guitar-result-comparison.js?v=9" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
@@ -755,6 +755,7 @@
 .track-guest-lock-content{display:grid;justify-items:center;gap:14px;padding:24px;text-align:center}
 .track-guest-lock-content .btn{white-space:normal}
 </style>
+<link rel="stylesheet" href="/assets/score-view.css?v=1" />
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -1032,7 +1033,7 @@
 <details><summary>Les abonnements et la génération sont-ils actifs ? <span>+</span></summary><p>Non, le site public est une démonstration. Les vrais paiements et le traitement audio en ligne seront activés après intégration et tests.</p></details>
 </div></div></section></main>
 <main id="workspace" class="hidden">
-    <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><span class="sidebar-label">TON ESPACE</span><nav class="side-nav"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-create"><span>✦</span> Nouvelle partition</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Démo</strong><small>Offre de démonstration</small><a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
+    <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><button id="menu-create" class="side-new" type="button"><span aria-hidden="true">＋</span> Nouvelle partition</button><nav class="side-nav" aria-label="Ton espace"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button></nav><span class="sidebar-label side-recents-label" hidden>RÉCENTS</span><nav id="side-recents" class="side-recents" aria-label="Partitions récentes"></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Démo</strong><small>Offre de démonstration</small><a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
     <div class="app-layout"><header class="app-header"><a href="/" class="brand track-guest-brand" data-nav="home" aria-label="SongToSheet, accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><span class="small-credit"><span>◇</span> <b id="top-credits">Démo</b> · accès</span><div class="user-avatar" id="user-avatar">S</div></div></header><div class="app-scroll">
       <section id="dashboard-page" class="app-page"><div class="app-welcome"><div><span class="dashboard-kicker">TON STUDIO PERSONNEL ✦</span><h1>Prêt à jouer quelque chose<br/><span>de nouveau ?</span></h1><p>Transforme tes enregistrements en partitions en quelques étapes.</p></div><div class="welcome-decor">♫</div></div><div class="overview-cards"><div class="overview-card"><span class="metric-symbol purple">◇</span><div><strong id="metric-credits">Démo</strong><small>Accès actuel</small></div></div><div class="overview-card"><span class="metric-symbol green">▤</span><div><strong id="metric-total">0</strong><small>Partitions générées</small></div></div><div class="overview-card"><span class="metric-symbol orange">✧</span><div><strong id="metric-progress">0</strong><small>Générations en cours</small></div></div></div><div class="dashboard-grid"><div class="dashboard-create"><div><span class="section-label">CRÉATION RAPIDE</span><h2>Ta prochaine partition est à un clic.</h2><p>Dépose un morceau et laisse SongToSheet faire le premier relevé.</p><button id="dashboard-start" class="btn btn-primary">Nouvelle partition <span>↗</span></button></div><div class="dashboard-illustration">♬</div></div><div class="dashboard-helper"><span class="helper-symbol">✦</span><h3>Comment ça marche ?</h3><p>Importe ton fichier audio, choisis ton instrument, puis lance la génération. Le résultat sera sauvegardé dans ta bibliothèque.</p><a href="/#comment-ca-marche" id="learn-more">Voir les étapes <span>↗</span></a></div></div><div class="list-heading"><h2>Dernières partitions</h2><button id="view-all">Tout voir →</button></div><div id="recent-jobs" class="jobs-list"></div><p id="admin-guitar-comparison" hidden><a class="btn btn-outline" href="/comparatif.html">Comparer les tablatures guitare</a></p></section>
 
@@ -1369,9 +1370,14 @@
       $('metric-total').textContent=state.jobs.length;
       $('metric-progress').textContent=state.jobs.filter(j=>['processing','queued'].includes(j.status)).length;
       $('user-avatar').textContent=state.user.email.charAt(0).toUpperCase();
-      renderJobs('recent-jobs',state.jobs.slice(0,5));renderJobs('library-jobs',filterJobs());
+      renderJobs('recent-jobs',state.jobs.slice(0,5));renderJobs('library-jobs',filterJobs());renderRecents();
       $('library-count').textContent=`${state.jobs.length} création${state.jobs.length===1?'':'s'}`;
     }catch(e){toast(e.message,true);}
+  }
+  function renderRecents(){
+    const box=$('side-recents'),jobs=state.jobs.slice(0,8);
+    box.innerHTML=jobs.map(j=>`<button type="button" data-job="${safe(j.id)}"${state.activePage==='result'&&state.resultId===j.id?' aria-current="page"':''} title="${safe(j.title)}"><span aria-hidden="true">♪</span><b>${safe(j.title)}</b></button>`).join('');
+    box.previousElementSibling.hidden=!jobs.length;
   }
   function filterJobs(){const query=($('library-search').value||'').toLowerCase().trim();return state.jobs.filter(j=>(j.title+' '+j.instrument+' '+(j.format||'')).toLowerCase().includes(query));}
   const statusText={ready:'À générer',completed:'Aperçu disponible',failed:'Échec',processing:'En cours',queued:'En attente'};
@@ -1431,6 +1437,8 @@
     for(const id of ['menu-dashboard','menu-create','menu-library'])$(id).classList.toggle('side-active',id===side);
     const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition'};
     $('page-crumb').textContent=names[page]||'Mon espace';
+    if(page!=='result')$('result-page').classList.remove('is-score');
+    renderRecents();
     document.querySelector('.sidebar').classList.remove('mobile-open');
     if(page==='create'){
       if(state.link)$('workspace-url').value=state.link;
@@ -1596,7 +1604,7 @@
       window.SongToSheetFlow.openSavedDemo(job);
     }catch(e){toast(e.message||'Impossible de lancer cet aperçu.',true);}
   }
-    function openResult(id){stopPlayer();state.resultId=id;$('result-content').textContent='Chargement de la création…';startApp('result');}
+    function openResult(id){stopPlayer();state.resultId=id;$('result-page').classList.remove('is-score');$('result-content').textContent='Chargement de la création…';startApp('result');}
   function notesSvg(notes){
     const notesToDraw=notes.slice(0,48),perLine=12,lineCount=Math.max(1,Math.ceil(notesToDraw.length/perLine)),height=150*lineCount+12;
     let svg=`<svg viewBox="0 0 720 ${height}" role="img" aria-label="Aperçu des premières notes transcrites" xmlns="http://www.w3.org/2000/svg">`;
@@ -1715,15 +1723,16 @@
     if(!tracks.length||$('track-audio-review'))return;
     const root=document.createElement('details');
     root.id='track-audio-review';
-    root.className='result-hero';
-    root.innerHTML=`<summary>Écouter les pistes séparées · Admin</summary>
+    root.className='score-admin-block';
+    root.innerHTML=`<summary>Écouter les pistes séparées</summary>
       <p class="result-note">Compare le mix à la piste analysée au même moment. Les MP3 restent disponibles pendant 24 h.</p>
       <label for="track-review-source">Piste</label>
       <select id="track-review-source">${tracks.map(key=>`<option value="${key}"${key===analyzed?' selected':''}>${
         labels[key]}${key===analyzed?' · analysée':''}</option>`).join('')}</select>
       <audio controls preload="none" aria-label="Écoute des pistes séparées"></audio>
       <a class="btn btn-outline">Télécharger le MP3</a>`;
-    $('track-result-summary').after(root);
+    $('track-admin').append(root);
+    $('track-admin').hidden=false;
     const select=root.querySelector('select'), player=root.querySelector('audio'), save=root.querySelector('a');
     let position=0;
     function switchTrack(){
@@ -1773,7 +1782,7 @@
           `<a class="btn ${key==='pdf'?'btn-primary':'btn-outline'}" href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}">↓ ${label}</a>`).join('');
         const tab=j.format==='tablature'&&j.downloads.includes('tab');
         const d=ready&&state.user?.role==='admin'?j.diagnostic:null;
-        const diagnostic=d?`<details class="result-note" open><summary>Diagnostic de la transcription</summary>
+        const diagnostic=d?`<details class="score-admin-block"><summary>Diagnostic de la transcription</summary>
           <p>${d.matched_attacks===null?'Attaques audio non mesurables sur cet extrait.':`${d.matched_attacks} sur ${d.total_attacks} attaques de notes proches d’une attaque détectée dans l’audio.`}</p>
           <p>${d.filtered_notes} note(s) suspecte(s) filtrée(s). ${d.tab_chords} attaque(s) de plusieurs notes en tablature. ${j.note_count-d.tab_notes} note(s) sans doigté retenu avec ce réglage.</p>
           ${d.review_seconds.length?`<p>À écouter en priorité vers ${d.review_seconds.map(timeFmt).join(', ')}.</p>`:''}
@@ -1801,23 +1810,43 @@
               </div>
               <ol class="track-activity" aria-label="Journal de génération"></ol>
             </section>
-            <section id="track-wait-survey" class="wait-survey" aria-label="Questions facultatives" hidden></section>`;
+            <section id="track-wait-survey" class="wait-survey" aria-label="Questions facultatives" hidden></section>
+            <section id="track-admin" class="score-admin" aria-label="Outils admin" hidden><h2>Outils admin</h2><div id="track-diagnostic"></div></section>`;
           $('track-result-summary').dataset.job=id;
           trackSummaryMarkup=trackProgressMarkup=undefined;
         }
-        const summary=`<span class="dashboard-kicker">${completed&&ready?'100 % · ':''}${status}</span>
-          <h1>${safe(j.title)}</h1><p class="result-meta">${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · ${j.preview_limit?'Aperçu gratuit · jusqu’à 30 s':'Accès admin'}</p>
+        const access=j.preview_limit?'Aperçu gratuit · 30 s':'Accès admin';
+        const meta=`${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · ${access}`;
+        const notice=ready?`${fallback}${soloFallback}${j.status==='failed'&&j.error_message?' '+j.error_message:''}${!j.preview_limit&&!waiting&&j.pdf_error?' Le PDF est indisponible pour ce relevé.':''}`.trim():'';
+        const hints={pdf:'À lire et imprimer',musicxml:'Pour un éditeur de partitions',tab:'Pour un éditeur de partitions',mid:'Pour un logiciel de musique'};
+        const menu=j.preview_limit
+          ?`<p>Le téléchargement en PDF, MIDI et MusicXML est inclus dans les offres.</p><a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les offres</a>`
+          :Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
+            `<a href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}"><b>${label.replace('Télécharger le ','')}</b><small>${hints[key]}</small></a>`).join('');
+        const versionChoice=j.instrument==='guitare'||j.piano_versions?.length;
+        const summary=ready?`<button type="button" class="score-bar-btn score-bar-menu" data-score-menu aria-label="Ouvrir le menu">☰</button>
+          <button type="button" class="score-bar-btn" data-score-back aria-label="Retour à ma bibliothèque" title="Retour à ma bibliothèque">←</button>
+          <div class="score-bar-title"><h1 title="${safe(j.title)}">${safe(j.title)}</h1><p>${meta}</p></div>
+          <div id="score-bar-controls" class="score-bar-controls"></div>
+          <details class="score-download"><summary class="btn btn-primary"><span aria-hidden="true">↓</span> Télécharger</summary>
+            <div class="score-download-menu"><div id="score-download-job">${versionChoice&&!j.preview_limit&&menu?'<h3>Relevé d’origine</h3>':''}${menu}</div><div id="score-download-version"></div></div></details>
+          ${notice?`<p class="score-bar-notice" role="status">${safe(notice)}</p>`:''}`
+          :`<span class="dashboard-kicker">${status}</span>
+          <h1>${safe(j.title)}</h1><p class="result-meta">${meta}</p>
           ${j.source_name?`<p class="result-meta">Source · ${safe(j.source_name)}</p>`:''}
-          ${detail?`<p>${safe(detail)}</p>`:''}${downloads?`<div class="result-actions">${downloads}</div>`:''}${diagnostic}
-          ${!waiting&&!completed&&!ready?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;
+          ${detail?`<p>${safe(detail)}</p>`:''}${downloads?`<div class="result-actions">${downloads}</div>`:''}
+          ${!waiting&&!completed?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;
         if(trackSummaryMarkup!==summary){
           const resultSummary=$('track-result-summary');
-          const wasOpen=resultSummary.querySelector('details')?.open;
+          const controls=$('score-bar-controls');
+          resultSummary.className=ready?'score-bar':'result-hero';
           resultSummary.innerHTML=summary;
-          const details=resultSummary.querySelector('details');
-          if(details&&wasOpen!==undefined)details.open=wasOpen;
+          if(controls?.childElementCount)$('score-bar-controls')?.replaceWith(controls);
           trackSummaryMarkup=summary;
         }
+        $('result-page').classList.toggle('is-score',ready);
+        $('track-diagnostic').innerHTML=diagnostic;
+        if(diagnostic)$('track-admin').hidden=false;
         $('track-result-summary').classList.toggle('track-result-waiting',waiting&&!ready);
         if(completed&&state.user?.role==='admin')addAudioReview(j);
         show('track-progress',waiting);
@@ -2066,7 +2095,20 @@
     $('sidebar-logout').onclick=logout;$('mobile-sidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('mobile-open');
     $('menu-dashboard').onclick=()=>showAppPage('dashboard');$('menu-create').onclick=()=>showAppPage('create');$('menu-library').onclick=()=>showAppPage('library');
     $('dashboard-start').onclick=()=>showAppPage('create');$('view-all').onclick=()=>showAppPage('library');$('library-new').onclick=()=>showAppPage('create');
-    $('back-to-library').onclick=()=>showAppPage('library');$('workspace-generate').onclick=submitJob;
+    $('back-to-library').onclick=()=>showAppPage('library');
+    $('result-content').addEventListener('click',e=>{
+      if(e.target.closest('[data-score-back]'))showAppPage('library');
+      else if(e.target.closest('[data-score-menu]')){e.stopPropagation();$('mobile-sidebar').click();}
+      else if(e.target.closest('.score-download-menu a'))e.target.closest('.score-download').open=false;
+    });
+    document.addEventListener('click',e=>{
+      const menu=document.querySelector('.score-download[open]');
+      if(menu&&!menu.contains(e.target))menu.open=false;
+    });
+    document.addEventListener('keydown',e=>{
+      const menu=e.key==='Escape'&&document.querySelector('.score-download[open]');
+      if(menu){menu.open=false;menu.querySelector('summary').focus();}
+    });$('workspace-generate').onclick=submitJob;
     $('library-search').oninput=()=>renderJobs('library-jobs',filterJobs());$('auth-form').onsubmit=submitAuth;
     $('learn-more').onclick=(e)=>{e.preventDefault();go('/#comment-ca-marche');document.querySelector('#comment-ca-marche')?.scrollIntoView({behavior:'smooth'});};
     $('footer-year').textContent=new Date().getFullYear();

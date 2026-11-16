@@ -1,0 +1,84 @@
+'use strict';
+// Démo locale de l'interface : sert le site statique et simule l'API avec une tablature d'exemple.
+// Aucune base de données, aucun secret : `node dev/server.js` puis http://localhost:4173/app
+const http=require('node:http');
+const fs=require('node:fs');
+const path=require('node:path');
+const root=path.join(__dirname,'..');
+const example=path.join(__dirname,'example');
+if(!fs.existsSync(path.join(example,'arpege.musicxml')))require('./make-example.js');
+const port=Number(process.env.PORT)||4173;
+const types={'.html':'text/html; charset=utf-8','.js':'application/javascript; charset=utf-8','.css':'text/css; charset=utf-8',
+  '.svg':'image/svg+xml','.png':'image/png','.mp3':'audio/mpeg','.wav':'audio/wav','.txt':'text/plain; charset=utf-8',
+  '.mid':'audio/midi','.musicxml':'application/xml; charset=utf-8','.pdf':'application/pdf'};
+const pages=JSON.parse(fs.readFileSync(path.join(root,'vercel.json'),'utf8')).rewrites.map(item=>item.source);
+const duration=16*4*60/92;
+const now=Math.floor(Date.now()/1000);
+const files={
+  solotab:'arpege.musicxml',solomid:'arpege.mid',rhythmtab:'accords.musicxml',rhythmmid:'accords.mid',
+  tab:'arpege.musicxml',musicxml:'arpege.musicxml',mid:'arpege.mid',vocals:'voix.wav',
+  pdf:path.join(root,'backend/web/demo/score.pdf')
+};
+const base={track:true,instrument:'guitare',format:'tablature',status:'completed',source_type:'link',source_name:'YouTube',
+  duration,note_count:142,guitar_compare:true,guitar_goal:'solo',capo:0,
+  diagnostic:{matched_attacks:131,total_attacks:142,filtered_notes:3,tab_chords:16,tab_notes:142,review_seconds:[7,13,25]}};
+const jobs=[
+  {...base,id:'exemple-complet',title:'Balade d’exemple (accès complet)',created_at:now-3600,
+    downloads:['mid','musicxml','tab','pdf','solotab','solomid','rhythmtab','rhythmmid','vocals']},
+  {...base,id:'exemple-apercu',title:'Balade d’exemple (aperçu gratuit 30 s)',created_at:now-86400,preview_limit:30,preview_duration:30,
+    downloads:['mid','musicxml','tab','solotab','solomid','rhythmtab','rhythmmid','vocals']},
+  {...base,id:'exemple-choisi',title:'Balade d’exemple (version déjà choisie)',created_at:now-172800,
+    downloads:['mid','musicxml','tab','pdf','solotab','solomid','rhythmtab','rhythmmid']},
+  {...base,id:'exemple-en-cours',title:'Balade d’exemple (transcription en cours)',created_at:now-300,status:'processing',
+    stage:'processing',note_count:0,diagnostic:undefined,downloads:[]}
+];
+const choices={'exemple-choisi':'solo-demo'};
+const versions=[
+  {key:'solo-demo',score:'solotab',midi:'solomid',recommended:true,recommendation_source:'ai'},
+  {key:'held-demo',score:'rhythmtab',midi:'rhythmmid',recommended:false,recommendation_source:null}
+];
+const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
+const send=(res,file,download)=>{
+  fs.readFile(file,(error,data)=>{
+    if(error){res.writeHead(404);res.end('Introuvable');return;}
+    const headers={'Content-Type':types[path.extname(file)]||'application/octet-stream','Cache-Control':'no-store'};
+    if(download)headers['Content-Disposition']=`attachment; filename="${download}"`;
+    res.writeHead(200,headers);res.end(data);
+  });
+};
+const body=req=>new Promise(resolve=>{let text='';req.on('data',chunk=>text+=chunk);req.on('end',()=>{try{resolve(JSON.parse(text||'{}'));}catch{resolve({});}});});
+
+http.createServer(async(req,res)=>{
+  const url=new URL(req.url,'http://localhost');
+  const route=url.pathname;
+  if(route==='/api/auth/me')return json(res,200,{user:{id:'demo',email:'demo@songtosheet.local',role:'admin'}});
+  if(route==='/api/jobs')return json(res,200,{jobs});
+  if(route.startsWith('/api/jobs/')){
+    const job=jobs.find(item=>item.id===decodeURIComponent(route.slice(10)));
+    return job?json(res,200,job):json(res,404,{detail:'Création introuvable.'});
+  }
+  if(route==='/api/track'){
+    if(req.method==='POST'){
+      const data=await body(req);
+      if(data.action==='guitar_vote'){choices[data.id]=data.choice;return json(res,200,{selected:data.choice});}
+      return json(res,400,{detail:'Action indisponible dans la démo locale.'});
+    }
+    const id=url.searchParams.get('id');
+    if(url.searchParams.get('comparison')==='1')return json(res,200,{token:'demo',versions,selected:choices[id]||null});
+    const kind=url.searchParams.get('download');
+    if(Object.hasOwn(files,kind)){
+      const file=path.isAbsolute(files[kind])?files[kind]:path.join(example,files[kind]);
+      return send(res,file,req.headers['sec-fetch-dest']==='empty'?null:'exemple-'+kind+path.extname(file));
+    }
+    return json(res,404,{detail:'Export indisponible.'});
+  }
+  if(route==='/api/player-assets'){
+    const asset={score:'opensheetmusicdisplay',midi:'@tonejs/midi'}[url.searchParams.get('asset')];
+    return asset?send(res,require.resolve(asset,{paths:[root]})):json(res,404,{detail:'Ressource introuvable.'});
+  }
+  if(route.startsWith('/api/'))return json(res,404,{detail:'Indisponible dans la démo locale.'});
+  const file=route==='/'||pages.includes(route)?'index.html':path.normalize(decodeURIComponent(route)).replace(/^([/\\]|\.\.)+/,'');
+  const target=path.join(root,file);
+  if(!target.startsWith(root))return json(res,403,{});
+  send(res,target);
+}).listen(port,'127.0.0.1',()=>console.log(`Démo locale SongToSheet : http://localhost:${port}/app`));

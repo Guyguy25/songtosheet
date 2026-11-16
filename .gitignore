@@ -10,3 +10,6 @@ __pycache__/
 .vercel/
 node_modules/
 .DS_Store
+
+# Démo locale (générée par dev/server.js)
+dev/example/

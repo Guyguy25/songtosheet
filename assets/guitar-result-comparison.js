@@ -135,7 +135,11 @@
     const status = add(root, 'p', 'guitar-comparison-status', piano ? 'Chargement des partitions…' : 'Chargement des tablatures…');
     status.setAttribute('role', 'status');
     const cards = [];
+    // The page header offers a slot for the playback controls; fall back to the comparison itself.
+    const bar = document.getElementById('score-bar-controls');
+    const versionLinks = document.getElementById('score-download-version');
     let active, frame, position = 0, token, saving = false;
+    let showPlay = () => {}, showVoice = () => {}, justVoted = false;
     let voiceEnabled = false, voiceRequest, voiceVolume = .4;
     const loadVocals = job.downloads?.includes('vocals') ? () => {
       voiceRequest ??= fetch(exportUrl('vocals'), {signal}).then(response => {
@@ -153,11 +157,12 @@
         card.badge.hidden = !current?.recommended;
         card.badge.textContent = current?.recommendation_source === 'ai' ? 'Recommandé par l’IA' : 'Recommandé';
         const chosen = data.selected === card.key;
-        card.vote.textContent = chosen ? 'Ton choix ✓' : piano || cards.length > 1 ? 'Je préfère cette version' : 'Choisir cette tablature';
+        card.vote.textContent = chosen ? 'Ton choix ✓' : piano || cards.length > 1 ? 'Choisir cette version' : 'Choisir cette tablature';
+        card.vote.classList.toggle('is-chosen', chosen);
         card.vote.hidden = !piano && !data.token && !chosen;
         card.vote.disabled = chosen || (!piano && !data.token) || saving || card.listen.disabled;
       }
-      status.textContent = data.selected ? 'Ton choix a été enregistré.' :
+      status.textContent = data.selected ? (justVoted ? 'Ton choix a été enregistré.' : '') :
         data.votingUnavailable ? 'Le vote est momentanément indisponible. Tu peux écouter les versions.' :
         data.recommendationStatus === 'close' ? 'Versions proches selon l’analyse audio. Écoute-les pour choisir.' :
         data.recommendationStatus === 'uncertain' ? 'Analyse audio incertaine. Écoute les versions pour choisir.' :
@@ -189,12 +194,12 @@
       };
       const grid = add(root, 'div', 'guitar-comparison-grid' + (piano ? ' piano-comparison-grid' : ''));
       grid.dataset.count = data.versions.length;
-      const back = add(root, 'button', 'btn btn-outline guitar-comparison-back', '← Comparer les versions');
-      back.type = 'button';
-      back.hidden = true;
-      const transport = add(root, 'div', 'guitar-comparison-transport');
-      root.insertBefore(transport, grid);
-      const time = add(transport, 'span', '', '0:00');
+      const transport = add(bar || root, 'div', 'guitar-comparison-transport');
+      if (!bar) root.insertBefore(transport, grid);
+      const playButton = add(transport, 'button', 'score-play', '▶');
+      playButton.type = 'button';
+      playButton.disabled = true;
+      const time = add(transport, 'span', 'score-time', '0:00');
       const seek = add(transport, 'input', '');
       seek.type = 'range';
       seek.min = 0;
@@ -203,33 +208,47 @@
       seek.value = 0;
       seek.disabled = true;
       seek.setAttribute('aria-label', 'Position commune de lecture');
-      const mix = loadVocals ? add(root, 'div', 'comparison-voice-mix') : null;
-      if (mix) root.insertBefore(mix, grid);
-      const voice = mix ? add(mix, 'button', 'guitar-comparison-voice', 'Ajouter la voix isolée') : null;
+      const tools = add(bar || root, 'div', 'score-tools');
+      if (!bar) root.insertBefore(tools, grid);
+      const speed = add(tools, 'select', 'score-speed');
+      speed.setAttribute('aria-label', 'Vitesse de lecture');
+      for (const value of [.5, .75, 1, 1.25, 1.5]) {
+        const option = add(speed, 'option', '', String(value).replace('.', ',') + '×');
+        option.value = value;
+        option.selected = value === 1;
+      }
+      speed.onchange = () => {
+        for (const card of cards) {
+          const control = card.element.querySelector('.sp-speed select');
+          if (!control || control.disabled) continue;
+          control.value = speed.value;
+          control.dispatchEvent(new Event('change'));
+        }
+      };
+      const mix = loadVocals ? add(tools, 'div', 'comparison-voice-mix') : null;
+      const voice = mix ? add(mix, 'button', 'guitar-comparison-voice', 'Voix') : null;
       if (voice) {
-        const copy = add(mix, 'div', 'comparison-voice-copy');
-        add(copy, 'strong', '', 'Voix originale');
-        add(copy, 'span', '', 'Écoute la voix du morceau avec la version en cours.');
-        const volume = add(mix, 'label', 'comparison-voice-volume');
-        const value = add(volume, 'span', '', 'Volume voix · 40 %');
-        const slider = add(volume, 'input', '');
+        const slider = add(mix, 'input', '');
         slider.type = 'range';
         slider.min = 0;
         slider.max = 100;
         slider.step = 1;
         slider.value = 40;
-        slider.setAttribute('aria-label', 'Volume de la voix');
-        slider.disabled = true;
+        slider.hidden = true;
         slider.oninput = () => {
           voiceVolume = Number(slider.value) / 100;
-          value.textContent = `Volume voix · ${slider.value} %`;
+          slider.setAttribute('aria-label', `Volume de la voix · ${slider.value} %`);
+          slider.title = `Volume voix · ${slider.value} %`;
           active?.player.setVocalVolume(voiceVolume);
         };
-        function showVoice() {
+        slider.oninput();
+        showVoice = () => {
           voice.setAttribute('aria-pressed', String(voiceEnabled));
-          voice.textContent = voiceEnabled ? 'Retirer la voix isolée' : 'Ajouter la voix isolée';
-          slider.disabled = !voiceEnabled;
-        }
+          const label = voiceEnabled ? 'Retirer la voix isolée' : 'Ajouter la voix isolée';
+          voice.setAttribute('aria-label', label);
+          voice.title = label + ' pendant l’écoute';
+          slider.hidden = !voiceEnabled;
+        };
         voice.type = 'button';
         showVoice();
         voice.onclick = async () => {
@@ -248,12 +267,54 @@
           }
         };
       }
+      const zoom = add(tools, 'div', 'score-zoom');
+      zoom.setAttribute('role', 'group');
+      zoom.setAttribute('aria-label', piano ? 'Taille de la partition' : 'Taille de la tablature');
+      for (const [step, label, text] of [[-1, 'Réduire', '−'], [1, 'Agrandir', '+']]) {
+        const button = add(zoom, 'button', '', text);
+        button.type = 'button';
+        button.setAttribute('aria-label', label);
+        button.title = label;
+        button.onclick = () => {
+          for (const card of cards) card.element.querySelector(`[data-zoom="${step}"]`)?.click();
+        };
+      }
+      const back = add(tools, 'button', 'guitar-comparison-back', 'Comparer les versions');
+      back.type = 'button';
+      back.hidden = true;
+
+      const target = () => active || focused || cards.find(card => card.lastPlayed && card.available) ||
+        cards.find(card => card.available && !card.badge.hidden) || cards.find(card => card.available);
+      showPlay = () => {
+        playButton.textContent = active ? '❚❚' : '▶';
+        playButton.setAttribute('aria-label', active ? 'Mettre en pause' : 'Écouter');
+        playButton.disabled = !cards.some(card => card.available && !card.listen.disabled);
+        for (const card of cards) {
+          card.listen.textContent = card === active ? 'Pause' : 'Écouter';
+          card.element.classList.toggle('is-playing', card === active);
+        }
+      };
+      playButton.onclick = () => target()?.listen.onclick();
+      const showDownloads = () => {
+        if (!versionLinks || job.preview_limit) return;
+        const shown = focused ? [focused] : cards.filter(card => card.available);
+        versionLinks.replaceChildren();
+        for (const card of shown) {
+          add(versionLinks, 'h3', '', focused || single ? (piano ? 'Cette version' : 'Cette tablature') : card.title);
+          for (const [label, hint, file] of [['MIDI', 'Pour un logiciel de musique', card.files.midi],
+            ['MusicXML', 'Pour un éditeur de partitions', card.files.score]]) {
+            const link = add(versionLinks, 'a', '');
+            link.href = exportUrl(file);
+            add(link, 'b', '', label);
+            add(link, 'small', '', hint);
+          }
+        }
+      };
 
       function focusOption(item, focus = false) {
         if (active && active !== item && item) {
           position = active.player.position();
           active.player.pause();
-          active.listen.textContent = 'Écouter';
           active = null;
           cancelAnimationFrame(frame);
           update(position);
@@ -262,15 +323,20 @@
         grid.dataset.count = item ? 1 : cards.filter(card => card.available).length;
         grid.classList.toggle('is-focused', Boolean(item));
         heading.textContent = item || single ? chosenTitle : question;
+        heading.hidden = Boolean(item) || single;
+        root.classList.toggle('is-single', Boolean(item) || single);
         back.hidden = !item || single;
         focused = item;
+        if (!piano) for (const card of cards) card.player?.setZoom((item || single) && matchMedia('(min-width: 900px)').matches ? 1.3 : 1);
         showChords();
+        showDownloads();
+        showPlay();
         if (focus) {
-          item.listen.focus({preventScroll:true});
-          transport.scrollIntoView({block:'nearest'});
+          playButton.focus({preventScroll:true});
+          root.closest('.app-scroll')?.scrollTo({top:0});
         }
       }
-      back.onclick = () => {focusOption(null);heading.tabIndex = -1;heading.focus();};
+      back.onclick = () => {justVoted = false;status.textContent = '';focusOption(null);heading.tabIndex = -1;heading.focus({preventScroll:true});};
 
       function update(value, source) {
         position = value;
@@ -283,8 +349,8 @@
         update(active.player.position(), active);
         if (active.player.playing()) frame = requestAnimationFrame(sync);
         else {
-          active.listen.textContent = 'Écouter';
           active = null;
+          showPlay();
         }
       }
       seek.oninput = () => update(Number(seek.value));
@@ -292,15 +358,16 @@
       for (const [index, version] of data.versions.entries()) {
         const card = add(grid, 'article', 'guitar-option');
         const header = add(card, 'header', 'guitar-option-header');
-        add(header, 'h3', '', piano ? version.label : single ? 'Tablature' : `Option ${index + 1}`);
+        const title = piano ? version.label : single ? 'Tablature' : `Option ${index + 1}`;
+        add(header, 'h3', '', title);
         const badge = add(header, 'span', 'guitar-option-badge', 'Recommandé');
         const listen = add(header, 'button', 'btn btn-outline', 'Écouter');
         listen.type = 'button';
         listen.disabled = true;
         const score = add(card, 'section', 'score-player guitar-option-player');
-        const vote = add(card, 'button', 'btn btn-primary guitar-option-vote', 'Je préfère cette version');
+        const vote = add(card, 'button', 'btn btn-primary guitar-option-vote', 'Choisir cette version');
         vote.type = 'button';
-        const item = {key: version.key, element:card, badge, listen, vote, player: null};
+        const item = {key: version.key, element:card, badge, listen, vote, title, files: version, player: null};
         cards.push(item);
         item.player = window.SongToSheetPlayer.mount(score, {
           scoreUrl: exportUrl(version.score), midiUrl: exportUrl(version.midi),
@@ -319,6 +386,7 @@
             seek.max = Math.max(Number(seek.max), duration);
             item.player.seek(position);
             decorate(data);
+            showPlay();
           },
         });
         listen.onclick = async () => {
@@ -326,32 +394,24 @@
           if (active) {
             position = active.player.position();
             active.player.pause();
-            active.listen.textContent = 'Écouter';
           }
           cancelAnimationFrame(frame);
           active = same ? null : item;
+          showPlay();
           if (same) { update(position); return; }
+          for (const card of cards) card.lastPlayed = card === item;
           item.player.seek(position);
           item.player.setVocalVolume(voiceVolume);
           const vocals = item.player.setVocals(voiceEnabled).catch(() => {
             if (signal.aborted || active !== item || !voice) return;
             voiceEnabled = false;
-            voice.setAttribute('aria-pressed', 'false');
-            voice.textContent = 'Ajouter la voix isolée';
-            mix.querySelector('input').disabled = true;
+            showVoice();
             status.textContent = 'La piste voix est indisponible.';
           });
-          listen.textContent = 'Pause';
           await item.player.play();
           await vocals;
           if (!signal.aborted && active === item) sync();
         };
-        if (!job.preview_limit) {
-          const links = add(card, 'div', 'guitar-option-downloads');
-          for (const [label, file] of [['MIDI', version.midi], ['MusicXML', version.score]]) {
-            add(links, 'a', 'btn btn-outline', label).href = exportUrl(file);
-          }
-        }
         vote.onclick = async () => {
           if ((!piano && !token) || saving) return;
           saving = true;
@@ -360,7 +420,7 @@
             const result = await post('/api/track', {
               action: piano ? 'piano_choice' : 'guitar_vote', id: job.id, token, choice: version.key
             });
-            if (!signal.aborted) Object.assign(data, result);
+            if (!signal.aborted) {Object.assign(data, result);justVoted = true;}
           } catch (error) {
             if (!signal.aborted) {
               saving = false;
@@ -380,7 +440,7 @@
       update(0);
       decorate(data);
       const selected = cards.find(card => card.key === data.selected);
-      if (selected) focusOption(selected);
+      focusOption(selected || null);
     }
 
     if (piano) display({
@@ -395,6 +455,8 @@
       controller.abort();
       cancelAnimationFrame(frame);
       for (const card of cards) card.player?.();
+      bar?.replaceChildren();
+      versionLinks?.replaceChildren();
       root.remove();
     };
   }

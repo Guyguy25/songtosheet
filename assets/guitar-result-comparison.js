@@ -148,6 +148,9 @@
       }).catch(error => {voiceRequest = null; throw error;});
       return voiceRequest;
     } : null;
+    // La voix accompagne l'écoute par défaut ; c'est à l'utilisateur de la retirer.
+    voiceEnabled = Boolean(loadVocals);
+    loadVocals?.().catch(() => {});
 
     function decorate(data) {
       token = data.token;

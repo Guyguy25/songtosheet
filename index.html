@@ -755,7 +755,7 @@
 .track-guest-lock-content{display:grid;justify-items:center;gap:14px;padding:24px;text-align:center}
 .track-guest-lock-content .btn{white-space:normal}
 </style>
-<link rel="stylesheet" href="/assets/score-view.css?v=2" />
+<link rel="stylesheet" href="/assets/score-view.css?v=3" />
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -1374,10 +1374,15 @@
       $('library-count').textContent=`${state.jobs.length} création${state.jobs.length===1?'':'s'}`;
     }catch(e){toast(e.message,true);}
   }
+  let recentsExpanded=false;
   function renderRecents(){
-    const box=$('side-recents'),jobs=state.jobs.slice(0,8);
-    box.innerHTML=jobs.map(j=>`<button type="button" data-job="${safe(j.id)}"${state.activePage==='result'&&state.resultId===j.id?' aria-current="page"':''} title="${safe(j.title)}"><span aria-hidden="true">♪</span><b>${safe(j.title)}</b></button>`).join('');
-    box.previousElementSibling.hidden=!jobs.length;
+    const box=$('side-recents'),limit=8,all=state.jobs;
+    // Replié : les 8 plus récentes, plus la partition ouverte si elle est plus ancienne.
+    const opened=state.activePage==='result'?state.resultId:null;
+    const jobs=recentsExpanded?all:all.filter((j,i)=>i<limit||j.id===opened);
+    const toggle=all.length>limit?`<button type="button" class="side-recents-toggle" data-recents-toggle aria-expanded="${recentsExpanded}">${recentsExpanded?'Réduire':`Tout afficher (${all.length})`}</button>`:'';
+    box.innerHTML=jobs.map(j=>`<button type="button" data-job="${safe(j.id)}"${j.id===opened?' aria-current="page"':''} title="${safe(j.title)}"><span aria-hidden="true">♪</span><b>${safe(j.title)}</b></button>`).join('')+toggle;
+    box.previousElementSibling.hidden=!all.length;
   }
   function filterJobs(){const query=($('library-search').value||'').toLowerCase().trim();return state.jobs.filter(j=>(j.title+' '+j.instrument+' '+(j.format||'')).toLowerCase().includes(query));}
   const statusText={ready:'À générer',completed:'Aperçu disponible',failed:'Échec',processing:'En cours',queued:'En attente'};
@@ -2096,6 +2101,11 @@
     $('menu-dashboard').onclick=()=>showAppPage('dashboard');$('menu-create').onclick=()=>showAppPage('create');$('menu-library').onclick=()=>showAppPage('library');
     $('dashboard-start').onclick=()=>showAppPage('create');$('view-all').onclick=()=>showAppPage('library');$('library-new').onclick=()=>showAppPage('create');
     $('back-to-library').onclick=()=>showAppPage('library');
+    $('side-recents').addEventListener('click',e=>{
+      if(!e.target.closest('[data-recents-toggle]'))return;
+      recentsExpanded=!recentsExpanded;renderRecents();
+      if(recentsExpanded)$('side-recents').querySelector('[data-recents-toggle]').focus();
+    });
     $('result-content').addEventListener('click',e=>{
       if(e.target.closest('[data-score-back]'))showAppPage('library');
       else if(e.target.closest('[data-score-menu]')){e.stopPropagation();$('mobile-sidebar').click();}

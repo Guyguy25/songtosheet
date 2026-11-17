@@ -103,7 +103,7 @@ def process_queue():
     return taken
 
 
-@app.function(image=light, secrets=[secret])
+@app.function(image=light, secrets=[secret], scaledown_window=2)
 @modal.fastapi_endpoint(method="POST")
 def wake(request: Request):
     import sys
@@ -119,7 +119,10 @@ def wake(request: Request):
     return {"started": True}
 
 
-@app.function(image=light, secrets=[secret], schedule=modal.Period(minutes=2), timeout=60)
+# Safety net for a lost wake call: rare now, so a 5-minute check is enough, and the
+# container shuts down 2 s after each check instead of idling for a minute.
+@app.function(image=light, secrets=[secret], schedule=modal.Period(minutes=5), timeout=60,
+              scaledown_window=2)
 def watchdog():
     import sys
 

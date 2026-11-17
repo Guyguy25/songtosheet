@@ -149,8 +149,10 @@ def youtube_options():
     TRACK_YTDLP_POT_HOME: bgutil PO-token provider (server folder) so YouTube accepts
     downloads from cloud servers; TRACK_YTDLP_PROXY: optional proxy for YouTube only;
     TRACK_YTDLP_COOKIES: optional cookies.txt content of a (secondary) YouTube account."""
-    options = ["--ignore-config", "--no-cache-dir"]
+    options = ["--ignore-config"]
     pot_home = os.getenv("TRACK_YTDLP_POT_HOME")
+    # Cloud: keep YouTube's player code between downloads of the same container.
+    options += ["--cache-dir", "/tmp/yt-dlp-cache"] if pot_home else ["--no-cache-dir"]
     if pot_home:
         options += ["--extractor-args", f"youtubepot-bgutilscript:server_home={pot_home}"]
     else:

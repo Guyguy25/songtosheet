@@ -32,12 +32,39 @@ def queue_has_job(call):
     return bool(call("peek").get("queued"))
 
 
+_pot_server = None
+
+
+def start_pot_server():
+    """Keep the bgutil PO-token server running (default http://127.0.0.1:4416).
+
+    yt-dlp then asks it for tokens instead of starting a Node script per download."""
+    global _pot_server
+    home = os.getenv("TRACK_YTDLP_POT_HOME")
+    if not home or (_pot_server is not None and _pot_server.poll() is None):
+        return
+    import subprocess
+
+    try:
+        _pot_server = subprocess.Popen(["node", "build/main.js"], cwd=home, stdout=subprocess.DEVNULL,
+                                       stderr=subprocess.DEVNULL)
+    except OSError as error:
+        print(f"Serveur de jetons YouTube indisponible : {error}", flush=True)
+
+
 def engines():
     """Load (once per container) and warm the transcription engines."""
     global _engines
     if _engines is None:
         from track_worker import _warm, load_engines, load_note_model
 
+        start_pot_server()
+        try:
+            import torch
+
+            print(f"process_queue: GPU visible pour Demucs = {torch.cuda.is_available()}", flush=True)
+        except ImportError:
+            pass
         _engines = load_engines()
         load_note_model()
         # Transkun is only needed for piano recordings: it loads on first use.

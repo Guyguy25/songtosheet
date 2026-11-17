@@ -223,6 +223,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
             if job.get("guitar_compare") and not (job.get("youtube_id") or job.get("audio_url")):
                 with audio.open("rb") as stream:
                     audio_hash = file_digest(stream, "sha256").hexdigest()
+            print(f"{job['id']}: audio récupéré à {time.monotonic() - job_started:.1f}s", flush=True)
             if section is not None:
                 excerpt = job.get("excerpt")
                 limit = job["preview_limit"]

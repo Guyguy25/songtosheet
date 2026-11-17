@@ -67,6 +67,10 @@ engine = (
         "python -c \"from demucs.pretrained import get_model; get_model('htdemucs'); get_model('htdemucs_6s')\"",
         "python -c \"from beat_this.inference import File2Beats; File2Beats(checkpoint_path='final0', device='cpu')\"",
     )
+    # librosa compiles its numba code on first use (seconds per function, in the middle of a job):
+    # compile it once here and keep the result in the image.
+    .env({"NUMBA_CACHE_DIR": "/opt/numba-cache"})
+    .run_commands("mkdir -p /opt/numba-cache && python -c \"import numpy as np, librosa; t = np.arange(44100 * 4) / 44100; y = (.2 * np.sin(2 * np.pi * 196 * t)).astype('float32'); v = librosa.resample(y, orig_sr=44100, target_sr=16000); librosa.feature.rms(y=v, frame_length=1600, hop_length=800); s = librosa.resample(y, orig_sr=44100, target_sr=22050); librosa.beat.beat_track(y=s, sr=22050, hop_length=512); h = librosa.effects.harmonic(s); librosa.feature.chroma_cqt(y=h, sr=22050, hop_length=512); e = librosa.onset.onset_strength(y=s, sr=22050, hop_length=512); librosa.onset.onset_detect(onset_envelope=e, sr=22050, hop_length=512)\"")
     .env({
         "TRACK_YOURMT3_PYTHON": "/opt/yourmt3/bin/python",
         "TRACK_YOURMT3_CHECKPOINT": "/models/yourmt3.ckpt",
@@ -91,8 +95,7 @@ with light.imports():
 
 
 # L4 first; A10 when no L4 is free (Modal tries them in order), so a job never waits for capacity.
-# Cost per second ≈ L4 0.000222 $ + 4 cores × 0.0000131 $ + 12 GiB × 0.00000222 $ ≈ 0.0003 $:
-# 3 cents leave ~100 s of container time per generation, start-up included.
+# Cost per second ≈ L4 0.000222 $ + 8 cores × 0.0000131 $ + 16 GiB × 0.00000222 $ ≈ 0.00036 $.
 @app.function(image=engine, gpu=["L4", "A10"], cpu=8.0, memory=16384, timeout=600, scaledown_window=5,
               max_containers=2, secrets=[secret, proxy_secret])
 def process_queue():

@@ -76,6 +76,36 @@ class YourMT3:
 _LOCK = None
 
 
+BATCH_SIZE = 16  # mt3_infer decodes 8 segments at a time: 30 s of audio (15 segments) took two passes
+
+
+def use_batch_size(model, size=BATCH_SIZE):
+    """Make model.inference_file decode `size` segments per pass, whatever batch it is asked for."""
+    if getattr(model, "_songtosheet_batch", None) == size:
+        return
+    original = getattr(model, "_songtosheet_inference", None) or model.inference_file
+
+    def inference_file(*args, **kwargs):
+        if "bsz" not in kwargs and args:  # bsz given positionally
+            args = args[1:]
+        kwargs["bsz"] = size
+        return original(*args, **kwargs)
+    model._songtosheet_inference = original
+    model.inference_file = inference_file
+    model._songtosheet_batch = size
+
+
+def _bigger_batches():
+    try:
+        from mt3_infer import api
+    except ImportError:
+        return
+    for adapter in list(getattr(api, "_MODEL_CACHE", {}).values()):
+        model = getattr(adapter, "model", None)
+        if model is not None and hasattr(model, "inference_file"):
+            use_batch_size(model)
+
+
 def preload(checkpoint, device):
     """Load the model once, before the first request (mt3_infer caches it)."""
     import numpy as np
@@ -84,6 +114,7 @@ def preload(checkpoint, device):
     with _LOCK:
         transcribe(np.zeros(16000, dtype=np.float32), sr=16000, model="yourmt3", checkpoint_path=checkpoint,
                    device=device, auto_download=False)
+        _bigger_batches()
 
 
 def run(audio, destination, checkpoint, device):
@@ -95,6 +126,7 @@ def run(audio, destination, checkpoint, device):
     samples, rate = librosa.load(audio, sr=16000, mono=True)
     lock = _LOCK if _LOCK is not None else contextlib.nullcontext()
     with lock:
+        _bigger_batches()
         # mt3_infer caches the loaded model, so a serving process loads it only once.
         transcribe(samples, sr=rate, model="yourmt3", checkpoint_path=checkpoint, device=device,
                    auto_download=False).save(destination)

@@ -93,6 +93,12 @@ def warm_engines(loaded):
     import stem_separation
 
     stem_separation.warm()
+    try:
+        from audio_warmup import warm_audio_analysis
+
+        print(f"process_queue: analyses audio prêtes en {warm_audio_analysis():.1f}s", flush=True)
+    except Exception as error:
+        print(f"Préchauffage des analyses audio impossible : {error}", flush=True)
     _warmed = True
 
 

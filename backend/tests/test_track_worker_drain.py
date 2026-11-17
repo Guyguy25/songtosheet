@@ -42,3 +42,12 @@ def test_claim_payload_matches_engines():
     without = claim_payload(Engines())
     assert without["piano_compare"] is False and without["piano_judge_version"] is None
     assert claim_payload(Engines(piano=object()))["piano_judge_version"] == 3
+
+
+def test_drain_stops_claiming_when_time_runs_out(monkeypatch):
+    # A job may take up to 5 minutes: never claim one the container could not finish.
+    clock = iter([0, 100, 400]).__next__
+    monkeypatch.setattr(track_worker.time, "monotonic", clock)
+    monkeypatch.setattr(track_worker, "process_job", lambda *args: None)
+    always = lambda action, **fields: {"job": {"id": "x", "lease": "l"}}
+    assert drain(always, Engines(), Path("/tmp"), time_budget=600) == 1

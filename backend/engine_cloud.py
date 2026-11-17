@@ -46,10 +46,12 @@ def engines():
     return _engines
 
 
-def run_drain(cache=Path("/tmp/songtosheet-cache")):
-    """Process the queue until it is empty. Returns the number of jobs taken."""
+def run_drain(cache=Path("/tmp/songtosheet-cache"), time_budget=570):
+    """Process the queue until it is empty. Returns the number of jobs taken.
+
+    time_budget stays under process_queue's 600 s timeout."""
     from track_worker import drain, make_call
 
     call, session = make_call(os.environ["SITE_URL"], os.environ["TRACK_WORKER_TOKEN"])
     with session:
-        return drain(call, engines(), cache)
+        return drain(call, engines(), cache, time_budget=time_budget)

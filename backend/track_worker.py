@@ -427,13 +427,21 @@ def run_job(call, job, cache, engines):
     process_job(call, job, cache, engines.guitar, engines.solo, engines.piano, engines.solo_piano)
 
 
-def drain(call, engines, cache, *, max_jobs=50, guided_guitar_only=False, piano_only=False):
+JOB_LIMIT_SECONDS = 300  # the site's processing deadline per job
+
+
+def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_only=False, piano_only=False):
     """Process queued jobs until the queue is empty (cloud mode). Returns how many were taken.
 
-    A failing job does not stop the others; a connection error to the site propagates."""
+    time_budget: seconds the container may still run; no job is claimed unless a full
+    JOB_LIMIT_SECONDS remains.  A failing job does not stop the others; a connection
+    error to the site propagates."""
     payload = claim_payload(engines, guided_guitar_only, piano_only)
+    started = time.monotonic()
     done = 0
     while done < max_jobs:
+        if time_budget is not None and time.monotonic() - started > time_budget - JOB_LIMIT_SECONDS:
+            break
         job = call("claim", **payload)["job"]
         if not job:
             break

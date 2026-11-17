@@ -110,6 +110,23 @@ def download_track(url, directory):
     raise TrackLinkError("Impossible de récupérer l’audio. Vérifie que le fichier est accessible sans connexion.")
 
 
+def youtube_options():
+    """Common yt-dlp options for YouTube.
+
+    TRACK_YTDLP_POT_HOME: bgutil PO-token provider (server folder) so YouTube accepts
+    downloads from cloud servers; TRACK_YTDLP_PROXY: optional proxy for YouTube only."""
+    options = ["--ignore-config", "--no-cache-dir"]
+    pot_home = os.getenv("TRACK_YTDLP_POT_HOME")
+    if pot_home:
+        options += ["--extractor-args", f"youtubepot-bgutilscript:server_home={pot_home}"]
+    else:
+        options.append("--no-plugin-dirs")
+    proxy = os.getenv("TRACK_YTDLP_PROXY")
+    if proxy:
+        options += ["--proxy", proxy]
+    return options
+
+
 def download_youtube_section(video_id, directory, start, end):
     """Fetch only [start, end] seconds of a video's audio (much faster for previews).
 
@@ -119,7 +136,7 @@ def download_youtube_section(video_id, directory, start, end):
         raise TrackLinkError("Colle un lien vers une vidéo ou un Short YouTube.")
     info = directory / "youtube-duration.txt"
     command = [
-        sys.executable, "-m", "yt_dlp", "--ignore-config", "--no-plugin-dirs", "--no-cache-dir",
+        sys.executable, "-m", "yt_dlp", *youtube_options(),
         "--no-playlist", "--js-runtimes", "node", "--socket-timeout", "12",
         "--extractor-retries", "2", "--retries", "2", "--fragment-retries", "2",
         "--match-filter", "!is_live", "--no-simulate", "--print-to-file", "%(duration)s", str(info),
@@ -148,7 +165,7 @@ def download_youtube(video_id, directory):
     if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
         raise TrackLinkError("Colle un lien vers une vidéo ou un Short YouTube.")
     command = [
-        sys.executable, "-m", "yt_dlp", "--ignore-config", "--no-plugin-dirs", "--no-cache-dir",
+        sys.executable, "-m", "yt_dlp", *youtube_options(),
         "--no-playlist", "--js-runtimes", "node", "--socket-timeout", "12",
         "--extractor-retries", "2", "--retries", "2", "--fragment-retries", "2",
         "--max-filesize", "25M", "--match-filter", "!is_live",

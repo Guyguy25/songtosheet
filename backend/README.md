@@ -272,7 +272,7 @@ Tous les modèles et leurs poids sont intégrés à l'image : un conteneur déma
 
 1. Crée un compte sur modal.com, puis une clé d'accès (Settings → API Tokens).
 2. Dans GitHub, Settings → Secrets and variables → Actions, ajoute `MODAL_TOKEN_ID` et `MODAL_TOKEN_SECRET`.
-3. Dans Modal, Secrets → Custom, crée `songtosheet-worker` avec :
+3. Dans Modal, Secrets → Custom, crée `custom-secret` avec :
    - `TRACK_WORKER_TOKEN` : la même valeur que sur la machine du worker actuel ;
    - `ENGINE_WAKE_SECRET` : une longue phrase au hasard ;
    - `SITE_URL` : `https://songtosheet.vercel.app`.

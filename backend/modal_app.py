@@ -5,7 +5,7 @@
 - `watchdog`: every 2 minutes, restarts `process_queue` if a job is waiting (lost wake-up).
 - `benchmark`: `modal run backend/modal_app.py::benchmark --url <YouTube>` measures real timings.
 
-Secret `songtosheet-worker` (created by the owner in Modal): TRACK_WORKER_TOKEN,
+Secret `custom-secret` (created by the owner in Modal): TRACK_WORKER_TOKEN,
 ENGINE_WAKE_SECRET, SITE_URL.  Deployed by .github/workflows/deploy-engine.yml.
 """
 import os
@@ -25,7 +25,7 @@ ARRANGER_COMMIT = "cd54d5b268d67404853b5aeb0b40eb7f6c0a27a4"
 REMI_COMMIT = "832b96a0f990cdc3b67998836f3c067290632f6b"
 
 app = modal.App("songtosheet-engine")
-secret = modal.Secret.from_name("songtosheet-worker")
+secret = modal.Secret.from_name("custom-secret")
 
 # Small CPU image for the wake endpoint and the watchdog.
 light = (modal.Image.debian_slim(python_version="3.11")

@@ -59,3 +59,19 @@ test('peek reports a queued job',async()=>{
   assert.deepStrictEqual((await call({authorization:'Bearer '+token})).body,{queued:false});
   assert.strictEqual((await call({})).status,403);
 });
+
+test('scheduleWake hands the call to waitUntil and returns at once',async()=>{
+  process.env.ENGINE_WAKE_URL='https://engine.example/wake';process.env.ENGINE_WAKE_SECRET='s3cret';
+  const kept=[];
+  const original=Module._load;
+  Module._load=function(request,...rest){if(request==='@vercel/functions')return {waitUntil:promise=>kept.push(promise)};return original.call(this,request,...rest);};
+  const {scheduleWake}=fresh('lib/engine-wake.js');
+  let finish;global.fetch=()=>new Promise(resolve=>{finish=resolve;});
+  const started=Date.now();
+  await scheduleWake();
+  Module._load=original;
+  assert.ok(Date.now()-started<100);
+  assert.strictEqual(kept.length,1);
+  finish({ok:true,status:200});
+  await kept[0];
+});

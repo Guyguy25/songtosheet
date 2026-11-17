@@ -101,8 +101,10 @@ def wake(request: Request):
     from engine_cloud import wake_allowed
 
     if not wake_allowed(request.headers.get("authorization"), os.environ.get("ENGINE_WAKE_SECRET", "")):
+        print("wake: secret refusé", flush=True)
         raise HTTPException(status_code=403, detail="Accès refusé.")
     process_queue.spawn()
+    print("wake: moteur lancé", flush=True)
     return {"started": True}
 
 
@@ -113,7 +115,9 @@ def watchdog():
     sys.path.insert(0, CODE)
     from engine_cloud import queue_has_job, site_call
 
-    if queue_has_job(site_call(os.environ["SITE_URL"], os.environ["TRACK_WORKER_TOKEN"])):
+    waiting = queue_has_job(site_call(os.environ["SITE_URL"], os.environ["TRACK_WORKER_TOKEN"]))
+    print(f"watchdog: demande en attente = {waiting}", flush=True)
+    if waiting:
         process_queue.spawn()
 
 

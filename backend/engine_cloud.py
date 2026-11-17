@@ -86,8 +86,19 @@ def run_drain(cache=Path("/tmp/songtosheet-cache"), time_budget=570):
     """Process the queue until it is empty. Returns the number of jobs taken.
 
     time_budget stays under process_queue's 600 s timeout."""
+    import time
+
     from track_worker import drain, make_call
 
+    started = time.monotonic()
+    print("process_queue: chargement des moteurs…", flush=True)
+    loaded = engines()  # model loading counts against the container's timeout too
+    print(f"process_queue: moteurs prêts en {time.monotonic() - started:.1f}s", flush=True)
     call, session = make_call(os.environ["SITE_URL"], os.environ["TRACK_WORKER_TOKEN"])
     with session:
-        return drain(call, engines(), cache, time_budget=time_budget)
+        taken = drain(call, loaded, cache, time_budget=time_budget - (time.monotonic() - started))
+    seconds = time.monotonic() - started + 5  # + the 5 s idle window before shutdown
+    # L4 + 4 cores + 12 GiB ≈ 0.000301 $/s (A10: ~25 % more); container boot not included.
+    print(f"process_queue: {seconds:.0f}s de machine pour {taken} demande(s), coût estimé "
+          f"{100 * seconds * 0.000301:.2f} centime(s) de dollar (hors démarrage du conteneur)", flush=True)
+    return taken

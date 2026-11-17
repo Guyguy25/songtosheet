@@ -10,6 +10,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 import threading
 import time
 from importlib.util import find_spec
@@ -75,6 +76,15 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
             vocals.unlink(missing_ok=True)
             print(f"{job['id']}: piste voix indisponible : {type(error).__name__}", flush=True)
 
+    def chords():
+        # Runs on the full mix with YourMT3+, alongside the guitar transcription below.
+        folder = directory / "chords"
+        meta = accompany(audio, folder, job["title"], lambda _: None, piano_engine)
+        return meta, folder, read_exports(folder, CHORD_EXPORTS | {"heldtab": "tab.musicxml", "heldmid": "score.mid"})
+
+    pool = ThreadPoolExecutor(1)
+    chords_future = pool.submit(chords)
+    pool.shutdown(wait=False)
     try:
         result = transcribe(audio, "guitare", data, isolated=False, title=job["title"],
                             progress=report, guitar_engine=guitar_engine, guitar_solo=True,
@@ -95,9 +105,7 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
 
     chord = None
     try:
-        folder = directory / "chords"
-        chord = accompany(audio, folder, job["title"], (lambda _: None) if direct else report, piano_engine)
-        chord_files = read_exports(folder, CHORD_EXPORTS | {"heldtab": "tab.musicxml", "heldmid": "score.mid"})
+        chord, folder, chord_files = chords_future.result()
         if len(chord_files) != 4:
             raise ValueError("Les deux accompagnements n’ont pas été exportés.")
         exports.update(chord_files)
@@ -179,7 +187,36 @@ def prepare_preview(audio, directory, limit, excerpt=None):
     return preview, duration
 
 
-def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_engine=None, solo_piano_engine=None):
+def fetch_audio(call, job, directory):
+    """Download or receive the job's audio into directory. Returns (audio, section)."""
+    section = None
+    if job.get("youtube_id") and job.get("preview_limit") and os.getenv("TRACK_YOUTUBE_SECTIONS", "1") != "0":
+        # A preview needs only 30 s: fetch that part instead of the whole video.
+        begin = (job.get("excerpt") or {}).get("start_ms", 0) / 1000
+        stop = begin + job["preview_limit"]
+        if job.get("excerpt"):
+            stop = min(stop, job["excerpt"]["end_ms"] / 1000)
+        section = download_youtube_section(job["youtube_id"], directory, begin, stop + .5)
+        if section is None:
+            print(f"{job['id']}: extrait YouTube indisponible, téléchargement complet", flush=True)
+    if section is not None:
+        audio = section[0]
+    elif job.get("youtube_id"):
+        audio = download_youtube(job["youtube_id"], directory)
+    elif job.get("audio_url"):
+        audio = download_track(job["audio_url"], directory)
+    else:
+        audio = directory / f"input.{job['extension']}"
+        with audio.open("wb") as file:
+            for index in range(job["chunks"]):
+                chunk = call("read", id=job["id"], lease=job["lease"], index=index)
+                file.write(base64.b64decode(chunk["data"], validate=True))
+    return audio, section
+
+
+def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_engine=None, solo_piano_engine=None,
+                fetched=None):
+    """fetched: optional Future of fetch_audio, started earlier (e.g. during the model warm-up)."""
     identity = {"id": job["id"], "lease": job["lease"]}
     job_started = time.monotonic()
     direct_published = False
@@ -194,28 +231,8 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
     try:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
-            section = None
-            if job.get("youtube_id") and job.get("preview_limit") and os.getenv("TRACK_YOUTUBE_SECTIONS", "1") != "0":
-                # A preview needs only 30 s: fetch that part instead of the whole video.
-                begin = (job.get("excerpt") or {}).get("start_ms", 0) / 1000
-                stop = begin + job["preview_limit"]
-                if job.get("excerpt"):
-                    stop = min(stop, job["excerpt"]["end_ms"] / 1000)
-                section = download_youtube_section(job["youtube_id"], directory, begin, stop + .5)
-                if section is None:
-                    print(f"{job['id']}: extrait YouTube indisponible, téléchargement complet", flush=True)
-            if section is not None:
-                audio = section[0]
-            elif job.get("youtube_id"):
-                audio = download_youtube(job["youtube_id"], directory)
-            elif job.get("audio_url"):
-                audio = download_track(job["audio_url"], directory)
-            else:
-                audio = directory / f"input.{job['extension']}"
-                with audio.open("wb") as file:
-                    for index in range(job["chunks"]):
-                        chunk = call("read", **identity, index=index)
-                        file.write(base64.b64decode(chunk["data"], validate=True))
+            audio, section = (fetched.result() if fetched is not None
+                              else fetch_audio(call, job, directory))
             capo = job.get("capo", 0)
             review = directory / "review"
             source_duration = None
@@ -426,15 +443,20 @@ def make_call(url, token):
     return call, session
 
 
-def run_job(call, job, cache, engines):
-    process_job(call, job, cache, engines.guitar, engines.solo, engines.piano, engines.solo_piano)
+def run_job(call, job, cache, engines, fetched=None):
+    process_job(call, job, cache, engines.guitar, engines.solo, engines.piano, engines.solo_piano,
+                **({"fetched": fetched} if fetched is not None else {}))
 
 
 JOB_LIMIT_SECONDS = 300  # the site's processing deadline per job
 
 
-def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_only=False, piano_only=False):
+def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_only=False, piano_only=False,
+          warm=None):
     """Process queued jobs until the queue is empty (cloud mode). Returns how many were taken.
+
+    warm: optional slow model warm-up, run only once a job is claimed, while that
+    job's audio downloads in the background (an empty queue never pays for it).
 
     time_budget: seconds the container may still run; no job is claimed unless a full
     JOB_LIMIT_SECONDS remains.  A failing job does not stop the others; a connection
@@ -451,7 +473,15 @@ def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_
         done += 1
         job_started = time.monotonic()
         try:
-            run_job(call, job, cache, engines)
+            if warm is not None:
+                with tempfile.TemporaryDirectory() as fetch_folder, ThreadPoolExecutor(1) as pool:
+                    fetched = pool.submit(fetch_audio, call, job, Path(fetch_folder))
+                    warm, ready = None, warm
+                    ready()
+                    print(f"{job.get('id')}: moteurs prêts à {time.monotonic() - job_started:.1f}s", flush=True)
+                    run_job(call, job, cache, engines, fetched)
+            else:
+                run_job(call, job, cache, engines)
         except requests.RequestException:
             raise
         except Exception as error:

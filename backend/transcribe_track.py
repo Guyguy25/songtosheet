@@ -8,6 +8,7 @@ import math
 import subprocess
 import sys
 import tempfile
+from concurrent.futures import ThreadPoolExecutor
 from bisect import bisect_left
 from collections import Counter, defaultdict
 from functools import lru_cache
@@ -215,6 +216,16 @@ def piano_midi_events(midi, duration):
     return notes
 
 
+def transcribe_mix(guitar_engine, original, work, duration):
+    """Guitar notes and attacks heard in the full mix; ([], []) when the engine fails."""
+    try:
+        mix = guitar_engine.transcribe(original, work / "mix-guitar.mid")
+        return midi_events(mix, duration, guitar_only=True), guitar_attacks(original)[0]
+    except (ValueError, OSError, subprocess.TimeoutExpired) as error:
+        print(f"Relevé guitare du mix indisponible : {error}", file=sys.stderr, flush=True)
+        return [], []
+
+
 def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=None, capo=0, progress=None,
                review_audio=None, guitar_engine=None, guitar_solo=False, has_voice=True, solo_engine=None,
                  on_direct=None, piano_engine=None, compare_solo=False):
@@ -276,8 +287,10 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     if not (piano_engine or guitar_engine) or (guitar_solo and has_voice and not isolated):
         from basic_pitch.inference import predict
 
-    with tempfile.TemporaryDirectory(dir=output) as temporary:
+    with tempfile.TemporaryDirectory(dir=output) as temporary, ThreadPoolExecutor(1) as background:
+        # background finishes (exits first) before the temporary folder is removed.
         work = Path(temporary)
+        mix_future = None
         original = wav = work / "input.wav"
         run(["ffmpeg", "-nostdin", "-v", "error", *input_options, "-map", "0:a:0",
              "-ar", "44100", "-ac", "2", "-fs", str(max_pcm_bytes), str(wav)], timeout=90)
@@ -287,6 +300,10 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             if review_audio is not None:
                 review_audio(original, work)
         elif not isolated:
+            if guitar_solo and compare_solo and guitar_engine and not cached:
+                # The solo comparison also needs the guitar heard in the full mix: transcribe it
+                # while Demucs separates the stems instead of afterwards.
+                mix_future = background.submit(transcribe_mix, guitar_engine, original, work, duration)
             report("isolate")
             from stem_separation import separate
 
@@ -469,13 +486,10 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             from guitar_solo import write_solo
 
             mix_notes, mix_attacks = [], []
-            if guitar_engine and not isolated:
-                try:
-                    mix = guitar_engine.transcribe(original, work / "mix-guitar.mid")
-                    mix_notes = midi_events(mix, duration, guitar_only=True)
-                    mix_attacks, _ = guitar_attacks(original)
-                except (ValueError, OSError, subprocess.TimeoutExpired) as error:
-                    print(f"Relevé guitare du mix indisponible : {error}", file=sys.stderr, flush=True)
+            if mix_future is not None:
+                mix_notes, mix_attacks = mix_future.result()
+            elif guitar_engine and not isolated:
+                mix_notes, mix_attacks = transcribe_mix(guitar_engine, original, work, duration)
             try:
                 solo_result = work / "solo"
                 arrange_solo = solo_engine.write if solo_engine else write_solo

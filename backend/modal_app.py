@@ -93,7 +93,7 @@ with light.imports():
 # L4 first; A10 when no L4 is free (Modal tries them in order), so a job never waits for capacity.
 # Cost per second ≈ L4 0.000222 $ + 4 cores × 0.0000131 $ + 12 GiB × 0.00000222 $ ≈ 0.0003 $:
 # 3 cents leave ~100 s of container time per generation, start-up included.
-@app.function(image=engine, gpu=["L4", "A10"], cpu=4.0, memory=12288, timeout=600, scaledown_window=5,
+@app.function(image=engine, gpu=["L4", "A10"], cpu=8.0, memory=16384, timeout=600, scaledown_window=5,
               max_containers=2, secrets=[secret, proxy_secret])
 def process_queue():
     from engine_cloud import run_drain

@@ -124,6 +124,25 @@ def log_failure(where, result):
     print(f"yt-dlp ({where}) a échoué : " + (" | ".join(lines) or details[-800:]), file=sys.stderr, flush=True)
 
 
+def sticky_proxy(proxy):
+    """Keep one exit IP for a whole download.
+
+    YouTube signs its media links for the IP that asked for them: with a rotating
+    residential proxy the page and the audio come from different IPs and the audio
+    request gets 403.  DataImpulse keeps an IP per `sessid` (about 30 minutes)."""
+    from urllib.parse import urlsplit, urlunsplit
+    import secrets
+
+    parts = urlsplit(proxy)
+    if not (parts.hostname or "").endswith("dataimpulse.com") or not parts.username:
+        return proxy
+    session = "sessid." + secrets.token_hex(6)
+    login = parts.username + (";" if "__" in parts.username else "__") + session
+    host = parts.hostname + (f":{parts.port}" if parts.port else "")
+    credentials = login + (f":{parts.password}" if parts.password is not None else "")
+    return urlunsplit((parts.scheme, f"{credentials}@{host}", parts.path, parts.query, parts.fragment))
+
+
 def youtube_options():
     """Common yt-dlp options for YouTube.
 
@@ -138,7 +157,7 @@ def youtube_options():
         options.append("--no-plugin-dirs")
     proxy = os.getenv("TRACK_YTDLP_PROXY")
     if proxy:
-        options += ["--proxy", proxy]
+        options += ["--proxy", sticky_proxy(proxy)]
     cookies = os.getenv("TRACK_YTDLP_COOKIES")
     if cookies:
         # Netscape cookie file of a YouTube account, stored as a secret: written to a

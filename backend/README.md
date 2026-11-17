@@ -133,7 +133,33 @@ Redémarre le worker avec les deux moteurs configurés. Les nouveaux aperçus re
 
 Le worker analyse le mix avec YourMT3+ MoE sans pitch shift. Les notes mélodiques sont réunies dans un MIDI piano et gravées sur deux portées. Les percussions sont écartées.
 
-Les aperçus piano comparent YourMT3+, Basic Pitch sur le mix et une réduction à règles issue de Basic Pitch. Les trois utilisent le même extrait. Un modèle spectral indépendant estime les hauteurs dans le mix et classe les exports selon la concordance des hauteurs et des timings. Le résultat affiche les variantes disponibles et ouvre la recommandation quand au moins deux variantes ont pu être évaluées. Le modèle reste indicatif pour les mix denses.
+Les aperçus piano (pipeline v3, novembre 2026) produisent jusqu’à quatre versions sur le même extrait :
+
+| Version | Clé | Contenu |
+|---|---|---|
+| Arrangement deux mains | `arrangement` | Mélodie chantée (piste voix de YourMT3+) à la main droite, accords détectés à la main gauche. Le motif de main gauche (accords tenus, « oom-pah » ou arpèges) suit le mouvement de l’accompagnement original. |
+| Piano original | `solo` | Relevé Transkun quand l’enregistrement est surtout du piano (reprises piano, ballades). F1 ≈ 0,97 sur piano seul, contre ≈ 0,70 pour Basic Pitch. |
+| Piano facile | `playable` | Mélodie + une note de basse par accord. |
+| Version complète | `yourmt3` | Toutes les notes de YourMT3+, éclaircies pour rester jouables (portée d’une octave par main, notes fantômes retirées). |
+
+Basic Pitch n’est plus affiché quand YourMT3+ est disponible : il sert de second avis au juge, et de repli (`basic`, `reduction`) sinon.
+
+**Grille rythmique.** `piano_beats.py` détecte les temps et les premiers temps de mesure avec beat_this (MIT, CPJKU), ou librosa en repli. Les notes sont placées sur cette grille : vraies barres de mesure, levée (anacrouse) quand le morceau commence avant le premier temps, rythmes à la double croche. Le MIDI porte une carte de tempo qui suit l’enregistrement temps par temps : le curseur, la lecture MIDI et la piste voix restent synchronisés avec l’audio d’origine. Chaque main est écrite en accords plaqués lisibles (pas de voix superposées).
+
+**Juge IA v3.** `evaluate_piano_options.recommend` mesure pour chaque version : mélodie (comparée à la voix isolée par Demucs), accords, basse et rythme (comparés à un rendu audio de la version), notes (accord entre plusieurs modèles de transcription indépendants : YourMT3+, Basic Pitch, Transkun) et jouabilité (écart et nombre de notes par main, densité). Il recommande la version au meilleur score pondéré et rédige une phrase d’explication (« Recommandée par l’IA : … »). Le site affiche cette phrase, et sous chaque version les scores Mélodie, Accords et Jouabilité.
+
+**Vitesse.** YourMT3+ et Transkun restent chargés en mémoire entre deux demandes (`engine_process.py`, désactivable avec `TRACK_YOURMT3_PERSISTENT=0`) et sont préchargés au démarrage du worker. La séparation de la voix, la détection des temps, Basic Pitch et Transkun tournent en parallèle de YourMT3+. Pour YouTube, le worker ne télécharge que l’extrait de 30 secondes (`TRACK_YOUTUBE_SECTIONS=0` pour revenir au téléchargement complet).
+
+Installation des nouveaux moteurs :
+
+```bash
+# Environnement du worker (Demucs y installe déjà PyTorch)
+python -m pip install -r requirements-transcription.txt   # ajoute beat-this
+# Environnement YourMT3+ (Transkun y est lancé par défaut, poids inclus dans le paquet, licence MIT)
+<chemin-python-yourmt3> -m pip install transkun==2.0.1 moduleconf
+```
+
+Variables utiles : `TRACK_TRANSKUN=0` désactive Transkun, `TRACK_TRANSKUN_PYTHON` choisit un autre Python, `TRACK_TRANSKUN_DEVICE` / `TRACK_BEAT_DEVICE` (`auto`, `cpu`, `cuda`), `TRACK_BEAT_THIS=0` force librosa. beat_this télécharge son modèle (≈ 80 Mo) au premier usage depuis le serveur de la JKU ; `TRACK_BEAT_THIS_CHECKPOINT` accepte un chemin local.
 
 L’option `--piano-only` réserve le worker aux aperçus piano. Pour revenir au parcours simple, configure `TRACK_PIANO_COMPARISON=0` sur le site.
 

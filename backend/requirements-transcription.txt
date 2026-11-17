@@ -5,3 +5,4 @@ numpy<2
 verovio==6.4.1
 yt-dlp==2026.10.26
 yt-dlp-ejs==0.8.0
+beat-this==1.1.0

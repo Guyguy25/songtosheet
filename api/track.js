@@ -6,7 +6,7 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
+const {PIANO_CRITERIA,CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
 const AUDIO_RETENTION_MS=2*60*60*1000;
@@ -218,11 +218,11 @@ async function worker(db,res,body){
     if(body.youtube!==true)compatible.youtube_id={$exists:false};
     if(body.excerpts!==true)compatible.excerpt={$exists:false};
     if(body.piano_only===true){
-      if(process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_judge_version!==2)return json(res,200,{job:null});
+      if(process.env.TRACK_PIANO_COMPARISON!=='0'&&![2,3].includes(body.piano_judge_version))return json(res,200,{job:null});
       compatible.instrument='piano';
       compatible.preview_limit=PREVIEW_SECONDS;
     }else if(process.env.TRACK_PIANO_COMPARISON!=='0'&&
-      (body.piano_compare!==true||body.piano_playable!==true||body.piano_judge_version!==2)){
+      (body.piano_compare!==true||body.piano_playable!==true||![2,3].includes(body.piano_judge_version))){
       compatible.$and=[{$or:[{instrument:{$ne:'piano'}},{preview_limit:{$ne:PREVIEW_SECONDS}}]}];
     }
     if(body.preview!==true)compatible.preview_limit={$exists:false};
@@ -348,7 +348,7 @@ async function worker(db,res,body){
     const preview=job.preview_limit?{preview_duration:Math.min(previewDuration,job.preview_limit)}:{};
     const pianoData=hasPianoFiles?{piano_primary:body.piano_primary}:{};
     const pianoSuggestion=body.piano_recommendation;
-    if(hasPianoFiles&&[1,2].includes(pianoSuggestion?.version)&&pianoSuggestion.recommended===body.piano_primary){
+    if(hasPianoFiles&&[1,2,3].includes(pianoSuggestion?.version)&&pianoSuggestion.recommended===body.piano_primary){
       const available=Object.entries(PIANO_VARIANTS).filter(([,v])=>exports[v.score]&&exports[v.midi]);
       const scores=Object.fromEntries(available
         .map(([key])=>[key,pianoSuggestion.scores?.[key]])
@@ -356,6 +356,19 @@ async function worker(db,res,body){
       if(available.length>=2&&Object.keys(scores).length===available.length&&
         scores[body.piano_primary]===Math.max(...Object.values(scores))){
         pianoData.piano_recommendation={version:pianoSuggestion.version,recommended:body.piano_primary,scores};
+        if(pianoSuggestion.version===3){
+          const criteria={};
+          for(const [key] of available){
+            const values=pianoSuggestion.criteria?.[key];
+            if(!values||typeof values!=='object')continue;
+            criteria[key]=Object.fromEntries(PIANO_CRITERIA.filter(name=>Number.isInteger(values[name])&&
+              values[name]>=0&&values[name]<=100).map(name=>[name,values[name]]));
+          }
+          const summary=typeof pianoSuggestion.summary==='string'?
+            pianoSuggestion.summary.replace(/[\u0000-\u001f<>]/g,'').trim().slice(0,240):'';
+          pianoData.piano_recommendation.criteria=criteria;
+          if(summary)pianoData.piano_recommendation.summary=summary;
+        }
       }
     }
     const updated=await jobs.updateOne(filter,{$set:{duration,note_count,exports,downloads:Object.keys(exports),diagnostic,stage:'pdf',...capo,...engine,...preview,...comparisonData,...pianoData},

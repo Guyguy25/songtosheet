@@ -105,14 +105,62 @@ def piano_hands(notes, bpm, beats):
             pitch = note["pitch"]
             tick = round(note["start"] * bpm / 30)
             _, middle = patterns.get(tick // (beats * 2), (None, None))
-            bass = (pitch < 60 or (tick % 2 and pitch == middle)
-                    or (pitch == low and 60 <= pitch <= 62 and high - pitch >= 9))
+            if note.get("hand") in ("left", "right"):
+                bass = note["hand"] == "left"
+            else:
+                bass = (pitch < 60 or (tick % 2 and pitch == middle)
+                        or (pitch == low and 60 <= pitch <= 62 and high - pitch >= 9))
             (left if bass else right).append(note)
     return right, left, patterns
 
 
-def write_piano_score(notes, destination, title, bpm, beats):
+def trim_pickup(measure, shift):
+    """Turn the leading empty part of the first bar into an anacrusis."""
+    from music21 import note as m21note, stream
+
+    containers = [measure, *measure.getElementsByClass(stream.Voice)]
+    for container in containers:
+        for element in list(container.notesAndRests):
+            end = element.offset + element.quarterLength
+            if isinstance(element, m21note.Rest) and end <= shift + 1e-6:
+                container.remove(element)
+            elif isinstance(element, m21note.Rest) and element.offset < shift:
+                element.quarterLength = end - shift
+                container.setElementOffset(element, 0)
+            else:
+                container.setElementOffset(element, element.offset - shift)
+    measure.paddingLeft = shift
+
+
+def block_chords(events):
+    """Readable rhythm for one hand: notes struck together end together, a note stops
+    where the hand plays next, and a gap of one grid step is closed (legato)."""
+    ends = defaultdict(int)
+    for start, stop, _ in events:
+        ends[start] = max(ends[start], stop)
+    starts = sorted(ends)
+    following = dict(zip(starts, starts[1:]))
+    simplified = []
+    for start, _, midi in events:
+        stop = ends[start]
+        after = following.get(start)
+        if after is not None and (stop > after or after - stop <= 1):
+            stop = after
+        simplified.append((start, max(stop, start + 1), midi))
+    return simplified
+
+
+def write_piano_score(notes, destination, title, bpm, beats, pickup=0, simplify=False):
+    """Engrave notes (seconds at a constant bpm) on a grand staff.
+
+    pickup: length in quarter notes of an incomplete first bar (0 for none).
+    simplify: write each hand as a sequence of block chords (see block_chords)."""
     from music21 import chord, clef, instrument, layout, metadata, meter, note, pitch, stream, tempo
+
+    shift = (beats - pickup) if 0 < pickup < beats else 0
+    if shift:
+        offset = shift * 60 / bpm
+        notes = [{**item, "start": item["start"] + offset, "end": item["end"] + offset} for item in notes]
 
     score = stream.Score()
     score.metadata = metadata.Metadata(title=title)
@@ -156,6 +204,8 @@ def write_piano_score(notes, destination, title, bpm, beats):
                 if index == 1 and pattern and item["pitch"] == pattern[start % 2] and following_tick == start + 1:
                     stop = following_tick
             events.append((start, stop, item["pitch"]))
+        if simplify:
+            events = block_chords(events)
         for (start, stop), values in groupby(sorted(events), key=lambda value: value[:2]):
             pitches = [pitch.Pitch(midi=midi) for midi in dict.fromkeys(midi for _, _, midi in values)]
             for value in pitches:
@@ -171,7 +221,17 @@ def write_piano_score(notes, destination, title, bpm, beats):
             if measure.getOverlaps():
                 measure.makeVoices(inPlace=True, fillGaps=True)
             measure.makeRests(fillGaps=True, timeRangeFromBarDuration=True, inPlace=True)
+        if shift:
+            trim_pickup(staff.getElementsByClass(stream.Measure).first(), shift)
+            for number, measure in enumerate(staff.getElementsByClass(stream.Measure)):
+                measure.number = number
         score.append(staff)
         staves.append(staff)
     score.insert(0, layout.StaffGroup(staves, name="Piano", symbol="brace", barTogether=True))
     score.write("musicxml", fp=destination)
+    if shift:
+        from pathlib import Path
+
+        text = Path(destination).read_text(encoding="utf-8")
+        Path(destination).write_text(text.replace('<measure implicit="no" number="0">', '<measure implicit="yes" number="0">'),
+                               encoding="utf-8")

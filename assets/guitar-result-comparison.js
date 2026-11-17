@@ -159,6 +159,10 @@
         card.available = Boolean(current);
         card.badge.hidden = !current?.recommended;
         card.badge.textContent = current?.recommendation_source === 'ai' ? 'Recommandé par l’IA' : 'Recommandé';
+        if (card.summary) {
+          card.summary.textContent = current?.recommended && data.summary ? data.summary : '';
+          card.summary.hidden = !card.summary.textContent;
+        }
         const chosen = data.selected === card.key;
         card.vote.textContent = chosen ? 'Ton choix ✓' : piano || cards.length > 1 ? 'Choisir cette version' : 'Choisir cette tablature';
         card.vote.classList.toggle('is-chosen', chosen);
@@ -170,7 +174,8 @@
         data.recommendationStatus === 'close' ? 'Versions proches selon l’analyse audio. Écoute-les pour choisir.' :
         data.recommendationStatus === 'uncertain' ? 'Analyse audio incertaine. Écoute les versions pour choisir.' :
         piano && data.versions.some(version => version.recommended) ?
-          'Le badge indique la version qui se rapproche le plus du morceau selon l’analyse audio.' : '';
+          (data.summary ? 'L’IA a écouté le morceau et comparé chaque version : la plus fidèle et jouable porte le badge.' :
+            'Le badge indique la version qui se rapproche le plus du morceau selon l’analyse audio.') : '';
     }
 
     function display(data) {
@@ -367,10 +372,24 @@
         const listen = add(header, 'button', 'btn btn-outline', 'Écouter');
         listen.type = 'button';
         listen.disabled = true;
+        let summary = null;
+        if (piano) {
+          if (version.hint) add(card, 'p', 'piano-option-hint', version.hint);
+          const measured = version.criteria || {};
+          const parts = [['melody', 'Mélodie'], ['harmony', 'Accords'], ['playability', 'Jouabilité']]
+            .filter(([name]) => Number.isInteger(measured[name]))
+            .map(([name, label]) => `${label} ${measured[name]} %`);
+          if (parts.length) {
+            const row = add(card, 'p', 'piano-option-criteria', parts.join(' · '));
+            row.title = 'Mesures de l’analyse audio comparée au morceau original';
+          }
+          summary = add(card, 'p', 'piano-option-ai', '');
+          summary.hidden = true;
+        }
         const score = add(card, 'section', 'score-player guitar-option-player');
         const vote = add(card, 'button', 'btn btn-primary guitar-option-vote', 'Choisir cette version');
         vote.type = 'button';
-        const item = {key: version.key, element:card, badge, listen, vote, title, files: version, player: null};
+        const item = {key: version.key, element:card, badge, listen, vote, title, files: version, player: null, summary};
         cards.push(item);
         item.player = window.SongToSheetPlayer.mount(score, {
           scoreUrl: exportUrl(version.score), midiUrl: exportUrl(version.midi),
@@ -449,7 +468,8 @@
     if (piano) display({
       versions: job.piano_versions.map(version => ({...version, recommendation_source: 'ai'})),
       selected: job.piano_choice,
-      recommendationStatus: job.piano_recommendation_status
+      recommendationStatus: job.piano_recommendation_status,
+      summary: job.piano_recommendation_summary
     });
     else api(`/api/track?id=${encodeURIComponent(job.id)}&comparison=1`, {signal}).then(display).catch(() => {
       if (!signal.aborted) status.textContent = 'Comparaison indisponible. Actualise cette page pour réessayer.';

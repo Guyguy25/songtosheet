@@ -39,7 +39,12 @@ engine = (
     .run_commands("curl -fsSL https://deb.nodesource.com/setup_22.x | bash -", "apt-get install -y nodejs")
     .pip_install_from_requirements(str(HERE / "requirements.txt"))
     .pip_install_from_requirements(str(HERE / "requirements-transcription.txt"))
-    .pip_install("miditoolkit==1.0.1", "PyYAML>=6.0.2", "uv")
+    .pip_install("miditoolkit==1.0.1", "PyYAML>=6.0.2", "uv", "bgutil-ytdlp-pot-provider==2.0.2")
+    # PO-token provider so YouTube accepts downloads from cloud servers (script mode, Node).
+    .run_commands(
+        "git clone --depth 1 --branch 2.0.2 https://github.com/Brainicism/bgutil-ytdlp-pot-provider.git /opt/bgutil",
+        "cd /opt/bgutil/server && npm ci && npx tsc",
+    )
     # Basic Pitch runs its ONNX model: TensorFlow (pulled in by basic-pitch on Linux) only slows start-up.
     .run_commands("python -m pip uninstall -y tensorflow tensorflow-cpu keras tf-keras || true")
     .run_commands(
@@ -73,6 +78,7 @@ engine = (
         "TRACK_GUITARARRANGER_ROOT": "/opt/guitararranger",
         "TRACK_REMI_ROOT": "/opt/remi-z",
         "TRACK_PDF_BROWSER": "/usr/bin/chromium",
+        "TRACK_YTDLP_POT_HOME": "/opt/bgutil/server",
         "PYTHONPATH": CODE,
     })
     .add_local_dir(HERE, CODE, ignore=["tests", "data", ".venv", "**/__pycache__", "web/sounds", "web/demo", ".env"])

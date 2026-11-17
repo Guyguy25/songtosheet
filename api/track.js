@@ -490,7 +490,12 @@ module.exports=async(req,res)=>{
     if(req.method==='GET'&&req.query.stats==='1'){
       if(user?.role!=='admin')return json(res,403,{detail:'Accès refusé.'});
       res.setHeader('Cache-Control','no-store');
-      return json(res,200,await engineStats(await database()));
+      try{
+        return json(res,200,await engineStats(await database()));
+      }catch(error){
+        console.error('Statistiques des moteurs indisponibles',error?.name,error?.code,error?.message);
+        return json(res,503,{detail:'Statistiques indisponibles : '+(error?.codeName||error?.name||'erreur')});
+      }
     }
     if(req.method==='GET'&&req.query.audio!==undefined&&user.role!=='admin')return json(res,403,{detail:'Accès refusé.'});
     if(req.method==='GET')return req.query.audio===undefined

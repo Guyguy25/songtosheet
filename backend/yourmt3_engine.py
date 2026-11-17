@@ -26,7 +26,9 @@ class YourMT3:
             return None
         if not python or not checkpoint:
             raise ValueError("Configure Python et le checkpoint de YourMT3+.")
-        python, checkpoint = Path(python).resolve(strict=True), Path(checkpoint).resolve(strict=True)
+        from engine_process import interpreter
+
+        python, checkpoint = interpreter(python), Path(checkpoint).resolve(strict=True)
         with checkpoint.open("rb") as weights:
             if hashlib.file_digest(weights, "sha256").hexdigest() != CHECKPOINT_SHA256:
                 raise ValueError("Le checkpoint ne correspond pas aux poids YourMT3+ validés.")

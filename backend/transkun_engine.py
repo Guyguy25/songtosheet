@@ -23,7 +23,9 @@ class Transkun:
         python = os.getenv("TRACK_TRANSKUN_PYTHON") or os.getenv("TRACK_YOURMT3_PYTHON")
         if os.getenv("TRACK_TRANSKUN", "1") == "0" or not python:
             return None
-        return cls(Path(python).resolve(strict=True), os.getenv("TRACK_TRANSKUN_DEVICE", "auto"))
+        from engine_process import interpreter
+
+        return cls(interpreter(python), os.getenv("TRACK_TRANSKUN_DEVICE", "auto"))
 
     def _engine(self):
         from engine_process import PersistentEngine

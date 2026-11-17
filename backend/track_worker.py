@@ -1,5 +1,6 @@
 """Process SongToSheet beta jobs on a machine with the transcription models."""
 import argparse
+from dataclasses import dataclass
 import base64
 from hashlib import file_digest
 import json
@@ -376,6 +377,84 @@ def _warm(engine):
         print(f"Préchargement de {type(engine).__name__} impossible : {error}", flush=True)
 
 
+@dataclass
+class Engines:
+    guitar: object = None
+    solo: object = None
+    piano: object = None
+    solo_piano: object = None
+
+
+def load_engines(piano_only=False):
+    """Read the engines configured in the environment (TRACK_* variables)."""
+    try:
+        solo_piano = Transkun.from_env()
+    except (OSError, ValueError) as error:
+        print(f"Transkun indisponible : {error}", flush=True)
+        solo_piano = None
+    return Engines(None if piano_only else Tsumugi.from_env(), None if piano_only else GuitarArranger.from_env(),
+                   YourMT3.from_env(), solo_piano)
+
+
+def claim_payload(engines, guided_guitar_only=False, piano_only=False):
+    """What this worker can process, sent with every claim."""
+    youtube = find_spec("yt_dlp") is not None and find_spec("yt_dlp_ejs") is not None and shutil.which("node") is not None
+    piano = engines.piano is not None
+    guitar = engines.guitar is not None and engines.solo is not None
+    return dict(pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True,
+                guitar_goals=True, guitar_chords=piano, guitar_compare=piano and guitar,
+                guitar_judge=True, guitar_vocals=True, guided_guitar_only=guided_guitar_only,
+                piano_only=piano_only, piano_compare=piano, piano_playable=piano,
+                piano_judge_version=3 if piano else None,
+                piano_vocals=piano and find_spec("demucs") is not None,
+                excerpts=True, preview=piano_only or guitar)
+
+
+def make_call(url, token):
+    """Return (call, session): call(action, **fields) posts to the site's worker API."""
+    session = requests.Session()
+    session.headers["Authorization"] = f"Bearer {token}"
+
+    def call(action, **fields):
+        response = session.post(url.rstrip("/") + "/api/track",
+                                json={"action": action, **fields}, timeout=30, allow_redirects=False)
+        response.raise_for_status()
+        return response.json()
+    return call, session
+
+
+def run_job(call, job, cache, engines):
+    process_job(call, job, cache, engines.guitar, engines.solo, engines.piano, engines.solo_piano)
+
+
+JOB_LIMIT_SECONDS = 300  # the site's processing deadline per job
+
+
+def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_only=False, piano_only=False):
+    """Process queued jobs until the queue is empty (cloud mode). Returns how many were taken.
+
+    time_budget: seconds the container may still run; no job is claimed unless a full
+    JOB_LIMIT_SECONDS remains.  A failing job does not stop the others; a connection
+    error to the site propagates."""
+    payload = claim_payload(engines, guided_guitar_only, piano_only)
+    started = time.monotonic()
+    done = 0
+    while done < max_jobs:
+        if time_budget is not None and time.monotonic() - started > time_budget - JOB_LIMIT_SECONDS:
+            break
+        job = call("claim", **payload)["job"]
+        if not job:
+            break
+        done += 1
+        try:
+            run_job(call, job, cache, engines)
+        except requests.RequestException:
+            raise
+        except Exception as error:
+            print(f"{job.get('id')}: traitement interrompu : {error}", flush=True)
+    return done
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("url")
@@ -391,53 +470,29 @@ def main():
 
     if args.guided_guitar_only and args.piano_only:
         parser.error("Choisis un seul mode de traitement spécialisé.")
-    guitar_engine = None if args.piano_only else Tsumugi.from_env()
-    solo_engine = None if args.piano_only else GuitarArranger.from_env()
-    piano_engine = YourMT3.from_env()
-    try:
-        solo_piano_engine = Transkun.from_env()
-    except (OSError, ValueError) as error:
-        print(f"Transkun indisponible : {error}", flush=True)
-        solo_piano_engine = None
-    if args.piano_only and piano_engine is None:
+    engines = load_engines(args.piano_only)
+    if args.piano_only and engines.piano is None:
         parser.error("Configure YourMT3+ pour le comparatif piano.")
-    with requests.Session() as session:
-        session.headers["Authorization"] = f"Bearer {token}"
-
-        def call(action, **fields):
-            response = session.post(args.url.rstrip("/") + "/api/track",
-                                    json={"action": action, **fields}, timeout=30, allow_redirects=False)
-            response.raise_for_status()
-            return response.json()
-
+    call, session = make_call(args.url, token)
+    with session:
         if not args.once and not args.guided_guitar_only:
             load_note_model()
         # Load the piano models now rather than during the first user's job.
-        for engine in (piano_engine, solo_piano_engine):
+        for engine in (engines.piano, engines.solo_piano):
             if engine is not None and not args.once:
                 threading.Thread(target=lambda engine=engine: _warm(engine), daemon=True).start()
-        youtube = find_spec("yt_dlp") is not None and find_spec("yt_dlp_ejs") is not None and shutil.which("node") is not None
-        print(f"Moteur de transcription prêt. Piano : {'YourMT3+' if piano_engine else 'Basic Pitch'}"
-              f"{' + Transkun' if solo_piano_engine else ''}.", flush=True)
+        print(f"Moteur de transcription prêt. Piano : {'YourMT3+' if engines.piano else 'Basic Pitch'}"
+              f"{' + Transkun' if engines.solo_piano else ''}.", flush=True)
+        payload = claim_payload(engines, args.guided_guitar_only, args.piano_only)
         connected = False
         while True:
             try:
-                job = call("claim", pdf=True, links=True, youtube=youtube, capo=True, auto_capo=True,
-                           guitar_goals=True, guitar_chords=piano_engine is not None,
-                           guitar_compare=piano_engine is not None and guitar_engine is not None and solo_engine is not None,
-                           guitar_judge=True,
-                           guitar_vocals=True,
-                           guided_guitar_only=args.guided_guitar_only,
-                           piano_only=args.piano_only, piano_compare=piano_engine is not None,
-                           piano_playable=piano_engine is not None,
-                           piano_judge_version=3 if piano_engine is not None else None,
-                           piano_vocals=piano_engine is not None and find_spec("demucs") is not None,
-                           excerpts=True, preview=args.piano_only or (guitar_engine is not None and solo_engine is not None))["job"]
+                job = call("claim", **payload)["job"]
                 if not connected:
                     print("Connexion à la file de transcription confirmée.", flush=True)
                     connected = True
                 if job:
-                    process_job(call, job, args.cache, guitar_engine, solo_engine, piano_engine, solo_piano_engine)
+                    run_job(call, job, args.cache, engines)
                 if args.once:
                     return
                 if not job:

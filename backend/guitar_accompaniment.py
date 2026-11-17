@@ -7,6 +7,8 @@ from shutil import copyfile
 from tempfile import TemporaryDirectory
 from xml.etree import ElementTree as ET
 
+from timing import timed_call
+
 import numpy as np
 
 from guitar_tab import (
@@ -201,7 +203,7 @@ def accompany(audio, output, title, progress, engine):
     bpm = estimate_tempo(signal, rate, 512)
     blocks = max(1, ceil(duration * bpm / 120))
     with TemporaryDirectory(dir=output.parent) as work:
-        midi = engine.transcribe(audio, Path(work) / "harmony.mid")
+        midi = timed_call("YourMT3+ accords", engine.transcribe)(audio, Path(work) / "harmony.mid")
     grid = midi_chords(midi, bpm, blocks)
     if sum(chord is not None for chord in grid) < max(1, blocks // 3):
         raise ValueError("Les accords sont trop incertains sur cet audio. Essaie un passage plus clair.")

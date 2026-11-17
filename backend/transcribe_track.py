@@ -9,6 +9,8 @@ import subprocess
 import sys
 import tempfile
 from concurrent.futures import ThreadPoolExecutor
+
+from timing import timed_call
 from bisect import bisect_left
 from collections import Counter, defaultdict
 from functools import lru_cache
@@ -219,7 +221,7 @@ def piano_midi_events(midi, duration):
 def transcribe_mix(guitar_engine, original, work, duration):
     """Guitar notes and attacks heard in the full mix; ([], []) when the engine fails."""
     try:
-        mix = guitar_engine.transcribe(original, work / "mix-guitar.mid")
+        mix = timed_call("Tsumugi mix complet", guitar_engine.transcribe)(original, work / "mix-guitar.mid")
         return midi_events(mix, duration, guitar_only=True), guitar_attacks(original)[0]
     except (ValueError, OSError, subprocess.TimeoutExpired) as error:
         print(f"Relevé guitare du mix indisponible : {error}", file=sys.stderr, flush=True)
@@ -307,7 +309,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             report("isolate")
             from stem_separation import separate
 
-            separate(separator, wav, work)
+            timed_call("Demucs", separate)(separator, wav, work)
             wav = work / separator / "input" / f"{stem}.wav"
             if review_audio is not None:
                 review_audio(original, wav.parent)
@@ -322,7 +324,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
             midi = piano_engine.transcribe(wav, work / "piano-source.mid")
             notes = piano_midi_events(midi, duration)
         elif guitar_engine:
-            midi = guitar_engine.transcribe(wav, work / "guitar.mid")
+            midi = timed_call("Tsumugi guitare isolée", guitar_engine.transcribe)(wav, work / "guitar.mid")
             notes = midi_events(midi, duration, guitar_only=True)
         else:
             model, midi, _ = predict(wav, load_note_model())
@@ -341,7 +343,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         if instrument == "guitare":
             tuning = TUNINGS[instrument]
             notes = [note for note in notes if tuning[-1] <= note["pitch"] <= tuning[0] + 24]
-            transients, attack_levels = guitar_attacks(wav)
+            transients, attack_levels = timed_call("attaques guitare", guitar_attacks)(wav)
             if not guitar_engine:
                 clean = filter_guitar_echoes(notes, transients)
                 filtered = len(notes) - len(clean)
@@ -471,7 +473,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
         vocals = []
         if guitar_solo and has_voice and not isolated:
             try:
-                _, voice, _ = predict(wav.with_name("vocals.wav"), load_note_model(),
+                _, voice, _ = timed_call("Basic Pitch voix", predict)(wav.with_name("vocals.wav"), load_note_model(),
                                       minimum_frequency=100, maximum_frequency=1000)
                 vocals = midi_events(voice, duration)
             except Exception as error:
@@ -492,7 +494,7 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                 mix_notes, mix_attacks = transcribe_mix(guitar_engine, original, work, duration)
             try:
                 solo_result = work / "solo"
-                arrange_solo = solo_engine.write if solo_engine else write_solo
+                arrange_solo = timed_call("arrangement solo", solo_engine.write if solo_engine else write_solo)
                 if arrange_solo(original, None if isolated else wav.with_name("bass.wav"), notes, vocals,
                               duration, solo_result, f"{score_title} – Guitare solo",
                               bpm, tab_meter, resolved_capo, mix=mix_notes, mix_attacks=mix_attacks):

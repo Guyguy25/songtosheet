@@ -5,10 +5,12 @@ import subprocess
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
+import threading
 
 
 CHECKPOINT_SHA256 = "59c8335517d1faf7d735fef29e061181d87b96385f2e9a08332791e2b64affd4"
 ENGINE = "tsumugi-guitar-v1.5"
+_CREATE = threading.Lock()
 
 
 @dataclass
@@ -22,11 +24,12 @@ class Tsumugi:
     def _engine(self):
         from engine_process import PersistentEngine
 
-        if self._process is None:
-            self._process = PersistentEngine(
-                [self.python, "-B", Path(__file__).resolve().with_name("tsumugi_server.py"),
-                 self.checkpoint, self.device], "Tsumugi", cwd=self.root)
-        return self._process
+        with _CREATE:  # warm() may run in a background thread
+            if self._process is None:
+                self._process = PersistentEngine(
+                    [self.python, "-B", Path(__file__).resolve().with_name("tsumugi_server.py"),
+                     self.checkpoint, self.device], "Tsumugi", cwd=self.root)
+            return self._process
 
     def warm(self):
         if os.getenv("TRACK_TSUMUGI_PERSISTENT", "1") != "0":

@@ -52,3 +52,26 @@ def test_mix_transcription_failure_is_not_fatal(tmp_path):
         def transcribe(self, audio, destination):
             raise OSError("engine down")
     assert transcribe_mix(Broken(), tmp_path / "a.wav", tmp_path, 30.0) == ([], [])
+
+
+def test_warm_engines_starts_tsumugi_without_waiting(monkeypatch):
+    import threading
+
+    import engine_cloud
+    import stem_separation
+    import track_worker
+    from track_worker import Engines
+
+    release, started, demucs = threading.Event(), threading.Event(), []
+
+    class SlowGuitar:
+        def warm(self):
+            started.set()
+            release.wait(5)
+    monkeypatch.setattr(engine_cloud, "_warmed", False)
+    monkeypatch.setattr(track_worker, "load_note_model", lambda: None)
+    monkeypatch.setattr(stem_separation, "warm", lambda: demucs.append(1))
+    engine_cloud.warm_engines(Engines(guitar=SlowGuitar()))
+    assert started.wait(5) and not release.is_set()  # returned while Tsumugi was still starting
+    assert demucs == [1]  # Demucs gets its warm-up pass
+    release.set()

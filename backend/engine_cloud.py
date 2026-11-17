@@ -83,13 +83,16 @@ def warm_engines(loaded):
     # Transkun is only needed for piano recordings: it loads on first use.
     if loaded.piano is not None:
         _warm(loaded.piano)
-    try:
-        from stem_separation import _SEPARATORS, _api, _device
+    if loaded.guitar is not None:
+        # Tsumugi starts in its own process; the first transcription waits for it if needed.
+        import threading
 
-        for model in ("htdemucs_6s", "htdemucs"):
-            _SEPARATORS.setdefault(model, _api().Separator(model=model, device=_device(), shifts=0))
-    except Exception as error:
-        print(f"Préchargement Demucs impossible : {error}", flush=True)
+        threading.Thread(target=_warm, args=(loaded.guitar,), daemon=True).start()
+    # Load Demucs and run one tiny pass so the first separation skips the GPU set-up.
+    # This runs while the job's audio downloads (8 cores: no contention with it).
+    import stem_separation
+
+    stem_separation.warm()
     _warmed = True
 
 

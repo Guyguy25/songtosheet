@@ -6,7 +6,7 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {wakeEngine}=require('../lib/engine-wake');
+const {scheduleWake}=require('../lib/engine-wake');
 const {PIANO_CRITERIA,CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
@@ -168,7 +168,7 @@ async function begin(db,req,res,user,body){
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
       ...(link?{queued_at:now}:{}),
       created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+(link?AUDIO_RETENTION_MS:UPLOAD_MS))});
-    if(link)await wakeEngine();
+    if(link)await scheduleWake();
     return json(res,201,{id:String(result.insertedId),chunk_bytes:CHUNK_BYTES});
   }catch(error){
     if(error.code===11000)return json(res,409,{detail:'Une transcription est déjà en cours. Retrouve-la dans ta bibliothèque.'});
@@ -194,7 +194,7 @@ async function upload(db,res,user,body){
     const expires_at=new Date(job.created_at.getTime()+AUDIO_RETENTION_MS);
     const queued_at=new Date();
     const updated=await jobs.updateOne({...filter,expires_at:{$gt:queued_at}},{$set:{status:'queued',queued_at,expires_at}});
-    if(updated.modifiedCount)await wakeEngine();
+    if(updated.modifiedCount)await scheduleWake();
     return updated.modifiedCount?json(res,200,{id:body.id}):json(res,409,{detail:'Import déjà traité.'});
   }
   const {index,data}=body;

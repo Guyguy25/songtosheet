@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Statistiques des moteurs · SongToSheet</title>
+  <link rel="icon" href="/assets/favicon.svg">
+  <style>
+    :root{font-family:system-ui,sans-serif;color:#20192f;background:#f6f5fa;accent-color:#7040dc}
+    body{margin:0}
+    main{max-width:1140px;margin:auto;padding:32px 20px 60px}
+    a{color:#5e31be}
+    h1{margin:14px 0 8px;font-size:clamp(1.8rem,5vw,2.6rem)}
+    h2{margin:0 0 6px}
+    p{margin:0 0 12px;color:#554969}
+    .panel{background:#fff;border:1px solid #e7dff0;border-radius:16px;padding:18px;margin-top:18px;overflow-x:auto}
+    .facts{display:flex;gap:10px;flex-wrap:wrap;margin:10px 0 14px}
+    .fact{background:#f4eeff;border-radius:10px;padding:8px 12px;font-size:14px}
+    .fact b{font-size:18px;display:block;color:#3d2470}
+    table{width:100%;border-collapse:collapse;font-size:14px;min-width:760px}
+    th,td{text-align:left;padding:10px 8px;border-bottom:1px solid #eee8f5;vertical-align:top}
+    th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:#6c6080}
+    td.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+    .engine{display:block;color:#6c6080;font-size:12px;margin-top:2px}
+    .bar{height:6px;border-radius:3px;background:#eee8f5;margin-top:5px;max-width:120px}
+    .bar span{display:block;height:100%;border-radius:3px;background:#7040dc}
+    .verdict{display:inline-block;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:650;white-space:nowrap}
+    .keep{background:#e5f6ea;color:#1d6b35}.watch{background:#fff4dc;color:#8a5a00}
+    .drop{background:#fde8e8;color:#9b1c1c}.wait{background:#eee8f5;color:#554969}
+    #status{margin-top:18px}
+  </style>
+</head>
+<body>
+<main>
+  <a href="/">← Retour au tableau de bord</a>
+  <h1>Statistiques des moteurs</h1>
+  <p>Pour chaque version : combien de fois elle a été générée, recommandée par le juge IA et choisie par les utilisateurs.
+    Le choix des utilisateurs est le signal le plus fiable ; la recommandation IA sert de second avis.
+    Une version devient « candidate au retrait » quand, sur au moins 20 partitions, elle est choisie et recommandée moins d’une fois sur dix.</p>
+  <p id="status">Chargement…</p>
+  <div id="content"></div>
+</main>
+<script>
+(() => {
+  const content = document.getElementById('content');
+  const status = document.getElementById('status');
+  const element = (tag, className, text) => {
+    const node = document.createElement(tag);
+    if (className) node.className = className;
+    if (text !== undefined) node.textContent = text;
+    return node;
+  };
+  const verdict = row => {
+    if (row.generated < 20) return ['wait', 'Pas assez de données'];
+    if (row.chosen_rate >= 25 || row.recommended_rate >= 25) return ['keep', 'À garder'];
+    if (row.chosen_rate < 10 && row.recommended_rate < 10) return ['drop', 'Candidate au retrait'];
+    return ['watch', 'À surveiller'];
+  };
+  const seconds = value => value === null ? '—' : `${Math.round(value)} s`;
+  const rate = (cell, value, count) => {
+    cell.className = 'num';
+    cell.append(`${value} % (${count})`);
+    const bar = element('div', 'bar');
+    const fill = element('span');
+    fill.style.width = `${Math.min(100, value)}%`;
+    bar.append(fill);
+    cell.append(bar);
+  };
+  const section = (title, data, guitar) => {
+    const panel = element('section', 'panel');
+    panel.append(element('h2', '', title));
+    const facts = element('div', 'facts');
+    for (const [label, value] of [
+      ['Partitions', data.jobs], ['Avec recommandation IA', data.judged], ['Avec choix utilisateur', data.chosen],
+      ['Durée moyenne aperçu', seconds(data.average_seconds.preview)],
+      ['Durée moyenne morceau entier', seconds(data.average_seconds.full)],
+    ]) {
+      const fact = element('div', 'fact');
+      fact.append(element('b', '', String(value)), label);
+      facts.append(fact);
+    }
+    panel.append(facts);
+    if (!data.versions.length) {
+      panel.append(element('p', '', 'Aucune partition terminée pour l’instant.'));
+      return panel;
+    }
+    const table = element('table');
+    const head = element('tr');
+    for (const label of ['Version', 'Générée', 'Choisie', 'Recommandée IA', ...(guitar ? ['Votes comparatif'] : []), 'Score IA moyen', 'Verdict']) {
+      head.append(element('th', '', label));
+    }
+    table.append(head);
+    for (const row of data.versions) {
+      const line = element('tr');
+      const name = element('td');
+      name.append(element('strong', '', row.label), element('span', 'engine', row.engine));
+      const generated = element('td', 'num', String(row.generated));
+      const chosen = element('td'); rate(chosen, row.chosen_rate, row.chosen);
+      const recommended = element('td'); rate(recommended, row.recommended_rate, row.recommended);
+      const score = element('td', 'num', row.average_score === null ? '—' : String(row.average_score));
+      const [kind, text] = verdict(row);
+      const judgement = element('td');
+      judgement.append(element('span', `verdict ${kind}`, text));
+      line.append(name, generated, chosen, recommended);
+      if (guitar) line.append(element('td', 'num', String(row.community_votes)));
+      line.append(score, judgement);
+      table.append(line);
+    }
+    panel.append(table);
+    return panel;
+  };
+  fetch('/api/track?stats=1', {credentials: 'same-origin'})
+    .then(async response => {
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.detail || 'Statistiques indisponibles.');
+      return data;
+    })
+    .then(data => {
+      status.textContent = `Mis à jour le ${new Date(data.generated_at).toLocaleString('fr-FR')}.`;
+      content.append(section('Piano', data.piano, false), section('Guitare', data.guitar, true));
+    })
+    .catch(error => {
+      status.textContent = error.message === 'Accès refusé.' || error.message === 'Connexion requise.'
+        ? 'Cette page est réservée au compte admin. Connecte-toi puis recharge la page.' : error.message;
+    });
+})();
+</script>
+</body>
+</html>

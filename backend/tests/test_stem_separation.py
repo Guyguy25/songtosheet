@@ -46,3 +46,22 @@ def test_two_stems_mode(monkeypatch, tmp_path):
     folder = stem_separation.separate("htdemucs", audio, tmp_path, two_stems="vocals")
     assert sorted(path.name for path in folder.iterdir()) == ["no_vocals.wav", "vocals.wav"]
     assert (folder / "no_vocals.wav").read_text() == "0.75"
+
+
+def test_warm_loads_models_and_runs_one_pass(monkeypatch):
+    runs = []
+
+    class Warmable(FakeSeparator):
+        audio_channels = 2
+
+        def separate_tensor(self, wav):
+            runs.append(tuple(wav.shape))
+
+    class Api(FakeApi):
+        Separator = Warmable
+
+    monkeypatch.setattr(stem_separation, "_api", lambda: Api)
+    monkeypatch.setattr(stem_separation, "_device", lambda: "cpu")
+    stem_separation._SEPARATORS.clear()
+    stem_separation.warm()
+    assert runs == [(2, 44100), (2, 44100)] and set(stem_separation._SEPARATORS) == {"htdemucs_6s", "htdemucs"}

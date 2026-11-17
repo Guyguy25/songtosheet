@@ -53,3 +53,19 @@ def separate(model, audio, out, *, two_stems=None, timeout=900):
         command += ["--two-stems", two_stems]
     subprocess.run(command + [str(audio)], check=True, capture_output=True, timeout=timeout)
     return folder
+
+
+def warm(models=("htdemucs_6s", "htdemucs")):
+    """Load the models and run one tiny separation so the GPU is ready for the first job."""
+    try:
+        import torch
+
+        api = _api()
+        with _LOCK:
+            for model in models:
+                separator = _SEPARATORS.get(model)
+                if separator is None:
+                    separator = _SEPARATORS[model] = api.Separator(model=model, device=_device(), shifts=0)
+                separator.separate_tensor(torch.zeros(separator.audio_channels, separator.samplerate))
+    except Exception as error:
+        print(f"Préchauffage Demucs impossible : {type(error).__name__}: {error}", file=sys.stderr, flush=True)

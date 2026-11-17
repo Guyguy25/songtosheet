@@ -25,8 +25,9 @@ def interpreter(path):
 
 
 class PersistentEngine:
-    def __init__(self, command, name, *, startup_timeout=600):
+    def __init__(self, command, name, *, startup_timeout=600, cwd=None):
         self.command = [str(part) for part in command]
+        self.cwd = cwd
         self.name = name
         self.startup_timeout = startup_timeout
         self.process = None
@@ -36,7 +37,7 @@ class PersistentEngine:
         environment = {key: value for key, value in os.environ.items() if key != "TRACK_WORKER_TOKEN"}
         self.process = subprocess.Popen(
             self.command, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=sys.stderr,
-            text=True, encoding="utf-8", errors="replace", bufsize=1, env=environment,
+            text=True, encoding="utf-8", errors="replace", bufsize=1, env=environment, cwd=self.cwd,
         )
         ready = self._read(self.startup_timeout)
         if ready.get("ready") is not True:

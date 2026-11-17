@@ -29,12 +29,26 @@ def test_run_drain_logs_cost_and_subtracts_loading_time(monkeypatch, capsys):
     seen = {}
     monkeypatch.setenv("SITE_URL", "https://site.example")
     monkeypatch.setenv("TRACK_WORKER_TOKEN", "t")
-    monkeypatch.setattr(engine_cloud, "engines", lambda: "engines")
+    warmed = []
+    monkeypatch.setattr(engine_cloud, "prepare_engines", lambda: "engines")
+    monkeypatch.setattr(engine_cloud, "warm_engines", lambda loaded: warmed.append(loaded))
 
-    def drain(call, loaded, cache, time_budget):
+    def drain(call, loaded, cache, time_budget, warm):
         seen["budget"] = time_budget
+        assert warmed == []  # the warm-up waits for a claimed job
+        warm()
         return 1
     monkeypatch.setattr(track_worker, "drain", drain)
     assert engine_cloud.run_drain(time_budget=570) == 1
     assert seen["budget"] <= 570
+    assert warmed == ["engines"]
     assert "coût estimé" in capsys.readouterr().out
+
+
+def test_mix_transcription_failure_is_not_fatal(tmp_path):
+    from transcribe_track import transcribe_mix
+
+    class Broken:
+        def transcribe(self, audio, destination):
+            raise OSError("engine down")
+    assert transcribe_mix(Broken(), tmp_path / "a.wav", tmp_path, 30.0) == ([], [])

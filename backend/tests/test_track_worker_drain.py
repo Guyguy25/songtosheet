@@ -51,3 +51,57 @@ def test_drain_stops_claiming_when_time_runs_out(monkeypatch):
     monkeypatch.setattr(track_worker, "process_job", lambda *args: None)
     always = lambda action, **fields: {"job": {"id": "x", "lease": "l"}}
     assert drain(always, Engines(), Path("/tmp"), time_budget=600) == 1
+
+
+def test_first_download_overlaps_engine_warmup(monkeypatch):
+    # The audio of the first job downloads while the models load (warm), not after.
+    import threading
+
+    fetching = threading.Event()
+    received = {}
+
+    def fetch(call, job, directory):
+        fetching.set()
+        return ("audio", None)
+
+    def warm():
+        assert fetching.wait(5), "the download did not start during the warm-up"
+
+    def process(call, job, *args, fetched=None):
+        received["audio"] = fetched.result()
+    monkeypatch.setattr(track_worker, "fetch_audio", fetch)
+    monkeypatch.setattr(track_worker, "process_job", process)
+    assert drain(jobs_then_empty(1), Engines(), Path("/tmp"), warm=warm) == 1
+    assert received["audio"] == ("audio", None)
+
+
+def test_empty_queue_skips_the_warmup(monkeypatch):
+    warmed = []
+    assert drain(jobs_then_empty(0), Engines(), Path("/tmp"), warm=lambda: warmed.append(1)) == 0
+    assert warmed == []
+
+
+def test_guitar_chords_run_alongside_the_guitar_transcription(monkeypatch):
+    import threading
+
+    import guitar_accompaniment
+
+    chords_started = threading.Event()
+    seen = {}
+
+    def transcribe(*args, **kwargs):
+        seen["parallel"] = chords_started.wait(5)
+        raise ValueError("no guitar")
+
+    def accompany(*args):
+        chords_started.set()
+        raise ValueError("no chords")
+    monkeypatch.setattr(track_worker, "transcribe", transcribe)
+    monkeypatch.setattr(guitar_accompaniment, "accompany", accompany)
+    job = {"id": "j", "title": "t"}
+    try:
+        track_worker.compare_versions(Path("a.wav"), Path("/tmp"), Path("/tmp/x"), job, lambda _: None,
+                                      None, None, None)
+    except ValueError:
+        pass
+    assert seen["parallel"] is True

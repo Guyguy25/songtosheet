@@ -52,34 +52,52 @@ def start_pot_server():
         print(f"Serveur de jetons YouTube indisponible : {error}", flush=True)
 
 
-def engines():
-    """Load (once per container) and warm the transcription engines."""
+def prepare_engines():
+    """Fast part (once per container): engine handles and the YouTube token server, no model loaded."""
     global _engines
     if _engines is None:
-        from track_worker import _warm, load_engines, load_note_model
+        from track_worker import load_engines
 
         start_pot_server()
-        try:
-            import torch
-
-            print(f"process_queue: GPU visible pour Demucs = {torch.cuda.is_available()}", flush=True)
-        except ImportError:
-            pass
         _engines = load_engines()
-        load_note_model()
-        # Transkun is only needed for piano recordings: it loads on first use.
-        if _engines.piano is not None:
-            _warm(_engines.piano)
-        # Load the Demucs models now (no warm-up pass: parallel warm-ups on 4 cores
-        # slowed the YouTube download down more than they saved).
-        try:
-            from stem_separation import _SEPARATORS, _api, _device
-
-            for model in ("htdemucs_6s", "htdemucs"):
-                _SEPARATORS.setdefault(model, _api().Separator(model=model, device=_device(), shifts=0))
-        except Exception as error:
-            print(f"Préchargement Demucs impossible : {error}", flush=True)
     return _engines
+
+
+_warmed = False
+
+
+def warm_engines(loaded):
+    """Slow part (once per container): load the models into memory / onto the GPU."""
+    global _warmed
+    if _warmed:
+        return
+    from track_worker import _warm, load_note_model
+
+    try:
+        import torch
+
+        print(f"process_queue: GPU visible pour Demucs = {torch.cuda.is_available()}", flush=True)
+    except ImportError:
+        pass
+    load_note_model()
+    # Transkun is only needed for piano recordings: it loads on first use.
+    if loaded.piano is not None:
+        _warm(loaded.piano)
+    try:
+        from stem_separation import _SEPARATORS, _api, _device
+
+        for model in ("htdemucs_6s", "htdemucs"):
+            _SEPARATORS.setdefault(model, _api().Separator(model=model, device=_device(), shifts=0))
+    except Exception as error:
+        print(f"Préchargement Demucs impossible : {error}", flush=True)
+    _warmed = True
+
+
+def engines():
+    """Load and warm everything now (used by the benchmark)."""
+    loaded = prepare_engines()
+    warm_engines(loaded)
+    return loaded
 
 
 def run_drain(cache=Path("/tmp/songtosheet-cache"), time_budget=570):
@@ -91,14 +109,14 @@ def run_drain(cache=Path("/tmp/songtosheet-cache"), time_budget=570):
     from track_worker import drain, make_call
 
     started = time.monotonic()
-    print("process_queue: chargement des moteurs…", flush=True)
-    loaded = engines()  # model loading counts against the container's timeout too
-    print(f"process_queue: moteurs prêts en {time.monotonic() - started:.1f}s", flush=True)
+    loaded = prepare_engines()
     call, session = make_call(os.environ["SITE_URL"], os.environ["TRACK_WORKER_TOKEN"])
     with session:
-        taken = drain(call, loaded, cache, time_budget=time_budget - (time.monotonic() - started))
+        # The models load only once a job is claimed, while its audio downloads.
+        taken = drain(call, loaded, cache, time_budget=time_budget - (time.monotonic() - started),
+                      warm=lambda: warm_engines(loaded))
     seconds = time.monotonic() - started + 5  # + the 5 s idle window before shutdown
-    # L4 + 4 cores + 12 GiB ≈ 0.000301 $/s (A10: ~25 % more); container boot not included.
+    # L4 + 8 cores + 16 GiB ≈ 0.000362 $/s (A10: ~25 % more); container boot not included.
     print(f"process_queue: {seconds:.0f}s de machine pour {taken} demande(s), coût estimé "
-          f"{100 * seconds * 0.000301:.2f} centime(s) de dollar (hors démarrage du conteneur)", flush=True)
+          f"{100 * seconds * 0.000362:.2f} centime(s) de dollar (hors démarrage du conteneur)", flush=True)
     return taken

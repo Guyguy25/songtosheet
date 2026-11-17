@@ -73,14 +73,31 @@ class YourMT3:
         return PrettyMIDI(str(destination))
 
 
+_LOCK = None
+
+
+def preload(checkpoint, device):
+    """Load the model once, before the first request (mt3_infer caches it)."""
+    import numpy as np
+    from mt3_infer import transcribe
+
+    with _LOCK:
+        transcribe(np.zeros(16000, dtype=np.float32), sr=16000, model="yourmt3", checkpoint_path=checkpoint,
+                   device=device, auto_download=False)
+
+
 def run(audio, destination, checkpoint, device):
+    import contextlib
+
     import librosa
     from mt3_infer import transcribe
 
     samples, rate = librosa.load(audio, sr=16000, mono=True)
-    # mt3_infer caches the loaded model, so a serving process loads it only once.
-    transcribe(samples, sr=rate, model="yourmt3", checkpoint_path=checkpoint, device=device,
-               auto_download=False).save(destination)
+    lock = _LOCK if _LOCK is not None else contextlib.nullcontext()
+    with lock:
+        # mt3_infer caches the loaded model, so a serving process loads it only once.
+        transcribe(samples, sr=rate, model="yourmt3", checkpoint_path=checkpoint, device=device,
+                   auto_download=False).save(destination)
 
 
 if __name__ == "__main__":
@@ -88,8 +105,13 @@ if __name__ == "__main__":
         sys.path.insert(0, str(Path(__file__).resolve().parent))
         from engine_process import protocol_channel, serve
 
+        import threading
+
         channel = protocol_channel()
         checkpoint, device = sys.argv[2:]
+        _LOCK = threading.Lock()
+        # Load the model in the background: the worker downloads and prepares the audio meanwhile.
+        threading.Thread(target=preload, args=(checkpoint, device), daemon=True).start()
         serve(lambda request: run(request["audio"], request["destination"], checkpoint, device), channel)
     else:
         run(*sys.argv[1:])

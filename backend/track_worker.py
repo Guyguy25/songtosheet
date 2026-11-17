@@ -185,6 +185,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
     direct_published = False
 
     def report(stage):
+        print(f"{job['id']}: étape {stage} à {time.monotonic() - job_started:.1f}s", flush=True)
         try:
             call("progress", **identity, stage=stage)
         except requests.RequestException:

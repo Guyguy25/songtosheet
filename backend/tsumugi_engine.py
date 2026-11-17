@@ -3,7 +3,7 @@ import hashlib
 import os
 import subprocess
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 
@@ -11,12 +11,26 @@ CHECKPOINT_SHA256 = "59c8335517d1faf7d735fef29e061181d87b96385f2e9a08332791e2b64
 ENGINE = "tsumugi-guitar-v1.5"
 
 
-@dataclass(frozen=True)
+@dataclass
 class Tsumugi:
     root: Path
     checkpoint: Path
     python: str
     device: str
+    _process: object = field(default=None, repr=False, compare=False)
+
+    def _engine(self):
+        from engine_process import PersistentEngine
+
+        if self._process is None:
+            self._process = PersistentEngine(
+                [self.python, "-B", Path(__file__).resolve().with_name("tsumugi_server.py"),
+                 self.checkpoint, self.device], "Tsumugi", cwd=self.root)
+        return self._process
+
+    def warm(self):
+        if os.getenv("TRACK_TSUMUGI_PERSISTENT", "1") != "0":
+            self._engine().warm()
 
     @classmethod
     def from_env(cls):
@@ -37,6 +51,14 @@ class Tsumugi:
 
     def transcribe(self, audio, destination):
         from pretty_midi import PrettyMIDI
+
+        if os.getenv("TRACK_TSUMUGI_PERSISTENT", "1") != "0":
+            try:
+                self._engine().request(audio=str(audio.resolve()), destination=str(destination.resolve()))
+                if destination.is_file():
+                    return PrettyMIDI(str(destination))
+            except ValueError as error:
+                print(f"Tsumugi persistant indisponible, relance ponctuelle : {error}", file=sys.stderr, flush=True)
 
         command = [
             self.python, "-m", "instrument_agnostic_amt.amt.cli.infer",

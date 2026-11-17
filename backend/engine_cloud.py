@@ -70,14 +70,14 @@ def engines():
         # Transkun is only needed for piano recordings: it loads on first use.
         if _engines.piano is not None:
             _warm(_engines.piano)
-        # Load the Demucs models now, while YourMT3+ loads in its own process.
-        try:
-            from stem_separation import _SEPARATORS, _api, _device
+        # Load and warm Demucs and Tsumugi in the background, while the job's audio downloads.
+        import threading
 
-            for model in ("htdemucs_6s", "htdemucs"):
-                _SEPARATORS.setdefault(model, _api().Separator(model=model, device=_device(), shifts=0))
-        except Exception as error:
-            print(f"Préchargement Demucs impossible : {error}", flush=True)
+        from stem_separation import warm as warm_demucs
+
+        threading.Thread(target=warm_demucs, daemon=True).start()
+        if _engines.guitar is not None and hasattr(_engines.guitar, "warm"):
+            threading.Thread(target=lambda: _warm(_engines.guitar), daemon=True).start()
     return _engines
 
 

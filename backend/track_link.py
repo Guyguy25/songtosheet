@@ -110,6 +110,40 @@ def download_track(url, directory):
     raise TrackLinkError("Impossible de récupérer l’audio. Vérifie que le fichier est accessible sans connexion.")
 
 
+def download_youtube_section(video_id, directory, start, end):
+    """Fetch only [start, end] seconds of a video's audio (much faster for previews).
+
+    Returns (audio, full duration in seconds) or None when it fails, so the caller can
+    fall back to downloading the whole audio."""
+    if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
+        raise TrackLinkError("Colle un lien vers une vidéo ou un Short YouTube.")
+    info = directory / "youtube-duration.txt"
+    command = [
+        sys.executable, "-m", "yt_dlp", "--ignore-config", "--no-plugin-dirs", "--no-cache-dir",
+        "--no-playlist", "--js-runtimes", "node", "--socket-timeout", "12",
+        "--extractor-retries", "2", "--retries", "2", "--fragment-retries", "2",
+        "--match-filter", "!is_live", "--no-simulate", "--print-to-file", "%(duration)s", str(info),
+        "--format", "bestaudio[ext=m4a]/bestaudio/best[acodec!=none]",
+        "--download-sections", f"*{max(0.0, start):.2f}-{end:.2f}",
+        "--extract-audio", "--audio-format", "m4a",
+        "--no-progress", "-o", str(directory / "section.%(ext)s"),
+        "--", "https://www.youtube.com/watch?v=" + video_id,
+    ]
+    environment = {key: value for key, value in os.environ.items() if key != "TRACK_WORKER_TOKEN"}
+    try:
+        result = subprocess.run(command, capture_output=True, timeout=90, check=False, env=environment)
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    audio = directory / "section.m4a"
+    try:
+        duration = float(info.read_text(encoding="utf-8").split()[0])
+    except (OSError, ValueError, IndexError):
+        return None
+    if result.returncode or not audio.is_file() or not 1024 <= audio.stat().st_size <= MAX_BYTES:
+        return None
+    return audio, duration
+
+
 def download_youtube(video_id, directory):
     if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
         raise TrackLinkError("Colle un lien vers une vidéo ou un Short YouTube.")

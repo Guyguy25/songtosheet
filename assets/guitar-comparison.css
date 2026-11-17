@@ -55,3 +55,8 @@
 .guitar-chord line, .guitar-chord .open-string { stroke: #635575; fill: none; }
 .guitar-chord text { fill: #392949; font-size: 11px; text-anchor: middle; dominant-baseline: central; }
 .guitar-chord .fretted-string { fill: #7549eb; }
+
+.piano-option-hint { margin: 2px 0 0; color: #5d5a66; font-size: 13px; }
+.piano-option-criteria { margin: 4px 0 0; color: #3f3a4a; font-size: 12px; font-weight: 650; letter-spacing: .01em; }
+.piano-option-ai { margin: 6px 0 0; padding: 8px 10px; border-radius: 10px; background: #f4eeff; color: #3d2470; font-size: 13px; line-height: 1.4; }
+.piano-option-ai::before { content: "✦ "; color: #7b4fd1; }

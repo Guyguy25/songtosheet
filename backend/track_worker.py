@@ -9,6 +9,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 from importlib.util import find_spec
 from pathlib import Path
@@ -18,10 +19,11 @@ import requests
 
 from transcribe_track import AUDIO_FORMATS, load_note_model, run, transcribe
 from score_pdf import render_pdf
-from track_link import TrackLinkError, download_track, download_youtube
+from track_link import TrackLinkError, download_track, download_youtube, download_youtube_section
 from tsumugi_engine import Tsumugi
 from guitararranger_engine import GuitarArranger
 from yourmt3_engine import YourMT3
+from transkun_engine import Transkun
 
 
 EXPORTS = {"musicxml": "score.musicxml", "tab": "tab.musicxml", "mid": "score.mid", "tabmid": "tab.mid"}
@@ -176,8 +178,9 @@ def prepare_preview(audio, directory, limit, excerpt=None):
     return preview, duration
 
 
-def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_engine=None):
+def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_engine=None, solo_piano_engine=None):
     identity = {"id": job["id"], "lease": job["lease"]}
+    job_started = time.monotonic()
     direct_published = False
 
     def report(stage):
@@ -189,7 +192,19 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
     try:
         with tempfile.TemporaryDirectory() as temporary:
             directory = Path(temporary)
-            if job.get("youtube_id"):
+            section = None
+            if job.get("youtube_id") and job.get("preview_limit") and os.getenv("TRACK_YOUTUBE_SECTIONS", "1") != "0":
+                # A preview needs only 30 s: fetch that part instead of the whole video.
+                begin = (job.get("excerpt") or {}).get("start_ms", 0) / 1000
+                stop = begin + job["preview_limit"]
+                if job.get("excerpt"):
+                    stop = min(stop, job["excerpt"]["end_ms"] / 1000)
+                section = download_youtube_section(job["youtube_id"], directory, begin, stop + .5)
+                if section is None:
+                    print(f"{job['id']}: extrait YouTube indisponible, téléchargement complet", flush=True)
+            if section is not None:
+                audio = section[0]
+            elif job.get("youtube_id"):
                 audio = download_youtube(job["youtube_id"], directory)
             elif job.get("audio_url"):
                 audio = download_track(job["audio_url"], directory)
@@ -206,25 +221,40 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
             if job.get("guitar_compare") and not (job.get("youtube_id") or job.get("audio_url")):
                 with audio.open("rb") as stream:
                     audio_hash = file_digest(stream, "sha256").hexdigest()
-            if job.get("preview_limit"):
+            if section is not None:
+                excerpt = job.get("excerpt")
+                limit = job["preview_limit"]
+                if excerpt:
+                    limit = min(limit, (excerpt["end_ms"] - excerpt["start_ms"]) / 1000)
+                audio, _ = prepare_preview(audio, directory, limit)
+                source_duration = limit if excerpt else max(section[1], limit)
+            elif job.get("preview_limit"):
                 audio, source_duration = prepare_preview(audio, directory, job["preview_limit"], job.get("excerpt"))
 
             if job.get("piano_compare"):
-                from piano_comparison import DEFAULT, EXPORTS as PIANO_EXPORTS, generate
+                from piano_comparison import EXPORTS as PIANO_EXPORTS, generate
 
                 vocals = directory / "piano-vocals.mp3"
+                separation = None
                 if job.get("piano_vocals"):
                     report("isolate")
-                    try:
-                        run([sys.executable, "-m", "demucs", "-n", "htdemucs", "-o", str(directory),
-                             "--two-stems", "vocals", "--shifts", "0", str(audio)], timeout=110)
-                        encode_vocals(audio, directory / "htdemucs" / audio.stem / "vocals.wav",
-                                      vocals, job["preview_limit"])
-                    except Exception as error:
-                        vocals.unlink(missing_ok=True)
-                        print(f"{job['id']}: piste voix piano indisponible : {error}", flush=True)
-                duration, variants, recommendation = generate(audio, directory, job["title"], report, piano_engine,
-                                                               vocals=vocals)
+
+                    def separate():
+                        try:
+                            run([sys.executable, "-m", "demucs", "-n", "htdemucs", "-o", str(directory),
+                                 "--two-stems", "vocals", "--shifts", "0", str(audio)], timeout=110)
+                            encode_vocals(audio, directory / "htdemucs" / audio.stem / "vocals.wav",
+                                          vocals, job["preview_limit"])
+                        except Exception as error:
+                            vocals.unlink(missing_ok=True)
+                            print(f"{job['id']}: piste voix piano indisponible : {error}", flush=True)
+
+                    # The voice is only needed by the judge: separate it while the notes are transcribed.
+                    separation = threading.Thread(target=separate, daemon=True)
+                    separation.start()
+                duration, variants, recommendation = generate(
+                    audio, directory, job["title"], report, piano_engine, vocals=vocals,
+                    solo_engine=solo_piano_engine, wait_vocals=separation.join if separation else None)
                 primary = recommendation["recommended"] if recommendation else next(iter(variants))
                 score, midi, count = variants[primary]
                 exports = {}
@@ -238,12 +268,13 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                 include_vocals(exports, vocals)
                 call("preview", **identity, duration=source_duration or duration,
                      preview_duration=duration, note_count=count, exports=exports,
-                     engine="yourmt3-plus-moe-nops" if primary in (DEFAULT, "playable") else "basic-pitch-0.4.0",
+                     engine="yourmt3-plus-moe-nops" if piano_engine is not None else "basic-pitch-0.4.0",
                      piano_primary=primary, piano_recommendation=recommendation)
                 direct_published = True
                 payload = {"ok": True, "preview": True, "exports": {}}
                 call("finish", **identity, **payload)
-                print(f"{job['id']}: comparatif piano terminé ({len(variants)} versions, {primary})", flush=True)
+                print(f"{job['id']}: comparatif piano terminé ({len(variants)} versions, {primary}) "
+                      f"en {time.monotonic() - job_started:.1f}s", flush=True)
                 return
 
             if job.get("guitar_compare"):
@@ -338,6 +369,13 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
         time.sleep(2 ** attempt)
 
 
+def _warm(engine):
+    try:
+        engine.warm()
+    except Exception as error:
+        print(f"Préchargement de {type(engine).__name__} impossible : {error}", flush=True)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("url")
@@ -356,6 +394,11 @@ def main():
     guitar_engine = None if args.piano_only else Tsumugi.from_env()
     solo_engine = None if args.piano_only else GuitarArranger.from_env()
     piano_engine = YourMT3.from_env()
+    try:
+        solo_piano_engine = Transkun.from_env()
+    except (OSError, ValueError) as error:
+        print(f"Transkun indisponible : {error}", flush=True)
+        solo_piano_engine = None
     if args.piano_only and piano_engine is None:
         parser.error("Configure YourMT3+ pour le comparatif piano.")
     with requests.Session() as session:
@@ -369,8 +412,13 @@ def main():
 
         if not args.once and not args.guided_guitar_only:
             load_note_model()
+        # Load the piano models now rather than during the first user's job.
+        for engine in (piano_engine, solo_piano_engine):
+            if engine is not None and not args.once:
+                threading.Thread(target=lambda engine=engine: _warm(engine), daemon=True).start()
         youtube = find_spec("yt_dlp") is not None and find_spec("yt_dlp_ejs") is not None and shutil.which("node") is not None
-        print(f"Moteur de transcription prêt. Piano : {'YourMT3+' if piano_engine else 'Basic Pitch'}.", flush=True)
+        print(f"Moteur de transcription prêt. Piano : {'YourMT3+' if piano_engine else 'Basic Pitch'}"
+              f"{' + Transkun' if solo_piano_engine else ''}.", flush=True)
         connected = False
         while True:
             try:
@@ -382,14 +430,14 @@ def main():
                            guided_guitar_only=args.guided_guitar_only,
                            piano_only=args.piano_only, piano_compare=piano_engine is not None,
                            piano_playable=piano_engine is not None,
-                           piano_judge_version=2 if piano_engine is not None else None,
+                           piano_judge_version=3 if piano_engine is not None else None,
                            piano_vocals=piano_engine is not None and find_spec("demucs") is not None,
                            excerpts=True, preview=args.piano_only or (guitar_engine is not None and solo_engine is not None))["job"]
                 if not connected:
                     print("Connexion à la file de transcription confirmée.", flush=True)
                     connected = True
                 if job:
-                    process_job(call, job, args.cache, guitar_engine, solo_engine, piano_engine)
+                    process_job(call, job, args.cache, guitar_engine, solo_engine, piano_engine, solo_piano_engine)
                 if args.once:
                     return
                 if not job:

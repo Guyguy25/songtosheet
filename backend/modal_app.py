@@ -89,7 +89,9 @@ with light.imports():
 
 
 # L4 first; A10 when no L4 is free (Modal tries them in order), so a job never waits for capacity.
-@app.function(image=engine, gpu=["L4", "A10"], cpu=8.0, memory=16384, timeout=600, scaledown_window=15,
+# Cost per second ≈ L4 0.000222 $ + 4 cores × 0.0000131 $ + 12 GiB × 0.00000222 $ ≈ 0.0003 $:
+# 3 cents leave ~100 s of container time per generation, start-up included.
+@app.function(image=engine, gpu=["L4", "A10"], cpu=4.0, memory=12288, timeout=600, scaledown_window=5,
               max_containers=2, secrets=[secret])
 def process_queue():
     from engine_cloud import run_drain
@@ -128,7 +130,7 @@ def watchdog():
         process_queue.spawn()
 
 
-@app.function(image=engine, gpu="L4", cpu=8.0, memory=16384, timeout=900)
+@app.function(image=engine, gpu="L4", cpu=4.0, memory=12288, timeout=900)
 def measure(url: str):
     """Time the piano pipeline on a 30 s preview and on 3 minutes of a YouTube video."""
     import re
@@ -172,7 +174,7 @@ def measure(url: str):
                                            "versions": sorted(files),
                                            "recommended": (recommendation or {}).get("recommended")}
     gpu_seconds = report["piano_180s"]["total_s"]
-    report["estimated_cost_180s_usd"] = round(gpu_seconds * (0.000222 + 8 * 0.0000131 + 16 * 0.00000222), 4)
+    report["estimated_cost_180s_usd"] = round(gpu_seconds * (0.000222 + 4 * 0.0000131 + 12 * 0.00000222), 4)
     print(report, flush=True)
     return report
 

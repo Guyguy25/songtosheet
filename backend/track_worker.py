@@ -446,12 +446,14 @@ def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_
         if not job:
             break
         done += 1
+        job_started = time.monotonic()
         try:
             run_job(call, job, cache, engines)
         except requests.RequestException:
             raise
         except Exception as error:
             print(f"{job.get('id')}: traitement interrompu : {error}", flush=True)
+        print(f"{job.get('id')}: durée de traitement {time.monotonic() - job_started:.1f}s", flush=True)
     return done
 
 

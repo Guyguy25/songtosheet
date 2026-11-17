@@ -49,7 +49,7 @@ engine = (
         f"echo '{YOURMT3_SHA256}  /models/yourmt3.ckpt' | sha256sum -c -",
         # Guitar engines.
         f"git clone https://github.com/anime-song/tsumugi.git /opt/tsumugi && git -C /opt/tsumugi checkout {TSUMUGI_COMMIT}",
-        "cd /opt/tsumugi && uv sync --locked --no-dev",
+        "cd /opt/tsumugi && uv sync --frozen --no-dev",
         f"curl -fL '{TSUMUGI_WEIGHTS}' -o /opt/tsumugi/best_model_guitar_v1_5.pth",
         f"git clone https://github.com/Sonata165/GuitarArranger.git /opt/guitararranger && "
         f"git -C /opt/guitararranger checkout {ARRANGER_COMMIT}",

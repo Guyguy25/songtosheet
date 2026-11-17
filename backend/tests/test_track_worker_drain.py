@@ -46,7 +46,7 @@ def test_claim_payload_matches_engines():
 
 def test_drain_stops_claiming_when_time_runs_out(monkeypatch):
     # A job may take up to 5 minutes: never claim one the container could not finish.
-    clock = iter([0, 100, 400]).__next__
+    clock = iter([0, 100, 100, 100, 400, 400]).__next__  # start, check, job start, job end, check
     monkeypatch.setattr(track_worker.time, "monotonic", clock)
     monkeypatch.setattr(track_worker, "process_job", lambda *args: None)
     always = lambda action, **fields: {"job": {"id": "x", "lease": "l"}}

@@ -288,8 +288,9 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                 review_audio(original, work)
         elif not isolated:
             report("isolate")
-            run([sys.executable, "-m", "demucs", "-n", separator, "-o", str(work),
-                 "--shifts", "0", str(wav)], timeout=900)
+            from stem_separation import separate
+
+            separate(separator, wav, work)
             wav = work / separator / "input" / f"{stem}.wav"
             if review_audio is not None:
                 review_audio(original, wav.parent)

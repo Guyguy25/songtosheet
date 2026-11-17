@@ -244,8 +244,9 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
 
                     def separate():
                         try:
-                            run([sys.executable, "-m", "demucs", "-n", "htdemucs", "-o", str(directory),
-                                 "--two-stems", "vocals", "--shifts", "0", str(audio)], timeout=110)
+                            from stem_separation import separate
+
+                            separate("htdemucs", audio, directory, two_stems="vocals", timeout=110)
                             encode_vocals(audio, directory / "htdemucs" / audio.stem / "vocals.wav",
                                           vocals, job["preview_limit"])
                         except Exception as error:

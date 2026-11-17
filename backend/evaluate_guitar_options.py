@@ -118,8 +118,8 @@ def note_agreement(notes, reference, step, frames):
     return round(float((relevant & expected).sum() / relevant.sum()), 3)
 
 
-def evaluate(mix, candidates, guitar=None, reference=None):
-    evidence = audio_evidence(mix)
+def evaluate(mix, candidates, guitar=None, reference=None, evidence=None):
+    evidence = audio_evidence(mix) if evidence is None else evidence
     stem = audio_evidence(guitar) if guitar else None
     report = {}
     for key, files in candidates.items():
@@ -137,14 +137,22 @@ def evaluate(mix, candidates, guitar=None, reference=None):
     return report
 
 
-def recommend(mix, candidates, *, guitar_evidence=None):
-    """Return a version key and bounded scores. Human votes can supersede this suggestion."""
+def prepare_judge(mix):
+    """The judge's analysis of the original audio alone, computable before any version exists."""
     try:
         reference = learned_reference(mix)
     except Exception as error:
         print(f"Référence indépendante Basic Pitch indisponible : {error}", flush=True)
         reference = None
-    report = evaluate(mix, candidates, reference=reference)
+    return {"reference": reference, "evidence": audio_evidence(mix)}
+
+
+def recommend(mix, candidates, *, guitar_evidence=None, prepared=None):
+    """Return a version key and bounded scores. Human votes can supersede this suggestion.
+
+    prepared: prepare_judge(mix), when it was computed earlier."""
+    prepared = prepared or prepare_judge(mix)
+    report = evaluate(mix, candidates, reference=prepared["reference"], evidence=prepared["evidence"])
     guitar_evidence = guitar_evidence or {}
     guitar_support = guitar_evidence.get("relative_rms", 0)
     guitar_coverage = guitar_evidence.get("attack_coverage", 0)

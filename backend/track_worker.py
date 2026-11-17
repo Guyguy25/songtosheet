@@ -82,8 +82,14 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
         meta = accompany(audio, folder, job["title"], lambda _: None, piano_engine)
         return meta, folder, read_exports(folder, CHORD_EXPORTS | {"heldtab": "tab.musicxml", "heldmid": "score.mid"})
 
-    pool = ThreadPoolExecutor(1)
+    pool = ThreadPoolExecutor(2)
     chords_future = pool.submit(chords)
+    judge_future = None
+    if job.get("guitar_judge"):
+        # The judge's own analysis of the audio (Basic Pitch) needs no version: start it now.
+        from evaluate_guitar_options import prepare_judge
+
+        judge_future = pool.submit(prepare_judge, audio)
     pool.shutdown(wait=False)
     try:
         result = transcribe(audio, "guitare", data, isolated=False, title=job["title"],
@@ -128,7 +134,8 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
         try:
             from evaluate_guitar_options import recommend
 
-            recommendation = recommend(audio, options, guitar_evidence=(direct or {}).get("guitar_evidence"))
+            recommendation = recommend(audio, options, guitar_evidence=(direct or {}).get("guitar_evidence"),
+                                       prepared=judge_future.result() if judge_future else None)
         except Exception as error:
             print(f"{job['id']}: recommandation automatique indisponible : {error}", flush=True)
     return meta, exports, recommendation

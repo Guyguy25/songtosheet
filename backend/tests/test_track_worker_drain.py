@@ -105,3 +105,46 @@ def test_guitar_chords_run_alongside_the_guitar_transcription(monkeypatch):
     except ValueError:
         pass
     assert seen["parallel"] is True
+
+
+def test_guitar_judge_analysis_starts_with_the_transcription(monkeypatch):
+    import threading
+
+    import evaluate_guitar_options
+    import guitar_accompaniment
+
+    judge_started = threading.Event()
+    seen = {}
+
+    def transcribe(*args, **kwargs):
+        seen["parallel"] = judge_started.wait(5)
+        raise ValueError("no guitar")
+
+    def prepare(audio):
+        judge_started.set()
+        return {}
+    monkeypatch.setattr(track_worker, "transcribe", transcribe)
+    monkeypatch.setattr(guitar_accompaniment, "accompany", lambda *args: (_ for _ in ()).throw(ValueError("x")))
+    monkeypatch.setattr(evaluate_guitar_options, "prepare_judge", prepare)
+    job = {"id": "j", "title": "t", "guitar_judge": True}
+    try:
+        track_worker.compare_versions(Path("a.wav"), Path("/tmp"), Path("/tmp/x"), job, lambda _: None,
+                                      None, None, None)
+    except ValueError:
+        pass
+    assert seen["parallel"] is True
+
+
+def test_recommend_reuses_the_prepared_analysis(monkeypatch):
+    import evaluate_guitar_options
+
+    used = {}
+
+    def evaluate(mix, candidates, guitar=None, reference=None, evidence=None):
+        used.update(reference=reference, evidence=evidence)
+        return {}
+    monkeypatch.setattr(evaluate_guitar_options, "learned_reference",
+                        lambda audio: (_ for _ in ()).throw(AssertionError("recomputed")))
+    monkeypatch.setattr(evaluate_guitar_options, "evaluate", evaluate)
+    evaluate_guitar_options.recommend(Path("a.wav"), {}, prepared={"reference": ["n"], "evidence": "e"})
+    assert used == {"reference": ["n"], "evidence": "e"}

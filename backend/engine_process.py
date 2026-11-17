@@ -11,6 +11,19 @@ import sys
 import threading
 
 
+def interpreter(path):
+    """Absolute path of a Python executable, without following symlinks.
+
+    In a virtual environment, bin/python is a symlink to the base interpreter:
+    resolving it would run the base Python, without the environment's packages."""
+    from pathlib import Path
+
+    candidate = Path(path).absolute()
+    if not candidate.exists():
+        raise FileNotFoundError(f"Python introuvable : {candidate}")
+    return candidate
+
+
 class PersistentEngine:
     def __init__(self, command, name, *, startup_timeout=600):
         self.command = [str(part) for part in command]

@@ -40,9 +40,9 @@ def engines():
 
         _engines = load_engines()
         load_note_model()
-        for engine in (_engines.piano, _engines.solo_piano):
-            if engine is not None:
-                _warm(engine)
+        # Transkun is only needed for piano recordings: it loads on first use.
+        if _engines.piano is not None:
+            _warm(_engines.piano)
     return _engines
 
 

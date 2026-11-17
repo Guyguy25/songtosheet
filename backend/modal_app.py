@@ -40,6 +40,8 @@ engine = (
     .pip_install_from_requirements(str(HERE / "requirements.txt"))
     .pip_install_from_requirements(str(HERE / "requirements-transcription.txt"))
     .pip_install("miditoolkit==1.0.1", "PyYAML>=6.0.2", "uv")
+    # Basic Pitch runs its ONNX model: TensorFlow (pulled in by basic-pitch on Linux) only slows start-up.
+    .run_commands("python -m pip uninstall -y tensorflow tensorflow-cpu keras tf-keras || true")
     .run_commands(
         # YourMT3+ and Transkun in their own environment (pinned versions from backend/README.md).
         "python -m venv /opt/yourmt3",

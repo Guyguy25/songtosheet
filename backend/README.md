@@ -257,3 +257,29 @@ Dockerfile           Container de déploiement pour un serveur persistant
 .env.example         Paramètres requis
 /tests               Tests d'intégration et fichier audio original
 ```
+
+## Hébergement Modal (le moteur tourne sans ton PC)
+
+Le moteur est déployé sur [Modal](https://modal.com) (carte graphique L4 facturée à la seconde, 30 $ de crédits offerts par mois). `backend/modal_app.py` contient trois fonctions :
+
+- `wake` : adresse HTTPS appelée par le site quand une demande est mise en file. Elle lance `process_queue`.
+- `process_queue` : conteneur GPU (L4, 8 cœurs, 16 Go) qui traite les demandes en attente avec `track_worker.drain`, puis s'arrête 15 s après la dernière. 2 conteneurs maximum en même temps.
+- `watchdog` : toutes les 2 minutes, sans GPU, relance `process_queue` s'il reste une demande en attente (réveil perdu).
+
+Tous les modèles et leurs poids sont intégrés à l'image : un conteneur démarre sans téléchargement.
+
+### Mise en place (une seule fois)
+
+1. Crée un compte sur modal.com, puis une clé d'accès (Settings → API Tokens).
+2. Dans GitHub, Settings → Secrets and variables → Actions, ajoute `MODAL_TOKEN_ID` et `MODAL_TOKEN_SECRET`.
+3. Dans Modal, Secrets → Custom, crée `songtosheet-worker` avec :
+   - `TRACK_WORKER_TOKEN` : la même valeur que sur la machine du worker actuel ;
+   - `ENGINE_WAKE_SECRET` : une longue phrase au hasard ;
+   - `SITE_URL` : `https://songtosheet.vercel.app`.
+4. Lance le workflow GitHub « Deploy engine (Modal) » (onglet Actions → Run workflow). La première construction de l'image prend 20 à 40 minutes ; les suivantes réutilisent le cache.
+5. Dans Modal, ouvre l'app `songtosheet-engine` et copie l'adresse de la fonction `wake`.
+6. Dans Vercel, ajoute `ENGINE_WAKE_URL` (cette adresse) et `ENGINE_WAKE_SECRET` (la même phrase), puis redéploie.
+
+Ensuite, chaque push sur `main` qui modifie `backend/` redéploie le moteur. Pour mesurer le temps et le coût réels, relance le workflow en remplissant « benchmark_url » avec un lien YouTube.
+
+Sans `ENGINE_WAKE_URL`, le site fonctionne comme avant ; le worker local (`track_worker.py`) reste utilisable en parallèle.

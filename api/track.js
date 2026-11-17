@@ -215,7 +215,9 @@ async function worker(db,res,body){
   const chunks=db.collection('track_audio');
   const now=new Date();
   if(body.action==='peek'){
-    const waiting=await jobs.findOne({active:true,status:'queued',expires_at:{$gt:now}},{projection:{_id:1}});
+    // Same conditions as claim, so an expired job never wakes a GPU for nothing.
+    const waiting=await jobs.findOne({active:true,status:'queued',expires_at:{$gt:new Date(now.getTime()+PROCESSING_MS)},
+      $nor:[expiredQueue(now)]},{projection:{_id:1}});
     return json(res,200,{queued:Boolean(waiting)});
   }
   if(body.action==='claim'){

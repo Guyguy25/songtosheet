@@ -26,3 +26,10 @@ def test_cookies_from_secret_are_written_to_a_private_file(monkeypatch, tmp_path
     path = options[options.index("--cookies") + 1]
     assert open(path).read().startswith("# Netscape")
     assert oct(os.stat(path).st_mode & 0o777) == "0o600"
+
+
+def test_error_details_hide_proxy_credentials(monkeypatch):
+    from track_link import redact
+    monkeypatch.setenv("TRACK_YTDLP_PROXY", "http://user:s3cret@gw.example:823")
+    text = redact("ERROR: Unable to connect to proxy http://user:s3cret@gw.example:823 (407)")
+    assert "s3cret" not in text and "user:" not in text and "407" in text

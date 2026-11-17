@@ -110,6 +110,20 @@ def download_track(url, directory):
     raise TrackLinkError("Impossible de récupérer l’audio. Vérifie que le fichier est accessible sans connexion.")
 
 
+def redact(text):
+    """Remove proxy credentials from yt-dlp output before it reaches the logs."""
+    proxy = os.getenv("TRACK_YTDLP_PROXY")
+    if proxy:
+        text = text.replace(proxy, "[proxy]")
+    return re.sub(r"//[^/@\s]+@", "//[identifiants]@", text)
+
+
+def log_failure(where, result):
+    details = redact((result.stderr + result.stdout).decode("utf-8", errors="replace"))
+    lines = [line for line in details.splitlines() if "ERROR" in line or "WARNING" in line][-6:]
+    print(f"yt-dlp ({where}) a échoué : " + (" | ".join(lines) or details[-800:]), file=sys.stderr, flush=True)
+
+
 def youtube_options():
     """Common yt-dlp options for YouTube.
 
@@ -170,6 +184,7 @@ def download_youtube_section(video_id, directory, start, end):
     except (OSError, ValueError, IndexError):
         return None
     if result.returncode or not audio.is_file() or not 1024 <= audio.stat().st_size <= MAX_BYTES:
+        log_failure("extrait", result)
         return None
     return audio, duration
 
@@ -193,6 +208,7 @@ def download_youtube(video_id, directory):
         raise TrackLinkError("La récupération de l’audio YouTube a échoué. Réessaie dans un instant.") from error
     audio = directory / "input.m4a"
     if result.returncode or not audio.is_file():
+        log_failure("complet", result)
         details = (result.stderr + result.stdout).decode("utf-8", errors="replace").lower()
         if "private video" in details or "video unavailable" in details:
             raise TrackLinkError("Cette vidéo YouTube est privée ou indisponible. Vérifie que le lien s’ouvre sans connexion.")

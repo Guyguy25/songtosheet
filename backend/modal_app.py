@@ -82,7 +82,8 @@ with light.imports():
     from fastapi import HTTPException, Request
 
 
-@app.function(image=engine, gpu="L4", cpu=8.0, memory=16384, timeout=600, scaledown_window=15,
+# L4 first; A10 when no L4 is free (Modal tries them in order), so a job never waits for capacity.
+@app.function(image=engine, gpu=["L4", "A10"], cpu=8.0, memory=16384, timeout=600, scaledown_window=15,
               max_containers=2, secrets=[secret])
 def process_queue():
     from engine_cloud import run_drain

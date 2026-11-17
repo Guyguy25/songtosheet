@@ -75,3 +75,19 @@ test('scheduleWake hands the call to waitUntil and returns at once',async()=>{
   finish({ok:true,status:200});
   await kept[0];
 });
+
+test('peek ignores jobs whose queue wait has expired',async()=>{
+  const token='b'.repeat(64);
+  process.env.TRACK_WORKER_DIGEST=crypto.createHash('sha256').update(token).digest('hex');
+  let seen;
+  const db={collection:()=>({findOne:async filter=>{seen=filter;return null;},updateOne:async()=>({matchedCount:1}),createIndex:async()=>{}})};
+  const original=Module._load;
+  Module._load=function(request,...rest){if(request.endsWith('lib/mongodb'))return {database:async()=>db};return original.call(this,request,...rest);};
+  const handler=fresh('api/track.js');
+  Module._load=original;
+  const res={statusCode:0,setHeader(){},status(code){this.statusCode=code;return this;},json(body){this.body=body;},end(){}};
+  await handler({method:'POST',headers:{authorization:'Bearer '+token},body:{action:'peek'},query:{}},res);
+  // Same conditions as claim: a job past its 5-minute queue wait must not wake a GPU.
+  assert.ok(Array.isArray(seen.$nor)&&seen.$nor.length===1);
+  assert.ok(seen.expires_at.$gt.getTime()>Date.now()+60*1000);
+});

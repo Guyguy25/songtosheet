@@ -26,6 +26,8 @@ REMI_COMMIT = "832b96a0f990cdc3b67998836f3c067290632f6b"
 
 app = modal.App("songtosheet-engine")
 secret = modal.Secret.from_name("custom-secret")
+# Residential proxy for YouTube downloads (TRACK_YTDLP_PROXY), kept in its own secret.
+proxy_secret = modal.Secret.from_name("custom-secret-2")
 
 # Small CPU image for the wake endpoint and the watchdog.
 light = (modal.Image.debian_slim(python_version="3.11")
@@ -92,7 +94,7 @@ with light.imports():
 # Cost per second ≈ L4 0.000222 $ + 4 cores × 0.0000131 $ + 12 GiB × 0.00000222 $ ≈ 0.0003 $:
 # 3 cents leave ~100 s of container time per generation, start-up included.
 @app.function(image=engine, gpu=["L4", "A10"], cpu=4.0, memory=12288, timeout=600, scaledown_window=5,
-              max_containers=2, secrets=[secret])
+              max_containers=2, secrets=[secret, proxy_secret])
 def process_queue():
     from engine_cloud import run_drain
 
@@ -130,7 +132,7 @@ def watchdog():
         process_queue.spawn()
 
 
-@app.function(image=engine, gpu="L4", cpu=4.0, memory=12288, timeout=900)
+@app.function(image=engine, gpu="L4", cpu=4.0, memory=12288, timeout=900, secrets=[proxy_secret])
 def measure(url: str):
     """Time the piano pipeline on a 30 s preview and on 3 minutes of a YouTube video."""
     import re

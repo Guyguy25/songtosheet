@@ -33,3 +33,18 @@ def test_error_details_hide_proxy_credentials(monkeypatch):
     monkeypatch.setenv("TRACK_YTDLP_PROXY", "http://user:s3cret@gw.example:823")
     text = redact("ERROR: Unable to connect to proxy http://user:s3cret@gw.example:823 (407)")
     assert "s3cret" not in text and "user:" not in text and "407" in text
+
+
+def test_dataimpulse_proxy_keeps_one_ip_per_download(monkeypatch):
+    monkeypatch.setenv("TRACK_YTDLP_PROXY", "http://abc:pw@gw.dataimpulse.com:823")
+    first = youtube_options()
+    proxy = first[first.index("--proxy") + 1]
+    assert proxy.startswith("http://abc__sessid.") and proxy.endswith(":pw@gw.dataimpulse.com:823")
+    second = youtube_options()
+    assert second[second.index("--proxy") + 1] != proxy  # a new IP for each download
+
+
+def test_dataimpulse_login_with_parameters(monkeypatch):
+    monkeypatch.setenv("TRACK_YTDLP_PROXY", "http://abc__cr.fr:pw@gw.dataimpulse.com:823")
+    options = youtube_options()
+    assert options[options.index("--proxy") + 1].startswith("http://abc__cr.fr;sessid.")

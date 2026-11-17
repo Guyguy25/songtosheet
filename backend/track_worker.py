@@ -19,6 +19,7 @@ from urllib.parse import urlparse
 
 import requests
 
+from timing import start_job, timed_call
 from transcribe_track import AUDIO_FORMATS, load_note_model, run, transcribe
 from score_pdf import render_pdf
 from track_link import TrackLinkError, download_track, download_youtube, download_youtube_section
@@ -89,7 +90,7 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
         # The judge's own analysis of the audio (Basic Pitch) needs no version: start it now.
         from evaluate_guitar_options import prepare_judge
 
-        judge_future = pool.submit(prepare_judge, audio)
+        judge_future = pool.submit(timed_call("juge analyse audio", prepare_judge), audio)
     pool.shutdown(wait=False)
     try:
         result = transcribe(audio, "guitare", data, isolated=False, title=job["title"],
@@ -134,7 +135,7 @@ def compare_versions(audio, data, directory, job, report, guitar_engine, solo_en
         try:
             from evaluate_guitar_options import recommend
 
-            recommendation = recommend(audio, options, guitar_evidence=(direct or {}).get("guitar_evidence"),
+            recommendation = timed_call("juge comparaison", recommend)(audio, options, guitar_evidence=(direct or {}).get("guitar_evidence"),
                                        prepared=judge_future.result() if judge_future else None)
         except Exception as error:
             print(f"{job['id']}: recommandation automatique indisponible : {error}", flush=True)
@@ -226,6 +227,7 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
     """fetched: optional Future of fetch_audio, started earlier (e.g. during the model warm-up)."""
     identity = {"id": job["id"], "lease": job["lease"]}
     job_started = time.monotonic()
+    start_job()
     direct_published = False
 
     def report(stage):

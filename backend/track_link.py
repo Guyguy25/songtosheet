@@ -114,7 +114,8 @@ def youtube_options():
     """Common yt-dlp options for YouTube.
 
     TRACK_YTDLP_POT_HOME: bgutil PO-token provider (server folder) so YouTube accepts
-    downloads from cloud servers; TRACK_YTDLP_PROXY: optional proxy for YouTube only."""
+    downloads from cloud servers; TRACK_YTDLP_PROXY: optional proxy for YouTube only;
+    TRACK_YTDLP_COOKIES: optional cookies.txt content of a (secondary) YouTube account."""
     options = ["--ignore-config", "--no-cache-dir"]
     pot_home = os.getenv("TRACK_YTDLP_POT_HOME")
     if pot_home:
@@ -124,6 +125,18 @@ def youtube_options():
     proxy = os.getenv("TRACK_YTDLP_PROXY")
     if proxy:
         options += ["--proxy", proxy]
+    cookies = os.getenv("TRACK_YTDLP_COOKIES")
+    if cookies:
+        # Netscape cookie file of a YouTube account, stored as a secret: written to a
+        # private file because yt-dlp only reads cookies from a file.
+        import tempfile
+
+        path = os.path.join(tempfile.gettempdir(), "songtosheet-youtube-cookies.txt")
+        descriptor = os.open(path, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
+            handle.write(cookies.replace("\\n", "\n"))
+        os.chmod(path, 0o600)
+        options += ["--cookies", path]
     return options
 
 

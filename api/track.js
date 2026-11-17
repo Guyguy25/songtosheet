@@ -7,6 +7,7 @@ const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
 const {scheduleWake}=require('../lib/engine-wake');
+const {engineStats}=require('../lib/engine-stats');
 const {PIANO_CRITERIA,CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
@@ -485,6 +486,11 @@ module.exports=async(req,res)=>{
         status:'completed',instrument:'piano',piano_primary:{$exists:true},downloads:{$all:[version.score,version.midi]}},
         {$set:{piano_choice:choice}});
       return saved.matchedCount?json(res,200,{selected:choice}):json(res,404,{detail:'Partition piano indisponible.'});
+    }
+    if(req.method==='GET'&&req.query.stats==='1'){
+      if(user?.role!=='admin')return json(res,403,{detail:'Accès refusé.'});
+      res.setHeader('Cache-Control','no-store');
+      return json(res,200,await engineStats(await database()));
     }
     if(req.method==='GET'&&req.query.audio!==undefined&&user.role!=='admin')return json(res,403,{detail:'Accès refusé.'});
     if(req.method==='GET')return req.query.audio===undefined

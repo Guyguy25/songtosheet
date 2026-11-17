@@ -69,7 +69,8 @@ engine = (
     )
     # librosa compiles its numba code on first use (seconds per function, in the middle of a job):
     # compile it once here and keep the result in the image.
-    .env({"NUMBA_CACHE_DIR": "/opt/numba-cache"})
+    # A generic CPU target: the cache built here is valid on the (different) machines that run jobs.
+    .env({"NUMBA_CACHE_DIR": "/opt/numba-cache", "NUMBA_CPU_NAME": "generic"})
     .run_commands("mkdir -p /opt/numba-cache && python -c \"import numpy as np, librosa; t = np.arange(44100 * 4) / 44100; y = (.2 * np.sin(2 * np.pi * 196 * t)).astype('float32'); v = librosa.resample(y, orig_sr=44100, target_sr=16000); librosa.feature.rms(y=v, frame_length=1600, hop_length=800); s = librosa.resample(y, orig_sr=44100, target_sr=22050); librosa.beat.beat_track(y=s, sr=22050, hop_length=512); h = librosa.effects.harmonic(s); librosa.feature.chroma_cqt(y=h, sr=22050, hop_length=512); e = librosa.onset.onset_strength(y=s, sr=22050, hop_length=512); librosa.onset.onset_detect(onset_envelope=e, sr=22050, hop_length=512)\"")
     .env({
         "TRACK_YOURMT3_PYTHON": "/opt/yourmt3/bin/python",
@@ -190,3 +191,51 @@ def measure(url: str):
 @app.local_entrypoint()
 def benchmark(url: str):
     print(measure.remote(url))
+
+
+@app.function(image=engine, gpu="L4", cpu=8.0, memory=16384, timeout=900, secrets=[proxy_secret])
+def measure_yourmt3(url: str):
+    """YourMT3+ speed and note agreement, full precision vs bf16, on 30 s and 120 s of a video."""
+    import json
+    import re
+    import subprocess
+    import tempfile
+
+    from pretty_midi import PrettyMIDI
+
+    from engine_cloud import start_pot_server
+    from track_link import download_youtube
+    from yourmt3_engine import note_agreement
+
+    video = re.search(r"(?:v=|youtu\.be/|shorts/)([A-Za-z0-9_-]{11})", url)
+    if not video:
+        raise ValueError("Lien YouTube invalide.")
+    start_pot_server()
+    report = {}
+    with tempfile.TemporaryDirectory() as folder:
+        folder = Path(folder)
+        source = download_youtube(video.group(1), folder)
+        for seconds in (30, 120):
+            clip, work = folder / f"clip{seconds}.wav", folder / f"work{seconds}"
+            work.mkdir()
+            subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "30", "-i", str(source), "-t", str(seconds),
+                            "-ar", "44100", "-ac", "2", str(clip)], check=True)
+            output = subprocess.run([os.environ["TRACK_YOURMT3_PYTHON"], f"{CODE}/bench_yourmt3.py", str(clip),
+                                     str(work), os.environ["TRACK_YOURMT3_CHECKPOINT"], "cuda"],
+                                    check=True, capture_output=True, text=True).stdout
+            times = json.loads(output.strip().splitlines()[-1])
+
+            def notes(name):
+                midi = PrettyMIDI(str(work / f"{name}.mid"))
+                return [(note.pitch, note.start) for track in midi.instruments if not track.is_drum
+                        for note in track.notes]
+            full, half = notes("fp32"), notes("bf16")
+            report[f"{seconds}s"] = {"fp32_s": times["fp32"], "bf16_s": times["bf16"], "notes_fp32": len(full),
+                                     "notes_bf16": len(half), "agreement_f1": note_agreement(full, half)}
+    print(report, flush=True)
+    return report
+
+
+@app.local_entrypoint()
+def benchmark_yourmt3(url: str):
+    print(measure_yourmt3.remote(url))

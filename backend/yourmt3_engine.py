@@ -95,6 +95,32 @@ def use_batch_size(model, size=BATCH_SIZE):
     model._songtosheet_batch = size
 
 
+def precision_context(device):
+    """bf16 autocast on the GPU when TRACK_YOURMT3_PRECISION=bf16, full precision otherwise."""
+    import contextlib
+
+    if os.getenv("TRACK_YOURMT3_PRECISION", "fp32") != "bf16" or not str(device).startswith("cuda"):
+        return contextlib.nullcontext()
+    import torch
+
+    return torch.autocast("cuda", dtype=torch.bfloat16)
+
+
+def note_agreement(reference, candidate, tolerance=.05):
+    """F1 between two note lists of (pitch, onset seconds): same pitch, onsets within 50 ms."""
+    if not reference and not candidate:
+        return 1.0
+    unused = sorted(candidate)
+    matched = 0
+    for pitch, onset in sorted(reference):
+        for index, (other_pitch, other_onset) in enumerate(unused):
+            if other_pitch == pitch and abs(other_onset - onset) <= tolerance:
+                matched += 1
+                del unused[index]
+                break
+    return round(2 * matched / (len(reference) + len(candidate)), 4)
+
+
 def _bigger_batches():
     try:
         from mt3_infer import api
@@ -128,8 +154,10 @@ def run(audio, destination, checkpoint, device):
     with lock:
         _bigger_batches()
         # mt3_infer caches the loaded model, so a serving process loads it only once.
-        transcribe(samples, sr=rate, model="yourmt3", checkpoint_path=checkpoint, device=device,
-                   auto_download=False).save(destination)
+        with precision_context(device):
+            result = transcribe(samples, sr=rate, model="yourmt3", checkpoint_path=checkpoint, device=device,
+                                auto_download=False)
+        result.save(destination)
 
 
 if __name__ == "__main__":

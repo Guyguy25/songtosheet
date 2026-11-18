@@ -36,7 +36,7 @@ TRACKS = {
     "piano": ("piano", 0),
 }
 TUNINGS = {"guitare": (64, 59, 55, 50, 45, 40), "basse": (43, 38, 33, 28)}
-AUDIO_FORMATS = {".wav": "wav", ".mp3": "mp3", ".m4a": "mov", ".flac": "flac", ".ogg": "ogg", ".aac": "aac"}
+AUDIO_FORMATS = {".wav": "wav", ".mp3": "mp3", ".m4a": "mov", ".flac": "flac", ".ogg": "ogg", ".opus": "ogg", ".aac": "aac"}
 
 
 def run(command, timeout):

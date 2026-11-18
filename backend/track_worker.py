@@ -210,7 +210,8 @@ def fetch_audio(call, job, directory):
     if section is not None:
         audio = section[0]
     elif job.get("youtube_id"):
-        audio = download_youtube(job["youtube_id"], directory)
+        # A preview only needs its 30 s analysed: the light stream comes twice as fast.
+        audio = download_youtube(job["youtube_id"], directory, light=bool(job.get("preview_limit")))
     elif job.get("audio_url"):
         audio = download_track(job["audio_url"], directory)
     else:

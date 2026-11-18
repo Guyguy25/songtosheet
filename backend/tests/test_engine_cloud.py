@@ -75,3 +75,23 @@ def test_warm_engines_starts_tsumugi_without_waiting(monkeypatch):
     assert started.wait(5) and not release.is_set()  # returned while Tsumugi was still starting
     assert demucs == [1]  # Demucs gets its warm-up pass
     release.set()
+
+
+def test_prepare_engines_starts_model_processes_at_boot(monkeypatch):
+    import engine_cloud
+    import track_worker
+    from track_worker import Engines
+
+    started = []
+
+    class Child:
+        def __init__(self, name):
+            self.name = name
+
+        def warm(self):
+            started.append(self.name)
+    monkeypatch.setattr(engine_cloud, "_engines", None)
+    monkeypatch.setattr(engine_cloud, "start_pot_server", lambda: None)
+    monkeypatch.setattr(track_worker, "load_engines", lambda: Engines(guitar=Child("tsumugi"), piano=Child("yourmt3")))
+    engine_cloud.prepare_engines()
+    assert sorted(started) == ["tsumugi", "yourmt3"]

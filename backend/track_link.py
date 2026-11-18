@@ -210,7 +210,9 @@ def download_youtube_section(video_id, directory, start, end):
     return audio, duration
 
 
-def download_youtube(video_id, directory):
+def download_youtube(video_id, directory, light=False):
+    """Whole audio of a video. light: a small Opus stream (~70 kb/s, half the bytes through the
+    proxy) kept as is, enough for analysing a preview; otherwise the best m4a."""
     if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
         raise TrackLinkError("Colle un lien vers une vidéo ou un Short YouTube.")
     command = [
@@ -218,7 +220,9 @@ def download_youtube(video_id, directory):
         "--no-playlist", "--js-runtimes", "node", "--socket-timeout", "12",
         "--extractor-retries", "2", "--retries", "2", "--fragment-retries", "2",
         "--max-filesize", "25M", "--match-filter", "!is_live",
-        "--format", "bestaudio[ext=m4a]/bestaudio/best[acodec!=none]", "--extract-audio", "--audio-format", "m4a",
+        "--format", ("250/249/251/bestaudio[ext=m4a]/bestaudio/best[acodec!=none]" if light
+                     else "bestaudio[ext=m4a]/bestaudio/best[acodec!=none]"),
+        "--extract-audio", "--audio-format", "opus" if light else "m4a",
         "--no-progress", "-o", str(directory / "input.%(ext)s"),
         "--", "https://www.youtube.com/watch?v=" + video_id,
     ]
@@ -227,7 +231,7 @@ def download_youtube(video_id, directory):
         result = subprocess.run(command, capture_output=True, timeout=120, check=False, env=environment)
     except (OSError, subprocess.TimeoutExpired) as error:
         raise TrackLinkError("La récupération de l’audio YouTube a échoué. Réessaie dans un instant.") from error
-    audio = directory / "input.m4a"
+    audio = directory / ("input.opus" if light else "input.m4a")
     if result.returncode or not audio.is_file():
         log_failure("complet", result)
         details = (result.stderr + result.stdout).decode("utf-8", errors="replace").lower()

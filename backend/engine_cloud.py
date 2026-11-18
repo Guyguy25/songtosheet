@@ -60,6 +60,14 @@ def prepare_engines():
 
         start_pot_server()
         _engines = load_engines()
+        # YourMT3+ needs ~20-30 s to import and load in its own process: start it (and Tsumugi)
+        # now, at container boot, instead of after the job is claimed. Starting a process is quick;
+        # the model loads in the background.
+        from track_worker import _warm
+
+        for child in (_engines.piano, _engines.guitar):
+            if child is not None:
+                _warm(child)
     return _engines
 
 

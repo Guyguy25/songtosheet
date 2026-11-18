@@ -143,6 +143,9 @@ def warm_clip(seconds=30, rate=16000):
 
 def preload(checkpoint, device):
     """Load the model once, before the first request (mt3_infer caches it)."""
+    import time
+
+    started = time.monotonic()
     import numpy as np
     from mt3_infer import transcribe
 
@@ -151,9 +154,12 @@ def preload(checkpoint, device):
                    device=device, auto_download=False)  # loads the model
         _bigger_batches()
         # Then a pass with the real batch size: the first pass at a new shape sets up the GPU kernels
-        # (a 30 s preview took ~19 s in a job, ~5 s once warmed at that size).
+        # so a real 30 s preview does not pay for it.
+        loaded = time.monotonic() - started
         transcribe(warm_clip(), sr=16000, model="yourmt3", checkpoint_path=checkpoint,
                    device=device, auto_download=False)
+        print(f"YourMT3+ : modèle chargé en {loaded:.1f}s, prêt en {time.monotonic() - started:.1f}s "
+              "(imports compris)", file=sys.stderr, flush=True)
 
 
 def run(audio, destination, checkpoint, device):

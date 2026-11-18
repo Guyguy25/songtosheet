@@ -34,6 +34,7 @@ def render_pdf(folder: Path, title: str, instrument: str, format: str, destinati
                       "footer": "none", "pageWidth": 2100, "pageHeight": 2670,
                       "scale": 54, "svgViewBox": True})
     if not score.loadFile(str(source)) or not (count := score.getPageCount()):
+        print(f"PDF : Verovio ne lit pas {source.name} : {score.getLog()[-300:]}", flush=True)
         raise ValueError("La mise en page PDF a échoué.")
 
     label = "Tablature" if tab else "Partition"
@@ -62,10 +63,14 @@ def render_pdf(folder: Path, title: str, instrument: str, format: str, destinati
             footer {{position:absolute;right:11mm;bottom:9mm;font-size:9pt}}
             </style><body>{''.join(pages)}</body></html>""", encoding="utf-8"
         )
-        command = [chromium_path(), "--headless", "--no-pdf-header-footer", "--disable-gpu",
+        # In the engine container Chromium runs as root without user namespaces, so its own
+        # sandbox cannot start; the page is ours and the network is blocked below.
+        command = [chromium_path(), "--headless", "--no-sandbox", "--no-pdf-header-footer", "--disable-gpu",
                    "--no-first-run", "--disable-background-networking", "--host-resolver-rules=MAP * ~NOTFOUND",
                    f"--user-data-dir={work / 'profile'}", f"--print-to-pdf={destination.resolve()}",
                    document.as_uri()]
         result = subprocess.run(command, capture_output=True, timeout=45)
         if result.returncode or not destination.is_file():
+            detail = result.stderr.decode("utf-8", "replace").strip().splitlines()[-3:]
+            print(f"PDF : Chromium a renvoyé {result.returncode} : {' | '.join(detail)}", flush=True)
             raise ValueError("La mise en page PDF a échoué.")

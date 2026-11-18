@@ -418,3 +418,45 @@ def measure_download(url: str):
 @app.local_entrypoint()
 def benchmark_download(url: str):
     measure_download.remote(url)
+
+
+@app.function(image=engine, cpu=2.0, memory=4096, timeout=300)
+def check_pdf():
+    """Render the PDF of a 6.5-minute tablature inside the engine image, and show Chromium's errors."""
+    import random
+    import subprocess
+    import tempfile
+    from pathlib import Path
+
+    from guitar_tab import arrange, write_tab
+    from score_pdf import chromium_path, render_pdf
+    from transcribe_track import TUNINGS
+
+    rng = random.Random(2)
+    notes, t = [], .3
+    while t < 388:
+        notes.append({"pitch": rng.choice([40, 45, 47, 52, 55, 57, 59, 60, 62, 64, 67]), "start": round(t, 3),
+                      "end": round(t + rng.choice([.2, .4, .9]), 3), "velocity": 90})
+        t += rng.choice([.12, .24, .36, .48])
+    work = Path(tempfile.mkdtemp())
+    write_tab(arrange(notes, TUNINGS["guitare"]), work / "tab.musicxml", TUNINGS["guitare"], 69, "Test", "guitare", until=388)
+    report = [f"chromium: {chromium_path()}",
+              subprocess.run([chromium_path(), "--version"], capture_output=True, text=True).stdout.strip()]
+    (work / "page.html").write_text("<p>test</p>")
+    for flags in ([], ["--no-sandbox"]):
+        run = subprocess.run([chromium_path(), "--headless", *flags, "--disable-gpu", f"--user-data-dir={work / 'p'}",
+                              f"--print-to-pdf={work / 'probe.pdf'}", (work / "page.html").as_uri()],
+                             capture_output=True, text=True, timeout=60)
+        report.append(f"flags {flags or 'aucun'} -> code {run.returncode} : {run.stderr.strip()[-300:]}")
+    try:
+        render_pdf(work, "Test", "guitare", "tablature", work / "out.pdf")
+        report.append(f"render_pdf OK, {(work / 'out.pdf').stat().st_size} octets")
+    except Exception as error:
+        report.append(f"render_pdf ÉCHEC : {error}")
+    return "\n".join(report)
+
+
+@app.local_entrypoint()
+def benchmark_pdf(url: str = ""):
+    print(check_pdf.remote())
+

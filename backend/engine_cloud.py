@@ -125,13 +125,19 @@ def run_drain(cache=Path("/tmp/songtosheet-cache"), time_budget=570):
 
     from track_worker import drain, make_call
 
+    import threading
+
     started = time.monotonic()
     loaded = prepare_engines()
+    print(f"process_queue: conteneur préparé en {time.monotonic() - started:.1f}s", flush=True)
+    # A container is only woken when a job waits (site wake call, or the watchdog's peek): warm the
+    # models right away, while the job is claimed and its audio downloads, not after the claim.
+    warming = threading.Thread(target=warm_engines, args=(loaded,), daemon=True)
+    warming.start()
     call, session = make_call(os.environ["SITE_URL"], os.environ["TRACK_WORKER_TOKEN"])
     with session:
-        # The models load only once a job is claimed, while its audio downloads.
         taken = drain(call, loaded, cache, time_budget=time_budget - (time.monotonic() - started),
-                      warm=lambda: warm_engines(loaded))
+                      warm=warming.join)
     seconds = time.monotonic() - started + 5  # + the 5 s idle window before shutdown
     # L4 + 8 cores + 16 GiB ≈ 0.000362 $/s (A10: ~25 % more); container boot not included.
     print(f"process_queue: {seconds:.0f}s de machine pour {taken} demande(s), coût estimé "

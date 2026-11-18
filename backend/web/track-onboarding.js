@@ -1,5 +1,8 @@
 (() => {
   'use strict';
+  // The engine takes audio up to 10 minutes (preview excerpts and whole songs alike).
+  const MAX_AUDIO_SECONDS=600;
+  const TOO_LONG='Tablurio ne prend pas encore les audios de plus de 10 minutes. Choisis un morceau plus court.';
 
   const instruments=[
     ['piano','🎹','Piano'],['guitare','🎸','Guitare'],['basse','♫','Basse']
@@ -193,6 +196,8 @@
     }
 
     function resetClip(){
+      draft.tooLong=false;
+      clipHint?.classList.remove('is-limit');
       stopClip();
       clearTimeout(clipLoadTimer);
       clipLoadTimer=null;
@@ -224,6 +229,16 @@
       };
       const ready=seconds=>{
         if(clipSource!==source||!Number.isFinite(seconds)||seconds<.5||draft.excerpt)return;
+        if(seconds>MAX_AUDIO_SECONDS+1){
+          clearTimeout(clipLoadTimer);
+          clipLoadTimer=null;
+          stopClip();
+          draft.tooLong=true;
+          clipHint.textContent=TOO_LONG;
+          clipHint.classList.add('is-limit');
+          if(current==='excerpt')next.disabled=true;
+          return;
+        }
         clearTimeout(clipLoadTimer);
         clipLoadTimer=null;
         clipDuration=Math.min(86400000,Math.floor(seconds*1000));
@@ -402,6 +417,8 @@
         if(draft.file!==file||!Number.isFinite(media.duration))return;
         fileDuration=media.duration;
         filename.textContent=`${file.name} · ${formatDuration(fileDuration)}`;
+        draft.tooLong=fileDuration>MAX_AUDIO_SECONDS+1;
+        if(draft.tooLong)setStatus(TOO_LONG,true);
         media.classList.remove('hidden');
         if(current==='confirm')renderRecap();
       };
@@ -535,7 +552,7 @@
       }
       back.classList.toggle('hidden',index===0&&!onExcerptBack);
       next.classList.toggle('hidden',!confirming&&!clipping);
-      next.disabled=clipping&&!draft.excerpt;
+      next.disabled=clipping&&(!draft.excerpt||draft.tooLong);
       next.textContent=clipping?'Continuer →':freemium?'Générer mon aperçu gratuit ↗':'Générer mon relevé ↗';
       setStatus('');
       if(focus)heading.focus({preventScroll:true});
@@ -720,6 +737,7 @@
       }
       if(current!=='confirm')return;
       if(mode==='link'&&!draft.excerpt){current='excerpt';render(true);return;}
+      if(draft.tooLong){setStatus(TOO_LONG,true);return;}
       if(!rights.checked){setStatus('Confirme que tu disposes des droits nécessaires.',true);rights.focus();return;}
       busy=true;
       media.pause();

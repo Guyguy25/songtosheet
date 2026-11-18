@@ -4,6 +4,7 @@ const {teaserMusicXml,teaserSource,TEASER_FILES}=require('../lib/teaser');
 const {coveredRecommendation}=require('../lib/score-coverage');
 const {previewEta}=require('../lib/track-eta');
 const {freePreviewsLeft,FREE_LIMIT_MESSAGE}=require('../lib/free-previews');
+const {youtubeTooLong,TOO_LONG_MESSAGE}=require('../lib/audio-limit');
 const {compareGuitar,sourceKey,candidates}=require('../lib/guitar-comparison');
 const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
@@ -175,6 +176,9 @@ async function begin(db,req,res,user,body){
       $unset:{lease:'',lease_until:'',audio_url:''}});
   await jobs.updateMany({user_id:user._id,active:true,expires_at:{$lte:now}},
     {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'},$unset:{audio_url:''}});
+  if(source?.youtubeId&&await youtubeTooLong(source.youtubeId)){
+    return json(res,400,{detail:TOO_LONG_MESSAGE,reason:'too_long'});
+  }
   if(await freePreviewsLeft(db,user)===0){
     return json(res,402,{detail:FREE_LIMIT_MESSAGE,reason:'free_limit'});
   }

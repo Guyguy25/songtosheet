@@ -137,3 +137,4 @@
 @media(max-width:410px){
   .track-instruments > :nth-child(n) { grid-column:1/-1; }
 }
+.track-excerpt-hint.is-limit{display:inline-block;padding:9px 13px;border-radius:12px;background:#fff4e5;color:#8a4b00;font-weight:600;line-height:1.45}

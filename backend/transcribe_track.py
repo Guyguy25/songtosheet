@@ -46,6 +46,10 @@ def run(command, timeout):
     return result.stdout.strip()
 
 
+# One generation handles up to 10 minutes of audio (the site checks YouTube links before this).
+MAX_AUDIO_SECONDS = 600
+
+
 def write_score(midi_path, destination, title, *, guitar=False):
     from music21 import clef, converter, metadata
 
@@ -264,6 +268,8 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
     ], timeout=20))
     if not math.isfinite(duration) or duration < 0.5:
         raise ValueError("L’audio doit durer au moins 0,5 seconde.")
+    if duration > MAX_AUDIO_SECONDS + 5:
+        raise ValueError("L’audio dépasse 10 minutes : Tablurio ne prend pas encore les morceaux plus longs.")
     # Bound decoded stereo PCM and the separator's working set even for highly compressed inputs.
     max_pcm_bytes = 256 * 1024**2
     capacity_error = "L’audio dépasse la capacité de traitement. Essaie un extrait plus court."

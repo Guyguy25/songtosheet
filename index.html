@@ -10,6 +10,7 @@
   <script>document.documentElement.classList.toggle('has-overlay-header', /^\/(?:tarifs\/?|upgrade\/?)?$/.test(location.pathname.toLowerCase()));</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
+  <link rel="stylesheet" href="/assets/site-ui.css?v=1" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=14" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=32" defer></script>
@@ -759,6 +760,17 @@
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="start-dialog" class="start-dialog" aria-labelledby="start-dialog-title">
+    <div class="start-dialog-inner">
+      <button type="button" class="start-dialog-close" data-start-close aria-label="Fermer">×</button>
+      <p class="start-dialog-kicker">✦ Aperçu gratuit</p>
+      <h2 id="start-dialog-title">Quel morceau veux-tu jouer&nbsp;?</h2>
+      <p class="start-dialog-lead">Colle un lien ou importe un audio. Tu choisis ton instrument juste après.</p>
+      <div id="start-dialog-body"></div>
+      <ul class="start-dialog-steps"><li>Aperçu de 30&nbsp;s offert</li><li>Aucune carte demandée</li><li>Piano, guitare, basse, violon, voix</li></ul>
+      <p class="start-dialog-foot">Déjà un compte&nbsp;? <a href="/connexion" data-nav="login">Se connecter</a></p>
+    </div>
+  </dialog>
   <header id="public-header" class="site-header" data-session-pending>
   <div class="container nav-inner nav-capsule">
     <a href="/" data-nav="home" class="brand" aria-label="Tablurio — Accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a>
@@ -1316,6 +1328,7 @@
 
   function renderRoute(){
     clearInterval(state.poll);state.poll=null;menuClose();
+    if($('start-dialog')?.open)$('start-dialog').close();
     const pathname=(location.pathname.replace(/\/$/,'')||'/').toLowerCase();
     const publicRoutes={'/':'landing','/fonctionnalites':'features-view','/resultats':'results-view','/tarifs':'pricing-view','/upgrade':'pricing-view','/faq':'faq-view'};
     const activePublic=publicRoutes[pathname]||null;
@@ -1498,6 +1511,24 @@
   }
   let closePlayer;
   function stopPlayer(){closePlayer?.();closePlayer=undefined;}
+  // The landing generator moves into the start dialog and back, so its wiring stays the same.
+  let heroAnchor=null;
+  const heroMovable=()=>[document.querySelector('.hero-action-panel'),$('hero-source-error')];
+  function openStartDialog(){
+    const dialog=$('start-dialog');
+    if(dialog.open)return;
+    heroAnchor=document.createComment('hero-generator');
+    const nodes=heroMovable();
+    nodes[0].before(heroAnchor);
+    $('start-dialog-body').append(...nodes);
+    dialog.showModal();
+    requestAnimationFrame(()=>(state.heroMode==='upload'?$('tab-upload'):$('hero-link'))?.focus());
+  }
+  function restoreHeroPanel(){
+    if(!heroAnchor)return;
+    heroAnchor.after(...heroMovable());
+    heroAnchor.remove();heroAnchor=null;
+  }
   function showAppPage(page,{replace=false}={}){if(!canOpenStudio(page))return go('/inscription');
     if(page!=='result')stopPlayer();
     if(page!=='create')trackWizard?.pause();
@@ -2324,14 +2355,30 @@
     window.addEventListener('popstate',renderRoute);
     window.addEventListener('scroll',updatePublicHeader,{passive:true});
     window.addEventListener('pageshow',updatePublicHeader);
-    const focusGenerator=()=>{
-      go('/');
-      requestAnimationFrame(()=>{
-        const field=$('hero-link');
-        document.querySelector('.hero-action-panel')?.scrollIntoView({behavior:'smooth',block:'center'});
-        if(field)setTimeout(()=>field.focus({preventScroll:true}),260);
-      });
+    // "Commencer": if the landing generator is already on screen, point at it;
+    // otherwise bring that same generator to the visitor in a dialog, without leaving the page.
+    const heroField=()=>state.heroMode==='upload'?$('tab-upload'):$('hero-link');
+    const heroOnScreen=()=>{
+      if(location.pathname!=='/')return false;
+      const panel=document.querySelector('#landing .hero-action-panel');
+      if(!panel)return false;
+      const r=panel.getBoundingClientRect();
+      return r.height>0&&r.top>=72&&r.bottom<=window.innerHeight-12;
     };
+    const focusGenerator=()=>{
+      menuClose();
+      if(heroOnScreen()){
+        const panel=document.querySelector('#landing .hero-action-panel');
+        panel.classList.remove('is-pulsing');void panel.offsetWidth;panel.classList.add('is-pulsing');
+        heroField()?.focus({preventScroll:true});
+        return;
+      }
+      openStartDialog();
+    };
+    $('start-dialog').addEventListener('close',restoreHeroPanel);
+    $('start-dialog').addEventListener('click',e=>{
+      if(e.target.closest('[data-start-close]')||e.target===$('start-dialog'))$('start-dialog').close();
+    });
     const openFromHeader=()=>state.user?startApp('dashboard'):focusGenerator();
     $('nav-login').onclick=()=>go('/connexion');$('nav-cta').onclick=openFromHeader;$('mobile-login').onclick=()=>go('/connexion');$('mobile-start').onclick=openFromHeader;$('footer-start').onclick=focusGenerator;$('showcase-cta').onclick=focusGenerator;
     $('mobile-menu-btn').onclick=()=>{

@@ -353,6 +353,14 @@ def measure_download(url: str):
     video = re.search(r"(?:v=|youtu\.be/|shorts/)([A-Za-z0-9_-]{11})", url).group(1)
     start_pot_server()
     time.sleep(2)
+    from track_link import download_youtube_section
+
+    for attempt in range(3):
+        with tempfile.TemporaryDirectory() as folder:
+            started = time.monotonic()
+            result = download_youtube_section(video, Path(folder), 30, 60.5)
+            print(f"===== extrait en course n°{attempt + 1} : {time.monotonic() - started:.1f}s, "
+                  f"{'ok' if result else 'échec'}", flush=True)
     for label, extra in (("extrait 1", ["--download-sections", "*30-60", "-f", "bestaudio[ext=m4a]/bestaudio"]),
                          ("extrait 2", ["--download-sections", "*30-60", "-f", "bestaudio[ext=m4a]/bestaudio"]),
                          ("complet léger", ["-f", "250/249/251/bestaudio"])):

@@ -1,5 +1,6 @@
 'use strict';
 const {createHash,createHmac,randomBytes,randomUUID,timingSafeEqual}=require('node:crypto');
+const {teaserMusicXml,teaserSource}=require('../lib/teaser');
 const {compareGuitar,sourceKey,candidates}=require('../lib/guitar-comparison');
 const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
@@ -60,8 +61,22 @@ async function guestStatus(db,req,res,guest){
     active:1,created_at:1,queued_at:1,expires_at:1,processing_deadline:1,lease_until:1,error_message:1,
   }});
   if(!job)return json(res,404,{detail:'Aperçu introuvable ou expiré.'});
-  const {title,instrument,format,status,stage,stages,source_name,preview_limit,error_message}=serialTrack(job);
-  return json(res,200,{track:true,title,instrument,format,status,stage,stages,source_name,preview_limit,error_message,downloads:[]});
+  const {title,instrument,format,status,stage,stages,source_name,preview_limit,error_message,created_at}=serialTrack(job);
+  return json(res,200,{track:true,title,instrument,format,status,stage,stages,source_name,preview_limit,error_message,created_at,downloads:[],
+    teaser:status==='completed'});
+}
+
+// Opening bars of the visitor's own finished preview, to show that it is ready before sign-up.
+async function guestTeaser(db,req,res,guest){
+  const {id}=req.query;
+  if(!guest||!isId(id))return json(res,404,{detail:'Aperçu introuvable ou expiré.'});
+  const job=await db.collection('track_jobs').findOne({...trackFilter(id,guest),status:'completed'},
+    {projection:{format:1,'exports.tab':1,'exports.musicxml':1}});
+  const xml=job&&teaserMusicXml(teaserSource(job));
+  if(!xml)return json(res,404,{detail:'Aperçu introuvable.'});
+  res.setHeader('Content-Type','application/vnd.recordare.musicxml+xml');
+  res.setHeader('Cache-Control','private, no-store');
+  return res.status(200).send(xml);
 }
 
 async function claimGuestTrack(db,res,user,guest,id){
@@ -467,6 +482,7 @@ module.exports=async(req,res)=>{
     }
     const user=await authenticated(req);
     if(req.method==='GET'&&req.query.guest==='1'){
+      if(req.query.teaser==='1')return await guestTeaser(await database(),req,res,guestSession(req,res));
       return await guestStatus(await database(),req,res,guestSession(req,res));
     }
     if(req.method==='POST'&&body.action==='claim_guest'&&user){

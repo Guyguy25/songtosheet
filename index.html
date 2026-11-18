@@ -10,7 +10,7 @@
   <script>document.documentElement.classList.toggle('has-overlay-header', /^\/(?:tarifs\/?|upgrade\/?)?$/.test(location.pathname.toLowerCase()));</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/assets/site-ui.css?v=1" />
+  <link rel="stylesheet" href="/assets/site-ui.css?v=2" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=14" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=32" defer></script>
@@ -2023,19 +2023,97 @@
     select.addEventListener('change',switchTrack);
     switchTrack();
   }
-  function showLockedTrack(job){
-    const kind=job.format==='tablature'?'Ta tablature':'Ta partition';
-    const notation=window.SongToSheetFlow?.placeholderNotation(job.instrument,job.format==='tablature')||'';
-    $('result-content').innerHTML=`<div class="result-hero">
-      <span class="dashboard-kicker">${kind.toUpperCase()} EST PRÊTE</span>
-      <h1>${safe(job.title)}</h1><p class="result-meta">${safe(job.instrument)}</p>
-    </div><section class="track-guest-lock" aria-label="Aperçu à débloquer">
-      <div class="track-guest-notation" aria-hidden="true" inert>${notation}</div>
-      <div class="track-guest-lock-content">
-        <a class="btn btn-primary" data-nav="signup" href="/inscription">Inscris-toi pour voir tes 30 s gratuites</a>
-        <a href="/connexion" data-nav="login">J’ai déjà un compte</a>
+  function showLockedTrack(job,id){
+    const tab=job.format==='tablature',kind=tab?'tablature':'partition';
+    const notation=window.SongToSheetFlow?.placeholderNotation(job.instrument,tab)||'';
+    $('result-content').innerHTML=`<div class="result-hero guest-ready-hero">
+      <span class="guest-ready-badge"><span aria-hidden="true">✓</span> Ta ${kind} est prête</span>
+      <h1>${safe(job.title)}</h1>
+      <p class="result-meta">${instrumentIcon[job.instrument]||'♫'} ${safe(job.instrument)} · ${tab?'Tablature':'Partition'} · Aperçu de 30&nbsp;s</p>
+    </div>
+    <section class="guest-teaser" aria-label="Début de ta ${kind}">
+      <div class="guest-teaser-sheet" aria-hidden="true" inert>
+        <div id="guest-teaser-score" class="guest-teaser-score"><div class="guest-teaser-fallback">${notation}</div></div>
+      </div>
+      <div class="guest-teaser-veil">
+        <div class="guest-teaser-card">
+          <span class="guest-teaser-lock" aria-hidden="true">🔒</span>
+          <h2>Plus qu’une étape pour jouer ta ${kind}</h2>
+          <p>Crée ton compte gratuit : tes 30&nbsp;s s’ouvrent aussitôt, avec la lecture audio synchronisée.</p>
+          <a class="btn btn-primary guest-teaser-cta" data-nav="signup" href="/inscription">Voir ma ${kind} gratuitement <span aria-hidden="true">→</span></a>
+          <a class="guest-teaser-login" href="/connexion" data-nav="login">J’ai déjà un compte</a>
+          <ul class="guest-teaser-trust"><li>Gratuit</li><li>Sans carte bancaire</li><li>Gardée dans ton compte</li></ul>
+        </div>
       </div>
     </section>`;
+    if(job.teaser)renderTeaser(id);
+  }
+  // The real opening bars of the visitor's preview, engraved like in the studio.
+  let osmdLoading=null;
+  function loadOsmd(){
+    if(window.opensheetmusicdisplay)return Promise.resolve();
+    return osmdLoading||=new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src='/api/player-assets?asset=score&v=2.3.0';
+      script.onload=resolve;
+      script.onerror=()=>{osmdLoading=null;script.remove();reject(new Error('Lecteur indisponible.'));};
+      document.head.append(script);
+    });
+  }
+  async function renderTeaser(id){
+    const box=$('guest-teaser-score');
+    if(!box||!id)return;
+    let engraving;
+    try{
+      const [xml]=await Promise.all([
+        fetch(`/api/track?guest=1&teaser=1&id=${encodeURIComponent(id)}`,{credentials:'same-origin'})
+          .then(r=>r.ok?r.text():Promise.reject(new Error('Aperçu indisponible.'))),
+        loadOsmd()]);
+      if(!box.isConnected)return;
+      engraving=document.createElement('div');
+      engraving.className='guest-teaser-engraving';
+      box.append(engraving);
+      const display=new window.opensheetmusicdisplay.OpenSheetMusicDisplay(engraving,{
+        backend:'svg',autoResize:false,drawTitle:false,drawSubtitle:false,drawComposer:false,drawCredits:false,drawPartNames:false});
+      await display.load(xml);
+      if(!box.isConnected)return;
+      display.Zoom=window.innerWidth<640?.6:.85;
+      display.render();
+      box.classList.add('is-rendered');
+      // Keep the first line of music sharp: the blur starts right under it.
+      const systems=display.GraphicSheet?.MusicPages?.[0]?.MusicSystems||[];
+      const lines=systems[0]?.StaffLines;
+      const section=box.closest('.guest-teaser'),veil=section?.querySelector('.guest-teaser-veil');
+      if(lines?.length&&systems.length>1&&veil){
+        const last=lines.at(-1),scale=10*display.Zoom;
+        const bottom=(last.PositionAndShape.AbsolutePosition.y+last.StaffHeight)*scale;
+        const top=engraving.getBoundingClientRect().top-section.getBoundingClientRect().top;
+        veil.style.marginTop=Math.round(top+bottom+14)+'px';
+      }
+    }catch{engraving?.remove();}
+  }
+  // Free previews: a 30-second countdown from the moment the visitor launched it.
+  let countdownTimer=null;
+  const COUNTDOWN_SECONDS=30;
+  function runCountdown(progress,createdAt){
+    const box=progress.querySelector('.track-countdown');
+    if(!box)return;
+    const key=String(createdAt||'local');
+    if(box.dataset.key===key&&countdownTimer)return;
+    box.dataset.key=key;box.hidden=false;
+    // Trust the server's launch time unless this device's clock disagrees with it.
+    const now=Date.now()/1000;
+    const start=createdAt&&Math.abs(now-createdAt)<90?createdAt:now;
+    clearInterval(countdownTimer);
+    const tick=()=>{
+      if(!box.isConnected||box.closest('.hidden')){clearInterval(countdownTimer);countdownTimer=null;return;}
+      const left=Math.max(0,Math.ceil(COUNTDOWN_SECONDS-(Date.now()/1000-start)));
+      box.style.setProperty('--left',String(left/COUNTDOWN_SECONDS));
+      box.querySelector('b').textContent=left;
+      box.classList.toggle('is-over',left===0);
+      box.querySelector('small').textContent=left?'Ton aperçu de 30 s arrive':'Encore quelques secondes…';
+    };
+    tick();countdownTimer=setInterval(tick,250);
   }
   async function loadResult(id){
     const guest=!state.user;
@@ -2048,7 +2126,7 @@
       if(guest&&j.status==='completed'){
         clearTimeout(state.poll);state.poll=null;
         cancelAnimationFrame(trackProgressFrame);
-        showLockedTrack(j);
+        showLockedTrack(j,id);
         return;
       }
       if(guest&&j.status==='failed')rememberGuestTrack(null);
@@ -2076,6 +2154,7 @@
         if($('track-result-summary')?.dataset.job!==id){
           $('result-content').innerHTML=`<div id="track-result-summary" class="result-hero"></div>
             <section id="track-progress" class="track-progress hidden" aria-label="Progression du relevé">
+              <div class="track-countdown" hidden><div class="track-countdown-ring"><b>30</b><span>s</span></div><small>Ton aperçu de 30 s arrive</small></div>
               <div class="track-progress-heading">
                 <span class="track-progress-spinner" aria-hidden="true"></span>
                 <h2 aria-live="polite"></h2>
@@ -2132,6 +2211,8 @@
         if(completed&&state.user?.role==='admin')addAudioReview(j);
         show('track-progress',waiting);
         if(!waiting)cancelAnimationFrame(trackProgressFrame);
+        if(waiting&&j.preview_limit)runCountdown($('track-progress'),j.created_at);
+        else if(!waiting){clearInterval(countdownTimer);countdownTimer=null;}
         window.SongToSheetWaitSurvey?.mount($('track-wait-survey'),state.user?.id,waiting&&!ready);
         const stage=ready?(j.preview_limit?(j.instrument==='guitare'&&!['chords','original'].includes(j.guitar_goal)?'solo':'finalize'):'pdf'):
           j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';

@@ -27,7 +27,7 @@
   }
 
   function importHint(provider){
-    return `Le lien ${provider} sert de référence. Pour transcrire le morceau, ajoute un fichier audio autorisé ou son lien direct.`;
+    return `Ce morceau ${provider} n’a pas été trouvé sur YouTube. Colle le lien YouTube du morceau, ou importe ton fichier audio.`;
   }
 
   const platformLogos=`<span class="source-platforms" role="img" aria-label="YouTube, Spotify et Deezer">
@@ -50,22 +50,21 @@
     return ['Spotify','Deezer'].includes(source?.provider);
   }
 
+  // Spotify and Deezer audio is protected: the same song is found on YouTube; Deezer's
+  // official 30 s preview stays a fallback when the site is allowed to use it.
   async function resolveVersion(source){
-    const deezer=source.provider==='Deezer';
-    const resolver=deezer?'deezer':'youtube';
-    const response=await fetch('/api/media-info?resolve='+resolver+'&url='+encodeURIComponent(source.url.href),{
+    const response=await fetch('/api/media-info?resolve=youtube&url='+encodeURIComponent(source.url.href),{
       signal:AbortSignal.timeout(20000)
     });
     const info=await response.json();
     if(response.status===400)throw new Error(info.error);
     if(!response.ok)throw new Error('La recherche du morceau a échoué. Réessaie ou importe ton fichier audio.');
-    if(deezer){
-      const preview=parse(info.preview_url);
-      if(!preview||!preview.url.hostname.endsWith('.dzcdn.net'))return null;
-      return {audioUrl:preview.url.href,name:info.title,versionLabel:'Extrait Deezer'};
-    }
     const version=parse(info.version?.url);
-    return version?.youtubeId?{audioUrl:version.url.href,versionLabel:'Version proposée sur YouTube · '+info.version.title}:null;
+    if(version?.youtubeId)return {audioUrl:version.url.href,versionLabel:'Version proposée sur YouTube · '+info.version.title};
+    const preview=source.provider==='Deezer'?parse(info.preview_url):null;
+    if(preview&&preview.url.hostname.endsWith('.dzcdn.net'))
+      return {audioUrl:preview.url.href,name:info.title,versionLabel:'Extrait Deezer'};
+    return null;
   }
 
   if(typeof module==='object')module.exports={parse,importHint,needsVersion,resolveVersion,platformLogos,advanceOnPaste};

@@ -94,6 +94,7 @@
         </div>
         <section class="track-excerpt hidden">
           <p class="track-version-label" hidden></p>
+          <div class="track-version-choices" hidden></div>
           <div class="track-excerpt-video" hidden></div>
           <audio preload="metadata"></audio>
           <p class="track-excerpt-hint" aria-live="polite"></p>
@@ -292,6 +293,47 @@
         },30);
       }
     });
+    // Spotify/Deezer links: the YouTube upload picked automatically may be another recording
+    // (acoustic, live…); the other matches found are offered under the video.
+    function renderVersionChoices(){
+      const box=get('.track-version-choices');
+      const choices=mode==='link'&&link?.alternatives?.length?link.alternatives:[];
+      box.hidden=!choices.length;
+      box.replaceChildren();
+      if(!choices.length)return;
+      const label=document.createElement('p');
+      label.className='track-version-question';
+      label.textContent='Pas la bonne version ? Choisis-en une autre :';
+      box.append(label);
+      for(const choice of choices){
+        const button=document.createElement('button');
+        button.type='button';
+        button.className='track-version-choice';
+        const name=document.createElement('strong');
+        name.textContent=choice.title||'Autre version';
+        button.append(name);
+        if(choice.channel){
+          const channel=document.createElement('small');
+          channel.textContent=choice.channel;
+          button.append(channel);
+        }
+        button.addEventListener('click',()=>chooseVersion(choice));
+        box.append(button);
+      }
+    }
+    function chooseVersion(choice){
+      const parsed=audioSource?.parse(choice.audioUrl);
+      if(!parsed?.youtubeId||busy)return;
+      const current={audioUrl:link.url.href,versionLabel:link.versionLabel,
+        title:link.versionTitle||String(link.versionLabel||'').replace(/^Version proposée sur YouTube · /,''),
+        channel:link.versionChannel||''};
+      link={...parsed,versionLabel:choice.versionLabel,versionTitle:choice.title,versionChannel:choice.channel,
+        alternatives:[current,...link.alternatives.filter(item=>item!==choice)]};
+      titleEdited=false;
+      fetchMetadata(link);
+      onLinkChange?.(link.url.href);
+      render();
+    }
     const setStatus=(message,error=false)=>{
       status.textContent=message;
       status.classList.toggle('is-error',error);
@@ -441,6 +483,7 @@
       const versionLabel=get('.track-version-label');
       versionLabel.hidden=!link?.versionLabel;
       versionLabel.textContent=link?.versionLabel||'';
+      renderVersionChoices();
       if(clipping)loadClip();
       else stopClip();
       if(!importing)media.pause();
@@ -606,7 +649,8 @@
         const version=await audioSource.resolveVersion(source);
         if(mode!=='link'||linkInput.value.trim()!==rawLink)return false;
         if(version){
-          source={...audioSource.parse(version.audioUrl),versionLabel:version.versionLabel,name:version.name};
+          source={...audioSource.parse(version.audioUrl),versionLabel:version.versionLabel,name:version.name,
+            alternatives:version.alternatives||[]};
         }else{
           setMode('file',source);
           render();
@@ -653,7 +697,8 @@
       }
       if(current==='excerpt'){
         if(draft.excerpt){
-          if(onExcerpt)onExcerpt(draft.excerpt);
+          if(onExcerpt)onExcerpt(draft.excerpt,{audioUrl:link.url.href,versionLabel:link.versionLabel,
+            alternatives:link.alternatives||[]});
           else advance();
         }
         return;
@@ -689,7 +734,7 @@
     return {
       pause(){media.pause();stopClip();},
       dispose(){resetClip();lookup?.controller.abort();},
-      prefill({instrument,file,name,audioUrl,excerpt,versionLabel},{focus=true}={}){
+      prefill({instrument,file,name,audioUrl,excerpt,versionLabel,alternatives},{focus=true}={}){
         if(busy)return;
         if(file!==undefined||audioUrl!==undefined){
           Object.assign(draft,{instrument:'',format:'',source:'',capo:null,guitarPresence:null,guitarGoal:null});
@@ -699,7 +744,7 @@
           setMode(file||isReference||!allowLink?'file':'link',isReference?parsed:null);
           if(file)setFile(file);
           else if(validLink){
-            link={...parsed,versionLabel};
+            link={...parsed,versionLabel,alternatives:Array.isArray(alternatives)?alternatives:[]};
             linkInput.value=parsed.url.href;
             fetchMetadata(link);
             onLinkChange?.(link.url.href);

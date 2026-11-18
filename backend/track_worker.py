@@ -485,6 +485,8 @@ def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_
         job_started = time.monotonic()
         print(f"{job.get('id')}: prise en charge en {job_started - asked:.1f}s "
               f"({job_started - started:.1f}s après le début de la file)", flush=True)
+        if job.get("instrument") == "piano" and engines.solo_piano is not None:
+            _warm(engines.solo_piano)  # Transkun loads in its own process while the audio downloads
         try:
             if warm is not None:
                 with tempfile.TemporaryDirectory() as fetch_folder, ThreadPoolExecutor(1) as pool:

@@ -387,29 +387,47 @@ def explain(best, table, has_voice):
     return f"Recommandée par l’IA : {reasons}."
 
 
-def recommend_v3(audio, candidates, vocals=None, *, has_voice=False, references=None):
+def recommend_v3(audio, candidates, vocals=None, *, has_voice=False, references=None, workers=None):
+    """workers: threads for the independent analyses (default: one per task). numpy and
+    librosa release the GIL in their heavy parts, so on a 3-minute piece the candidates
+    (rendered and analysed one by one before: ~18 s) are scored side by side, with the
+    exact same computations."""
+    from concurrent.futures import ThreadPoolExecutor
+
     from pretty_midi import PrettyMIDI
     from transcribe_track import midi_events
 
     import librosa
 
-    evidence, step = pitch_evidence(audio)
-    signal, _ = librosa.load(audio, sr=RATE, mono=True)
-    source = spectral_profile(signal, separate=True)
-    vocal_evidence = None
-    if vocals is not None and vocals.is_file():
+    def source_profile():
+        signal, _ = librosa.load(audio, sr=RATE, mono=True)
+        return signal, spectral_profile(signal, separate=True)
+
+    def vocal_pitch():
+        if vocals is None or not vocals.is_file():
+            return None
         try:
-            vocal_evidence, _ = pitch_evidence(vocals)
-            has_voice = has_voice or bool(vocal_evidence.any())
+            return pitch_evidence(vocals)[0]
         except (OSError, ValueError):
-            pass
+            return None
+
+    with ThreadPoolExecutor(max_workers=workers or 3) as pool:
+        evidence_future, profile_future = pool.submit(pitch_evidence, audio), pool.submit(source_profile)
+        vocal_future = pool.submit(vocal_pitch)
+        evidence, step = evidence_future.result()
+        signal, source = profile_future.result()
+        vocal_evidence = vocal_future.result()
+    if vocal_evidence is not None:
+        has_voice = has_voice or bool(vocal_evidence.any())
     reference = consensus(list((references or {}).values()))
-    table = {}
-    for key, path in candidates.items():
+
+    def score(path):
         notes = midi_events(PrettyMIDI(str(path)), float("inf"))
-        values = criteria(evidence, step, notes, vocal_evidence, source, len(signal), reference)
-        if values:
-            table[key] = values
+        return criteria(evidence, step, notes, vocal_evidence, source, len(signal), reference)
+
+    with ThreadPoolExecutor(max_workers=workers or max(1, len(candidates))) as pool:
+        results = dict(zip(candidates, pool.map(score, candidates.values())))
+    table = {key: values for key, values in results.items() if values}
     if len(table) < 2 or len(table) != len(candidates):
         return None
     scores = {key: total(values) for key, values in table.items()}

@@ -135,8 +135,10 @@ def generate(audio, directory, title, report, piano_engine, *, vocals=None, solo
         # Basic Pitch is cheap: it is always computed, as a fallback or as a second
         # opinion for the judge's consensus of transcription models.
         basic = pool.submit(timed_call("Basic Pitch piano", basic_pitch))
+        # Transkun starts with YourMT3+ instead of after it; its notes are only kept when the
+        # recording is mostly piano (decided from YourMT3+ below), as before.
         solo = None
-        if solo_engine is not None and piano_engine is None:
+        if solo_engine is not None:
             solo = pool.submit(timed_call("Transkun", solo_engine.transcribe), audio, directory / "transkun.mid")
         if piano_engine is not None:
             try:
@@ -146,8 +148,8 @@ def generate(audio, directory, title, report, piano_engine, *, vocals=None, solo
                 raw["yourmt3"] = thin_hands(references["yourmt3"])
             except Exception as error:
                 print(f"YourMT3+ indisponible : {error}", flush=True)
-        if solo is None and solo_engine is not None and piano_share >= .5:
-            solo = pool.submit(timed_call("Transkun", solo_engine.transcribe), audio, directory / "transkun.mid")
+        if solo is not None and piano_engine is not None and piano_share < .5:
+            solo = None  # not a piano recording: Transkun's notes are not used
         try:
             references["basic"] = basic.result()
         except Exception as error:

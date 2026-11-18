@@ -35,3 +35,17 @@ def test_opus_audio_is_accepted():
     from transcribe_track import AUDIO_FORMATS
 
     assert ".opus" in AUDIO_FORMATS
+
+
+def test_full_download_retries_once_through_another_ip(monkeypatch, tmp_path):
+    calls = []
+
+    def once(video_id, directory, light):
+        calls.append(1)
+        if len(calls) == 1:
+            raise track_link.TrackLinkError("blocked")
+        return directory / "input.m4a"
+    monkeypatch.setenv("TRACK_YTDLP_PROXY", "http://user:pass@proxy:1")
+    monkeypatch.setattr(track_link, "_download_youtube_once", once)
+    assert track_link.download_youtube("dQw4w9WgXcQ", tmp_path).name == "input.m4a"
+    assert len(calls) == 2

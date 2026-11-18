@@ -27,11 +27,14 @@ test('rejects anything that is not a MusicXML score',()=>{
   assert.equal(teaserMusicXml('<score-partwise><part id="P1"></part></score-partwise>'),null);
 });
 
-test('picks the tablature for a tablature request, the score otherwise',()=>{
+test('picks the preferred file when it has enough bars, else the fullest one',()=>{
   const b64=s=>Buffer.from(s).toString('base64');
-  const exports={musicxml:b64('score'),tab:b64('tab'),mid:b64('midi')};
-  assert.equal(teaserSource({format:'tablature',exports}),'tab');
-  assert.equal(teaserSource({format:'partition',exports}),'score');
-  assert.equal(teaserSource({format:'tablature',exports:{musicxml:b64('score')}}),'score');
+  const long=score(['P1'],12),short=score(['P1'],3),mid=score(['P1'],5);
+  assert.equal(teaserSource({format:'tablature',exports:{musicxml:b64(long),tab:b64(long.replace('C','D'))}}),long.replace('C','D'));
+  assert.equal(teaserSource({format:'partition',exports:{musicxml:b64(long),tab:b64(short)}}),long);
+  // Recommended version first, as long as it is not a near-empty one.
+  assert.equal(teaserSource({format:'tablature',exports:{tab:b64(short),rhythmtab:b64(long)}},['rhythmtab']),long);
+  assert.equal(teaserSource({format:'tablature',exports:{tab:b64(long),rhythmtab:b64(short)}},['rhythmtab']),long);
+  assert.equal(teaserSource({format:'tablature',exports:{tab:b64(short),heldtab:b64(mid)}}),mid);
   assert.equal(teaserSource({exports:{mid:b64('midi')}}),null);
 });

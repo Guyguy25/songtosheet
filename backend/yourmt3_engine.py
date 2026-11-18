@@ -142,7 +142,9 @@ def warm_clip(seconds=30, rate=16000):
 
 
 def preload(checkpoint, device):
-    """Load the model once, before the first request (mt3_infer caches it)."""
+    """Load the model once, before the first request (mt3_infer caches it), then warm up
+    through run() itself, exactly like a request."""
+    import tempfile
     import time
 
     started = time.monotonic()
@@ -153,13 +155,19 @@ def preload(checkpoint, device):
         transcribe(np.zeros(16000, dtype=np.float32), sr=16000, model="yourmt3", checkpoint_path=checkpoint,
                    device=device, auto_download=False)  # loads the model
         _bigger_batches()
-        # Then a pass with the real batch size: the first pass at a new shape sets up the GPU kernels
-        # so a real 30 s preview does not pay for it.
-        loaded = time.monotonic() - started
-        transcribe(warm_clip(), sr=16000, model="yourmt3", checkpoint_path=checkpoint,
-                   device=device, auto_download=False)
-        print(f"YourMT3+ : modèle chargé en {loaded:.1f}s, prêt en {time.monotonic() - started:.1f}s "
-              "(imports compris)", file=sys.stderr, flush=True)
+    loaded = time.monotonic() - started
+    # A request also reads and resamples an audio file with librosa, which compiles its code on
+    # first use (this venv has its own librosa): warming up the model alone left ~13 s of that
+    # to the first real request. So: a 30 s stereo 44.1 kHz file, through run().
+    import soundfile
+
+    with tempfile.TemporaryDirectory() as folder:
+        clip = Path(folder) / "warm.wav"
+        tone = warm_clip(rate=44100)
+        soundfile.write(str(clip), np.stack([tone, tone], axis=1), 44100)
+        run(clip, Path(folder) / "warm.mid", checkpoint, device)
+    print(f"YourMT3+ : modèle chargé en {loaded:.1f}s, prêt en {time.monotonic() - started:.1f}s "
+          "(imports compris)", file=sys.stderr, flush=True)
 
 
 def run(audio, destination, checkpoint, device):

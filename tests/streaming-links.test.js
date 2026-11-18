@@ -58,3 +58,35 @@ test('the hint explains what to do when no match was found',()=>{
   assert.match(hint,/YouTube/);
   assert.doesNotMatch(hint,/sert de référence/);
 });
+
+test('the studio version is preferred over a medley or a live take',async()=>{
+  process.env.YOUTUBE_DATA_API_KEY='k';
+  global.fetch=async url=>{
+    url=String(url);
+    if(url.startsWith('https://api.deezer.com/track/'))
+      return jsonResponse({title:'Harder, Better, Faster, Stronger',artist:{name:'Daft Punk'},duration:224});
+    return jsonResponse({items:[
+      {id:{videoId:'kcxK1Tnwy5M'},snippet:{title:'Around the World / Harder, Better, Faster, Stronger',channelTitle:'Daft Punk'}},
+      {id:{videoId:'bbbbbbbbbbb'},snippet:{title:'Daft Punk - Harder, Better, Faster, Stronger (Live)',channelTitle:'Daft Punk'}},
+      {id:{videoId:'gAjR4_CbPpQ'},snippet:{title:'Daft Punk - Harder, Better, Faster, Stronger (Official Video)',channelTitle:'Daft Punk'}},
+      {id:{videoId:'yydNF8tuVmU'},snippet:{title:'Harder, Better, Faster, Stronger',channelTitle:'Daft Punk - Topic'}}
+    ]});
+  };
+  const res=await call({url:'https://www.deezer.com/track/3135556',resolve:'youtube'});
+  assert.strictEqual(res.payload.version.url,'https://www.youtube.com/watch?v=yydNF8tuVmU');
+});
+
+test('without a Topic upload, the exact official title wins over a medley',async()=>{
+  process.env.YOUTUBE_DATA_API_KEY='k';
+  global.fetch=async url=>{
+    url=String(url);
+    if(url.startsWith('https://api.deezer.com/track/'))
+      return jsonResponse({title:'Harder, Better, Faster, Stronger',artist:{name:'Daft Punk'},duration:224});
+    return jsonResponse({items:[
+      {id:{videoId:'kcxK1Tnwy5M'},snippet:{title:'Around the World / Harder, Better, Faster, Stronger',channelTitle:'Daft Punk'}},
+      {id:{videoId:'gAjR4_CbPpQ'},snippet:{title:'Daft Punk - Harder, Better, Faster, Stronger (Official Video)',channelTitle:'Daft Punk'}}
+    ]});
+  };
+  const res=await call({url:'https://www.deezer.com/track/3135556',resolve:'youtube'});
+  assert.strictEqual(res.payload.version.url,'https://www.youtube.com/watch?v=gAjR4_CbPpQ');
+});

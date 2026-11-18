@@ -171,7 +171,9 @@
       }
       status.textContent = data.selected ? (justVoted ? 'Ton choix a été enregistré.' : '') :
         data.votingUnavailable ? 'Le vote est momentanément indisponible. Tu peux écouter les versions.' :
-        data.recommendationStatus === 'close' ? 'Versions proches selon l’analyse audio. Écoute-les pour choisir.' :
+        data.recommendationStatus === 'close' ? (data.versions.some(version => version.recommended) ?
+          'Versions très proches selon l’analyse audio : l’IA penche pour celle qui porte le badge. Écoute aussi l’autre.' :
+          'Versions proches selon l’analyse audio. Écoute-les pour choisir.') :
         data.recommendationStatus === 'uncertain' ? 'Analyse audio incertaine. Écoute les versions pour choisir.' :
         piano && data.versions.some(version => version.recommended) ?
           (data.summary ? 'L’IA a écouté le morceau et comparé chaque version : la plus fidèle et jouable porte le badge.' :

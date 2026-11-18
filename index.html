@@ -10,7 +10,7 @@
   <script>document.documentElement.classList.toggle('has-overlay-header', /^\/(?:tarifs\/?|upgrade\/?)?$/.test(location.pathname.toLowerCase()));</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/assets/site-ui.css?v=4" />
+  <link rel="stylesheet" href="/assets/site-ui.css?v=5" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=14" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=32" defer></script>
@@ -1032,7 +1032,7 @@
 <section class="sub-section pricing-faq"><div class="container"><div class="sub-title"><h2>Questions sur les abonnements</h2></div><div class="simple-faq">
 <details><summary>Pourquoi l'annuel est-il moins cher ? <span>+</span></summary><p>La réduction annuelle de 35 % ramène Starter à 78 €/an (6,50 €/mois) et Pro à 148,20 €/an (12,35 €/mois), avec paiement de l'année entière.</p></details>
 <details><summary>Que comprend l'offre à vie ? <span>+</span></summary><p>L’offre À vie donne accès aux fonctionnalités de l’offre pour un paiement unique de 99 €, dans le cadre d’une utilisation raisonnable.</p></details>
-<details><summary>Comment se passe le paiement ? <span>+</span></summary><p>Le règlement se fait sur Whop. Tu peux générer un aperçu gratuit de 30 secondes avant de choisir une offre.</p></details>
+<details><summary>Comment se passe le paiement ? <span>+</span></summary><p>Le règlement se fait sur Whop. Ton compte gratuit inclut 3 aperçus de 30 secondes pour tester avant de choisir une offre.</p></details>
 </div></div></section></main>
 <main id="faq-view" class="site-subpage hidden">
 <section class="sub-hero"><div class="container sub-hero-center"><span class="sub-kicker">CENTRE D'AIDE</span><h1>Une question ?<br><em>On t'explique tout.</em></h1><p>Tout ce qu'il faut savoir avant de transformer ta musique en partition.</p></div></section>
@@ -1043,7 +1043,7 @@
 <details><summary>Quels instruments sont prévus ? <span>+</span></summary><p>Piano, guitare, violon, basse et voix. Le moteur expérimental relève avant tout la mélodie principale et non un arrangement complet de tous les instruments.</p></details>
 <details><summary>La partition est-elle toujours correcte ? <span>+</span></summary><p>Non. La qualité dépend de la source. Les mélodies isolées sont plus simples à analyser que les morceaux avec accords, percussions et plusieurs instruments superposés.</p></details>
 <details><summary>Quels fichiers puis-je récupérer ? <span>+</span></summary><p>Un PDF pour lire et imprimer, un fichier MIDI et un MusicXML pour reprendre la transcription dans un logiciel de musique.</p></details>
-<details><summary>Y a-t-il un essai gratuit ? <span>+</span></summary><p>Non. Les offres sont Starter (10 €/mois, 1 morceau complet par jour), Pro (19 €/mois, sans limite quotidienne) et Lifetime (99 € une fois), avec une réduction de 35 % en annuel sur les abonnements.</p></details>
+<details><summary>Y a-t-il un essai gratuit ? <span>+</span></summary><p>Tu as 3 aperçus gratuits de 30 secondes pour juger le résultat sur tes propres morceaux. Ensuite, les offres sont Starter (10 €/mois, 1 morceau complet par jour), Pro (19 €/mois, sans limite quotidienne) et Lifetime (99 € une fois), avec une réduction de 35 % en annuel sur les abonnements.</p></details>
 <details><summary>Les abonnements et la génération sont-ils actifs ? <span>+</span></summary><p>Non, le site public est une démonstration. Les vrais paiements et le traitement audio en ligne seront activés après intégration et tests.</p></details>
 </div></div></section></main>
 <main id="workspace" class="hidden">
@@ -1158,7 +1158,7 @@
  </div>
 </main>
 
-  <main id="auth-view" class="hidden"><div class="auth-container"><a href="/" class="brand auth-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div class="auth-card"><span class="auth-flower">✦</span><h1 id="auth-title">Bienvenue sur Tablurio</h1><p id="auth-subtitle">Crée ton compte pour retrouver toutes tes partitions.</p><form id="auth-form"><label for="auth-email">Adresse email</label><input id="auth-email" class="field" type="email" autocomplete="email" placeholder="toi@exemple.com" required/><label for="auth-password">Mot de passe</label><input id="auth-password" class="field" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum" required/><p id="auth-password-hint" class="auth-demo-hint">8 caractères minimum. Ton mot de passe est haché sur le serveur et n’est jamais conservé en clair.</p><p id="auth-error" class="auth-error hidden"></p><button id="auth-submit" class="btn btn-primary" type="submit">Créer mon compte <span>↗</span></button></form><p id="auth-alternate" class="auth-alternate">Déjà un compte ? <a href="/connexion" data-nav="login">Se connecter</a></p></div><p class="auth-footer">SongToSheet · Ton studio de musique en ligne</p></div><div class="auth-art"><div class="auth-art-inner"><span>♫</span><h2>Chaque morceau a une histoire.<br/>À toi de la <i>jouer.</i></h2><div class="auth-art-card"><div class="auth-lines"></div><span>Ta prochaine partition commence ici. ✦</span></div></div></div></main>
+  <main id="auth-view" class="hidden"><div class="auth-container"><a href="/" class="brand auth-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div class="auth-card"><span class="auth-flower">✦</span><h1 id="auth-title">Bienvenue sur Tablurio</h1><p id="auth-subtitle">Crée ton compte pour retrouver toutes tes partitions.</p><form id="auth-form"><label for="auth-email">Adresse email</label><input id="auth-email" class="field" type="email" autocomplete="email" placeholder="toi@exemple.com" required/><div id="auth-phone-row" class="auth-phone-row"><label for="auth-phone">Numéro de téléphone</label><input id="auth-phone" class="field" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" maxlength="24"/></div><label for="auth-password">Mot de passe</label><input id="auth-password" class="field" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum" required/><p id="auth-password-hint" class="auth-demo-hint">8 caractères minimum. Ton mot de passe est haché sur le serveur et n’est jamais conservé en clair.</p><p id="auth-error" class="auth-error hidden"></p><button id="auth-submit" class="btn btn-primary" type="submit">Créer mon compte <span>↗</span></button></form><p id="auth-alternate" class="auth-alternate">Déjà un compte ? <a href="/connexion" data-nav="login">Se connecter</a></p></div><p class="auth-footer">SongToSheet · Ton studio de musique en ligne</p></div><div class="auth-art"><div class="auth-art-inner"><span>♫</span><h2>Chaque morceau a une histoire.<br/>À toi de la <i>jouer.</i></h2><div class="auth-art-card"><div class="auth-lines"></div><span>Ta prochaine partition commence ici. ✦</span></div></div></div></main>
 
   <main id="legal-view" class="hidden legal-view"><div class="container"><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><h1>Informations légales & limites de la V1</h1><p>Tablurio est un prototype technique. Avant commercialisation, il faudra publier les mentions légales, CGV, politique de confidentialité, politique de remboursement et documents RGPD de l'entité exploitante.</p><p>Utilisez uniquement des audios dont vous possédez les droits ou disposez des autorisations nécessaires. Les liens externes servent de référence ; leur contenu n'est pas téléchargé. Le moteur de transcription expérimental peut produire des erreurs musicales.</p><p>Les paiements sont traités par Whop. Ton abonnement se gère depuis « Mon abonnement », dans ton espace.</p></div></main>
 
@@ -1349,7 +1349,8 @@
     // Starter over its daily song: the plans page explains why Pro fits better.
     const upgradeNotice=$('upgrade-notice');
     if(pathname==='/upgrade'&&state.upgradeNotice){
-      upgradeNotice.textContent=state.upgradeNotice+' Le Pro est plus adapté à ton usage : sans limite quotidienne.';
+      const notice=state.upgradeNotice;
+      upgradeNotice.textContent=typeof notice==='object'?notice.message:notice+' Le Pro est plus adapté à ton usage : sans limite quotidienne.';
       upgradeNotice.hidden=false;
     }else{upgradeNotice.hidden=true;if(pathname!=='/upgrade')state.upgradeNotice=null;}
     if(pricing&&!pricingWasOpen){
@@ -1410,6 +1411,7 @@
     }
   }
   function renderAuth(){const login=state.authMode==='login';
+    show('auth-phone-row',!login);$('auth-phone').required=!login;
     $('auth-title').textContent=login?'Content de te revoir !':'Bienvenue sur Tablurio';
     $('auth-subtitle').textContent=login?'Retrouve ton studio de transcription.':'Crée ton compte pour retrouver toutes tes partitions.';
     $('auth-submit').innerHTML=login?'Se connecter <span>↗</span>':'Créer mon compte <span>↗</span>';
@@ -1419,7 +1421,7 @@
     $('auth-password').minLength=8;
     const claimOnly=Boolean(state.user&&guestTrackId());
     $('auth-email').required=!claimOnly;
-    $('auth-password').required=!claimOnly;
+    $('auth-password').required=!claimOnly;if(claimOnly)$('auth-phone').required=false;
     if(claimOnly)$('auth-submit').textContent='Réessayer d’ouvrir mon aperçu';
     $('auth-password-hint').textContent=login?'Connecte-toi avec le mot de passe de ton compte.':'8 caractères minimum. Ton mot de passe est haché de façon sécurisée sur le serveur.';
     show('auth-error',false);
@@ -1621,7 +1623,7 @@
   function showPlan(plan='free'){
     const paid=plan&&plan!=='free';
     $('sidebar-credits').textContent=PLAN_NAMES[plan]||'Gratuit';
-    $('sidebar-plan-detail').textContent=plan==='starter'?'1 morceau complet par jour':paid?'Sans limite quotidienne':'Aperçus de 30 s';
+    $('sidebar-plan-detail').textContent=plan==='starter'?'1 morceau complet par jour':paid?'Sans limite quotidienne':'3 aperçus gratuits de 30 s';
     const action=$('sidebar-plan-action');
     action.textContent=paid?'Mon abonnement':'Voir les abonnements ↗';
     action.dataset.account=paid?'1':'';
@@ -1680,7 +1682,7 @@
       (quota.remaining>0?`<strong>1 morceau complet disponible aujourd’hui</strong>`:`<strong>Morceau du jour utilisé</strong>`)+
         `<span>Se recharge à ${accountTime(quota.resets_at)} (minuit, heure de Paris). Non cumulable.</span>`:
       paid?`<strong>Sans limite quotidienne</strong><span>${quota.used} morceau${quota.used>1?'x':''} complet${quota.used>1?'s':''} aujourd’hui · usage personnel raisonnable.</span>`:
-      `<strong>Aperçus de 30 secondes</strong><span>Choisis une offre pour générer les morceaux en entier.</span>`;
+      `<strong>3 aperçus gratuits de 30 secondes</strong><span>Choisis une offre pour générer les morceaux en entier.</span>`;
     box.innerHTML=`${thanks?`<p class="account-thanks">${paid?'Merci ! Ton abonnement est actif.':'Paiement reçu, on active ton abonnement… Cette page se met à jour toute seule.'}</p>`:''}
       <div class="account-card"><span class="account-label">Offre</span><strong class="account-plan">${safe(PLAN_NAMES[tier]||tier)}</strong><p class="account-status">${safe(statusText)}</p></div>
       <div class="account-card"><span class="account-label">Quota</span><p class="account-quota">${quotaText}</p></div>
@@ -1857,8 +1859,14 @@
       openResult(id);
     }catch(error){
       if(id&&!queued)await post('/api/track',{action:'cancel',id}).catch(()=>{});
+      if(error.status===402&&error.body?.reason==='free_limit'){showFreeLimit(error.message);return;}
       throw error;
     }
+  }
+  // Free previews used up: the offers page, with the reason.
+  function showFreeLimit(message){
+    state.upgradeNotice={message:`${message} Choisis une offre pour générer tes morceaux en entier, dès 10 € par mois.`};
+    go('/upgrade');
   }
   async function revealDemo(id){
     if(!state.user){go('/inscription');return;}
@@ -2358,6 +2366,7 @@
         await refresh();
         return;
       }catch(error){
+        if(error.status===402&&error.body?.reason==='free_limit'){rememberGuestTrack(null);await refresh();showFreeLimit(error.message);return;}
         if(error.status!==404)throw error;
         rememberGuestTrack(null);
         toast(error.message,true);
@@ -2376,6 +2385,7 @@
       if(password.length<8)throw new Error('Le mot de passe doit contenir au moins 8 caractères.');
       const pending=window.SongToSheetFlow?.pendingData?.();
       const payload={email,password};
+      if(state.authMode!=='login')payload.phone=$('auth-phone').value.trim();
       if(pending&&pending.completed===true)payload.pending_generation=pending;
       const result=await post('/api/auth/'+(state.authMode==='login'?'login':'signup'),payload);
       setCurrentUser(result.user);

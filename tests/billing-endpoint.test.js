@@ -67,3 +67,24 @@ test('a signed activation gives the account its plan, once',async()=>{
   await handler(request(body,headers),again);
   assert.strictEqual(again.payload.duplicate,true);
 });
+
+test('API key without member scope (403): the signed webhook still grants the plan',async()=>{
+  process.env.WHOP_WEBHOOK_SECRET=SECRET;
+  process.env.WHOP_API_KEY='apik_test_without_scope';
+  const realFetch=global.fetch;
+  global.fetch=async()=>new Response('{"error":{"type":"forbidden"}}',{status:403});
+  try{
+    const account={_id:new ObjectId(),email:'tanguy@example.fr'};
+    const db=fakeDb([account]);
+    // No renewal date in the payload either: a monthly Starter still counts as paid.
+    const body=JSON.stringify({type:'membership.activated',data:{id:'mem_2',status:'active',plan:{id:'plan_IDC4CtmdcNpi7'},
+      metadata:{user_id:String(account._id)}}});
+    const res=response();
+    await load(db)(request(body,signed(body)),res);
+    assert.strictEqual(res.code,200);
+    assert.strictEqual(account.billing.tier,'starter');
+    assert.strictEqual(account.billing.active,true);
+    const end=new Date(account.billing.period_end).getTime();
+    assert.ok(end>Date.now()+25*86400e3&&end<Date.now()+40*86400e3);
+  }finally{global.fetch=realFetch;delete process.env.WHOP_API_KEY;}
+});

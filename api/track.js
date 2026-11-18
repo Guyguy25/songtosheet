@@ -3,6 +3,7 @@ const {createHash,createHmac,randomBytes,randomUUID,timingSafeEqual}=require('no
 const {teaserMusicXml,teaserSource,TEASER_FILES}=require('../lib/teaser');
 const {coveredRecommendation}=require('../lib/score-coverage');
 const {previewEta}=require('../lib/track-eta');
+const {freePreviewsLeft,FREE_LIMIT_MESSAGE}=require('../lib/free-previews');
 const {compareGuitar,sourceKey,candidates}=require('../lib/guitar-comparison');
 const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
@@ -88,6 +89,10 @@ async function guestTeaser(db,req,res,guest){
 async function claimGuestTrack(db,res,user,guest,id){
   if(!isId(id))return json(res,404,{detail:'Aperçu introuvable ou expiré.'});
   const jobs=db.collection('track_jobs');
+  // A free account that used its previews cannot top up through previews made signed out.
+  if(guest&&await freePreviewsLeft(db,user)===0){
+    return json(res,402,{detail:FREE_LIMIT_MESSAGE,reason:'free_limit'});
+  }
   if(guest){
     const claimed=await jobs.updateOne({...trackFilter(id,guest),status:'completed',active:false},
       {$set:{user_id:user._id},$unset:{guest_expires_at:''}});
@@ -170,6 +175,9 @@ async function begin(db,req,res,user,body){
       $unset:{lease:'',lease_until:'',audio_url:''}});
   await jobs.updateMany({user_id:user._id,active:true,expires_at:{$lte:now}},
     {$set:{active:false,status:'failed',error_message:'Le délai de traitement a expiré.'},$unset:{audio_url:''}});
+  if(await freePreviewsLeft(db,user)===0){
+    return json(res,402,{detail:FREE_LIMIT_MESSAGE,reason:'free_limit'});
+  }
   if(user.guest){
     const existing=await jobs.findOne({user_id:user._id,active:true},{projection:{_id:1}});
     if(existing)return json(res,409,{detail:'Une transcription est déjà en cours.'});

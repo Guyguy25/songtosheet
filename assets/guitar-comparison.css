@@ -13,6 +13,9 @@
 .guitar-option-player { margin: 10px 0; border-color: #ede6f5; background: #f7f2ff; color: #392949; border-radius: 10px; }
 .guitar-option-player .sp-toolbar,.guitar-option-player .sp-controls,.guitar-option-player .sp-source-duration { display: none; }
 .guitar-option-player .sp-sheet { max-height: 370px; overflow: auto; }
+/* The score is engraved at the frame's width; reserve the vertical scrollbar's place first
+   so it never pushes the engraving sideways (that was the horizontal scrollbar). */
+.guitar-option-player .sp-sheet { overflow-x: hidden; scrollbar-gutter: stable; }
 .guitar-comparison-grid.is-focused .sp-sheet { max-height: min(75vh, 760px); }
 .guitar-comparison-back { margin-bottom: 12px; }
 .guitar-comparison-voice { flex: none; border: 1px solid #7e699e; border-radius: 8px; background: #3e2f54; color: #fff; padding: 7px 10px; min-height: 36px; font: inherit; font-weight: 700; cursor: pointer; }

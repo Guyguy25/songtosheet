@@ -86,6 +86,10 @@
 #result-page.is-score .guitar-option-header h3{font-size:15px}
 #result-page.is-score .guitar-option .btn{min-height:36px;border-radius:9px;font-size:13px}
 #result-page.is-score .guitar-option-player{margin:0;border:0;border-radius:0;background:#fff}
+#result-page.is-score .piano-option-hint{margin:10px 16px 0}
+#result-page.is-score .piano-option-criteria{margin:4px 16px 0}
+#result-page.is-score .piano-option-ai{margin:8px 16px 0}
+#result-page.is-score .piano-option-ai+.guitar-option-player{margin-top:10px;border-top:1px solid #efebf5}
 #result-page.is-score .guitar-option-player .sp-sheet{min-height:240px;max-height:max(300px,calc(100dvh - 285px))}
 #result-page.is-score .guitar-option-vote{width:calc(100% - 24px);margin:12px}
 #result-page.is-score .piano-comparison-grid .guitar-option-vote{margin-top:auto}

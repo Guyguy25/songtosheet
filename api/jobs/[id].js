@@ -18,7 +18,7 @@ module.exports=async(req,res)=>{
     const filter={_id:new ObjectId(id),user_id:user._id};
     let job=await collection.findOne(filter);
     if(!job&&req.method==='GET'){
-      const access=user.role==='admin'?{}:{preview_limit:PREVIEW_SECONDS};
+      const access=user.role==='admin'?{}:{$or:[{preview_limit:PREVIEW_SECONDS},{variant:{$exists:true}}]};
       const track=await db.collection('track_jobs').findOne({...filter,...access},{projection:JOB_FIELDS});
       if(track)return json(res,200,serialTrack(track));
     }

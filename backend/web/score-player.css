@@ -102,3 +102,5 @@
   .sp-instrument{font-size:11px}
   .sp-controls .sp-play{width:36px;height:36px;flex-basis:36px}
 }
+/* Paying account: the end of the preview is an invitation, not a lock */
+.sp-continuation.is-included .sp-lock-badge{background:#e9f8f0;color:#1f7a52}

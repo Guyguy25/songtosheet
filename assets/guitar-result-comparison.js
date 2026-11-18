@@ -468,13 +468,12 @@
           if (!event.target.closest('.sp-lock-cta') || data.selected === version.key) return;
           choose({quiet: true});
         }, true);
+        // The lock's button acts on this version: unlock it (free) or generate its whole song (paid).
         const unlockLabel = card.querySelector('.sp-lock-cta');
-        if (unlockLabel && data.versions.length > 1) {
-          unlockLabel.textContent = 'Débloquer cette version ';
-          const arrow = document.createElement('span');
-          arrow.setAttribute('aria-hidden', 'true');
-          arrow.textContent = '↗';
-          unlockLabel.append(arrow);
+        if (unlockLabel) {
+          unlockLabel.dataset.variant = version.key;
+          if (data.versions.length > 1) unlockLabel.dataset.freeLabel = 'Débloquer cette version';
+          unlockLabel.dataset.paidLabel = job.full_jobs?.[version.key] ? 'Voir le morceau entier' : 'Générer la suite';
         }
       }
       update(0);

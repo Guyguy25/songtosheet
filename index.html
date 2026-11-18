@@ -960,12 +960,18 @@
         <h1 id="upgrade-title" tabindex="-1">Choisis ton abonnement</h1>
         <p>Compare les offres pour débloquer tes partitions complètes.</p>
       </header>
+      <div class="upgrade-cycle" role="group" aria-label="Fréquence de facturation">
+        <button type="button" data-cycle="monthly" aria-pressed="true">Mensuel</button>
+        <button type="button" data-cycle="annual" aria-pressed="false">Annuel <span>−35 %</span></button>
+      </div>
+      <p id="upgrade-cycle-status" class="upgrade-sr" role="status"></p>
       <div class="upgrade-grid">
         <article class="upgrade-card" aria-labelledby="upgrade-essential">
-          <div class="upgrade-plan-heading"><h2 id="upgrade-essential">Starter</h2></div>
+          <div class="upgrade-plan-heading"><h2 id="upgrade-essential">Essentiel</h2></div>
           <p class="upgrade-description">Pour travailler un morceau à la fois.</p>
           <div class="upgrade-price"><strong data-plan-price="essential">10 €</strong><span>/ mois</span></div>
           <p class="upgrade-charge" data-plan-billed="essential">10 € facturés chaque mois</p>
+          <p class="upgrade-saving" data-plan-saved="essential" hidden></p>
           <p class="upgrade-limit">1 transcription tous les 7 jours</p>
           <ul class="upgrade-features">
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Transcriptions illimitées*</span></li>
@@ -973,13 +979,14 @@
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Accès sans renouvellement</span></li>
           </ul>
-          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_IDC4CtmdcNpi7">Choisir Starter</a>
+          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_IDC4CtmdcNpi7" data-plan-checkout="essential">Choisir Essentiel</a>
         </article>
         <article class="upgrade-card upgrade-featured" aria-labelledby="upgrade-unlimited">
-          <div class="upgrade-plan-heading"><h2 id="upgrade-unlimited">Pro</h2><span class="upgrade-recommended">Recommandé</span></div>
+          <div class="upgrade-plan-heading"><h2 id="upgrade-unlimited">Illimité</h2><span class="upgrade-recommended">Recommandé</span></div>
           <p class="upgrade-description">Pour jouer de nouveaux morceaux plus souvent.</p>
           <div class="upgrade-price"><strong data-plan-price="unlimited">19 €</strong><span>/ mois</span></div>
           <p class="upgrade-charge" data-plan-billed="unlimited">19 € facturés chaque mois</p>
+          <p class="upgrade-saving" data-plan-saved="unlimited" hidden></p>
           <p class="upgrade-limit">Sans quota hebdomadaire*</p>
           <ul class="upgrade-features">
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Transcriptions illimitées*</span></li>
@@ -987,10 +994,10 @@
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Accès sans renouvellement</span></li>
           </ul>
-          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_4jV8ToLJhBWKm">Choisir Pro</a>
+          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_4jV8ToLJhBWKm" data-plan-checkout="unlimited">Choisir Illimité</a>
         </article>
         <article class="upgrade-card" aria-labelledby="upgrade-lifetime">
-          <div class="upgrade-plan-heading"><h2 id="upgrade-lifetime">Lifetime</h2></div>
+          <div class="upgrade-plan-heading"><h2 id="upgrade-lifetime">À vie</h2></div>
           <p class="upgrade-description">Pour garder ton accès avec un seul paiement.</p>
           <div class="upgrade-price"><strong data-plan-price="lifetime">99 €</strong><span>une fois</span></div>
           <p class="upgrade-charge" data-plan-billed="lifetime">Paiement unique de 99 €</p>
@@ -1001,15 +1008,16 @@
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Accès sans renouvellement</span></li>
           </ul>
-          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_tXX5q8JhuWQui">Choisir Lifetime</a>
+          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_tXX5q8JhuWQui">Choisir l’accès à vie</a>
         </article>
       </div>
-      <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Le quota Starter est non cumulable.</p>
+      <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Le quota Essentiel est non cumulable.</p>
     </div>
   </section>
 <section class="sub-section pricing-faq"><div class="container"><div class="sub-title"><h2>Questions sur les abonnements</h2></div><div class="simple-faq">
-<details><summary>Que comprend l’offre Lifetime ? <span>+</span></summary><p>Lifetime donne accès aux fonctionnalités de l’offre à vie pour un paiement unique de 99 €.</p></details>
-<details><summary>Comment se passe le paiement ? <span>+</span></summary><p>Tu choisis une offre et tu règles sur Whop. Tu peux générer un aperçu gratuit de 30 secondes avant de choisir.</p></details>
+<details><summary>Pourquoi l'annuel est-il moins cher ? <span>+</span></summary><p>La réduction annuelle de 35 % ramène Essentiel à 78 €/an (6,50 €/mois) et Illimité à 148,20 €/an (12,35 €/mois), avec paiement de l'année entière.</p></details>
+<details><summary>Que comprend l'offre à vie ? <span>+</span></summary><p>L’offre À vie donne accès aux fonctionnalités de l’offre pour un paiement unique de 99 €, dans le cadre d’une utilisation raisonnable.</p></details>
+<details><summary>Comment se passe le paiement ? <span>+</span></summary><p>Le règlement se fait sur Whop. Tu peux générer un aperçu gratuit de 30 secondes avant de choisir une offre.</p></details>
 </div></div></section></main>
 <main id="faq-view" class="site-subpage hidden">
 <section class="sub-hero"><div class="container sub-hero-center"><span class="sub-kicker">CENTRE D'AIDE</span><h1>Une question ?<br><em>On t'explique tout.</em></h1><p>Tout ce qu'il faut savoir avant de transformer ta musique en partition.</p></div></section>
@@ -1280,6 +1288,7 @@
     const pricing=activePublic==='pricing-view';
     show('upgrade-back',pathname==='/upgrade'&&Boolean(state.user));
     if(pricing&&!pricingWasOpen){
+      syncPricing('monthly');
       $('upgrade-title').focus({preventScroll:true});
     }
     pricingWasOpen=pricing;
@@ -1468,7 +1477,36 @@
     else showAppPage(page);
   }
 
+  const subscriptionPrices={
+    essential:{monthly:10,yearly:78,checkout:{monthly:'https://whop.com/checkout/plan_IDC4CtmdcNpi7',annual:'https://whop.com/checkout/plan_tSyrCMbVC4Tc5'}},
+    unlimited:{monthly:19,yearly:148.20,checkout:{monthly:'https://whop.com/checkout/plan_4jV8ToLJhBWKm',annual:'https://whop.com/checkout/plan_oTt3xxj15qEY0'}}
+  };
   let pricingWasOpen=false;
+  const euroFormatter=new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'});
+
+  function euros(amount){
+    return euroFormatter.format(amount).replace(/,00(?=\s)/,'');
+  }
+  function syncPricing(cycle){
+    const annual=cycle==='annual';
+    $('pricing-view').querySelectorAll('[data-cycle]').forEach(button=>{
+      button.setAttribute('aria-pressed',String(button.dataset.cycle===cycle));
+    });
+    for(const [plan,{monthly,yearly,checkout}] of Object.entries(subscriptionPrices)){
+      const price=document.querySelector('[data-plan-price="'+plan+'"]');
+      const billed=document.querySelector('[data-plan-billed="'+plan+'"]');
+      const saved=document.querySelector('[data-plan-saved="'+plan+'"]');
+      const paymentLink=document.querySelector('[data-plan-checkout="'+plan+'"]');
+      paymentLink.href=checkout[cycle];
+      price.textContent=euros(annual?yearly/12:monthly);
+      billed.textContent=annual?euros(yearly)+' facturés chaque année':euros(monthly)+' facturés chaque mois';
+      saved.hidden=!annual;
+      saved.textContent=annual?euros(monthly*12-yearly)+' économisés par an':'';
+    }
+    $('upgrade-cycle-status').textContent=annual
+      ?'Facturation annuelle sélectionnée. Les prix affichés par mois sont des équivalents.'
+      :'Facturation mensuelle sélectionnée.';
+  }
 
   async function inspectLink(value){const info=await post('/api/links/inspect',{url:value});state.link=info.source_url;toast(info.message);return info;}
   function switchHero(mode){state.heroMode=mode;window.SongToSheetFlow?.sourceError('');window.SongToSheetFlow?.showHeroMetadata(null);const link=mode==='link';show('link-panel',link);show('upload-panel',!link);show('hero-generate',!link);$('tab-link').classList.toggle('active',link);$('tab-upload').classList.toggle('active',!link);$('tab-link').setAttribute('aria-selected',link);$('tab-upload').setAttribute('aria-selected',!link);}
@@ -1996,6 +2034,8 @@
       const demoGenerate=e.target.closest('[data-demo-generate]');
       if(demoGenerate){e.preventDefault();await revealDemo(demoGenerate.dataset.demoGenerate);return;}
       const job=e.target.closest('button[data-job]');if(job){openResult(job.dataset.job);return;}
+      const cycle=e.target.closest('#pricing-view [data-cycle]');
+      if(cycle)syncPricing(cycle.dataset.cycle);
     });
 
     window.addEventListener('popstate',renderRoute);

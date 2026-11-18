@@ -13,10 +13,10 @@
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=14" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=32" defer></script>
-  <link rel="stylesheet" href="/backend/web/score-player.css?v=15" />
-  <script src="/backend/web/score-player.js?v=22" defer></script>
+  <link rel="stylesheet" href="/backend/web/score-player.css?v=16" />
+  <script src="/backend/web/score-player.js?v=23" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=10" />
-  <script src="/assets/guitar-result-comparison.js?v=13" defer></script>
+  <script src="/assets/guitar-result-comparison.js?v=14" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
@@ -613,7 +613,7 @@
 </style>
 
 
-<link rel="stylesheet" href="/assets/upgrade.css?v=4">
+<link rel="stylesheet" href="/assets/upgrade.css?v=5">
 <style id="lp2-style">
 .lp2{--bg:#07050f;--line:rgba(170,150,255,.18);--v:#7549eb;--v2:#a78bfa;--lilac:#c9bcff;--grad:linear-gradient(90deg,#6d4cf5,#3b82f6);--mute:#b4aecb;--ink:#211c35;--ink-mute:#6b6780;--soft:#f6f3ff;--ok:#5eead4;color:#fff;line-height:1.55}
 .lp2 section{padding:104px 0;margin:0}
@@ -755,7 +755,7 @@
 .track-guest-lock-content{display:grid;justify-items:center;gap:14px;padding:24px;text-align:center}
 .track-guest-lock-content .btn{white-space:normal}
 </style>
-<link rel="stylesheet" href="/assets/score-view.css?v=4" />
+<link rel="stylesheet" href="/assets/score-view.css?v=5" />
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -960,6 +960,7 @@
         <h1 id="upgrade-title" tabindex="-1">Choisis ton abonnement</h1>
         <p>Compare les offres pour débloquer tes partitions complètes.</p>
       </header>
+      <p id="upgrade-notice" class="upgrade-notice" role="status" hidden></p>
       <div class="upgrade-cycle" role="group" aria-label="Fréquence de facturation">
         <button type="button" data-cycle="monthly" aria-pressed="true">Mensuel</button>
         <button type="button" data-cycle="annual" aria-pressed="false">Annuel <span>−35 %</span></button>
@@ -1208,7 +1209,7 @@
     const res = await fetch(endpoint,{credentials:'same-origin',...options});
     const contentType=res.headers.get('content-type')||'';
     const data=contentType.includes('application/json')?await res.json():{};
-    if(!res.ok){const detail=data.detail||'Une erreur est survenue';const e=new Error(typeof detail==='string'?detail:detail.message||'Une erreur est survenue');e.status=res.status;e.data=detail;throw e;}
+    if(!res.ok){const detail=data.detail||'Une erreur est survenue';const e=new Error(typeof detail==='string'?detail:detail.message||'Une erreur est survenue');e.status=res.status;e.data=detail;e.body=data;throw e;}
     return data;
   }
   const post=(path,object)=>api(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(object)});
@@ -1310,6 +1311,12 @@
     for(const id of ['landing','features-view','results-view','pricing-view','faq-view'])show(id,activePublic===id);
     const pricing=activePublic==='pricing-view';
     show('upgrade-back',pathname==='/upgrade'&&Boolean(state.user));
+    // Starter over its daily song: the plans page explains why Pro fits better.
+    const upgradeNotice=$('upgrade-notice');
+    if(pathname==='/upgrade'&&state.upgradeNotice){
+      upgradeNotice.textContent=state.upgradeNotice+' Le Pro est plus adapté à ton usage : sans limite quotidienne.';
+      upgradeNotice.hidden=false;
+    }else{upgradeNotice.hidden=true;if(pathname!=='/upgrade')state.upgradeNotice=null;}
     if(pricing&&!pricingWasOpen){
       syncPricing('monthly');
       $('upgrade-title').focus({preventScroll:true});
@@ -1635,9 +1642,40 @@
     dialog.scrollTop=0;
     if(dialog.open)$('unlock-dialog-title').focus({preventScroll:true});
   }
+  // "Générer la suite": a paying account launches the whole song of a version itself.
+  function fullVariantFor(trigger){
+    const j=state.currentTrack;
+    if(trigger.dataset.variant)return trigger.dataset.variant;
+    if(j?.piano_versions?.length)return j.piano_choice||j.piano_versions.find(v=>v.recommended)?.key||j.piano_versions[0].key;
+    if(j?.guitar_compare)return 'original-v1';
+    return 'default';
+  }
+  async function generateFull(jobId,variant){
+    try{
+      const result=await post('/api/track',{action:'full',id:jobId,variant});
+      toast(result.existing?'Voici ton morceau entier.':'C’est parti : ton morceau entier se génère.');
+      openResult(result.id);
+      return true;
+    }catch(e){
+      if(e.status===402&&e.body?.reason==='daily_limit'){state.upgradeNotice=e.message;go('/upgrade');return true;}
+      if(e.status===402)return false;   // no plan after all: show the offers
+      if(e.status===401){go('/connexion');return true;}
+      toast(e.message||'La génération n’a pas pu démarrer.',true);
+      return true;
+    }
+  }
   async function openUnlock(trigger){
     const dialog=$('unlock-dialog');
     if(dialog.open)return;
+    const paid=(state.user?.plan||'free')!=='free';
+    const previewJob=trigger.closest('#result-page')&&state.currentTrack?.preview_limit&&state.currentTrack.id===state.resultId;
+    if(paid&&previewJob){
+      if(trigger.getAttribute('aria-busy')==='true')return;
+      trigger.setAttribute('aria-busy','true');
+      const handled=await generateFull(state.currentTrack.id,fullVariantFor(trigger));
+      trigger.removeAttribute('aria-busy');
+      if(handled)return;
+    }
     if(document.fullscreenElement)await document.exitFullscreen().catch(()=>{});
     if(dialog.open||!trigger.isConnected)return;
     unlockTrigger=trigger;
@@ -1942,6 +1980,7 @@
       }
       if(guest&&j.status==='failed')rememberGuestTrack(null);
       if(j.track){
+        state.currentTrack=j;
         const links={pdf:'Télécharger le PDF',musicxml:'Partition MusicXML',tab:'Tablature MusicXML',mid:'MIDI'};
         const completed=j.status==='completed';
         const waiting=['queued','processing'].includes(j.status);
@@ -1983,7 +2022,7 @@
           $('track-result-summary').dataset.job=id;
           trackSummaryMarkup=trackProgressMarkup=undefined;
         }
-        const access=j.preview_limit?'Aperçu gratuit · 30 s':'Accès admin';
+        const access=j.preview_limit?'Aperçu gratuit · 30 s':j.variant?'Morceau entier':'Accès admin';
         const meta=`${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · ${access}`;
         const notice=ready?`${fallback}${soloFallback}${j.status==='failed'&&j.error_message?' '+j.error_message:''}${!j.preview_limit&&!waiting&&j.pdf_error?' Le PDF est indisponible pour ce relevé.':''}`.trim():'';
         const hints={pdf:'À lire et imprimer',musicxml:'Pour un éditeur de partitions',tab:'Pour un éditeur de partitions',mid:'Pour un logiciel de musique'};
@@ -1996,6 +2035,7 @@
           <button type="button" class="score-bar-btn" data-score-back aria-label="Retour à ma bibliothèque" title="Retour à ma bibliothèque">←</button>
           <div class="score-bar-title"><h1 title="${safe(j.title)}">${safe(j.title)}</h1><p>${meta}</p></div>
           <div id="score-bar-controls" class="score-bar-controls"></div>
+          ${j.parent_id?`<button type="button" class="btn btn-outline score-compare" data-open-job="${safe(j.parent_id)}">⇄ Comparer les versions</button>`:''}
           <details class="score-download"><summary class="btn btn-primary"><span aria-hidden="true">↓</span> Télécharger</summary>
             <div class="score-download-menu"><div id="score-download-job">${versionChoice&&!j.preview_limit&&menu?'<h3>Relevé d’origine</h3>':''}${menu}</div><div id="score-download-version"></div></div></details>
           ${notice?`<p class="score-bar-notice" role="status">${safe(notice)}</p>`:''}`
@@ -2197,6 +2237,8 @@
       const checkout=e.target.closest('[data-plan-checkout]');
       if(checkout&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){e.preventDefault();await checkoutClick(checkout);return;}
       if(e.target.closest('#sidebar-plan-action[data-account="1"]')){e.preventDefault();showAppPage('account');return;}
+      const openJob=e.target.closest('[data-open-job]');
+      if(openJob){e.preventDefault();openResult(openJob.dataset.openJob);return;}
       const unlock=e.target.closest('[data-unlock]');
       if(unlock&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){
         e.preventDefault();

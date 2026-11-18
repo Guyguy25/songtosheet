@@ -613,6 +613,25 @@
         get('.sp-continuation-label p').textContent=(longer
           ?`Ton aperçu couvre ${time(seconds)} sur ${time(Math.round(sourceDuration))}.`:'La suite du morceau est masquée.')+
           ' Découvre les offres pour accéder au morceau complet.';
+        // A paying account is not locked out: the whole song is one click away, launched by them.
+        const paid=(window.SongToSheetCurrentUser?.plan||'free')!=='free';
+        continuation.classList.toggle('is-included',paid);
+        const badge=get('.sp-lock-badge');
+        badge.replaceChildren();
+        const icon=document.createElement('span');
+        icon.setAttribute('aria-hidden','true');
+        icon.textContent=paid?'✦':'🔒';
+        badge.append(icon,paid?' Inclus dans ton abonnement':' Suite masquée');
+        if(paid){
+          get('.sp-continuation-label strong').textContent='Le morceau entier est inclus dans ton abonnement';
+          get('.sp-continuation-label p').textContent='Génère la suite quand tu veux : elle est prête en général en moins d’une minute.';
+        }
+        const cta=get('.sp-lock-cta');
+        cta.textContent=(paid?cta.dataset.paidLabel||'Générer la suite':cta.dataset.freeLabel||'Débloquer la suite du morceau')+' ';
+        const arrow=document.createElement('span');
+        arrow.setAttribute('aria-hidden','true');
+        arrow.textContent='↗';
+        cta.append(arrow);
       }
       if(sheet.hidden||signal.aborted)return;
       const current=++loadId,url=kind?.value==='tab'?tabUrl:scoreUrl;

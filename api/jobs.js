@@ -14,7 +14,7 @@ module.exports=async(req,res)=>{
     if(req.method==='GET'){
       const query={user_id:user._id};
       const demos=db.collection('generations').find(query).sort({created_at:-1}).limit(100).toArray();
-      const access=user.role==='admin'?{}:{preview_limit:PREVIEW_SECONDS};
+      const access=user.role==='admin'?{}:{$or:[{preview_limit:PREVIEW_SECONDS},{variant:{$exists:true}}]};
       const tracks=db.collection('track_jobs').find({...query,...access,status:{$ne:'uploading'}},
         {projection:JOB_FIELDS}).sort({created_at:-1}).limit(100).toArray();
       const [demoJobs,trackJobs]=await Promise.all([demos,tracks]);

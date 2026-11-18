@@ -223,6 +223,53 @@ def fetch_audio(call, job, directory):
     return audio, section
 
 
+def generate_variant(audio, data, result, job, report, engines):
+    """The whole song for one paid version ("Générer la suite"): only what that version needs
+    is computed. Writes score/tab MusicXML and MIDI into result; returns (result, meta)."""
+    import shutil
+
+    variant = job.get("variant")
+    result.mkdir(parents=True, exist_ok=True)
+
+    def keep(score, midi):
+        for name, source in (("score.musicxml", score), ("tab.musicxml", score), ("score.mid", midi), ("tab.mid", midi)):
+            shutil.copyfile(source, result / name)
+
+    if job["instrument"] == "piano":
+        from piano_comparison import generate
+
+        (result.parent / "piano").mkdir(parents=True, exist_ok=True)
+        duration, variants, _ = generate(audio, result.parent / "piano", job["title"], report, engines.piano,
+                                         solo_engine=engines.solo_piano, judge=False)
+        if variant not in variants:
+            raise ValueError("Cette version n’est pas disponible pour ce morceau. Choisis-en une autre.")
+        score, midi, count = variants[variant]
+        keep(score, midi)
+        for name in ("tab.musicxml", "tab.mid"):
+            (result / name).unlink()
+        return result, {"duration": duration, "notes": count}
+    if variant in ("held-v1", "rhythm-v1"):
+        from guitar_accompaniment import accompany
+
+        folder = result.parent / "chords"
+        meta = accompany(audio, folder, job["title"], report, engines.piano)
+        held = variant == "held-v1"
+        keep(folder / ("tab.musicxml" if held else "rhythm.musicxml"), folder / ("score.mid" if held else "rhythm.mid"))
+        return result, meta
+    if variant in ("original-v1", "solo-v2"):
+        solo = variant == "solo-v2"
+        transcribed = transcribe(audio, "guitare", data, isolated=False, title=job["title"], progress=report,
+                                 guitar_engine=engines.guitar, guitar_solo=solo, solo_engine=engines.solo,
+                                 has_voice=job.get("source_content") != "instrumental", compare_solo=solo)
+        meta = json.loads((transcribed / "notes.json").read_text(encoding="utf-8"))
+        folder = transcribed / "solo" if solo else transcribed
+        if not (folder / "tab.musicxml").is_file():
+            raise ValueError("Cette version n’est pas disponible pour ce morceau. Choisis-en une autre.")
+        keep(folder / "tab.musicxml", folder / "tab.mid")
+        return result, meta
+    raise ValueError("Cette version n’est pas disponible pour ce morceau. Choisis-en une autre.")
+
+
 def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_engine=None, solo_piano_engine=None,
                 fetched=None):
     """fetched: optional Future of fetch_audio, started earlier (e.g. during the model warm-up)."""
@@ -260,6 +307,30 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
                 source_duration = limit if excerpt else max(section[1], limit)
             elif job.get("preview_limit"):
                 audio, source_duration = prepare_preview(audio, directory, job["preview_limit"], job.get("excerpt"))
+
+            if job.get("variant") not in (None, "default") and not job.get("preview_limit"):
+                # "Générer la suite": the whole song for the version the person paid for.
+                folder, meta = generate_variant(audio, data, directory / "full", job, report,
+                                                Engines(guitar_engine, solo_engine, piano_engine, solo_piano_engine))
+                exports = read_exports(folder, EXPORTS)
+                count = meta["notes"] if isinstance(meta["notes"], int) else len(meta["notes"])
+                call("preview", **identity, duration=meta["duration"], preview_duration=meta["duration"],
+                     note_count=count, exports=exports, engine=meta.get("engine"))
+                direct_published = True
+                payload = {"ok": True, "preview": True, "exports": {}}
+                pdf = directory / "pdf.pdf"
+                try:
+                    capo_value = job.get("capo") if isinstance(job.get("capo"), int) else 0
+                    render_pdf(folder, job["title"], job["instrument"], job.get("format", "partition"), pdf, capo=capo_value)
+                    encoded = base64.b64encode(pdf.read_bytes()).decode("ascii")
+                    if len(encoded) > 4_000_000:
+                        raise ValueError("PDF trop volumineux.")
+                    payload["exports"]["pdf"] = encoded
+                except Exception as error:
+                    print(f"{job['id']}: pdf : {error}", flush=True)
+                    payload["pdf_error"] = True
+                print(f"{job['id']}: morceau complet ({job['variant']}) en {time.monotonic() - job_started:.1f}s", flush=True)
+                return send_finish(call, identity, payload, job)
 
             if job.get("piano_compare"):
                 from piano_comparison import EXPORTS as PIANO_EXPORTS, generate
@@ -384,6 +455,10 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
             message = str(error)
         payload = ({"ok": True, "preview": True, "exports": {}, "pdf_error": not job.get("preview_limit")}
                    if direct_published else {"ok": False, "error": message})
+    send_finish(call, identity, payload, job)
+
+
+def send_finish(call, identity, payload, job):
     for attempt in range(3):
         try:
             call("finish", **identity, **payload)

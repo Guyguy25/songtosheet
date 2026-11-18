@@ -114,7 +114,7 @@ def write_version(notes, directory, key, title, grid, quantized=False):
 
 
 def generate(audio, directory, title, report, piano_engine, *, vocals=None, solo_engine=None,
-             wait_vocals=None):
+             wait_vocals=None, judge=True):
     """Return (duration, {key: (xml, midi, note_count)}, recommendation or None)."""
     duration = float(run(["ffprobe", "-v", "error", "-show_entries", "format=duration",
                           "-of", "csv=p=0", str(audio)], timeout=15))
@@ -194,7 +194,7 @@ def generate(audio, directory, title, report, piano_engine, *, vocals=None, solo
     if wait_vocals is not None:
         timed_call("attente voix (Demucs)", wait_vocals)()
     recommendation = None
-    if len(files) >= 2:
+    if judge and len(files) >= 2:
         report("judge")
         try:
             from evaluate_piano_options import recommend

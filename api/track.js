@@ -8,6 +8,7 @@ const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
 const {scheduleWake}=require('../lib/engine-wake');
 const {engineStats}=require('../lib/engine-stats');
+const {createFullSong}=require('../lib/full-song');
 const {PIANO_CRITERIA,CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
@@ -254,7 +255,7 @@ async function worker(db,res,body){
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
       excerpt:job.excerpt,isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
       guitar_compare:job.guitar_compare===true,guitar_judge:job.guitar_judge===true,guitar_vocals:job.guitar_vocals===true,
-      piano_vocals:job.piano_vocals===true,
+      piano_vocals:job.piano_vocals===true,...(job.variant?{variant:job.variant}:{}),
       piano_compare:process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_compare===true&&
         job.instrument==='piano'&&job.preview_limit===PREVIEW_SECONDS,
       review_audio:!job.isolated&&!job.preview_limit,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
@@ -409,7 +410,8 @@ async function worker(db,res,body){
 async function download(db,req,res,user){
   const {id,download:format}=req.query;
   if(!isId(id)||!Object.hasOwn(FORMATS,format))return json(res,404,{detail:'Export introuvable.'});
-  const access=user.role==='admin'?{}:{preview_limit:PREVIEW_SECONDS};
+  // Previews, and whole songs generated from a paid version ("Générer la suite").
+  const access=user.role==='admin'?{}:{$and:[{$or:[{preview_limit:PREVIEW_SECONDS},{variant:{$exists:true}}]}]};
   const job=await db.collection('track_jobs').findOne({...trackFilter(id,user),...access,
     $or:[{status:{$in:['processing','completed']}},{status:'failed',downloads:{$all:['mid','musicxml']}}]},
     {projection:{[`exports.${format}`]:1,preview_limit:1,solo_engine:1}});
@@ -473,6 +475,10 @@ module.exports=async(req,res)=>{
     const uploadAction=req.method==='POST'&&['begin','chunk','queue','cancel'].includes(body.action);
     const owner=user||(uploadAction&&guestSession(req,res,body.action==='begin'));
     if(!owner)return json(res,401,{detail:'Connexion requise.'});
+    if(req.method==='POST'&&body.action==='full'){
+      const result=await createFullSong(await database(),user,{id:body.id,variant:body.variant},new Date(),scheduleWake);
+      return json(res,result.status,result.body);
+    }
     if((req.method==='GET'&&req.query.comparison==='1')||(req.method==='POST'&&body.action==='guitar_vote')){
       return await compareGuitar(await database(),req,res,user);
     }

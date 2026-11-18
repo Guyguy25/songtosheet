@@ -13,7 +13,8 @@ def test_po_token_provider_and_proxy(monkeypatch):
     monkeypatch.setenv("TRACK_YTDLP_PROXY", "http://user:pass@proxy.example:8000")
     options = youtube_options()
     assert "--no-plugin-dirs" not in options  # the PO token provider is a yt-dlp plugin
-    assert options[options.index("--extractor-args") + 1] == "youtubepot-bgutilscript:server_home=/opt/bgutil/server"
+    extractor_args = [options[i + 1] for i, option in enumerate(options) if option == "--extractor-args"]
+    assert "youtubepot-bgutilscript:server_home=/opt/bgutil/server" in extractor_args
     assert options[options.index("--proxy") + 1] == "http://user:pass@proxy.example:8000"
 
 

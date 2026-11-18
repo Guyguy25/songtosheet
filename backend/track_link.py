@@ -1,5 +1,6 @@
 """Download a public HTTPS audio file for a transcription job."""
 import ipaddress
+from pathlib import Path
 import os
 import re
 import socket
@@ -153,6 +154,8 @@ def youtube_options():
     pot_home = os.getenv("TRACK_YTDLP_POT_HOME")
     # Cloud: keep YouTube's player code between downloads of the same container.
     options += ["--cache-dir", "/tmp/yt-dlp-cache"] if pot_home else ["--no-cache-dir"]
+    # Audio only: the HLS manifests YouTube also lists cost 1.3-2.5 s per download (measured).
+    options += ["--extractor-args", "youtube:skip=hls"]
     if pot_home:
         options += ["--extractor-args", f"youtubepot-bgutilscript:server_home={pot_home}"]
     else:
@@ -175,38 +178,90 @@ def youtube_options():
     return options
 
 
+def race(commands, outputs, timeout, env=None):
+    """Run the commands at the same time; the first to exit 0 with its output file (>= 1 KB)
+    wins and the others are stopped.  Returns (winner index or None, CompletedProcess list)."""
+    import tempfile
+    import time
+
+    logs = [tempfile.TemporaryFile() for _ in commands]
+    processes = []
+    try:
+        for command, log in zip(commands, logs):
+            processes.append(subprocess.Popen(command, stdout=log, stderr=subprocess.STDOUT, env=env))
+        deadline = time.monotonic() + timeout
+        winner = None
+        while winner is None and time.monotonic() < deadline:
+            running = False
+            for index, process in enumerate(processes):
+                code = process.poll()
+                if code is None:
+                    running = True
+                elif code == 0 and Path(outputs[index]).is_file() and Path(outputs[index]).stat().st_size >= 1024:
+                    winner = index
+                    break
+            if winner is None and not running:
+                break
+            time.sleep(.1)
+    finally:
+        for process in processes:
+            if process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
+    results = []
+    for command, process, log in zip(commands, processes, logs):
+        log.seek(0)
+        results.append(subprocess.CompletedProcess(command, process.returncode, b"", log.read()))
+        log.close()
+    return winner, results
+
+
 def download_youtube_section(video_id, directory, start, end):
     """Fetch only [start, end] seconds of a video's audio (much faster for previews).
 
+    With a residential proxy, two attempts race through two different exit IPs: some IPs
+    crawl (13 KB/s measured, 34 s for a 30 s excerpt) or fail, and the first good one wins.
     Returns (audio, full duration in seconds) or None when it fails, so the caller can
     fall back to downloading the whole audio."""
     if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):
         raise TrackLinkError("Colle un lien vers une vidéo ou un Short YouTube.")
-    info = directory / "youtube-duration.txt"
-    command = [
-        sys.executable, "-m", "yt_dlp", *youtube_options(),
-        "--no-playlist", "--js-runtimes", "node", "--socket-timeout", "12",
-        "--extractor-retries", "2", "--retries", "2", "--fragment-retries", "2",
-        "--match-filter", "!is_live", "--no-simulate", "--print-to-file", "%(duration)s", str(info),
-        "--format", "bestaudio[ext=m4a]/bestaudio/best[acodec!=none]",
-        "--download-sections", f"*{max(0.0, start):.2f}-{end:.2f}",
-        "--extract-audio", "--audio-format", "m4a",
-        "--no-progress", "-o", str(directory / "section.%(ext)s"),
-        "--", "https://www.youtube.com/watch?v=" + video_id,
-    ]
+    attempts = 2 if os.getenv("TRACK_YTDLP_PROXY") else 1
+    commands, outputs, infos = [], [], []
+    for attempt in range(attempts):
+        folder = directory / f"section-{attempt}"
+        folder.mkdir(parents=True, exist_ok=True)
+        infos.append(folder / "youtube-duration.txt")
+        outputs.append(folder / "section.m4a")
+        commands.append([
+            sys.executable, "-m", "yt_dlp", *youtube_options(),  # a new proxy session (exit IP) each
+            "--no-playlist", "--js-runtimes", "node", "--socket-timeout", "12",
+            "--extractor-retries", "2", "--retries", "2", "--fragment-retries", "2",
+            "--match-filter", "!is_live", "--no-simulate", "--print-to-file", "%(duration)s", str(infos[-1]),
+            "--format", "bestaudio[ext=m4a]/bestaudio/best[acodec!=none]",
+            "--download-sections", f"*{max(0.0, start):.2f}-{end:.2f}",
+            "--extract-audio", "--audio-format", "m4a",
+            "--no-progress", "-o", str(folder / "section.%(ext)s"),
+            "--", "https://www.youtube.com/watch?v=" + video_id,
+        ])
     environment = {key: value for key, value in os.environ.items() if key != "TRACK_WORKER_TOKEN"}
     try:
-        result = subprocess.run(command, capture_output=True, timeout=90, check=False, env=environment)
-    except (OSError, subprocess.TimeoutExpired):
+        winner, results = race(commands, outputs, timeout=90, env=environment)
+    except OSError:
         return None
-    audio = directory / "section.m4a"
+    if winner is None or outputs[winner].stat().st_size > MAX_BYTES:
+        for result in results:
+            log_failure("extrait", result)
+        return None
     try:
-        duration = float(info.read_text(encoding="utf-8").split()[0])
+        duration = float(infos[winner].read_text(encoding="utf-8").split()[0])
     except (OSError, ValueError, IndexError):
         return None
-    if result.returncode or not audio.is_file() or not 1024 <= audio.stat().st_size <= MAX_BYTES:
-        log_failure("extrait", result)
-        return None
+    audio = directory / "section.m4a"
+    outputs[winner].replace(audio)
     return audio, duration
 
 

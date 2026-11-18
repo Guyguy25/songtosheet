@@ -2430,7 +2430,12 @@
       }
       const demoGenerate=e.target.closest('[data-demo-generate]');
       if(demoGenerate){e.preventDefault();await revealDemo(demoGenerate.dataset.demoGenerate);return;}
-      const job=e.target.closest('[data-job]');if(job){if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();openResult(job.dataset.job);return;}
+      const job=e.target.closest('a[data-job]');if(job){
+        if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+        e.preventDefault();
+        // The song already on screen: nothing to reload.
+        if(state.activePage==='result'&&state.resultId===job.dataset.job&&isAppPath(location.pathname)){document.querySelector('.sidebar').classList.remove('mobile-open');return;}
+        openResult(job.dataset.job);return;}
       const cycle=e.target.closest('#pricing-view [data-cycle]');
       if(cycle)syncPricing(cycle.dataset.cycle);
     });

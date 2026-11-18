@@ -1,6 +1,7 @@
 'use strict';
 const {createHash,createHmac,randomBytes,randomUUID,timingSafeEqual}=require('node:crypto');
 const {teaserMusicXml,teaserSource,TEASER_FILES}=require('../lib/teaser');
+const {coveredRecommendation}=require('../lib/score-coverage');
 const {compareGuitar,sourceKey,candidates}=require('../lib/guitar-comparison');
 const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
@@ -371,7 +372,11 @@ async function worker(db,res,body){
         suggestion.scores[key]>=0&&suggestion.scores[key]<=100).map(({key})=>[key,suggestion.scores[key]]));
       if(Object.hasOwn(scores,suggestion.recommended)&&Object.keys(scores).length>=2&&
         scores[suggestion.recommended]===Math.max(...Object.values(scores))){
-        comparisonData.auto_recommendation={version:1,recommended:suggestion.recommended,scores};
+        // The judge can favour a version that goes silent after a few bars: skip those.
+        const files=Object.fromEntries(valid.filter(({key,score})=>Object.hasOwn(scores,key)&&exports[score])
+          .map(({key,score})=>[key,Buffer.from(exports[score],'base64').toString('utf8')]));
+        const recommended=coveredRecommendation(scores,files);
+        if(recommended)comparisonData.auto_recommendation={version:1,recommended,scores};
       }
     }
     const preview=job.preview_limit?{preview_duration:Math.min(previewDuration,job.preview_limit)}:{};

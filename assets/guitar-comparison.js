@@ -139,7 +139,7 @@
       if (file.size > 24 * 1024 * 1024) throw new Error();
       const {version, title, tracks} = JSON.parse(await file.text());
       if (version !== 1 || typeof title !== 'string' || !title || !Array.isArray(tracks) || tracks.length < 2 || tracks.length > 4) throw new Error();
-      const names = tracks.map((track, index) => track.name ?? ['SongToSheet','MuScriptor'][index]);
+      const names = tracks.map((track, index) => track.name ?? ['Tablurio','MuScriptor'][index]);
       if (names.some(name => typeof name !== 'string' || !name.trim() || name.length > 80)) throw new Error();
       const pdfs = tracks.map(track => bytes(track.pdf));
       if (pdfs.some(pdf => new TextDecoder().decode(pdf.subarray(0, 5)) !== '%PDF-')) throw new Error();
@@ -155,7 +155,7 @@
       player.hidden = false;
       status.textContent = `${tracks.length} versions prêtes à écouter.`;
     } catch {
-      status.textContent = 'Ce fichier de comparaison est illisible. Sélectionne le fichier JSON fourni par SongToSheet.';
+      status.textContent = 'Ce fichier de comparaison est illisible. Sélectionne le fichier JSON fourni par Tablurio.';
     } finally {
       input.disabled = false;
       input.value = '';

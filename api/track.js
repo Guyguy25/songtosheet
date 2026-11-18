@@ -438,7 +438,7 @@ async function reviewAudio(db,req,res,user){
   res.setHeader('Cache-Control','private, no-store');
   res.setHeader('Accept-Ranges','bytes');
   res.setHeader('Content-Type','audio/mpeg');
-  res.setHeader('Content-Disposition',`${save==='1'?'attachment':'inline'}; filename="songtosheet-${kind}.mp3"`);
+  res.setHeader('Content-Disposition',`${save==='1'?'attachment':'inline'}; filename="tablurio-${kind}.mp3"`);
   if(!req.headers.range)return res.status(200).send(bytes);
   const range=/^bytes=(\d*)-(\d*)$/.exec(req.headers.range);
   if(range&&(range[1]||range[2])){

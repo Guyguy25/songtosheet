@@ -36,7 +36,7 @@
       form.innerHTML=`<fieldset><legend></legend><div class="wait-survey-options"></div></fieldset>
         <div class="wait-survey-actions"><button class="btn btn-primary" type="submit" disabled>Envoyer</button>
         <button class="wait-survey-skip" type="button">Passer la question</button></div>
-        <p class="wait-survey-note">Facultatif. Tes réponses sont associées à ton compte pour nous aider à améliorer SongToSheet.</p>
+        <p class="wait-survey-note">Facultatif. Tes réponses sont associées à ton compte pour nous aider à améliorer Tablurio.</p>
         <p class="wait-survey-error" role="status"></p>`;
       form.querySelector('legend').textContent=question.text;
       const options=form.querySelector('.wait-survey-options');

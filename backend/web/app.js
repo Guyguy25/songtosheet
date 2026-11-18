@@ -30,10 +30,10 @@
     show('workspace',app);show('auth-view',authPage);show('legal-view',pathname==='/legal');
     if(app){if(!state.user){go('/inscription',true);return;}showAppPage(state.activePage);}
     if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth();}
-    document.title=landing?'SongToSheet.ai — De ta musique à ta partition.':app?'Mon studio — SongToSheet':authPage?'Mon compte — SongToSheet':'Informations — SongToSheet';
+    document.title=landing?'Tablurio.com — De ta musique à ta partition.':app?'Mon studio — Tablurio':authPage?'Mon compte — Tablurio':'Informations — Tablurio';
   }
   function renderAuth(){const login=state.authMode==='login';
-    $('auth-title').textContent=login?'Content de te revoir !':'Bienvenue sur SongToSheet';
+    $('auth-title').textContent=login?'Content de te revoir !':'Bienvenue sur Tablurio';
     $('auth-subtitle').textContent=login?'Retrouve ton studio de transcription.':'Crée ton compte pour retrouver toutes tes partitions.';
     $('auth-submit').innerHTML=login?'Se connecter <span>↗</span>':'Créer mon compte <span>↗</span>';
     $('auth-alternate').innerHTML=login?'Pas encore de compte ? <a href="/inscription" data-nav="signup">Créer un compte</a>':'Déjà un compte ? <a href="/connexion" data-nav="login">Se connecter</a>';

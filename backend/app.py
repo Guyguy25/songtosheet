@@ -52,7 +52,7 @@ PACKS={
     'standard':{'name':'Musicien','credits':30,'cents':1900,'badge':'Le plus populaire'},
     'studio':{'name':'Studio','credits':80,'cents':3900,'badge':'Meilleur prix / crédit'},
 }
-app=FastAPI(title='SongToSheet',version='0.1.0',docs_url='/api/docs' if DEV else None)
+app=FastAPI(title='Tablurio',version='0.1.0',docs_url='/api/docs' if DEV else None)
 app.mount('/static',StaticFiles(directory=str(ROOT/'web')),name='static')
 
 
@@ -425,7 +425,7 @@ def checkout(request:Request,body:CheckoutInput):
             'customer_email':u['email'],
             'line_items[0][price_data][currency]':'eur',
             'line_items[0][price_data][unit_amount]':str(pack['cents']),
-            'line_items[0][price_data][product_data][name]':f"SongToSheet · {pack['credits']} crédits",
+            'line_items[0][price_data][product_data][name]':f"Tablurio · {pack['credits']} crédits",
             'line_items[0][quantity]':'1',
             'metadata[user_id]':u['id'],'metadata[pack_id]':body.pack_id,
           })

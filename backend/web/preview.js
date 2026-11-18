@@ -3,7 +3,7 @@
 (()=>{
   'use strict';
   const originalFetch=window.fetch.bind(window);
-  const demoUser={id:'preview-account',email:'demo@songtosheet.ai',credits:0};
+  const demoUser={id:'preview-account',email:'demo@example.com',credits:0};
   const timestamp=Math.floor(Date.now()/1000)-3600;
   const notes=[69,72,76,74].map((pitch,i)=>({pitch,start:i*.5,end:i*.5+.45}));
   const demoJob={id:'preview-melody',title:'Mélodie de démonstration',instrument:'piano',duration:2.6,reserved_credits:0,status:'completed',note_count:4,bpm:120,created_at:timestamp,error_message:null,notes};

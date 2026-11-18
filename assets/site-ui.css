@@ -80,3 +80,7 @@
 .guest-teaser-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px;margin:6px 0 0;padding:0;list-style:none;color:#7a6f92;font-size:12.5px}
 .guest-teaser-trust li::before{content:"✓";margin-right:5px;color:#1fa368;font-weight:800}
 @media (max-width:640px){.guest-teaser-veil{margin-top:110px;padding-top:92px}.guest-teaser-card{padding:22px 18px 18px}}
+
+/* Sign-up phone field: lays out like the other fields of the form. */
+.auth-phone-row{display:contents}
+.auth-phone-row.hidden{display:none!important}

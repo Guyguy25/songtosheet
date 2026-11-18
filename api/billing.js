@@ -53,8 +53,10 @@ async function webhook(req,res){
   if(!id&&!object)return json(res,200,{ok:true,ignored:true});
   let membership=object;
   if(id&&process.env.WHOP_API_KEY){
-    // The API's copy is authoritative (events can arrive out of order).
-    membership=await store.fetchMembership(id);
+    // The API's copy is authoritative (events can arrive out of order); if the API refuses
+    // (e.g. a key without the member scope), the signed event itself is used.
+    try{membership=await store.fetchMembership(id);}
+    catch(error){if(!object)throw error;console.error('billing webhook: using the signed event',error.message);}
   }
   // Metadata set at checkout (the account id) is kept even if the API copy lacks it.
   const granted=entitlement({...membership,metadata:{...(object?.metadata||{}),...(membership?.metadata||{})}});

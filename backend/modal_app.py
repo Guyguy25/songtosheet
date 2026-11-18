@@ -338,7 +338,7 @@ def benchmark_speed(url: str):
     print(measure_speed.remote(url))
 
 
-@app.function(image=engine, cpu=8.0, memory=4096, timeout=600, secrets=[proxy_secret])
+@app.function(image=engine, gpu=["L4", "A10"], cpu=8.0, memory=16384, timeout=600, secrets=[proxy_secret])
 def measure_download(url: str):
     """Timestamped yt-dlp verbose output: where a YouTube download spends its seconds."""
     import re
@@ -355,12 +355,27 @@ def measure_download(url: str):
     time.sleep(2)
     from track_link import download_youtube_section
 
-    for attempt in range(3):
+    def section(label):
         with tempfile.TemporaryDirectory() as folder:
             started = time.monotonic()
             result = download_youtube_section(video, Path(folder), 30, 60.5)
-            print(f"===== extrait en course n°{attempt + 1} : {time.monotonic() - started:.1f}s, "
-                  f"{'ok' if result else 'échec'}", flush=True)
+            print(f"===== {label} : {time.monotonic() - started:.1f}s, {'ok' if result else 'échec'}", flush=True)
+
+    for attempt in range(3):
+        section(f"extrait en course seul n°{attempt + 1}")
+    # Same, while the models warm up in the background (as in a real job since the boot warm-up).
+    import threading
+
+    from engine_cloud import prepare_engines, warm_engines
+
+    loaded = prepare_engines()
+    warming = threading.Thread(target=warm_engines, args=(loaded,), daemon=True)
+    warming.start()
+    section("extrait en course PENDANT le préchauffage")
+    warming.join()
+    for attempt in range(2):
+        section(f"extrait en course après préchauffage n°{attempt + 1}")
+    return
     for label, extra in (("extrait 1", ["--download-sections", "*30-60", "-f", "bestaudio[ext=m4a]/bestaudio"]),
                          ("extrait 2", ["--download-sections", "*30-60", "-f", "bestaudio[ext=m4a]/bestaudio"]),
                          ("complet léger", ["-f", "250/249/251/bestaudio"])):

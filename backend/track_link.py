@@ -266,6 +266,19 @@ def download_youtube_section(video_id, directory, start, end):
 
 
 def download_youtube(video_id, directory, light=False):
+    """Whole audio of a video; with a residential proxy, a failure (blocked or crawling exit IP,
+    e.g. HTTP 429) is retried once through another IP."""
+    attempts = 2 if os.getenv("TRACK_YTDLP_PROXY") else 1
+    for attempt in range(attempts):
+        try:
+            return _download_youtube_once(video_id, directory, light)
+        except TrackLinkError:
+            if attempt == attempts - 1:
+                raise
+            print("yt-dlp (complet) : nouvel essai via une autre IP", flush=True)
+
+
+def _download_youtube_once(video_id, directory, light=False):
     """Whole audio of a video. light: a small Opus stream (~70 kb/s, half the bytes through the
     proxy) kept as is, enough for analysing a preview; otherwise the best m4a."""
     if not re.fullmatch(r"[A-Za-z0-9_-]{11}", video_id):

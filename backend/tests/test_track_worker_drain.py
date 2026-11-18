@@ -148,3 +148,28 @@ def test_recommend_reuses_the_prepared_analysis(monkeypatch):
     monkeypatch.setattr(evaluate_guitar_options, "evaluate", evaluate)
     evaluate_guitar_options.recommend(Path("a.wav"), {}, prepared={"reference": ["n"], "evidence": "e"})
     assert used == {"reference": ["n"], "evidence": "e"}
+
+
+def test_piano_job_starts_transkun_right_after_the_claim(monkeypatch):
+    started = []
+
+    class Transkun:
+        def warm(self):
+            started.append("transkun")
+    monkeypatch.setattr(track_worker, "process_job", lambda *args, **kwargs: None)
+    engines = Engines(solo_piano=Transkun())
+    drain(lambda action, **kw: {"job": {"id": "p", "instrument": "piano", "lease": "l"}}
+          if not started and action == "claim" else {"job": None}, engines, Path("/tmp"), max_jobs=1)
+    assert started == ["transkun"]
+
+
+def test_guitar_job_leaves_transkun_off(monkeypatch):
+    started = []
+
+    class Transkun:
+        def warm(self):
+            started.append("transkun")
+    monkeypatch.setattr(track_worker, "process_job", lambda *args, **kwargs: None)
+    drain(lambda action, **kw: {"job": {"id": "g", "instrument": "guitare", "lease": "l"}}, Engines(solo_piano=Transkun()),
+          Path("/tmp"), max_jobs=1)
+    assert started == []

@@ -1,0 +1,42 @@
+/* Scrollbars: soft lavender rail, brand-violet thumb, readable on the dark hero and the white sections. */
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-track{background:#f3effc}
+::-webkit-scrollbar-thumb{background:linear-gradient(180deg,#9b7cff,#6c47ec);border:3px solid #f3effc;border-radius:999px;min-height:48px}
+::-webkit-scrollbar-thumb:hover{background:linear-gradient(180deg,#8a66ff,#5a34dc)}
+::-webkit-scrollbar-thumb:active{background:#4f2bc9}
+::-webkit-scrollbar-corner{background:#f3effc}
+/* Inner panels (studio lists, scores, dialogs): thinner, rail blends into the panel. */
+* ::-webkit-scrollbar{width:8px;height:8px}
+* ::-webkit-scrollbar-track{background:transparent}
+* ::-webkit-scrollbar-thumb{background:#cbbdf6;border:2px solid transparent;background-clip:padding-box}
+* ::-webkit-scrollbar-thumb:hover{background:#9b7cff;background-clip:padding-box}
+/* Firefox has no pseudo-elements: colours only (Chrome would ignore the rules above if it saw these). */
+@supports (-moz-appearance:none){
+  html{scrollbar-color:#7c5cf0 #f3effc}
+  *{scrollbar-width:thin;scrollbar-color:#cbbdf6 transparent}
+}
+
+/* "Commencer" from anywhere: the landing generator, in a dialog. */
+.start-dialog{width:min(620px,calc(100vw - 28px));max-height:calc(100dvh - 28px);padding:0;border:1px solid rgba(171,145,255,.28);border-radius:26px;
+  background:var(--public-hero-background);color:#fff;box-shadow:0 40px 120px rgba(10,4,30,.55);overflow:visible}
+.start-dialog::backdrop{background:rgba(12,6,28,.62);backdrop-filter:blur(6px)}
+.start-dialog[open]{animation:start-in .22s cubic-bezier(.2,.8,.2,1)}
+@keyframes start-in{from{opacity:0;transform:translateY(14px) scale(.98)}to{opacity:1;transform:none}}
+.start-dialog-inner{position:relative;padding:34px 34px 26px}
+.start-dialog-close{position:absolute;top:14px;right:14px;width:38px;height:38px;border:0;border-radius:50%;background:rgba(255,255,255,.08);color:#fff;font-size:20px;cursor:pointer}
+.start-dialog-close:hover{background:rgba(255,255,255,.16)}
+.start-dialog-close:focus-visible{outline:3px solid #ae8af6;outline-offset:2px}
+.start-dialog-kicker{display:inline-flex;gap:8px;align-items:center;margin:0 0 12px;padding:6px 12px;border-radius:999px;background:rgba(124,92,240,.22);color:#d9cdff;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.start-dialog h2{margin:0 0 8px;font-size:clamp(26px,4vw,34px);line-height:1.08;letter-spacing:-.03em}
+.start-dialog-lead{margin:0 0 22px;color:#c9c0dd;font-size:15px;line-height:1.5}
+.start-dialog .hero-action-panel{max-width:none;margin:0}
+.start-dialog-steps{display:flex;flex-wrap:wrap;gap:8px 18px;margin:20px 0 0;padding:0;list-style:none;color:#b7acd0;font-size:13px}
+.start-dialog-steps li::before{content:"✓";margin-right:6px;color:#8ff0c4;font-weight:800}
+.start-dialog-foot{margin:18px 0 0;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);color:#a99fc2;font-size:13px}
+.start-dialog-foot a{color:#d9cdff;font-weight:700}
+@media (max-width:560px){.start-dialog-inner{padding:28px 20px 20px}}
+
+/* Generator already on screen: point at it instead of covering it. */
+.hero-action-panel.is-pulsing{animation:hero-pulse 1.1s ease-out 1}
+@keyframes hero-pulse{0%{box-shadow:0 0 0 0 rgba(155,124,255,.75)}100%{box-shadow:0 0 0 22px rgba(155,124,255,0)}}
+@media (prefers-reduced-motion:reduce){.start-dialog[open],.hero-action-panel.is-pulsing{animation:none}}

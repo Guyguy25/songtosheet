@@ -336,3 +336,43 @@ def measure_speed(url: str):
 @app.local_entrypoint()
 def benchmark_speed(url: str):
     print(measure_speed.remote(url))
+
+
+@app.function(image=engine, cpu=8.0, memory=4096, timeout=600, secrets=[proxy_secret])
+def measure_download(url: str):
+    """Timestamped yt-dlp verbose output: where a YouTube download spends its seconds."""
+    import re
+    import subprocess
+    import sys
+    import tempfile
+    import time
+
+    from engine_cloud import start_pot_server
+    from track_link import redact, youtube_options
+
+    video = re.search(r"(?:v=|youtu\.be/|shorts/)([A-Za-z0-9_-]{11})", url).group(1)
+    start_pot_server()
+    time.sleep(2)
+    for label, extra in (("extrait 1", ["--download-sections", "*30-60", "-f", "bestaudio[ext=m4a]/bestaudio"]),
+                         ("extrait 2", ["--download-sections", "*30-60", "-f", "bestaudio[ext=m4a]/bestaudio"]),
+                         ("complet léger", ["-f", "250/249/251/bestaudio"])):
+        with tempfile.TemporaryDirectory() as folder:
+            started = time.monotonic()
+            process = subprocess.Popen([sys.executable, "-m", "yt_dlp", *youtube_options(), "--verbose",
+                                        "--no-playlist", "--js-runtimes", "node", *extra, "-o", f"{folder}/a.%(ext)s",
+                                        "--", "https://www.youtube.com/watch?v=" + video],
+                                       stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            print(f"===== {label}", flush=True)
+            for line in process.stdout:
+                line = redact(line.rstrip())
+                if line.startswith("[debug] ") and not any(word in line for word in ("Downloading", "Invoking",
+                                                                                    "pot", "PO ", "ffmpeg")):
+                    continue
+                print(f"{time.monotonic() - started:6.1f}s {line[:220]}", flush=True)
+            process.wait()
+            print(f"===== {label} : {time.monotonic() - started:.1f}s, code {process.returncode}", flush=True)
+
+
+@app.local_entrypoint()
+def benchmark_download(url: str):
+    measure_download.remote(url)

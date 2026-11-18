@@ -40,5 +40,5 @@ jobs:
           BENCHMARK_URL: ${{ github.event.inputs.benchmark_url }}
           BENCHMARK: ${{ github.event.inputs.benchmark || 'benchmark' }}
         run: |
-          case "$BENCHMARK" in benchmark|benchmark_yourmt3|benchmark_speed) ;; *) echo "Mesure inconnue"; exit 1;; esac
+          case "$BENCHMARK" in benchmark|benchmark_yourmt3|benchmark_speed|benchmark_download) ;; *) echo "Mesure inconnue"; exit 1;; esac
           modal run "backend/modal_app.py::$BENCHMARK" --url "$BENCHMARK_URL"

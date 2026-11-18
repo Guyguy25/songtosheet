@@ -95,7 +95,10 @@
         <section class="track-excerpt hidden">
           <p class="track-version-label" hidden></p>
           <div class="track-version-choices" hidden></div>
-          <div class="track-excerpt-video" hidden></div>
+          <div class="track-excerpt-stage">
+            <div class="track-excerpt-video" hidden></div>
+            <button type="button" class="track-excerpt-overlay" hidden aria-label="Écouter l’extrait"><span aria-hidden="true">▶</span></button>
+          </div>
           <audio preload="metadata"></audio>
           <p class="track-excerpt-hint" aria-live="polite"></p>
           <div class="track-excerpt-controls hidden">
@@ -141,7 +144,12 @@
     const clip=get('.track-excerpt'), clipAudio=clip.querySelector('audio');
     const clipVideo=clip.querySelector('.track-excerpt-video'), clipControls=clip.querySelector('.track-excerpt-controls');
     const [clipStart,clipEnd]=clip.querySelectorAll('input'), [startLabel,endLabel]=clip.querySelectorAll('output');
-    const clipPlay=clip.querySelector('button'), clipHint=clip.querySelector('p');
+    // By class: the version label and version choices come first in the section.
+    const clipPlay=clip.querySelector('.track-excerpt-times button'), clipHint=clip.querySelector('.track-excerpt-hint');
+    // The YouTube player only shows the video (its own controls cannot follow the selected
+    // excerpt): a button over it plays and pauses the excerpt, like the one under the timeline.
+    const clipOverlay=clip.querySelector('.track-excerpt-overlay');
+    clipOverlay.addEventListener('click',()=>clipPlay.click());
     const clipLimit=30000, clipMinimum=500;
     let initialExcerpt, clipSource, clipPlayer, clipDuration=0, clipTimer, clipLoadTimer, clipPlaying=false;
 
@@ -158,10 +166,14 @@
       clipPlayer?.pauseVideo?.();
       clipPlay.textContent='▶';
       clipPlay.setAttribute('aria-label','Écouter l’extrait');
+      clipOverlay.classList.remove('is-playing');
+      clipOverlay.firstElementChild.textContent='▶';
+      clipOverlay.setAttribute('aria-label','Écouter l’extrait');
     }
 
     function updateClip(){
       clipControls.classList.toggle('hidden',!draft.excerpt);
+      clipOverlay.hidden=clipVideo.hidden||!draft.excerpt;
       if(!draft.excerpt)return;
       const {start_ms:start,end_ms:end}=draft.excerpt;
       clipStart.max=clipEnd.max=clipDuration;
@@ -279,6 +291,9 @@
       clipPlaying=true;
       clipPlay.textContent='❚❚';
       clipPlay.setAttribute('aria-label','Mettre en pause');
+      clipOverlay.classList.add('is-playing');
+      clipOverlay.firstElementChild.textContent='❚❚';
+      clipOverlay.setAttribute('aria-label','Mettre en pause');
       if(link.youtubeId){
         clipPlayer.loadVideoById({videoId:link.youtubeId,startSeconds:start/1000,endSeconds:end/1000});
       }else{

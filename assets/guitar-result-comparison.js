@@ -436,7 +436,8 @@
           await vocals;
           if (!signal.aborted && active === item) sync();
         };
-        vote.onclick = async () => {
+        // quiet: the unlock dialog is opening, so the page does not rearrange behind it.
+        const choose = async ({quiet = false} = {}) => {
           if ((!piano && !token) || saving) return;
           saving = true;
           decorate(data);
@@ -444,7 +445,7 @@
             const result = await post('/api/track', {
               action: piano ? 'piano_choice' : 'guitar_vote', id: job.id, token, choice: version.key
             });
-            if (!signal.aborted) {Object.assign(data, result);justVoted = true;}
+            if (!signal.aborted) {Object.assign(data, result);justVoted = !quiet;}
           } catch (error) {
             if (!signal.aborted) {
               saving = false;
@@ -457,9 +458,24 @@
           if (!signal.aborted) {
             decorate(data);
             const selected = cards.find(card => card.key === data.selected);
-            if (selected) focusOption(selected, true);
+            if (selected && !quiet) focusOption(selected, true);
           }
         };
+        vote.onclick = () => choose();
+        // Unlocking a version from its own card is the clearest choice there is: it counts as
+        // choosing that version (like downloading the take you prefer), then the unlock opens.
+        card.addEventListener('click', event => {
+          if (!event.target.closest('.sp-lock-cta') || data.selected === version.key) return;
+          choose({quiet: true});
+        }, true);
+        const unlockLabel = card.querySelector('.sp-lock-cta');
+        if (unlockLabel && data.versions.length > 1) {
+          unlockLabel.textContent = 'Débloquer cette version ';
+          const arrow = document.createElement('span');
+          arrow.setAttribute('aria-hidden', 'true');
+          arrow.textContent = '↗';
+          unlockLabel.append(arrow);
+        }
       }
       update(0);
       decorate(data);

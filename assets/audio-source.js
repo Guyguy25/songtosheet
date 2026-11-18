@@ -60,7 +60,15 @@
     if(response.status===400)throw new Error(info.error);
     if(!response.ok)throw new Error('La recherche du morceau a échoué. Réessaie ou importe ton fichier audio.');
     const version=parse(info.version?.url);
-    if(version?.youtubeId)return {audioUrl:version.url.href,versionLabel:'Version proposée sur YouTube · '+info.version.title};
+    if(version?.youtubeId){
+      const alternatives=(Array.isArray(info.versions)?info.versions:[])
+        .map(item=>({item,parsed:parse(item?.url)}))
+        .filter(({parsed})=>parsed?.youtubeId&&parsed.url.href!==version.url.href)
+        .slice(0,3)
+        .map(({item,parsed})=>({audioUrl:parsed.url.href,versionLabel:'Version proposée sur YouTube · '+item.title,
+          title:String(item.title||''),channel:String(item.channel||'')}));
+      return {audioUrl:version.url.href,versionLabel:'Version proposée sur YouTube · '+info.version.title,alternatives};
+    }
     const preview=source.provider==='Deezer'?parse(info.preview_url):null;
     if(preview&&preview.url.hostname.endsWith('.dzcdn.net'))
       return {audioUrl:preview.url.href,name:info.title,versionLabel:'Extrait Deezer'};

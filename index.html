@@ -1428,9 +1428,9 @@
     const heroExcerptWizard=window.SongToSheetTrackWizard.mount(host,{
       allowLink:true,
       onExcerptBack:()=>dialog.close(),
-      onExcerpt:excerpt=>{
+      onExcerpt:(excerpt,chosen)=>{
         dialog.close();
-        openTrackDraft({...draft,excerpt});
+        openTrackDraft({...draft,...(chosen||{}),excerpt});
       }
     });
     dialog.addEventListener('close',()=>{

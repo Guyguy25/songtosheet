@@ -90,3 +90,50 @@ test('without a Topic upload, the exact official title wins over a medley',async
   const res=await call({url:'https://www.deezer.com/track/3135556',resolve:'youtube'});
   assert.strictEqual(res.payload.version.url,'https://www.youtube.com/watch?v=gAjR4_CbPpQ');
 });
+
+function searchReturning(items,track={title:'Message',artist:{name:'Klem Schen'},duration:200}){
+  const searched=[];
+  global.fetch=async url=>{
+    url=String(url);
+    if(url.startsWith('https://api.deezer.com/track/'))return jsonResponse(track);
+    searched.push(new URL(url).searchParams.get('q'));
+    return jsonResponse({items});
+  };
+  return searched;
+}
+
+test('an unrequested variant (acoustic) loses even from a Topic channel',async()=>{
+  process.env.YOUTUBE_DATA_API_KEY='k';
+  searchReturning([
+    {id:{videoId:'acoustic001'},snippet:{title:'Message (Version Acoustique)',channelTitle:'Klem Schen - Topic'}},
+    {id:{videoId:'original001'},snippet:{title:'Klem Schen - Message (Clip Officiel)',channelTitle:'Klem Schen'}}
+  ]);
+  const res=await call({url:'https://www.deezer.com/track/1',resolve:'youtube'});
+  assert.strictEqual(res.payload.version.url,'https://www.youtube.com/watch?v=original001');
+  assert.deepStrictEqual(res.payload.versions.map(item=>item.url),[
+    'https://www.youtube.com/watch?v=original001','https://www.youtube.com/watch?v=acoustic001']);
+  assert.strictEqual(res.payload.versions[1].channel,'Klem Schen - Topic');
+});
+
+test('a requested variant is kept in the search and preferred',async()=>{
+  process.env.YOUTUBE_DATA_API_KEY='k';
+  const searched=searchReturning([
+    {id:{videoId:'original001'},snippet:{title:'Klem Schen - Message (Clip Officiel)',channelTitle:'Klem Schen'}},
+    {id:{videoId:'acoustic001'},snippet:{title:'Message (Version Acoustique)',channelTitle:'Klem Schen - Topic'}}
+  ],{title:'Message (Version Acoustique)',artist:{name:'Klem Schen'},duration:200});
+  const res=await call({url:'https://www.deezer.com/track/2',resolve:'youtube'});
+  assert.match(searched[0],/Version Acoustique/);
+  assert.strictEqual(res.payload.version.url,'https://www.youtube.com/watch?v=acoustic001');
+});
+
+test('the page offers the other versions found',async()=>{
+  const audioSource=fresh('assets/audio-source.js');
+  global.fetch=async()=>({ok:true,status:200,json:async()=>({title:'Message',
+    version:{url:'https://www.youtube.com/watch?v=original001',title:'Klem Schen - Message'},
+    versions:[{url:'https://www.youtube.com/watch?v=original001',title:'Klem Schen - Message',channel:'Klem Schen'},
+      {url:'https://www.youtube.com/watch?v=acoustic001',title:'Message (Version Acoustique)',channel:'Klem Schen - Topic'}]})});
+  const version=await audioSource.resolveVersion(audioSource.parse('https://www.deezer.com/track/1'));
+  assert.deepStrictEqual(version.alternatives,[{audioUrl:'https://www.youtube.com/watch?v=acoustic001',
+    versionLabel:'Version proposée sur YouTube · Message (Version Acoustique)',title:'Message (Version Acoustique)',
+    channel:'Klem Schen - Topic'}]);
+});

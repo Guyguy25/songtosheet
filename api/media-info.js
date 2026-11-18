@@ -156,15 +156,25 @@ async function resolveSource(raw){
   throw Object.assign(new Error('Ouvre le lien de partage et copie le lien direct du morceau.'),{status:400});
 }
 
-// "Song (Remastered 2011)", "Song - Radio Edit", "Song [feat. X]": streaming services add
-// edition tags that the official YouTube upload rarely repeats word for word.
+// "Song (Remastered 2011)", "Song - Radio Edit", "Song [feat. X]": streaming services add edition
+// tags that the official YouTube upload rarely repeats.  Variants ("Version Acoustique", "Live",
+// "Remix", "Instrumental") are a different recording: they stay in the search.
+const EDITION=/\b(remaster(ed)?|feat\.?|ft\.?|featuring|with|radio edit|single edit|explicit|clean|single version|album version|mono|stereo|deluxe|bonus( track)?|(19|20)\d\d)\b/i;
 function baseTitle(title){
-  return String(title||'').replace(/\s*[([][^)\]]*[)\]]/g,' ').replace(/\s+-\s+.*$/,'').replace(/\s+/g,' ').trim()||String(title||'');
+  let value=String(title||'');
+  value=value.replace(/\s*[([]([^)\]]*)[)\]]/g,(part,inside)=>EDITION.test(inside)?' ':part);
+  value=value.replace(/\s+-\s+(.*)$/,(part,tail)=>EDITION.test(tail)?'':part);
+  return value.replace(/\s+/g,' ').trim()||String(title||'');
 }
 
-async function findYouTubeVersion(info){
+const VARIANT=/\b(acoustic|acoustique|unplugged|live|concert|remix|mix|instrumental|orchestral|symphonic|piano|demo|session|extended|reprise|rework|acapella|cappella|karaoke|cover|slowed|sped|nightcore|8d|medley)\b/;
+
+// The YouTube uploads that match a song, best first: YouTube's "Artist - Topic" uploads, then
+// videos titled exactly as the song (artist and "official audio" words aside).  A variant the
+// song itself is not (acoustic, live, remix…) or a medley ("A / B") ranks last.
+async function findYouTubeVersions(info){
   const key=process.env.YOUTUBE_DATA_API_KEY;
-  if(!key||!info.title)return null;
+  if(!key||!info.title)return [];
   info={...info,title:baseTitle(info.title)};
   const query=[info.artist,info.title,'official audio'].filter(Boolean).join(' ');
   const params=new URLSearchParams({
@@ -175,35 +185,31 @@ async function findYouTubeVersion(info){
     const normalize=value=>String(value||'').normalize('NFD').replace(/\p{M}/gu,'')
       .toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
     const title=normalize(info.title);
-    if(!title)return null;
-    // Among acceptable results, prefer the exact studio recording: YouTube's "Artist - Topic"
-    // uploads, then videos titled exactly as the song (artist and "official audio" words aside);
-    // medleys ("A / B") and live takes only when the song itself is one.
-    const noise=new Set(['official','audio','video','music','lyric','lyrics','hd','4k','hq','remastered',
-      'remaster','visualizer','clip','officiel','version','original','mv']);
+    if(!title)return [];
+    const noise=new Set(['official','officiel','officielle','audio','video','music','lyric','lyrics','hd','4k','hq',
+      'remastered','remaster','visualizer','clip','version','original','mv','paroles']);
     const artist=normalize(info.artist);
-    const wantsLive=/\b(live|medley)\b/.test(title);
-    let best=null;
+    const ranked=[];
     (result.items||[]).forEach((item,position)=>{
       const id=item.id?.videoId;
       const label=clean(item.snippet?.title);
+      const channelLabel=clean(item.snippet?.channelTitle,80);
       const candidate=normalize(label);
-      const channel=normalize(item.snippet?.channelTitle);
+      const channel=normalize(channelLabel);
       if(!/^[\w-]{11}$/.test(id||'')||!(' '+candidate+' ').includes(' '+title+' '))return;
-      if(info.artist&&!normalize(label+' '+item.snippet?.channelTitle).includes(artist))return;
-      if(/\b(cover|karaoke|tutorial|reaction|sped up|slowed)\b/.test(candidate)&&
-        !/\b(cover|karaoke|tutorial|reaction|sped up|slowed)\b/.test(title))return;
-      const rest=(' '+candidate+' ').replace(' '+title+' ',' ').replace(artist?' '+artist+' ':'  ',' ')
-        .split(' ').filter(word=>word&&!noise.has(word));
+      if(info.artist&&!normalize(label+' '+channelLabel).includes(artist))return;
+      const rest=(' '+candidate+' ').replace(' '+title+' ',' ').replace(artist?' '+artist+' ':'  ',' ').trim();
+      if(/\b(cover|karaoke|tutorial|reaction|sped up|slowed)\b/.test(rest))return;
+      const extra=rest.split(' ').filter(word=>word&&!noise.has(word));
       let score=-position/10;
       if(/ topic$/.test(channel)&&(!artist||channel.startsWith(artist)))score+=4;
-      if(!rest.length)score+=2;
-      if(!wantsLive&&(/\//.test(label)||/\b(live|medley|concert)\b/.test(candidate)))score-=3;
-      if(!best||score>best.score)best={score,url:'https://www.youtube.com/watch?v='+id,title:label};
+      if(!extra.length)score+=2;
+      if(VARIANT.test(rest)||/\//.test(label))score-=6;
+      ranked.push({score,url:'https://www.youtube.com/watch?v='+id,title:label,channel:channelLabel});
     });
-    if(best)return {url:best.url,title:best.title};
+    return ranked.sort((a,b)=>b.score-a.score).map(({url,title,channel})=>({url,title,channel}));
   }catch{}
-  return null;
+  return [];
 }
 
 async function getInfo(src) {
@@ -291,9 +297,11 @@ module.exports=async function handler(req,res){
     }
     const result=await getInfo(src);
     if(resolve){
-      // Spotify and Deezer stream protected audio: the same song is looked up on YouTube.
-      const version=await findYouTubeVersion(result);
-      return res.status(200).json({...result,version});
+      // Spotify and Deezer stream protected audio: the same song is looked up on YouTube, and
+      // the other matches are offered in case the best guess is not the right recording.
+      const versions=(await findYouTubeVersions(result)).slice(0,4);
+      const version=versions[0]?{url:versions[0].url,title:versions[0].title}:null;
+      return res.status(200).json({...result,version,versions});
     }
     if(!result.duration_verified){
       return res.status(424).json({

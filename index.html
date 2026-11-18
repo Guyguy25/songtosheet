@@ -11,9 +11,9 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/assets/site-ui.css?v=5" />
-  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=14" />
+  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=15" />
   <script src="/assets/audio-source.js?v=7" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=32" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=33" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=16" />
   <script src="/backend/web/score-player.js?v=23" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=10" />
@@ -2191,11 +2191,14 @@
         }
         const access=j.preview_limit?'Aperçu gratuit · 30 s':j.variant?'Morceau entier':'Accès admin';
         const meta=`${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · ${access}`;
-        const notice=ready?`${fallback}${soloFallback}${j.status==='failed'&&j.error_message?' '+j.error_message:''}${!j.preview_limit&&!waiting&&j.pdf_error?' Le PDF est indisponible pour ce relevé.':''}`.trim():'';
+        const notice=ready?`${fallback}${soloFallback}${j.status==='failed'&&j.error_message?' '+j.error_message:''}`.trim():'';
         const hints={pdf:'À lire et imprimer',musicxml:'Pour un éditeur de partitions',tab:'Pour un éditeur de partitions',mid:'Pour un logiciel de musique'};
         const menu=j.preview_limit
           ?`<p>Le téléchargement en PDF, MIDI et MusicXML est inclus dans les offres.</p><a class="btn btn-primary" href="/upgrade" data-unlock="${j.format==='tablature'?'tablature':'partition'}" aria-haspopup="dialog">Débloquer les exports</a>`
-          :Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
+          // No engine PDF (older whole songs, or a layout failure): a printable page saves it as PDF.
+          :(!j.downloads.includes('pdf')&&(j.downloads.includes('tab')||j.downloads.includes('musicxml'))
+            ?`<a href="/imprimer.html?id=${encodeURIComponent(id)}&amp;auto=1" target="_blank" rel="noopener"><b>PDF</b><small>À lire et imprimer</small></a>`:'')+
+          Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
             `<a href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}"><b>${label.replace('Télécharger le ','')}</b><small>${hints[key]}</small></a>`).join('');
         const versionChoice=j.instrument==='guitare'||j.piano_versions?.length;
         // A whole song that failed: given back, relaunched from its own version (not a new song).

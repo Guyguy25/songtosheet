@@ -165,3 +165,17 @@ def test_filter_preserves_the_chord_and_an_upper_note_with_its_own_attack():
     assert diagnostic["matched_attacks"] == 2
     assert diagnostic["total_attacks"] == 3
     assert diagnostic["review_seconds"] == [0]
+
+
+def test_tab_runs_to_the_end_of_the_audio_with_empty_bars(tmp_path):
+    notes = [event(64, 0, .5), event(67, .5, 1)]
+    tab = arrange(notes, TUNINGS["guitare"])
+    short, padded = tmp_path / "short.musicxml", tmp_path / "padded.musicxml"
+    write_tab(tab, short, TUNINGS["guitare"], 120, "Test", "guitare")
+    write_tab(tab, padded, TUNINGS["guitare"], 120, "Test", "guitare", until=10)
+    assert len(ET.parse(short).findall(".//measure")) == 1
+    bars = ET.parse(padded).findall(".//measure")
+    # 120 BPM in 4/4: one bar every 2 s, so 10 s of audio fill five bars.
+    assert len(bars) == 5
+    assert all(bar.find("note/pitch") is None for bar in bars[1:])
+    assert len(ET.parse(padded).findall(".//note/pitch")) == len(notes)

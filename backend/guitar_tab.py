@@ -339,7 +339,8 @@ def write_harmony(measure, root, quality):
 
 
 def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=(), capo=0, chords=(),
-              meter=(4, 4), intro_count=0, pull_offs=(), slides=(), strummed=(), grouped_rhythm=False):
+              meter=(4, 4), intro_count=0, pull_offs=(), slides=(), strummed=(), grouped_rhythm=False,
+              until=None):
     root = ET.Element("score-partwise", version="4.0")
     add(root, "movement-title", title)
     part_list = ET.SubElement(root, "part-list")
@@ -384,6 +385,9 @@ def write_tab(notes, destination, tuning, bpm, title, instrument, *, transients=
                     and max(stop for stop, _ in events) >= next_tick):
                 connected.add(i)
     bars = (end + bar_ticks - 1) // bar_ticks
+    if until:
+        # Empty bars up to the end of the audio, so the score does not stop where the notes do.
+        bars = max(bars, (round(until * grid) + bar_ticks - 1) // bar_ticks)
     index, ringing_until = 0, 0
     for bar in range(bars):
         start, bar_end = bar * bar_ticks, (bar + 1) * bar_ticks

@@ -441,7 +441,8 @@ def transcribe(source, instrument, output, *, isolated=False, bpm=120, title=Non
                        beats=tab_meter[0] if tab_meter != (4, 4) else None, beat_type=tab_meter[1])
             write_tab(tab, result / "tab.musicxml", tuning, bpm, title or source.stem, instrument,
                       transients=transients, capo=resolved_capo, chords=chords, meter=tab_meter,
-                      intro_count=intro_count, pull_offs=pull_offs, slides=slides, strummed=strummed)
+                      intro_count=intro_count, pull_offs=pull_offs, slides=slides, strummed=strummed,
+                      until=duration)
         manifest = {**config, "notes": notes, "duration": duration, "tab": bool(tab)}
         if instrument == "piano":
             manifest.update(bpm=int(detected_bpm), meter=f"{beats}/4", intro=float(intro))

@@ -85,6 +85,14 @@
 .track-excerpt{width:min(100%,560px);margin-inline:auto}
 .track-excerpt-video{aspect-ratio:16/9;overflow:hidden;border-radius:14px;background:#161121}
 .track-excerpt-video iframe{width:100%;height:100%;display:block;border:0;pointer-events:none}
+.track-excerpt-stage{position:relative}
+.track-excerpt-overlay{position:absolute;inset:0;display:grid;place-items:center;width:100%;padding:0;border:0;border-radius:14px;background:transparent;cursor:pointer}
+.track-excerpt-overlay[hidden]{display:none}
+.track-excerpt-overlay span{display:grid;place-items:center;width:76px;height:76px;border-radius:50%;background:#8054e0;color:#fff;font-size:26px;box-shadow:0 6px 24px #0006;transition:opacity .2s,transform .2s}
+.track-excerpt-overlay:hover span{transform:scale(1.06)}
+.track-excerpt-overlay.is-playing span{opacity:0}
+.track-excerpt-overlay.is-playing:hover span,.track-excerpt-overlay.is-playing:focus-visible span{opacity:.9}
+.track-excerpt-overlay:focus-visible{outline:3px solid #b9a1f4;outline-offset:2px}
 .track-excerpt-hint,.track-excerpt-limit{margin:12px 0;color:#625a71;font-size:14px}
 .track-version-label{margin:0 0 8px;color:#625a71;font-size:13px}
 .track-version-choices{margin:0 0 12px}

@@ -132,6 +132,15 @@ def _bigger_batches():
             use_batch_size(model)
 
 
+def warm_clip(seconds=30, rate=16000):
+    """30 s of audible synthetic audio: a warm-up pass with the shape of a real preview."""
+    import numpy as np
+
+    time = np.arange(seconds * rate) / rate
+    chord = sum(np.sin(2 * np.pi * frequency * time) for frequency in (196.0, 246.9, 293.7))
+    return (.1 * chord * (np.sin(2 * np.pi * time) > -.5)).astype(np.float32)
+
+
 def preload(checkpoint, device):
     """Load the model once, before the first request (mt3_infer caches it)."""
     import numpy as np
@@ -139,8 +148,12 @@ def preload(checkpoint, device):
 
     with _LOCK:
         transcribe(np.zeros(16000, dtype=np.float32), sr=16000, model="yourmt3", checkpoint_path=checkpoint,
-                   device=device, auto_download=False)
+                   device=device, auto_download=False)  # loads the model
         _bigger_batches()
+        # Then a pass with the real batch size: the first pass at a new shape sets up the GPU kernels
+        # (a 30 s preview took ~19 s in a job, ~5 s once warmed at that size).
+        transcribe(warm_clip(), sr=16000, model="yourmt3", checkpoint_path=checkpoint,
+                   device=device, auto_download=False)
 
 
 def run(audio, destination, checkpoint, device):

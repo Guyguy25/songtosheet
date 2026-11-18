@@ -40,3 +40,11 @@ def test_note_agreement_scores_matching_notes():
     assert note_agreement(reference, reference) == 1.0
     assert note_agreement(reference, [(60, 1.02), (64, 2.0)]) == 0.8  # 2 of 3 matched: F1 = 0.8
     assert note_agreement([], []) == 1.0
+
+
+def test_yourmt3_warm_clip_is_a_full_preview():
+    from yourmt3_engine import warm_clip
+
+    clip = warm_clip()
+    assert len(clip) == 16000 * 30  # same shape as a real 30 s preview (15 segments, one batch)
+    assert float(abs(clip).max()) > .05  # audible: silent windows would be skipped

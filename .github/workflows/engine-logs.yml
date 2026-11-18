@@ -1,0 +1,29 @@
+name: Engine logs (Modal)
+
+# Read-only: prints the engine's recent logs (errors of failed transcriptions included).
+on:
+  workflow_dispatch:
+    inputs:
+      seconds:
+        description: "Durée de lecture en secondes"
+        required: false
+        default: "90"
+
+jobs:
+  logs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      MODAL_TOKEN_ID: ${{ secrets.MODAL_TOKEN_ID }}
+      MODAL_TOKEN_SECRET: ${{ secrets.MODAL_TOKEN_SECRET }}
+    steps:
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install modal
+      - name: Logs
+        env:
+          SECONDS_TO_READ: ${{ github.event.inputs.seconds || '90' }}
+        run: |
+          case "$SECONDS_TO_READ" in ''|*[!0-9]*) echo "Durée invalide"; exit 1;; esac
+          timeout "$SECONDS_TO_READ" modal app logs songtosheet-engine --timestamps || true

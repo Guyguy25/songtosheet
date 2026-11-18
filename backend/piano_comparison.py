@@ -14,6 +14,7 @@ import math
 
 from piano_arranger import arrange, monophonic
 from piano_beats import quantize, score_times, track_beats, write_grid_midi
+from timing import timed_call
 from piano_score import estimate_piano_grid, write_piano_score
 from transcribe_track import load_note_model, piano_midi_events, run, write_midi
 
@@ -130,23 +131,23 @@ def generate(audio, directory, title, report, piano_engine, *, vocals=None, solo
         return piano_midi_events(midi, duration)
 
     with ThreadPoolExecutor(max_workers=3) as pool:
-        beats = pool.submit(track_beats, audio)
+        beats = pool.submit(timed_call("grille rythmique (beat_this)", track_beats), audio)
         # Basic Pitch is cheap: it is always computed, as a fallback or as a second
         # opinion for the judge's consensus of transcription models.
-        basic = pool.submit(basic_pitch)
+        basic = pool.submit(timed_call("Basic Pitch piano", basic_pitch))
         solo = None
         if solo_engine is not None and piano_engine is None:
-            solo = pool.submit(solo_engine.transcribe, audio, directory / "transkun.mid")
+            solo = pool.submit(timed_call("Transkun", solo_engine.transcribe), audio, directory / "transkun.mid")
         if piano_engine is not None:
             try:
-                original = piano_engine.transcribe(audio, directory / "yourmt3-native.mid")
+                original = timed_call("YourMT3+ piano", piano_engine.transcribe)(audio, directory / "yourmt3-native.mid")
                 melody, instruments, piano_share = split_tracks(original, duration)
                 references["yourmt3"] = piano_midi_events(original, duration)
                 raw["yourmt3"] = thin_hands(references["yourmt3"])
             except Exception as error:
                 print(f"YourMT3+ indisponible : {error}", flush=True)
         if solo is None and solo_engine is not None and piano_share >= .5:
-            solo = pool.submit(solo_engine.transcribe, audio, directory / "transkun.mid")
+            solo = pool.submit(timed_call("Transkun", solo_engine.transcribe), audio, directory / "transkun.mid")
         try:
             references["basic"] = basic.result()
         except Exception as error:
@@ -171,7 +172,7 @@ def generate(audio, directory, title, report, piano_engine, *, vocals=None, solo
         harmony = raw.get("solo") if piano_share >= .5 and raw.get("solo") else instruments
         for key, level in (("arrangement", "full"), ("playable", "easy")):
             try:
-                notes, _ = arrange(melody, harmony, grid, duration, level)
+                notes, _ = timed_call(f"arrangement {key}", arrange)(melody, harmony, grid, duration, level)
                 if notes:
                     prepared[key] = notes
             except Exception as error:
@@ -181,21 +182,22 @@ def generate(audio, directory, title, report, piano_engine, *, vocals=None, solo
         if not notes:
             continue
         try:
-            files[key] = write_version(notes, directory, key, title, grid, quantized=key in prepared)
+            files[key] = timed_call(f"partition {key}", write_version)(notes, directory, key, title, grid,
+                                                                     quantized=key in prepared)
         except Exception as error:
             print(f"Partition piano {key} indisponible : {error}", flush=True)
     if not files:
         raise ValueError("Aucune note exploitable. Essaie un audio plus clair.")
 
     if wait_vocals is not None:
-        wait_vocals()
+        timed_call("attente voix (Demucs)", wait_vocals)()
     recommendation = None
     if len(files) >= 2:
         report("judge")
         try:
             from evaluate_piano_options import recommend
 
-            recommendation = recommend(audio, {key: values[1] for key, values in files.items()}, vocals,
+            recommendation = timed_call("juge piano", recommend)(audio, {key: values[1] for key, values in files.items()}, vocals,
                                        has_voice=bool(melody), references=references)
         except Exception as error:
             print(f"Comparaison audio piano indisponible : {error}", flush=True)

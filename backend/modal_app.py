@@ -143,7 +143,7 @@ def watchdog():
         process_queue.spawn()
 
 
-@app.function(image=engine, gpu="L4", cpu=4.0, memory=12288, timeout=900, secrets=[proxy_secret])
+@app.function(image=engine, gpu=["L4", "A10"], cpu=8.0, memory=16384, timeout=900, secrets=[proxy_secret])
 def measure(url: str):
     """Time the piano pipeline on a 30 s preview and on 3 minutes of a YouTube video."""
     import re
@@ -166,11 +166,15 @@ def measure(url: str):
         started = time.monotonic()
         source = download_youtube(video.group(1), folder)
         report["youtube_download_s"] = round(time.monotonic() - started, 1)
-        for seconds in (30, 180):
+        from timing import start_job
+
+        for label, seconds in (("30s_froid", 30), ("30s_chaud", 30), ("180s", 180)):
+            start_job()
+            print(f"===== piano {label}", flush=True)
             clip = folder / f"clip{seconds}.wav"
             subprocess.run(["ffmpeg", "-v", "error", "-y", "-i", str(source), "-t", str(seconds),
                             "-ar", "44100", "-ac", "2", str(clip)], check=True)
-            work = folder / f"work{seconds}"
+            work = folder / f"work{label}"
             work.mkdir()
             stages, last = {}, [time.monotonic()]
 
@@ -183,11 +187,11 @@ def measure(url: str):
             _, files, recommendation = generate(clip, work, "Mesure", step, loaded.piano,
                                                 solo_engine=loaded.solo_piano)
             step("end")
-            report[f"piano_{seconds}s"] = {"total_s": round(time.monotonic() - started, 1), "stages_s": stages,
+            report[f"piano_{label}"] = {"total_s": round(time.monotonic() - started, 1), "stages_s": stages,
                                            "versions": sorted(files),
                                            "recommended": (recommendation or {}).get("recommended")}
-    gpu_seconds = report["piano_180s"]["total_s"]
-    report["estimated_cost_180s_usd"] = round(gpu_seconds * (0.000222 + 4 * 0.0000131 + 12 * 0.00000222), 4)
+    for label in ("30s_froid", "30s_chaud", "180s"):
+        report[f"cost_{label}_cents"] = round(100 * report[f"piano_{label}"]["total_s"] * 0.000362, 2)
     print(report, flush=True)
     return report
 

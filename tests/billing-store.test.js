@@ -116,3 +116,19 @@ test('Pro: no daily limit; free accounts are sent to the plans',async()=>{
   for(const variant of ['a','b','c'])assert.strictEqual((await store.reserveFullSong(db,pro,{jobId:'j',variant},NOW)).ok,true);
   assert.deepStrictEqual(await store.reserveFullSong(db,free,{jobId:'j',variant:'a'},NOW),{ok:false,reason:'subscription'});
 });
+
+test('a whole song that failed is given back: it does not count and can be generated again',async()=>{
+  const db=fakeDb();const account=user(db);
+  await store.applyEntitlement(db,grant({user_id:String(account._id)}),NOW);
+  const first=new ObjectId();
+  assert.strictEqual((await store.reserveFullSong(db,account,{jobId:first,variant:'original-v1'},NOW)).ok,true);
+  db.collection('track_jobs');
+  db.data.track_jobs.push({_id:first,user_id:account._id,status:'failed'});
+  assert.strictEqual(await store.usedToday(db,account._id,NOW),0);
+  const retry=new ObjectId();
+  assert.deepStrictEqual(await store.reserveFullSong(db,account,{jobId:retry,variant:'original-v1'},NOW),{ok:true,tier:'starter'});
+  // A successful (or still running) one keeps counting.
+  db.data.track_jobs.push({_id:retry,user_id:account._id,status:'processing'});
+  assert.strictEqual(await store.usedToday(db,account._id,NOW),1);
+  assert.strictEqual((await store.reserveFullSong(db,account,{jobId:new ObjectId(),variant:'held-v1'},NOW)).reason,'daily_limit');
+});

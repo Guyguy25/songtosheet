@@ -56,7 +56,25 @@ def write_score(midi_path, destination, title, *, guitar=False):
             for existing in list(part.recurse().getElementsByClass(clef.Clef)):
                 existing.activeSite.remove(existing)
             part.getElementsByClass("Measure").first().insert(0, clef.Treble8vbClef())
+    fit_to_bars(score)
     score.write("musicxml", fp=destination)
+
+
+def fit_to_bars(score):
+    """Cut notes, chords and rests that run past their bar.
+
+    music21 splits single long notes at barlines, but not chords and voices built from
+    overlapping notes; a value longer than 8 bars cannot be written in MusicXML at all.
+    """
+    from music21 import duration
+
+    for part in score.parts:
+        for measure in part.getElementsByClass("Measure"):
+            bar = measure.barDuration.quarterLength
+            for element in measure.recurse().notesAndRests:
+                room = bar - element.offset
+                if room > 0 and element.duration.quarterLength > room:
+                    element.duration = duration.Duration(room)
 
 
 @lru_cache(maxsize=1)

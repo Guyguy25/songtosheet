@@ -239,3 +239,96 @@ def measure_yourmt3(url: str):
 @app.local_entrypoint()
 def benchmark_yourmt3(url: str):
     print(measure_yourmt3.remote(url))
+
+
+@app.function(image=engine, gpu=["L4", "A10"], cpu=8.0, memory=16384, timeout=900, secrets=[proxy_secret])
+def measure_speed(url: str):
+    """Where a guitar preview loses time: YouTube download variants, YourMT3+ alone vs alongside
+    Demucs and Tsumugi (as in a real job)."""
+    import re
+    import subprocess
+    import sys
+    import tempfile
+    import time
+    from concurrent.futures import ThreadPoolExecutor
+
+    from engine_cloud import engines, start_pot_server
+    from stem_separation import separate
+    from track_link import download_youtube, download_youtube_section, redact, youtube_options
+
+    video = re.search(r"(?:v=|youtu\.be/|shorts/)([A-Za-z0-9_-]{11})", url)
+    if not video:
+        raise ValueError("Lien YouTube invalide.")
+    video = video.group(1)
+    start_pot_server()
+    report = {}
+
+    def timed(name, function):
+        started = time.monotonic()
+        try:
+            result = function()
+        except Exception as error:  # a measurement, not a job: report and go on
+            result = f"erreur : {error}"
+        report[name] = {"s": round(time.monotonic() - started, 1), "result": str(result)[-300:]}
+        return result
+
+    with tempfile.TemporaryDirectory() as folder:
+        folder = Path(folder)
+        for index, name in enumerate(("section_1", "section_2")):
+            target = folder / name
+            target.mkdir()
+            timed(f"download_{name}", lambda: download_youtube_section(video, target, 30, 60))
+        verbose = folder / "verbose"
+        verbose.mkdir()
+        command = [sys.executable, "-m", "yt_dlp", *youtube_options(), "--verbose", "--no-playlist",
+                   "--js-runtimes", "node", "--format", "bestaudio[ext=m4a]/bestaudio/best[acodec!=none]",
+                   "--download-sections", "*30-60", "-o", str(verbose / "s.%(ext)s"),
+                   "--", "https://www.youtube.com/watch?v=" + video]
+        run = subprocess.run(command, capture_output=True, text=True, timeout=120)
+        lines = redact(run.stderr + run.stdout).splitlines()
+        report["section_verbose_tail"] = [line[:300] for line in lines
+                                          if "ffmpeg" in line.lower() or "error" in line.lower()][-15:]
+        for index, fmt in enumerate(("140", "251", "250", "249")):
+            target = folder / f"fmt{fmt}"
+            target.mkdir()
+
+            def fetch(fmt=fmt, target=target):
+                subprocess.run([sys.executable, "-m", "yt_dlp", *youtube_options(), "--no-playlist",
+                                "--js-runtimes", "node", "--format", fmt, "-o", str(target / "a.%(ext)s"),
+                                "--", "https://www.youtube.com/watch?v=" + video],
+                               check=True, capture_output=True, timeout=120)
+                return sum(file.stat().st_size for file in target.iterdir()) // 1024
+            timed(f"download_format_{fmt}_kB", fetch)
+        full = folder / "full"
+        full.mkdir()
+        source = timed("download_full", lambda: download_youtube(video, full))
+        clip = folder / "clip.wav"
+        subprocess.run(["ffmpeg", "-v", "error", "-y", "-ss", "30", "-i", str(source), "-t", "30",
+                        "-ar", "44100", "-ac", "2", str(clip)], check=True)
+
+        timed("engines_ready", engines)
+        loaded = engines()
+        for attempt in (1, 2):
+            timed(f"yourmt3_alone_{attempt}", lambda: loaded.piano.transcribe(clip, folder / "alone.mid"))
+        with ThreadPoolExecutor(3) as pool:
+            began = time.monotonic()
+            jobs = {
+                "yourmt3_with_others": pool.submit(loaded.piano.transcribe, clip, folder / "with.mid"),
+                "demucs_with_others": pool.submit(separate, "htdemucs_6s", clip, folder / "stems"),
+                "tsumugi_with_others": pool.submit(loaded.guitar.transcribe, clip, folder / "tsumugi.mid"),
+            }
+            for name, future in jobs.items():
+                future.result()
+                report[name] = round(time.monotonic() - began, 1)
+        from guitar_accompaniment import accompany
+
+        timed("accompany_full_chords", lambda: accompany(clip, folder / "chords", "Mesure", lambda _: None,
+                                                         loaded.piano))
+    for key, value in report.items():
+        print(f"{key}: {value}", flush=True)
+    return report
+
+
+@app.local_entrypoint()
+def benchmark_speed(url: str):
+    print(measure_speed.remote(url))

@@ -1,3 +1,5 @@
+#pricing-view { min-height: 0; }
+
 .upgrade-pricing {
   background: var(--public-hero-background);
   color: #fff;
@@ -56,7 +58,7 @@
   color: #4e288e;
   white-space: nowrap;
 }
-.upgrade-cycle button:focus-visible, .upgrade-back:focus-visible {
+.upgrade-cycle button:focus-visible, .upgrade-back:focus-visible, .upgrade-plan-action:focus-visible {
   outline: 2px solid #e3d1ff;
   outline-offset: 3px;
 }

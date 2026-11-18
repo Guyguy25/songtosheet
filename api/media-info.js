@@ -168,7 +168,7 @@ async function findYouTubeVersion(info){
   info={...info,title:baseTitle(info.title)};
   const query=[info.artist,info.title,'official audio'].filter(Boolean).join(' ');
   const params=new URLSearchParams({
-    part:'snippet',type:'video',videoEmbeddable:'true',maxResults:'5',q:query,key
+    part:'snippet',type:'video',videoEmbeddable:'true',maxResults:'10',q:query,key
   });
   try{
     const result=await fetchData('https://www.googleapis.com/youtube/v3/search?'+params);
@@ -176,16 +176,32 @@ async function findYouTubeVersion(info){
       .toLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();
     const title=normalize(info.title);
     if(!title)return null;
-    for(const item of result.items||[]){
+    // Among acceptable results, prefer the exact studio recording: YouTube's "Artist - Topic"
+    // uploads, then videos titled exactly as the song (artist and "official audio" words aside);
+    // medleys ("A / B") and live takes only when the song itself is one.
+    const noise=new Set(['official','audio','video','music','lyric','lyrics','hd','4k','hq','remastered',
+      'remaster','visualizer','clip','officiel','version','original','mv']);
+    const artist=normalize(info.artist);
+    const wantsLive=/\b(live|medley)\b/.test(title);
+    let best=null;
+    (result.items||[]).forEach((item,position)=>{
       const id=item.id?.videoId;
       const label=clean(item.snippet?.title);
       const candidate=normalize(label);
-      if(!/^[\w-]{11}$/.test(id||'')||!(' '+candidate+' ').includes(' '+title+' '))continue;
-      if(info.artist&&!normalize(label+' '+item.snippet?.channelTitle).includes(normalize(info.artist)))continue;
+      const channel=normalize(item.snippet?.channelTitle);
+      if(!/^[\w-]{11}$/.test(id||'')||!(' '+candidate+' ').includes(' '+title+' '))return;
+      if(info.artist&&!normalize(label+' '+item.snippet?.channelTitle).includes(artist))return;
       if(/\b(cover|karaoke|tutorial|reaction|sped up|slowed)\b/.test(candidate)&&
-        !/\b(cover|karaoke|tutorial|reaction|sped up|slowed)\b/.test(title))continue;
-      return {url:'https://www.youtube.com/watch?v='+id,title:label};
-    }
+        !/\b(cover|karaoke|tutorial|reaction|sped up|slowed)\b/.test(title))return;
+      const rest=(' '+candidate+' ').replace(' '+title+' ',' ').replace(artist?' '+artist+' ':'  ',' ')
+        .split(' ').filter(word=>word&&!noise.has(word));
+      let score=-position/10;
+      if(/ topic$/.test(channel)&&(!artist||channel.startsWith(artist)))score+=4;
+      if(!rest.length)score+=2;
+      if(!wantsLive&&(/\//.test(label)||/\b(live|medley|concert)\b/.test(candidate)))score-=3;
+      if(!best||score>best.score)best={score,url:'https://www.youtube.com/watch?v='+id,title:label};
+    });
+    if(best)return {url:best.url,title:best.title};
   }catch{}
   return null;
 }

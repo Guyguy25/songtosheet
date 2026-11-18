@@ -11,12 +11,13 @@
 .side-nav button>span{font-size:18px}
 .side-recents-label{margin:22px 0 8px;padding:0 12px;color:#857c96}
 .side-recents{display:grid;align-content:start;gap:1px;min-height:0;overflow-y:auto;margin-bottom:12px}
-.side-recents button{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 12px;border:0;border-radius:9px;background:transparent;color:#4e475e;font-size:13px;text-align:left}
-.side-recents button span{flex:none;color:#a79bc0}
-.side-recents button b{overflow:hidden;font-weight:550;text-overflow:ellipsis;white-space:nowrap}
-.side-recents button:hover,.side-recents button[aria-current]{background:#f2edff;color:#5a36c4}
-.side-recents button[aria-current] b{font-weight:700}
-.side-new:focus-visible,.side-nav button:focus-visible,.side-recents button:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
+.side-recents a{text-decoration:none}
+.side-recents button,.side-recents a{display:flex;align-items:center;gap:10px;min-width:0;padding:8px 12px;border:0;border-radius:9px;background:transparent;color:#4e475e;font-size:13px;text-align:left}
+.side-recents a span,.side-recents button span{flex:none;color:#a79bc0}
+.side-recents a b,.side-recents button b{overflow:hidden;font-weight:550;text-overflow:ellipsis;white-space:nowrap}
+.side-recents a:hover,.side-recents a[aria-current],.side-recents button:hover{background:#f2edff;color:#5a36c4}
+.side-recents a[aria-current] b{font-weight:700}
+.side-new:focus-visible,.side-nav button:focus-visible,.side-recents button:focus-visible,.side-recents a:focus-visible{outline:2px solid var(--purple);outline-offset:2px}
 .credit-panel{padding:12px 14px;border-radius:12px}
 .credit-panel>div{font-size:11px}
 .credit-panel>div span{font-size:13px}

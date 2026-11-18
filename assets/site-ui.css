@@ -41,19 +41,18 @@
 @keyframes hero-pulse{0%{box-shadow:0 0 0 0 rgba(155,124,255,.75)}100%{box-shadow:0 0 0 22px rgba(155,124,255,0)}}
 @media (prefers-reduced-motion:reduce){.start-dialog[open],.hero-action-panel.is-pulsing{animation:none}}
 
-/* Free preview countdown (30 s), above the progress steps. */
-.track-countdown{--left:1;display:grid;justify-items:center;gap:8px;margin:4px 0 16px}
-.track-countdown[hidden]{display:none}
-.track-countdown-ring{position:relative;display:flex;justify-content:center;align-items:center;width:92px;height:92px;border-radius:50%;
-  background:conic-gradient(#7549eb calc(var(--left)*360deg),#ece6fb 0);transition:background .25s linear}
-.track-countdown-ring::before{content:"";position:absolute;inset:8px;border-radius:50%;background:#fff}
-.track-countdown-ring b,.track-countdown-ring span{position:relative;color:#2a1d48;font-variant-numeric:tabular-nums}
-.track-countdown-ring b{font-size:32px;font-weight:800;letter-spacing:-.04em}
-.track-countdown-ring span{margin:8px 0 0 2px;font-size:14px;font-weight:700;color:#7a6c97}
-.track-countdown small{color:#6b5f86;font-size:14px;font-weight:600}
-.track-countdown.is-over .track-countdown-ring{animation:countdown-wait 1.4s ease-in-out infinite}
-@keyframes countdown-wait{50%{transform:scale(.94)}}
-@media (prefers-reduced-motion:reduce){.track-countdown.is-over .track-countdown-ring{animation:none}}
+/* Free preview: time left, a quiet pill under the stage title. */
+.track-progress-title{display:grid;justify-items:center;gap:7px;min-width:0}
+.track-progress-title h2{margin:0}
+.track-eta{display:inline-flex;align-items:center;gap:7px;margin:0;padding:4px 11px 4px 9px;border-radius:999px;background:#f3effd;color:#5a36c4;
+  font-size:12.5px;font-weight:600;line-height:1.4;font-variant-numeric:tabular-nums;letter-spacing:.005em}
+.track-eta[hidden]{display:none}
+.track-eta b{font-weight:800;color:#3f20a8}
+.track-eta-dot{width:6px;height:6px;border-radius:50%;background:#7549eb;box-shadow:0 0 0 0 rgba(117,73,235,.45);animation:eta-pulse 1.6s ease-out infinite}
+.track-eta.is-almost{background:#e7f8f0;color:#137a4b}
+.track-eta.is-almost .track-eta-dot{background:#1fa368;box-shadow:0 0 0 0 rgba(31,163,104,.45)}
+@keyframes eta-pulse{0%{box-shadow:0 0 0 0 rgba(117,73,235,.45)}80%,100%{box-shadow:0 0 0 7px rgba(117,73,235,0)}}
+@media (prefers-reduced-motion:reduce){.track-eta-dot{animation:none}}
 
 /* Visitor's preview is ready: real opening bars, the rest behind the sign-up card. */
 .guest-ready-hero{padding-bottom:22px}

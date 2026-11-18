@@ -1,4 +1,20 @@
-#pricing-view { min-height: 0; }
+#pricing-view { min-height: 0; background: #100b1f; color: #eee5fb; }
+#pricing-view .pricing-faq {
+  padding: clamp(40px, 6vw, 80px) 0;
+  background: linear-gradient(180deg, #100b1f, #161022);
+}
+#pricing-view .pricing-faq h2,
+#pricing-view .simple-faq summary { color: #f6efff; }
+#pricing-view .simple-faq,
+#pricing-view .simple-faq details { border-color: #392b4c; }
+#pricing-view .simple-faq p { color: #c8bcd7; }
+body:has(#pricing-view:not(.hidden)) #public-footer {
+  background: #100b1f;
+  border-color: #392b4c;
+  color: #eee5fb;
+}
+body:has(#pricing-view:not(.hidden)) #public-footer nav a { color: #c8bcd7; }
+body:has(#pricing-view:not(.hidden)) #public-footer nav a:hover { color: #fff; }
 
 .upgrade-pricing {
   background: var(--public-hero-background);
@@ -65,6 +81,7 @@
 
 .upgrade-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
 .upgrade-card {
+  position: relative;
   display: flex;
   flex-direction: column;
   --upgrade-muted: #d2c9df;
@@ -76,24 +93,36 @@
   background: #211a2d;
 }
 .upgrade-featured {
-  --upgrade-muted: #594965;
-  --upgrade-rule: #ddcde9;
-  --upgrade-mark: #6540b4;
-  background: #f6efff;
-  color: #251736;
-  border-color: #c7a8ff;
-  box-shadow: 0 10px 34px #0e081d55;
+  --upgrade-muted: #e0d4f8;
+  --upgrade-rule: #634f89;
+  --upgrade-mark: #cdb8ff;
+  background: linear-gradient(155deg, #332253, #211934);
+  color: #fff;
+  border-color: #a27aef;
+  box-shadow: 0 10px 34px #7549eb2b;
 }
+.upgrade-lifetime {
+  --upgrade-mark: #fbd47d;
+  background: linear-gradient(150deg, #2e241c, #211a2d);
+  border-color: #8d6833;
+}
+.upgrade-lifetime .upgrade-price strong { color: #ffe09b; }
 .upgrade-plan-heading { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 .upgrade-plan-heading h2 { font-size: 24px; letter-spacing: -.04em; margin: 0; color: inherit; }
-.upgrade-recommended {
-  padding: 4px 8px;
+.upgrade-card-badge {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 4px 12px;
   border-radius: 999px;
-  background: #e7d9ff;
-  color: #523184;
-  font-size: 11px;
+  background: #d9c3ff;
+  color: #321867;
+  font-size: 12px;
   font-weight: 800;
+  white-space: nowrap;
 }
+.upgrade-lifetime .upgrade-card-badge { background: #ffd07a; color: #3c230c; }
 .upgrade-description { min-height: 3em; margin: 6px 0 12px; color: var(--upgrade-muted); font-size: 13px; line-height: 1.5; }
 .upgrade-price { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
 .upgrade-price strong { font-size: clamp(34px, 4vw, 50px); line-height: 1.15; letter-spacing: -.055em; }
@@ -116,7 +145,7 @@
 .upgrade-unavailable span:last-child { text-decoration: line-through; }
 .upgrade-availability, .upgrade-note { text-align: center; }
 .upgrade-availability { margin: 25px 0 7px; color: #eee5fb; font-size: 14px; font-weight: 700; }
-.upgrade-note { margin: 0; color: #c9bfd8; font-size: 12px; line-height: 1.6; }
+.upgrade-note { margin: 18px 0 0; color: #c9bfd8; font-size: 12px; line-height: 1.6; }
 .upgrade-sr { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 
 @media (max-width: 1000px) {
@@ -155,3 +184,91 @@
 @media (min-width: 1101px) {
   .upgrade-pricing { padding-top: 130px; }
 }
+
+body:has(.unlock-dialog[open]) { overflow: hidden; }
+.unlock-dialog {
+  position: fixed;
+  width: min(460px, calc(100% - 28px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  overflow: auto;
+  overscroll-behavior: contain;
+  padding: clamp(20px, 4vw, 30px);
+  border: 1px solid #52416f;
+  border-radius: 20px;
+  background: radial-gradient(ellipse at top left, #292044, #151023 72%);
+  color: #fff;
+  box-shadow: 0 24px 90px #070410b3;
+}
+.unlock-dialog.has-offers { width: min(900px, calc(100% - 28px)); }
+.unlock-dialog::backdrop { background: #090611c7; backdrop-filter: blur(5px); }
+.unlock-dialog h2 { margin: 0 36px 10px 0; font-size: clamp(23px, 4vw, 32px); line-height: 1.15; }
+.unlock-dialog h2:focus { outline: none; }
+.unlock-close {
+  position: absolute;
+  right: 13px;
+  top: 13px;
+  width: 42px;
+  height: 42px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: #dbcaee;
+  font-size: 24px;
+}
+.unlock-close:hover, .unlock-back:hover { background: #ffffff14; color: #fff; }
+.unlock-track, .unlock-offers-copy { margin: 0 0 20px; color: #d6c9e7; font-size: 14px; overflow-wrap: anywhere; }
+.unlock-includes {
+  margin-top: 22px;
+  padding: 16px;
+  border: 1px solid #534167;
+  border-radius: 13px;
+  background: #ffffff0b;
+}
+.unlock-includes p { margin: 0 0 12px; color: #e0d4ef; font-weight: 800; font-size: 13px; }
+.unlock-includes ul { display: grid; gap: 10px; padding: 0; margin: 0; list-style: none; font-size: 14px; }
+.unlock-includes li { display: flex; align-items: baseline; gap: 9px; }
+.unlock-includes li > span[aria-hidden] { color: #c8acff; font-weight: 800; }
+.unlock-primary {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 20px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: 11px;
+  background: #7549eb;
+  color: #fff;
+  font-weight: 800;
+}
+.unlock-primary:hover { background: #663bd5; }
+.unlock-back { margin-top: 14px; min-height: 44px; padding: 0 10px; border: 0; border-radius: 8px; background: transparent; color: #d6c9e7; }
+.unlock-dialog button:focus-visible, .unlock-dialog a:focus-visible { outline: 2px solid #e3d1ff; outline-offset: 3px; }
+.unlock-dialog .upgrade-plan-heading h2 { margin: 0; font-size: 22px; }
+.unlock-dialog .upgrade-card { padding: 20px 16px 16px; }
+.unlock-dialog .upgrade-price strong { font-size: clamp(30px, 4vw, 42px); }
+.unlock-dialog .upgrade-cycle { margin-bottom: 24px; }
+@media (max-width: 760px) {
+  .unlock-dialog .upgrade-grid { gap: 24px; }
+  #pricing-view .upgrade-grid { row-gap: 25px; }
+}
+
+.sp-continuation::after,
+.flow-score-continuation.flow-paywall-area::after {
+  background: linear-gradient(180deg, #2b1a46a8, #191022e8 35%, #20152cc4 76%, #160e24eb);
+}
+.sp-continuation .sp-continuation-label {
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #fff;
+}
+.sp-continuation .sp-continuation-label p,
+.flow-score-continuation .flow-paywall-overlay p {
+  color: #e6ddf3;
+  text-shadow: none;
+}
+.flow-score-continuation .flow-paywall-overlay h2 { color: #fff; text-shadow: none; }
+.sp-continuation .sp-lock-progress,
+.flow-score-continuation .flow-paywall-progress { background: #ffffff35; }
+.sp-continuation .sp-lock-cta { width: auto; }

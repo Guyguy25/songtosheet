@@ -45,24 +45,23 @@ async function webhook(req,res){
   try{event=JSON.parse(body);}catch{return json(res,400,{detail:'JSON invalide.'});}
   const db=await database();
   await store.prepare(db);
-  try{
-    await db.collection('billing_events').insertOne({_id:String(req.headers['webhook-id']),type:String(event.type||''),
-      received_at:new Date()});
-  }catch(error){
-    if(error.code===11000)return json(res,200,{ok:true,duplicate:true});  // Whop delivers at least once
-    throw error;
+  const eventId=String(req.headers['webhook-id']);
+  if(await db.collection('billing_events').findOne({_id:eventId,processed:true},{projection:{_id:1}})){
+    return json(res,200,{ok:true,duplicate:true});
   }
   const {id,object}=membershipOf(event);
   if(!id&&!object)return json(res,200,{ok:true,ignored:true});
   let membership=object;
   if(id&&process.env.WHOP_API_KEY){
     // The API's copy is authoritative (events can arrive out of order).
-    try{membership=await store.fetchMembership(id);}catch(error){if(!object)throw error;}
+    membership=await store.fetchMembership(id);
   }
   // Metadata set at checkout (the account id) is kept even if the API copy lacks it.
   const granted=entitlement({...membership,metadata:{...(object?.metadata||{}),...(membership?.metadata||{})}});
   if(!granted)return json(res,200,{ok:true,ignored:true});
   const userId=await store.applyEntitlement(db,granted);
+  await db.collection('billing_events').updateOne({_id:eventId},{$set:{processed:true,
+    type:String(event.type||''),received_at:new Date()}},{upsert:true});
   console.log('billing webhook',event.type,granted.tier,granted.status,userId?'linked':'pending');
   return json(res,200,{ok:true});
 }
@@ -71,11 +70,15 @@ async function checkout(req,res,user){
   const {plan,period}=req.body||{};
   const planId=CHECKOUT_PLANS[plan]?.[plan==='lifetime'?'once':period==='annual'?'annual':'monthly'];
   if(!planId)return json(res,400,{detail:'Offre inconnue.'});
-  const origin='https://'+String(req.headers.host||'songtosheet.vercel.app');
+  const origin='https://songtosheet.vercel.app';
   const configuration=await store.whop('/checkout_configurations',{method:'POST',body:{
-    mode:'payment',plan_id:planId,metadata:{user_id:String(user._id)},redirect_url:origin+'/app?abonnement=merci'}});
+    account_id:'biz_7EpgzhL8mQlG1B',mode:'payment',variant_id:planId,metadata:{user_id:String(user._id)},redirect_url:origin+'/app?abonnement=merci'}});
   const target=String(configuration?.purchase_url||'');
-  const url=target.startsWith('https://')?target:target.startsWith('/')?'https://whop.com'+target:null;
+  let url=null;
+  try{
+    const parsed=new URL(target,'https://whop.com');
+    if(parsed.origin==='https://whop.com'&&parsed.pathname.startsWith('/checkout/'))url=parsed.href;
+  }catch{}
   if(!url)return json(res,502,{detail:'Le service de paiement ne répond pas. Réessaie dans un instant.'});
   return json(res,200,{url});
 }

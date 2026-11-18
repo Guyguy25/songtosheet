@@ -454,7 +454,8 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
         if isinstance(error, TrackLinkError) or str(error).startswith(("L’audio doit durer", "L’audio dépasse", "Aucune note exploitable", "Les exports dépassent", "Les accords sont trop incertains", "Le moteur d’accompagnement")):
             message = str(error)
         payload = ({"ok": True, "preview": True, "exports": {}, "pdf_error": not job.get("preview_limit")}
-                   if direct_published else {"ok": False, "error": message})
+                   if direct_published else
+                   {"ok": False, "error": message, "error_detail": f"{type(error).__name__}: {error}"[:500]})
     send_finish(call, identity, payload, job)
 
 

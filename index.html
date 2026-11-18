@@ -1444,27 +1444,32 @@
   async function refresh(){if(!state.user)return;
     try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);setCurrentUser(user.user);state.jobs=jobs.jobs||[];
       if(!state.user){go('/inscription');return;}
-      const access=state.user.role==='admin'?'Admin':'Freemium';
+      const access=state.user.role==='admin'?'Admin':state.user.plan&&state.user.plan!=='free'?PLAN_NAMES[state.user.plan]||'Freemium':'Freemium';
       $('sidebar-credits').textContent=access;$('top-credits').textContent=access;$('metric-credits').textContent=access;
       $('create-balance').textContent='Démo';
-      $('metric-total').textContent=state.jobs.length;
+      $('metric-total').textContent=songs().length;
       $('metric-progress').textContent=state.jobs.filter(j=>['processing','queued'].includes(j.status)).length;
       $('user-avatar').textContent=state.user.email.charAt(0).toUpperCase();
-      renderJobs('recent-jobs',state.jobs.slice(0,5));renderJobs('library-jobs',filterJobs());renderRecents();
-      $('library-count').textContent=`${state.jobs.length} création${state.jobs.length===1?'':'s'}`;
+      renderJobs('recent-jobs',songs().slice(0,5));renderJobs('library-jobs',filterJobs());renderRecents();
+      $('library-count').textContent=`${songs().length} création${songs().length===1?'':'s'}`;
     }catch(e){toast(e.message,true);}
   }
+  // One entry per song: a whole song generated from a preview lives under that preview,
+  // and the entry opens the whole song once there is one.
+  const songs=()=>state.jobs.filter(j=>!j.parent_id);
+  const entryTarget=j=>Object.values(j.full_jobs||{}).at(-1)||j.id;
+  const songOf=id=>state.jobs.find(j=>j.id===id)?.parent_id||id;
   let recentsExpanded=false;
   function renderRecents(){
-    const box=$('side-recents'),limit=8,all=state.jobs;
+    const box=$('side-recents'),limit=8,all=songs();
     // Replié : les 8 plus récentes, plus la partition ouverte si elle est plus ancienne.
-    const opened=state.activePage==='result'?state.resultId:null;
+    const opened=state.activePage==='result'&&state.resultId?songOf(state.resultId):null;
     const jobs=recentsExpanded?all:all.filter((j,i)=>i<limit||j.id===opened);
     const toggle=all.length>limit?`<button type="button" class="side-recents-toggle" data-recents-toggle aria-expanded="${recentsExpanded}">${recentsExpanded?'Réduire':`Tout afficher (${all.length})`}</button>`:'';
-    box.innerHTML=jobs.map(j=>`<a href="${appPath('result',j.id)}" data-job="${safe(j.id)}"${j.id===opened?' aria-current="page"':''} title="${safe(j.title)}"><span aria-hidden="true">♪</span><b>${safe(j.title)}</b></a>`).join('')+toggle;
+    box.innerHTML=jobs.map(j=>`<a href="${appPath('result',entryTarget(j))}" data-job="${safe(entryTarget(j))}"${j.id===opened?' aria-current="page"':''} title="${safe(j.title)}"><span aria-hidden="true">♪</span><b>${safe(j.title)}</b></a>`).join('')+toggle;
     box.previousElementSibling.hidden=!all.length;
   }
-  function filterJobs(){const query=($('library-search').value||'').toLowerCase().trim();return state.jobs.filter(j=>(j.title+' '+j.instrument+' '+(j.format||'')).toLowerCase().includes(query));}
+  function filterJobs(){const query=($('library-search').value||'').toLowerCase().trim();return songs().filter(j=>(j.title+' '+j.instrument+' '+(j.format||'')).toLowerCase().includes(query));}
   const statusText={ready:'À générer',completed:'Aperçu disponible',failed:'Échec',processing:'En cours',queued:'En attente'};
   function renderJobs(id,jobs){const box=$(id);
     if(!jobs.length){box.innerHTML='<div class="empty-jobs"><span>♬</span><strong>Aucune création pour le moment</strong><p>Choisis une musique pour commencer.</p><button class="btn btn-outline" data-start>Créer une partition ↗</button></div>';return;}
@@ -1472,11 +1477,11 @@
       const format=j.downloads?.includes('tab')?'Partition + tablature':j.format==='tablature'?'Tablature':'Partition';
       const details=safe(j.instrument)+' · '+format+' · '+(j.duration_verified===false?'Durée non vérifiée':timeFmt(j.duration))+' · '+dateFmt(j.created_at);
       if(j.track){
-        const status=j.status==='completed'?'Prête':statusText[j.status]||'Import en cours';
-        return `<div class="job-row demo-job-row"><a class="demo-job-details" href="${appPath('result',j.id)}" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${status}</span></a></div>`;
+        const status=j.full_jobs?'Morceau entier':j.status==='completed'?'Prête':statusText[j.status]||'Import en cours';
+        return `<div class="job-row demo-job-row"><a class="demo-job-details" href="${appPath('result',entryTarget(j))}" data-job="${safe(entryTarget(j))}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${status}</span></a></div>`;
       }
       const label=state.user.role==='admin'?'Transcrire l’audio':j.preview_revealed?'Voir mon aperçu':'Générer mon aperçu';
-      return `<div class="job-row demo-job-row"><a class="demo-job-details" href="${appPath('result',j.id)}" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${statusText[j.status]||'À générer'}</span></a><button type="button" class="demo-job-generate" data-demo-generate="${safe(j.id)}">${label} <span aria-hidden="true">↗</span></button></div>`;
+      return `<div class="job-row demo-job-row"><a class="demo-job-details" href="${appPath('result',entryTarget(j))}" data-job="${safe(entryTarget(j))}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${statusText[j.status]||'À générer'}</span></a><button type="button" class="demo-job-generate" data-demo-generate="${safe(j.id)}">${label} <span aria-hidden="true">↗</span></button></div>`;
     }).join('');
   }
   let trackWizard;
@@ -2193,6 +2198,8 @@
           :Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
             `<a href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}"><b>${label.replace('Télécharger le ','')}</b><small>${hints[key]}</small></a>`).join('');
         const versionChoice=j.instrument==='guitare'||j.piano_versions?.length;
+        // A whole song that failed: given back, relaunched from its own version (not a new song).
+        const fullFailed=j.status==='failed'&&Boolean(j.variant&&j.parent_id);
         const summary=ready?`<button type="button" class="score-bar-btn score-bar-menu" data-score-menu aria-label="Ouvrir le menu">☰</button>
           <button type="button" class="score-bar-btn" data-score-back aria-label="Retour à ma bibliothèque" title="Retour à ma bibliothèque">←</button>
           <div class="score-bar-title"><h1 title="${safe(j.title)}">${safe(j.title)}</h1><p>${meta}</p></div>
@@ -2204,8 +2211,11 @@
           :`<span class="dashboard-kicker">${status}</span>
           <h1>${safe(j.title)}</h1><p class="result-meta">${meta}</p>
           ${j.source_name?`<p class="result-meta">Source · ${safe(j.source_name)}</p>`:''}
-          ${detail?`<p>${safe(detail)}</p>`:''}${downloads?`<div class="result-actions">${downloads}</div>`:''}
-          ${!waiting&&!completed?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;
+          ${fullFailed?`<p>La génération du morceau entier n’a pas abouti. <strong>Elle n’est pas décomptée</strong> : ${state.user?.plan==='starter'?'ton morceau du jour t’est rendu, tu peux la relancer.':'tu peux la relancer.'}</p>`
+            :detail?`<p>${safe(detail)}</p>`:''}${downloads?`<div class="result-actions">${downloads}</div>`:''}
+          ${fullFailed?`<div class="result-actions"><button type="button" class="btn btn-primary" data-full-retry="${safe(j.parent_id)}" data-variant="${safe(j.variant)}">Relancer la génération</button>
+            <a class="btn btn-outline" href="${appPath('result',j.parent_id)}" data-open-job="${safe(j.parent_id)}">⇄ Revenir aux versions</a></div>`
+          :!waiting&&!completed?'<button type="button" class="btn btn-outline" data-start>Réessayer</button>':''}`;
         if(trackSummaryMarkup!==summary){
           const resultSummary=$('track-result-summary');
           const controls=$('score-bar-controls');
@@ -2434,6 +2444,8 @@
         go(target);return;
       }
       if(e.target.closest('[data-retry-guest]')){loadResult(state.resultId);return;}
+      const fullRetry=e.target.closest('[data-full-retry]');
+      if(fullRetry){fullRetry.disabled=true;if(!await generateFull(fullRetry.dataset.fullRetry,fullRetry.dataset.variant))openResult(fullRetry.dataset.fullRetry);fullRetry.disabled=false;return;}
       if(e.target.closest('[data-start]')){
         if(!state.user)state.guestStudio=true;
         startApp('create');return;

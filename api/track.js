@@ -433,7 +433,8 @@ async function worker(db,res,body){
   }else if(completed){
     outcome={status:'completed',duration,note_count,exports,downloads:Object.keys(exports)};
   }else{
-    outcome={status:'failed',error_message:typeof body.error==='string'?body.error.slice(0,300):'La transcription a échoué.'};
+    outcome={status:'failed',error_message:typeof body.error==='string'?body.error.slice(0,300):'La transcription a échoué.',
+      ...(typeof body.error_detail==='string'?{error_detail:body.error_detail.slice(0,500)}:{})};
   }
   const updated=await jobs.updateOne(filter,{$set:{...outcome,active:false,finished_at:now},$unset:{lease:'',lease_until:'',audio_url:''}});
   if(!updated.modifiedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});

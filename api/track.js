@@ -2,6 +2,7 @@
 const {createHash,createHmac,randomBytes,randomUUID,timingSafeEqual}=require('node:crypto');
 const {teaserMusicXml,teaserSource,TEASER_FILES}=require('../lib/teaser');
 const {coveredRecommendation}=require('../lib/score-coverage');
+const {previewEta}=require('../lib/track-eta');
 const {compareGuitar,sourceKey,candidates}=require('../lib/guitar-comparison');
 const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
@@ -59,11 +60,12 @@ async function guestStatus(db,req,res,guest){
   if(!guest||!isId(id))return json(res,404,{detail:'Aperçu introuvable ou expiré.'});
   const job=await db.collection('track_jobs').findOne(trackFilter(id,guest),{projection:{
     title:1,instrument:1,format:1,status:1,stage:1,stages:1,source_name:1,preview_limit:1,
-    active:1,created_at:1,queued_at:1,expires_at:1,processing_deadline:1,lease_until:1,error_message:1,
+    active:1,created_at:1,queued_at:1,expires_at:1,processing_deadline:1,lease_until:1,error_message:1,claimed_at:1,stage_at:1,
   }});
   if(!job)return json(res,404,{detail:'Aperçu introuvable ou expiré.'});
   const {title,instrument,format,status,stage,stages,source_name,preview_limit,error_message,created_at}=serialTrack(job);
-  return json(res,200,{track:true,title,instrument,format,status,stage,stages,source_name,preview_limit,error_message,created_at,downloads:[],
+  const eta=await previewEta(db,{...job,status});
+  return json(res,200,{track:true,title,instrument,format,status,stage,stages,source_name,preview_limit,error_message,created_at,eta,downloads:[],
     teaser:status==='completed'});
 }
 
@@ -269,7 +271,8 @@ async function worker(db,res,body){
     const deadline=new Date(now.getTime()+PROCESSING_MS);
     const job=await jobs.findOneAndUpdate({...compatible,active:true,status:'queued',expires_at:{$gt:deadline},
       $nor:[expiredQueue(now)]},
-      {$set:{status:'processing',lease,lease_until:deadline,processing_deadline:deadline,stage:'audio',stages:['audio']}},
+      {$set:{status:'processing',lease,lease_until:deadline,processing_deadline:deadline,stage:'audio',stages:['audio'],
+        claimed_at:now,stage_at:{audio:now}}},
       {sort:{created_at:1},returnDocument:'after'});
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
       excerpt:job.excerpt,isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
@@ -285,7 +288,7 @@ async function worker(db,res,body){
     $nor:[expiredProcessing(now)]};
   if(body.action==='progress'){
     if(!PROGRESS_STAGES.has(body.stage))return json(res,400,{detail:'Étape invalide.'});
-    const updated=await jobs.updateOne(filter,{$set:{stage:body.stage},$addToSet:{stages:body.stage}});
+    const updated=await jobs.updateOne(filter,{$set:{stage:body.stage},$addToSet:{stages:body.stage},$min:{['stage_at.'+body.stage]:now}});
     return updated.matchedCount?json(res,200,{ok:true}):json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   }
   const job=await jobs.findOne(filter,{projection:{exports:0}});
@@ -410,7 +413,7 @@ async function worker(db,res,body){
         ...(!comparisonData.auto_recommendation?{auto_recommendation:''}:{}),
         ...(!pianoData.piano_primary?{piano_primary:''}:{}),
         ...(!pianoData.piano_recommendation?{piano_recommendation:''}:{})},
-      $addToSet:{stages:'pdf'}});
+      $addToSet:{stages:'pdf'},$min:{'stage_at.pdf':now}});
     if(!updated.matchedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
     return json(res,200,{ok:true});
   }

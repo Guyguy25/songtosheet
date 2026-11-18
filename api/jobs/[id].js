@@ -5,6 +5,7 @@ const {authenticated,json}=require('../../lib/session');
 const {method,fail}=require('../../lib/authorization');
 const {serial}=require('../../lib/generations');
 const {serialTrack,JOB_FIELDS,PREVIEW_SECONDS}=require('../../lib/track-jobs');
+const {previewEta}=require('../../lib/track-eta');
 module.exports=async(req,res)=>{
   if(req.method!=='GET'&&req.method!=='POST'){res.setHeader('Allow','GET, POST');return json(res,405,{detail:'Méthode non autorisée.'});}
   if(!method(req,res,req.method))return;
@@ -20,7 +21,7 @@ module.exports=async(req,res)=>{
     if(!job&&req.method==='GET'){
       const access=user.role==='admin'?{}:{$or:[{preview_limit:PREVIEW_SECONDS},{variant:{$exists:true}}]};
       const track=await db.collection('track_jobs').findOne({...filter,...access},{projection:JOB_FIELDS});
-      if(track)return json(res,200,serialTrack(track));
+      if(track)return json(res,200,{...serialTrack(track),eta:await previewEta(db,track)});
     }
     if(!job)return json(res,404,{detail:'Création introuvable.'});
     if(req.method==='POST'){

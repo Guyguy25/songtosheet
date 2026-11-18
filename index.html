@@ -10,7 +10,7 @@
   <script>document.documentElement.classList.toggle('has-overlay-header', /^\/(?:tarifs\/?|upgrade\/?)?$/.test(location.pathname.toLowerCase()));</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/assets/site-ui.css?v=3" />
+  <link rel="stylesheet" href="/assets/site-ui.css?v=4" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=14" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=32" defer></script>
@@ -2094,28 +2094,28 @@
       }
     }catch{engraving?.remove();}
   }
-  // Free previews: a 30-second countdown from the moment the visitor launched it.
-  let countdownTimer=null;
-  const COUNTDOWN_SECONDS=30;
-  function runCountdown(progress,createdAt){
-    const box=progress.querySelector('.track-countdown');
+  // Free previews: time left, estimated by the server from recent previews (engine start included).
+  // The display counts down every second and eases toward each new estimate instead of jumping.
+  let countdownTimer=null,etaEnd=null,etaJob=null;
+  const clock=secs=>`${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
+  function runCountdown(progress,eta,queued,id){
+    const box=progress.querySelector('.track-eta');
     if(!box)return;
-    const key=String(createdAt||'local');
-    if(box.dataset.key===key&&countdownTimer)return;
-    box.dataset.key=key;box.hidden=false;
-    // Trust the server's launch time unless this device's clock disagrees with it.
-    const now=Date.now()/1000;
-    const start=createdAt&&Math.abs(now-createdAt)<90?createdAt:now;
-    clearInterval(countdownTimer);
+    if(!Number.isFinite(eta)){box.hidden=true;return;}
+    const target=Date.now()+eta*1000;
+    if(etaJob!==id||etaEnd===null)etaEnd=target;
+    else if(Math.abs(target-etaEnd)>2000)etaEnd+=(target-etaEnd)*.5;
+    etaJob=id;box.hidden=false;box.dataset.queued=queued?'1':'';
+    if(countdownTimer)return;
     const tick=()=>{
-      if(!box.isConnected||box.closest('.hidden')){clearInterval(countdownTimer);countdownTimer=null;return;}
-      const left=Math.max(0,Math.ceil(COUNTDOWN_SECONDS-(Date.now()/1000-start)));
-      box.style.setProperty('--left',String(left/COUNTDOWN_SECONDS));
-      box.querySelector('b').textContent=left;
-      box.classList.toggle('is-over',left===0);
-      box.querySelector('small').textContent=left?'Ton aperçu de 30 s arrive':'Encore quelques secondes…';
+      if(!box.isConnected||box.closest('.hidden')){clearInterval(countdownTimer);countdownTimer=null;etaEnd=null;return;}
+      const left=Math.max(0,Math.round((etaEnd-Date.now())/1000));
+      const text=box.querySelector('.track-eta-text');
+      const label=left<=3?'Presque prêt…':`Prêt dans <b>${clock(left)}</b>`;
+      if(text.innerHTML!==label)text.innerHTML=label;
+      box.classList.toggle('is-almost',left<=3);
     };
-    tick();countdownTimer=setInterval(tick,250);
+    tick();countdownTimer=setInterval(tick,500);
   }
   async function loadResult(id){
     const guest=!state.user;
@@ -2156,10 +2156,10 @@
         if($('track-result-summary')?.dataset.job!==id){
           $('result-content').innerHTML=`<div id="track-result-summary" class="result-hero"></div>
             <section id="track-progress" class="track-progress hidden" aria-label="Progression du relevé">
-              <div class="track-countdown" hidden><div class="track-countdown-ring"><b>30</b><span>s</span></div><small>Ton aperçu de 30 s arrive</small></div>
               <div class="track-progress-heading">
                 <span class="track-progress-spinner" aria-hidden="true"></span>
-                <h2 aria-live="polite"></h2>
+                <div class="track-progress-title"><h2 aria-live="polite"></h2>
+                  <div class="track-eta" hidden><span class="track-eta-dot" aria-hidden="true"></span><span class="track-eta-text"></span></div></div>
                 <span class="track-progress-percent" aria-hidden="true" hidden></span>
               </div>
               <p hidden></p>
@@ -2213,8 +2213,8 @@
         if(completed&&state.user?.role==='admin')addAudioReview(j);
         show('track-progress',waiting);
         if(!waiting)cancelAnimationFrame(trackProgressFrame);
-        if(waiting&&j.preview_limit)runCountdown($('track-progress'),j.created_at);
-        else if(!waiting){clearInterval(countdownTimer);countdownTimer=null;}
+        if(waiting&&j.preview_limit)runCountdown($('track-progress'),j.eta,j.status==='queued',id);
+        else if(!waiting){clearInterval(countdownTimer);countdownTimer=null;etaEnd=null;}
         window.SongToSheetWaitSurvey?.mount($('track-wait-survey'),state.user?.id,waiting&&!ready);
         const stage=ready?(j.preview_limit?(j.instrument==='guitare'&&!['chords','original'].includes(j.guitar_goal)?'solo':'finalize'):'pdf'):
           j.status==='queued'?'queue':Object.hasOwn(trackStages,j.stage)?j.stage:'processing';

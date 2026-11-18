@@ -10,7 +10,7 @@ on:
         description: "Lien YouTube pour mesurer le temps et le coût réels (optionnel)"
         required: false
       benchmark:
-        description: "Mesure à lancer : benchmark (piano) ou benchmark_yourmt3 (précision YourMT3+)"
+        description: "Mesure à lancer : benchmark (piano) benchmark_yourmt3 (précision YourMT3+) ou benchmark_speed"
         required: false
         default: benchmark
 
@@ -40,5 +40,5 @@ jobs:
           BENCHMARK_URL: ${{ github.event.inputs.benchmark_url }}
           BENCHMARK: ${{ github.event.inputs.benchmark || 'benchmark' }}
         run: |
-          case "$BENCHMARK" in benchmark|benchmark_yourmt3) ;; *) echo "Mesure inconnue"; exit 1;; esac
+          case "$BENCHMARK" in benchmark|benchmark_yourmt3|benchmark_speed) ;; *) echo "Mesure inconnue"; exit 1;; esac
           modal run "backend/modal_app.py::$BENCHMARK" --url "$BENCHMARK_URL"

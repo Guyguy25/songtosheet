@@ -133,6 +133,10 @@
 }
 
 .upgrade-plan-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
   width: 100%;
   min-height: 44px;
   margin-top: auto;

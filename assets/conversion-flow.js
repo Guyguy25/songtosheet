@@ -363,6 +363,7 @@
       $('flow-preview-instrument').textContent=(request?(instrumentNames[request.instrument]||'Piano'):'Piano')+' · '+formatLabel(request);
       $('flow-preview-paper-label').textContent=chosenFormat(request)==='tablature'?'Tablature originale de démonstration':'Mélodie originale de démonstration';
       $('flow-paywall-title').textContent='Tu n’as accès qu’aux 30 premières secondes de ta '+formatLongName(request);
+      $('flow-plans').dataset.unlock=formatLongName(request);
       $('flow-plans-label').textContent='Débloquer la '+formatLongName(request)+' complète';
       updatePreviewNotation(request);
       $('flow-preview').classList.remove('hidden');
@@ -587,7 +588,6 @@
       if(typeof window.SongToSheetOpenLibrary==='function')window.SongToSheetOpenLibrary();
       else navigate('/app');
     });
-    $('flow-plans').addEventListener('click',function(){navigate('/tarifs');});
     $('flow-new').addEventListener('click',backHome);
     window.addEventListener('popstate',function(){render(location.pathname);});
     render(location.pathname);

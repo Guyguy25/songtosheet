@@ -156,9 +156,16 @@ async function resolveSource(raw){
   throw Object.assign(new Error('Ouvre le lien de partage et copie le lien direct du morceau.'),{status:400});
 }
 
+// "Song (Remastered 2011)", "Song - Radio Edit", "Song [feat. X]": streaming services add
+// edition tags that the official YouTube upload rarely repeats word for word.
+function baseTitle(title){
+  return String(title||'').replace(/\s*[([][^)\]]*[)\]]/g,' ').replace(/\s+-\s+.*$/,'').replace(/\s+/g,' ').trim()||String(title||'');
+}
+
 async function findYouTubeVersion(info){
   const key=process.env.YOUTUBE_DATA_API_KEY;
   if(!key||!info.title)return null;
+  info={...info,title:baseTitle(info.title)};
   const query=[info.artist,info.title,'official audio'].filter(Boolean).join(' ');
   const params=new URLSearchParams({
     part:'snippet',type:'video',videoEmbeddable:'true',maxResults:'5',q:query,key
@@ -268,7 +275,8 @@ module.exports=async function handler(req,res){
     }
     const result=await getInfo(src);
     if(resolve){
-      const version=src.provider==='Spotify'&&req.query.resolve==='youtube'?await findYouTubeVersion(result):null;
+      // Spotify and Deezer stream protected audio: the same song is looked up on YouTube.
+      const version=await findYouTubeVersion(result);
       return res.status(200).json({...result,version});
     }
     if(!result.duration_verified){

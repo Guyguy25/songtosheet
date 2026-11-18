@@ -355,26 +355,41 @@ def measure_download(url: str):
     time.sleep(2)
     from track_link import download_youtube_section
 
-    def section(label):
-        with tempfile.TemporaryDirectory() as folder:
-            started = time.monotonic()
-            result = download_youtube_section(video, Path(folder), 30, 60.5)
-            print(f"===== {label} : {time.monotonic() - started:.1f}s, {'ok' if result else 'échec'}", flush=True)
+    import os
 
-    for attempt in range(3):
-        section(f"extrait en course seul n°{attempt + 1}")
-    # Same, while the models warm up in the background (as in a real job since the boot warm-up).
-    import threading
+    import track_link
 
-    from engine_cloud import prepare_engines, warm_engines
+    def section(label, extra):
+        original = track_link.youtube_options
 
-    loaded = prepare_engines()
-    warming = threading.Thread(target=warm_engines, args=(loaded,), daemon=True)
-    warming.start()
-    section("extrait en course PENDANT le préchauffage")
-    warming.join()
-    for attempt in range(2):
-        section(f"extrait en course après préchauffage n°{attempt + 1}")
+        def options():
+            return original() + (["--extractor-args", extra] if extra else [])
+        track_link.youtube_options = options
+        try:
+            with tempfile.TemporaryDirectory() as folder:
+                started = time.monotonic()
+                result = download_youtube_section(video, Path(folder), 30, 60.5)
+                print(f"===== {label} : {time.monotonic() - started:.1f}s, {'ok' if result else 'échec'}", flush=True)
+        finally:
+            track_link.youtube_options = original
+
+    proxy = os.environ.pop("TRACK_YTDLP_PROXY", None)  # one attempt at a time: compare like with like
+    os.environ["TRACK_YTDLP_PROXY_SINGLE"] = "1"
+    from track_link import sticky_proxy
+
+    for round_ in range(3):
+        for label, extra in (("défaut", None), ("sans page web", "youtube:player_skip=webpage"),
+                             ("sans page web ni configs", "youtube:player_skip=webpage,configs")):
+            os.environ["TRACK_YTDLP_PROXY"] = proxy
+            original_race = track_link.race
+
+            def single(commands, outputs, timeout, env=None):
+                return original_race(commands[:1], outputs[:1], timeout, env)
+            track_link.race = single
+            try:
+                section(f"{label} n°{round_ + 1}", extra)
+            finally:
+                track_link.race = original_race
     return
     for label, extra in (("extrait 1", ["--download-sections", "*30-60", "-f", "bestaudio[ext=m4a]/bestaudio"]),
                          ("extrait 2", ["--download-sections", "*30-60", "-f", "bestaudio[ext=m4a]/bestaudio"]),

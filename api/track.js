@@ -1,6 +1,6 @@
 'use strict';
 const {createHash,createHmac,randomBytes,randomUUID,timingSafeEqual}=require('node:crypto');
-const {teaserMusicXml,teaserSource}=require('../lib/teaser');
+const {teaserMusicXml,teaserSource,TEASER_FILES}=require('../lib/teaser');
 const {compareGuitar,sourceKey,candidates}=require('../lib/guitar-comparison');
 const {ObjectId}=require('mongodb');
 const {database}=require('../lib/mongodb');
@@ -71,8 +71,11 @@ async function guestTeaser(db,req,res,guest){
   const {id}=req.query;
   if(!guest||!isId(id))return json(res,404,{detail:'Aperçu introuvable ou expiré.'});
   const job=await db.collection('track_jobs').findOne({...trackFilter(id,guest),status:'completed'},
-    {projection:{format:1,'exports.tab':1,'exports.musicxml':1}});
-  const xml=job&&teaserMusicXml(teaserSource(job));
+    {projection:{format:1,instrument:1,downloads:1,engine:1,solo_engine:1,preview_limit:1,auto_recommendation:1,
+      ...Object.fromEntries(TEASER_FILES.map(key=>['exports.'+key,1]))}});
+  // Guitar: the version the AI recommends is the one shown first in the studio, so tease that one.
+  const recommended=job?.instrument==='guitare'&&candidates(job).find(v=>v.key===job.auto_recommendation?.recommended);
+  const xml=job&&teaserMusicXml(teaserSource(job,recommended?[recommended.score]:[]));
   if(!xml)return json(res,404,{detail:'Aperçu introuvable.'});
   res.setHeader('Content-Type','application/vnd.recordare.musicxml+xml');
   res.setHeader('Cache-Control','private, no-store');

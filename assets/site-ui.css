@@ -67,10 +67,10 @@
 .guest-teaser-score.is-rendered .guest-teaser-fallback{display:none}
 .guest-teaser-engraving svg{max-width:100%;height:auto}
 /* First system stays sharp; everything below fades into blur behind the card. */
-.guest-teaser-veil{grid-area:1/1;position:relative;margin-top:150px;display:grid;grid-template-columns:minmax(0,1fr);align-content:end;justify-items:center;padding:70px 16px 26px;
-  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
-  background:linear-gradient(180deg,rgba(255,255,255,0) 0,rgba(255,255,255,.72) 90px,rgba(255,255,255,.96) 100%);
-  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 60px);mask-image:linear-gradient(180deg,transparent 0,#000 60px)}
+.guest-teaser-veil{grid-area:1/1;position:relative;margin-top:150px;display:grid;grid-template-columns:minmax(0,1fr);align-content:end;justify-items:center;padding:118px 16px 26px;
+  -webkit-backdrop-filter:blur(3.5px);backdrop-filter:blur(3.5px);
+  background:linear-gradient(180deg,rgba(255,255,255,0) 0,rgba(255,255,255,.2) 90px,rgba(255,255,255,.9) 150px,#fff 100%);
+  -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 26px);mask-image:linear-gradient(180deg,transparent 0,#000 26px)}
 .guest-teaser-card{box-sizing:border-box;display:grid;justify-items:center;gap:10px;width:min(440px,100%);padding:24px 26px 20px;border:1px solid #e3d9fb;border-radius:20px;background:#fff;
   box-shadow:0 22px 60px rgba(64,37,140,.16);text-align:center}
 .guest-teaser-lock{display:grid;place-items:center;width:44px;height:44px;border-radius:14px;background:#f1ebff;font-size:20px}
@@ -80,4 +80,4 @@
 .guest-teaser-login{color:#5a36c4;font-size:14px;font-weight:700}
 .guest-teaser-trust{display:flex;flex-wrap:wrap;justify-content:center;gap:4px 14px;margin:6px 0 0;padding:0;list-style:none;color:#7a6f92;font-size:12.5px}
 .guest-teaser-trust li::before{content:"✓";margin-right:5px;color:#1fa368;font-weight:800}
-@media (max-width:640px){.guest-teaser-veil{margin-top:110px}.guest-teaser-card{padding:22px 18px 18px}}
+@media (max-width:640px){.guest-teaser-veil{margin-top:110px;padding-top:92px}.guest-teaser-card{padding:22px 18px 18px}}

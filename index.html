@@ -10,7 +10,7 @@
   <script>document.documentElement.classList.toggle('has-overlay-header', /^\/(?:tarifs\/?|upgrade\/?)?$/.test(location.pathname.toLowerCase()));</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/assets/site-ui.css?v=2" />
+  <link rel="stylesheet" href="/assets/site-ui.css?v=3" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=14" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=32" defer></script>
@@ -2078,6 +2078,8 @@
       await display.load(xml);
       if(!box.isConnected)return;
       display.Zoom=window.innerWidth<640?.6:.85;
+      // Two lines of four bars: the first one sharp, the second one blurred under the card.
+      if(display.EngravingRules)display.EngravingRules.RenderXMeasuresPerLineAkaSystem=4;
       display.render();
       box.classList.add('is-rendered');
       // Keep the first line of music sharp: the blur starts right under it.
@@ -2088,7 +2090,7 @@
         const last=lines.at(-1),scale=10*display.Zoom;
         const bottom=(last.PositionAndShape.AbsolutePosition.y+last.StaffHeight)*scale;
         const top=engraving.getBoundingClientRect().top-section.getBoundingClientRect().top;
-        veil.style.marginTop=Math.round(top+bottom+14)+'px';
+        veil.style.marginTop=Math.round(top+bottom+10)+'px';
       }
     }catch{engraving?.remove();}
   }

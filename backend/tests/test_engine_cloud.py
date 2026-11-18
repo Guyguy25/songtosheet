@@ -35,8 +35,8 @@ def test_run_drain_logs_cost_and_subtracts_loading_time(monkeypatch, capsys):
 
     def drain(call, loaded, cache, time_budget, warm):
         seen["budget"] = time_budget
-        assert warmed == []  # the warm-up waits for a claimed job
-        warm()
+        warm()  # waits for the warm-up started at boot
+        assert warmed == ["engines"]
         return 1
     monkeypatch.setattr(track_worker, "drain", drain)
     assert engine_cloud.run_drain(time_budget=570) == 1
@@ -95,3 +95,23 @@ def test_prepare_engines_starts_model_processes_at_boot(monkeypatch):
     monkeypatch.setattr(track_worker, "load_engines", lambda: Engines(guitar=Child("tsumugi"), piano=Child("yourmt3")))
     engine_cloud.prepare_engines()
     assert sorted(started) == ["tsumugi", "yourmt3"]
+
+
+def test_warm_up_starts_before_the_claim(monkeypatch):
+    import threading
+
+    import engine_cloud
+    import track_worker
+
+    monkeypatch.setenv("SITE_URL", "https://example.test")
+    monkeypatch.setenv("TRACK_WORKER_TOKEN", "t")
+    warming = threading.Event()
+    monkeypatch.setattr(engine_cloud, "prepare_engines", lambda: "engines")
+    monkeypatch.setattr(engine_cloud, "warm_engines", lambda loaded: warming.set())
+
+    def drain(call, loaded, cache, time_budget, warm):
+        assert warming.wait(5), "the warm-up did not start before the first claim"
+        warm()
+        return 0
+    monkeypatch.setattr(track_worker, "drain", drain)
+    assert engine_cloud.run_drain(time_budget=570) == 0

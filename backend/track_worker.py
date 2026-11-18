@@ -477,11 +477,14 @@ def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_
     while done < max_jobs:
         if time_budget is not None and time.monotonic() - started > time_budget - JOB_LIMIT_SECONDS:
             break
+        asked = time.monotonic()
         job = call("claim", **payload)["job"]
         if not job:
             break
         done += 1
         job_started = time.monotonic()
+        print(f"{job.get('id')}: prise en charge en {job_started - asked:.1f}s "
+              f"({job_started - started:.1f}s après le début de la file)", flush=True)
         try:
             if warm is not None:
                 with tempfile.TemporaryDirectory() as fetch_folder, ThreadPoolExecutor(1) as pool:

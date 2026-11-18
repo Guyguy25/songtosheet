@@ -69,7 +69,7 @@ def download_track(url, directory):
                 connection.sock = connect_public(host, ips)
                 connection.request("GET", path, headers={
                     "Accept-Encoding": "identity",
-                    "User-Agent": "SongToSheet/1.0 (+https://songtosheet.vercel.app)",
+                    "User-Agent": "Tablurio/1.0 (+https://tablurio.com)",
                 })
                 response = connection.getresponse()
                 if response.status in (301, 302, 303, 307, 308) and response.headers.get("Location"):

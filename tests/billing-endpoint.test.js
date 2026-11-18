@@ -16,7 +16,7 @@ function load(db){
 }
 function request(body,headers){
   const req=Readable.from([Buffer.from(body)]);
-  Object.assign(req,{method:'POST',query:{webhook:'whop'},headers:{host:'songtosheet.vercel.app',...headers}});
+  Object.assign(req,{method:'POST',query:{webhook:'whop'},headers:{host:'tablurio.com',...headers}});
   return req;
 }
 function response(){

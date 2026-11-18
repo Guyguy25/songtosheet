@@ -76,7 +76,7 @@ Le site public utilise les comptes MongoDB existants. La transcription réelle e
 Installe les dépendances du moteur et Chromium sur la machine de calcul. Si le navigateur est installé dans un dossier personnalisé, configure le chemin de l’exécutable avec `TRACK_PDF_BROWSER`. Configure le jeton hexadécimal de 32 octets dans `TRACK_WORKER_TOKEN` sur cette machine et uniquement son empreinte SHA-256 hexadécimale dans `TRACK_WORKER_DIGEST` sur Vercel. Lance le moteur depuis `backend` :
 
 ```powershell
-python .\track_worker.py https://songtosheet.vercel.app .\data\production-track-cache
+python .\track_worker.py https://tablurio.com .\data\production-track-cache
 ```
 
 Les demandes passent par le site public. La machine qui exécute le moteur doit rester allumée et connectée pour les traiter. Les fichiers audio intermédiaires sont supprimés en fin de traitement. Le cache local contient les exports.
@@ -275,7 +275,7 @@ Tous les modèles et leurs poids sont intégrés à l'image : un conteneur déma
 3. Dans Modal, Secrets → Custom, crée `custom-secret` avec :
    - `TRACK_WORKER_TOKEN` : la même valeur que sur la machine du worker actuel ;
    - `ENGINE_WAKE_SECRET` : une longue phrase au hasard ;
-   - `SITE_URL` : `https://songtosheet.vercel.app`.
+   - `SITE_URL` : `https://tablurio.com`.
 4. Lance le workflow GitHub « Deploy engine (Modal) » (onglet Actions → Run workflow). La première construction de l'image prend 20 à 40 minutes ; les suivantes réutilisent le cache.
 5. Dans Modal, ouvre l'app `songtosheet-engine` et copie l'adresse de la fonction `wake`.
 6. Dans Vercel, ajoute `ENGINE_WAKE_URL` (cette adresse) et `ENGINE_WAKE_SECRET` (la même phrase), puis redéploie.

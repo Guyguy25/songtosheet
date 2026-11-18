@@ -14,7 +14,7 @@
   <script src="/assets/audio-source.js?v=6" defer></script>
   <script src="/backend/web/track-onboarding.js?v=31" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=15" />
-  <script src="/backend/web/score-player.js?v=21" defer></script>
+  <script src="/backend/web/score-player.js?v=22" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=9" />
   <script src="/assets/guitar-result-comparison.js?v=12" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
@@ -613,7 +613,7 @@
 </style>
 
 
-<link rel="stylesheet" href="/assets/upgrade.css?v=3">
+<link rel="stylesheet" href="/assets/upgrade.css?v=4">
 <style id="lp2-style">
 .lp2{--bg:#07050f;--line:rgba(170,150,255,.18);--v:#7549eb;--v2:#a78bfa;--lilac:#c9bcff;--grad:linear-gradient(90deg,#6d4cf5,#3b82f6);--mute:#b4aecb;--ink:#211c35;--ink-mute:#6b6780;--soft:#f6f3ff;--ok:#5eead4;color:#fff;line-height:1.55}
 .lp2 section{padding:104px 0;margin:0}
@@ -967,22 +967,23 @@
       <p id="upgrade-cycle-status" class="upgrade-sr" role="status"></p>
       <div class="upgrade-grid">
         <article class="upgrade-card" aria-labelledby="upgrade-essential">
-          <div class="upgrade-plan-heading"><h2 id="upgrade-essential">Essentiel</h2></div>
+          <div class="upgrade-plan-heading"><h2 id="upgrade-essential">Starter</h2></div>
           <p class="upgrade-description">Pour travailler un morceau à la fois.</p>
           <div class="upgrade-price"><strong data-plan-price="essential">10 €</strong><span>/ mois</span></div>
           <p class="upgrade-charge" data-plan-billed="essential">10 € facturés chaque mois</p>
           <p class="upgrade-saving" data-plan-saved="essential" hidden></p>
-          <p class="upgrade-limit">1 transcription tous les 7 jours</p>
+          <p class="upgrade-limit">1 analyse par jour</p>
           <ul class="upgrade-features">
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Transcriptions illimitées*</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Tous les instruments</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Accès sans renouvellement</span></li>
           </ul>
-          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_IDC4CtmdcNpi7" data-plan-checkout="essential">Choisir Essentiel</a>
+          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_IDC4CtmdcNpi7" data-plan-checkout="essential">Choisir Starter</a>
         </article>
         <article class="upgrade-card upgrade-featured" aria-labelledby="upgrade-unlimited">
-          <div class="upgrade-plan-heading"><h2 id="upgrade-unlimited">Illimité</h2><span class="upgrade-recommended">Recommandé</span></div>
+          <span class="upgrade-card-badge">Populaire</span>
+          <div class="upgrade-plan-heading"><h2 id="upgrade-unlimited">Pro</h2></div>
           <p class="upgrade-description">Pour jouer de nouveaux morceaux plus souvent.</p>
           <div class="upgrade-price"><strong data-plan-price="unlimited">19 €</strong><span>/ mois</span></div>
           <p class="upgrade-charge" data-plan-billed="unlimited">19 € facturés chaque mois</p>
@@ -994,10 +995,11 @@
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Accès sans renouvellement</span></li>
           </ul>
-          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_4jV8ToLJhBWKm" data-plan-checkout="unlimited">Choisir Illimité</a>
+          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_4jV8ToLJhBWKm" data-plan-checkout="unlimited">Choisir Pro</a>
         </article>
-        <article class="upgrade-card" aria-labelledby="upgrade-lifetime">
-          <div class="upgrade-plan-heading"><h2 id="upgrade-lifetime">À vie</h2></div>
+        <article class="upgrade-card upgrade-lifetime" aria-labelledby="upgrade-lifetime">
+          <span class="upgrade-card-badge">À vie</span>
+          <div class="upgrade-plan-heading"><h2 id="upgrade-lifetime">Lifetime</h2></div>
           <p class="upgrade-description">Pour garder ton accès avec un seul paiement.</p>
           <div class="upgrade-price"><strong data-plan-price="lifetime">99 €</strong><span>une fois</span></div>
           <p class="upgrade-charge" data-plan-billed="lifetime">Paiement unique de 99 €</p>
@@ -1011,11 +1013,11 @@
           <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_tXX5q8JhuWQui">Choisir l’accès à vie</a>
         </article>
       </div>
-      <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Le quota Essentiel est non cumulable.</p>
+      <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Les analyses Starter sont non cumulables.</p>
     </div>
   </section>
 <section class="sub-section pricing-faq"><div class="container"><div class="sub-title"><h2>Questions sur les abonnements</h2></div><div class="simple-faq">
-<details><summary>Pourquoi l'annuel est-il moins cher ? <span>+</span></summary><p>La réduction annuelle de 35 % ramène Essentiel à 78 €/an (6,50 €/mois) et Illimité à 148,20 €/an (12,35 €/mois), avec paiement de l'année entière.</p></details>
+<details><summary>Pourquoi l'annuel est-il moins cher ? <span>+</span></summary><p>La réduction annuelle de 35 % ramène Starter à 78 €/an (6,50 €/mois) et Pro à 148,20 €/an (12,35 €/mois), avec paiement de l'année entière.</p></details>
 <details><summary>Que comprend l'offre à vie ? <span>+</span></summary><p>L’offre À vie donne accès aux fonctionnalités de l’offre pour un paiement unique de 99 €, dans le cadre d’une utilisation raisonnable.</p></details>
 <details><summary>Comment se passe le paiement ? <span>+</span></summary><p>Le règlement se fait sur Whop. Tu peux générer un aperçu gratuit de 30 secondes avant de choisir une offre.</p></details>
 </div></div></section></main>
@@ -1130,8 +1132,7 @@
       <h2 id="flow-paywall-title">Tu n’as accès qu’aux 30 premières secondes de ta partition</h2>
       <div class="flow-paywall-progress" aria-hidden="true"><span></span></div>
       <p>La suite de ton morceau est masquée. Découvre les offres pour accéder à la version complète.</p>
-      <button type="button" id="flow-plans" class="flow-main-btn"><span id="flow-plans-label">Débloquer la partition complète</span> <span aria-hidden="true">↗</span></button>
-      <small>Les achats ne sont pas encore actifs dans cette démonstration.</small>
+      <button type="button" id="flow-plans" class="flow-main-btn" data-unlock="partition" aria-haspopup="dialog"><span id="flow-plans-label">Débloquer la partition complète</span> <span aria-hidden="true">↗</span></button>
      </div>
     </div>
    </div>
@@ -1153,6 +1154,28 @@
 <nav aria-label="Navigation de bas de page"><a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a><a href="/legal" data-nav="legal">Mentions</a></nav>
 <div><small>Version de démonstration. La transcription audio en ligne reste en développement.</small><small>© <span id="footer-year"></span> SongToSheet</small></div>
 </div></footer>
+<dialog id="unlock-dialog" class="unlock-dialog" aria-labelledby="unlock-dialog-title">
+  <button class="unlock-close" type="button" data-unlock-close aria-label="Fermer">×</button>
+  <h2 id="unlock-dialog-title" tabindex="-1">Tu veux jouer la suite ?</h2>
+  <div id="unlock-intro">
+    <p class="unlock-track" id="unlock-track" hidden></p>
+    <div class="unlock-includes">
+      <p>Ce que tu vas débloquer</p>
+      <ul>
+        <li><span aria-hidden="true">✓</span><span id="unlock-notation">Ta partition complète</span></li>
+        <li><span aria-hidden="true">✓</span> La lecture du relevé complet</li>
+        <li><span aria-hidden="true">✓</span> Les exports PDF, MIDI et MusicXML</li>
+      </ul>
+    </div>
+    <button type="button" id="unlock-continue" class="unlock-primary">Débloquer la partition complète</button>
+  </div>
+  <div id="unlock-offers" hidden>
+    <p class="unlock-offers-copy">Choisis ton offre pour accéder au relevé complet.</p>
+    <div id="unlock-plans"></div>
+    <p id="unlock-cycle-status" class="upgrade-sr" role="status"></p>
+    <button type="button" class="unlock-back" id="unlock-back">← Retour</button>
+  </div>
+</dialog>
 <script>
 /* Paiements et transcription restent simulés. Comptes et bibliothèque : vrais endpoints serveur. */
 (()=>{
@@ -1487,25 +1510,70 @@
   function euros(amount){
     return euroFormatter.format(amount).replace(/,00(?=\s)/,'');
   }
-  function syncPricing(cycle){
+  function syncPricing(cycle,container=$('pricing-view')){
     const annual=cycle==='annual';
-    $('pricing-view').querySelectorAll('[data-cycle]').forEach(button=>{
+    container.querySelectorAll('[data-cycle]').forEach(button=>{
       button.setAttribute('aria-pressed',String(button.dataset.cycle===cycle));
     });
     for(const [plan,{monthly,yearly,checkout}] of Object.entries(subscriptionPrices)){
-      const price=document.querySelector('[data-plan-price="'+plan+'"]');
-      const billed=document.querySelector('[data-plan-billed="'+plan+'"]');
-      const saved=document.querySelector('[data-plan-saved="'+plan+'"]');
-      const paymentLink=document.querySelector('[data-plan-checkout="'+plan+'"]');
+      const price=container.querySelector('[data-plan-price="'+plan+'"]');
+      const billed=container.querySelector('[data-plan-billed="'+plan+'"]');
+      const saved=container.querySelector('[data-plan-saved="'+plan+'"]');
+      const paymentLink=container.querySelector('[data-plan-checkout="'+plan+'"]');
       paymentLink.href=checkout[cycle];
       price.textContent=euros(annual?yearly/12:monthly);
       billed.textContent=annual?euros(yearly)+' facturés chaque année':euros(monthly)+' facturés chaque mois';
       saved.hidden=!annual;
       saved.textContent=annual?euros(monthly*12-yearly)+' économisés par an':'';
     }
-    $('upgrade-cycle-status').textContent=annual
+    container.querySelector('[role="status"]').textContent=annual
       ?'Facturation annuelle sélectionnée. Les prix affichés par mois sont des équivalents.'
       :'Facturation mensuelle sélectionnée.';
+  }
+
+  let unlockTrigger;
+  function showUnlockStep(offers){
+    const dialog=$('unlock-dialog');
+    dialog.classList.toggle('has-offers',offers);
+    $('unlock-intro').hidden=offers;
+    $('unlock-offers').hidden=!offers;
+    $('unlock-dialog-title').textContent=offers?'Débloquer le relevé complet':'Tu veux jouer la suite ?';
+    dialog.scrollTop=0;
+    if(dialog.open)$('unlock-dialog-title').focus({preventScroll:true});
+  }
+  async function openUnlock(trigger){
+    const dialog=$('unlock-dialog');
+    if(dialog.open)return;
+    if(document.fullscreenElement)await document.exitFullscreen().catch(()=>{});
+    if(dialog.open||!trigger.isConnected)return;
+    unlockTrigger=trigger;
+    const format=trigger.dataset.unlock==='tablature'?'tablature':'partition';
+    const track=$('unlock-track');
+    track.textContent=trigger.closest('#result-page')?.querySelector('.score-bar-title h1')?.textContent.trim()
+      ||trigger.closest('#flow-preview')?.querySelector('#flow-preview-source')?.textContent.trim()||'';
+    track.hidden=!track.textContent;
+    $('unlock-notation').textContent='Ta '+format+' complète';
+    $('unlock-continue').textContent='Débloquer la '+format+' complète';
+    showUnlockStep(false);
+    dialog.showModal();
+    $('unlock-dialog-title').focus({preventScroll:true});
+  }
+  function showUnlockOffers(){
+    const dialog=$('unlock-dialog');
+    const plans=$('unlock-plans');
+    if(!plans.hasChildNodes()){
+      const pricing=$('pricing-view');
+      const cycle=pricing.querySelector('.upgrade-cycle').cloneNode(true);
+      const grid=pricing.querySelector('.upgrade-grid').cloneNode(true);
+      grid.querySelectorAll('[aria-labelledby]').forEach(card=>{
+        const heading=card.querySelector('h2');
+        heading.id='unlock-'+heading.id;
+        card.setAttribute('aria-labelledby',heading.id);
+      });
+      plans.append(cycle,grid);
+    }
+    syncPricing('monthly',dialog);
+    showUnlockStep(true);
   }
 
   async function inspectLink(value){const info=await post('/api/links/inspect',{url:value});state.link=info.source_url;toast(info.message);return info;}
@@ -1826,7 +1894,7 @@
         const notice=ready?`${fallback}${soloFallback}${j.status==='failed'&&j.error_message?' '+j.error_message:''}${!j.preview_limit&&!waiting&&j.pdf_error?' Le PDF est indisponible pour ce relevé.':''}`.trim():'';
         const hints={pdf:'À lire et imprimer',musicxml:'Pour un éditeur de partitions',tab:'Pour un éditeur de partitions',mid:'Pour un logiciel de musique'};
         const menu=j.preview_limit
-          ?`<p>Le téléchargement en PDF, MIDI et MusicXML est inclus dans les offres.</p><a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les offres</a>`
+          ?`<p>Le téléchargement en PDF, MIDI et MusicXML est inclus dans les offres.</p><a class="btn btn-primary" href="/upgrade" data-unlock="${j.format==='tablature'?'tablature':'partition'}" aria-haspopup="dialog">Débloquer les exports</a>`
           :Object.entries(links).filter(([key])=>j.downloads.includes(key)).map(([key,label])=>
             `<a href="/api/track?id=${encodeURIComponent(id)}&amp;download=${key}"><b>${label.replace('Télécharger le ','')}</b><small>${hints[key]}</small></a>`).join('');
         const versionChoice=j.instrument==='guitare'||j.piano_versions?.length;
@@ -2016,7 +2084,28 @@
   }
   async function logout(){try{await post('/api/auth/logout',{});}catch(e){toast(e.message,true);return;}window.SongToSheetFlow?.clearPending();rememberTrackLink();trackWizard?.pause();trackWizard=null;setCurrentUser(null);state.jobs=[];state.activePage='dashboard';state.guestStudio=false;state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}
   function wire(){
+    const unlockDialog=$('unlock-dialog');
+    $('unlock-continue').addEventListener('click',showUnlockOffers);
+    $('unlock-back').addEventListener('click',()=>showUnlockStep(false));
+    unlockDialog.querySelector('[data-unlock-close]').addEventListener('click',()=>unlockDialog.close());
+    unlockDialog.addEventListener('click',event=>{
+      if(event.target===unlockDialog){
+        const bounds=unlockDialog.getBoundingClientRect();
+        if(event.clientX<bounds.left||event.clientX>bounds.right||event.clientY<bounds.top||event.clientY>bounds.bottom)unlockDialog.close();
+      }
+      const cycle=event.target.closest('[data-cycle]');
+      if(cycle)syncPricing(cycle.dataset.cycle,unlockDialog);
+    });
+    unlockDialog.addEventListener('close',()=>{
+      if(!unlockDialog.open&&unlockTrigger?.isConnected)unlockTrigger.focus({preventScroll:true});
+    });
     document.addEventListener('click',async(e)=>{
+      const unlock=e.target.closest('[data-unlock]');
+      if(unlock&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){
+        e.preventDefault();
+        await openUnlock(unlock);
+        return;
+      }
       const nav=e.target.closest('[data-nav]');if(nav){
         if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
         e.preventDefault();
@@ -2151,7 +2240,7 @@ const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const li
 <dialog id="hero-excerpt-dialog" class="track-excerpt-dialog" aria-labelledby="hero-track-question">
   <div id="hero-excerpt-wizard"></div>
 </dialog>
-<script src="/assets/conversion-flow.js?v=18" defer></script>
+<script src="/assets/conversion-flow.js?v=19" defer></script>
 
 <script>
 /* Hero typewriter: partition <-> tablature. */

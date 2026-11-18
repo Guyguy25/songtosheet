@@ -1293,6 +1293,26 @@
   function canOpenStudio(page){
     return Boolean(state.user||(state.guestStudio&&['create','result'].includes(page)));
   }
+  // Studio URLs: /app, /app/new, /app/bibliotheque, /app/abonnement, /app/<id du son>.
+  const appSlugs={dashboard:'',create:'new',library:'bibliotheque',account:'abonnement'};
+  const appAliases={'':'dashboard',new:'create',nouveau:'create',bibliotheque:'library',library:'library',abonnement:'account',compte:'account'};
+  const isAppPath=(path)=>/^\/app(?:\/|$)/i.test(path);
+  function appPath(page,id){
+    if(page==='result')return id?'/app/'+encodeURIComponent(id):'/app/bibliotheque';
+    const slug=appSlugs[page]??'';
+    return slug?'/app/'+slug:'/app';
+  }
+  function parseAppPath(path){
+    const match=path.match(/^\/app(?:\/([^/]+))?\/?$/i);
+    if(!match)return null;
+    let segment='';
+    try{segment=match[1]?decodeURIComponent(match[1]):'';}catch{return null;}
+    const page=appAliases[segment.toLowerCase()];
+    return page?{page}:{page:'result',id:segment};
+  }
+  const returnKey='songtosheet.returnTo';
+  function rememberReturn(path){try{if(path&&isAppPath(path)&&path!=='/app')sessionStorage.setItem(returnKey,path);else sessionStorage.removeItem(returnKey);}catch{}}
+  function takeReturn(){try{const path=sessionStorage.getItem(returnKey);sessionStorage.removeItem(returnKey);return path&&parseAppPath(path)?path:null;}catch{return null;}}
 
   function renderRoute(){
     clearInterval(state.poll);state.poll=null;menuClose();
@@ -1300,7 +1320,9 @@
     const publicRoutes={'/':'landing','/fonctionnalites':'features-view','/resultats':'results-view','/tarifs':'pricing-view','/upgrade':'pricing-view','/faq':'faq-view'};
     const activePublic=publicRoutes[pathname]||null;
     const marketing=Boolean(activePublic)||pathname==='/legal';
-    const app=pathname==='/app';
+    const app=isAppPath(pathname);
+    const route=app?parseAppPath(location.pathname):null;
+    if(app&&!route){go('/app',true);return;}
     if(!app){stopPlayer();trackWizard?.pause();}
     const authPage=pathname==='/connexion'||pathname==='/inscription';
     show('public-header',marketing);
@@ -1333,13 +1355,23 @@
       const guestId=!state.user&&guestTrackId();
       if(guestId&&!state.guestStudio){
         state.guestStudio=true;
-        state.activePage='result';
-        state.resultId=guestId;
+        if(route.page!=='create'){route.page='result';route.id=guestId;}
       }
-      if(!canOpenStudio(state.activePage)){go('/inscription',true);return;}
+      if(route.page==='result'&&state.resultId!==route.id){
+        // Back/forward between two songs: drop the previous player before loading the next one.
+        stopPlayer();$('result-page').classList.remove('is-score');
+        $('result-content').textContent='Chargement de la création…';
+      }
+      state.activePage=route.page;
+      if(route.page==='result')state.resultId=route.id;
+      if(!canOpenStudio(state.activePage)){
+        // A shared or bookmarked studio link: sign in, then come back to it.
+        rememberReturn(location.pathname);
+        go(route.page==='result'||route.page==='account'?'/connexion':'/inscription',true);return;
+      }
       $('workspace').classList.toggle('track-guest',!state.user);
       if(state.user&&new URLSearchParams(location.search).get('abonnement')==='merci'){welcomeBack();}
-      else showAppPage(state.activePage);
+      else showAppPage(state.activePage,{replace:true});
     }
     if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth();}
     if(window.SongToSheetFlow)window.SongToSheetFlow.render(pathname);
@@ -1358,7 +1390,8 @@
       '/generation':'Ta partition se prépare — Tablurio.com',
       '/apercu':'Ton aperçu de partition — Tablurio.com',
       '/connexion':'Se connecter — Tablurio.com'};
-    document.title=titles[pathname]||'Tablurio.com';
+    const appTitles={dashboard:'Mon studio',create:'Nouvelle partition',library:'Ma bibliothèque',account:'Mon abonnement',result:'Ma partition'};
+    document.title=app?(appTitles[state.activePage]||'Mon studio')+' — Tablurio.com':titles[pathname]||'Tablurio.com';
     if(pathname==='/' && location.hash==='#comment-ca-marche'){
       requestAnimationFrame(()=>$('comment-ca-marche').scrollIntoView({behavior:'smooth',block:'start'}));
     }
@@ -1413,7 +1446,7 @@
     const opened=state.activePage==='result'?state.resultId:null;
     const jobs=recentsExpanded?all:all.filter((j,i)=>i<limit||j.id===opened);
     const toggle=all.length>limit?`<button type="button" class="side-recents-toggle" data-recents-toggle aria-expanded="${recentsExpanded}">${recentsExpanded?'Réduire':`Tout afficher (${all.length})`}</button>`:'';
-    box.innerHTML=jobs.map(j=>`<button type="button" data-job="${safe(j.id)}"${j.id===opened?' aria-current="page"':''} title="${safe(j.title)}"><span aria-hidden="true">♪</span><b>${safe(j.title)}</b></button>`).join('')+toggle;
+    box.innerHTML=jobs.map(j=>`<a href="${appPath('result',j.id)}" data-job="${safe(j.id)}"${j.id===opened?' aria-current="page"':''} title="${safe(j.title)}"><span aria-hidden="true">♪</span><b>${safe(j.title)}</b></a>`).join('')+toggle;
     box.previousElementSibling.hidden=!all.length;
   }
   function filterJobs(){const query=($('library-search').value||'').toLowerCase().trim();return state.jobs.filter(j=>(j.title+' '+j.instrument+' '+(j.format||'')).toLowerCase().includes(query));}
@@ -1425,10 +1458,10 @@
       const details=safe(j.instrument)+' · '+format+' · '+(j.duration_verified===false?'Durée non vérifiée':timeFmt(j.duration))+' · '+dateFmt(j.created_at);
       if(j.track){
         const status=j.status==='completed'?'Prête':statusText[j.status]||'Import en cours';
-        return `<div class="job-row demo-job-row"><button type="button" class="demo-job-details" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${status}</span></button></div>`;
+        return `<div class="job-row demo-job-row"><a class="demo-job-details" href="${appPath('result',j.id)}" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${status}</span></a></div>`;
       }
       const label=state.user.role==='admin'?'Transcrire l’audio':j.preview_revealed?'Voir mon aperçu':'Générer mon aperçu';
-      return `<div class="job-row demo-job-row"><button type="button" class="demo-job-details" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${statusText[j.status]||'À générer'}</span></button><button type="button" class="demo-job-generate" data-demo-generate="${safe(j.id)}">${label} <span aria-hidden="true">↗</span></button></div>`;
+      return `<div class="job-row demo-job-row"><a class="demo-job-details" href="${appPath('result',j.id)}" data-job="${safe(j.id)}"><span class="job-row-icon">${instrumentIcon[j.instrument]||'♫'}</span><span class="job-row-info"><b>${safe(j.title)}</b><small>${details}</small></span><span class="job-status">${statusText[j.status]||'À générer'}</span></a><button type="button" class="demo-job-generate" data-demo-generate="${safe(j.id)}">${label} <span aria-hidden="true">↗</span></button></div>`;
     }).join('');
   }
   let trackWizard;
@@ -1465,10 +1498,18 @@
   }
   let closePlayer;
   function stopPlayer(){closePlayer?.();closePlayer=undefined;}
-  function showAppPage(page){if(!canOpenStudio(page))return go('/inscription');
+  function showAppPage(page,{replace=false}={}){if(!canOpenStudio(page))return go('/inscription');
     if(page!=='result')stopPlayer();
     if(page!=='create')trackWizard?.pause();
     state.activePage=page;
+    // Each studio page has its own address, so back/forward, refresh and bookmarks work.
+    const target=appPath(page,state.resultId);
+    if(location.pathname!==target){
+      if(replace)history.replaceState({},'',target+location.search+location.hash);
+      else history.pushState({},'',target);
+    }
+    const appTitles={dashboard:'Mon studio',create:'Nouvelle partition',library:'Ma bibliothèque',account:'Mon abonnement',result:'Ma partition'};
+    document.title=(appTitles[page]||'Mon studio')+' — Tablurio.com';
     for(const p of ['dashboard','create','library','result','account'])show(p+'-page',page===p);
     const side=page==='dashboard'?'menu-dashboard':page==='library'||page==='result'?'menu-library':page==='account'?'menu-account':'menu-create';
     for(const id of ['menu-dashboard','menu-create','menu-library','menu-account'])$(id).classList.toggle('side-active',id===side);
@@ -1507,7 +1548,7 @@
   };
   function startApp(page='create'){
     if(!canOpenStudio(page)){state.activePage=page;go('/inscription');return;}
-    if(location.pathname!=='/app'){state.activePage=page;go('/app');}
+    if(!isAppPath(location.pathname)){state.activePage=page;go(appPath(page,state.resultId));}
     else showAppPage(page);
   }
 
@@ -1624,7 +1665,7 @@
   async function welcomeBack(){
     // Back from Whop: the webhook may land a few seconds after the redirect.
     history.replaceState(null,'',location.pathname);
-    showAppPage('account');
+    showAppPage('account',{replace:true});
     for(let attempt=0;attempt<10;attempt++){
       const data=await renderAccount({thanks:true});
       if(data&&data.tier!=='free')return;
@@ -1967,11 +2008,12 @@
   }
   async function loadResult(id){
     const guest=!state.user;
-    const current=()=>location.pathname==='/app'&&state.activePage==='result'&&state.resultId===id&&guest===!state.user;
+    const current=()=>isAppPath(location.pathname)&&state.activePage==='result'&&state.resultId===id&&guest===!state.user;
     try{
       const key=encodeURIComponent(id);
       const j=await api(guest?`/api/track?guest=1&id=${key}`:`/api/jobs/${key}`);
       if(!current())return;
+      if(j.title)document.title=j.title+' — Tablurio.com';
       if(guest&&j.status==='completed'){
         clearTimeout(state.poll);state.poll=null;
         cancelAnimationFrame(trackProgressFrame);
@@ -2035,7 +2077,7 @@
           <button type="button" class="score-bar-btn" data-score-back aria-label="Retour à ma bibliothèque" title="Retour à ma bibliothèque">←</button>
           <div class="score-bar-title"><h1 title="${safe(j.title)}">${safe(j.title)}</h1><p>${meta}</p></div>
           <div id="score-bar-controls" class="score-bar-controls"></div>
-          ${j.parent_id?`<button type="button" class="btn btn-outline score-compare" data-open-job="${safe(j.parent_id)}">⇄ Comparer les versions</button>`:''}
+          ${j.parent_id?`<a class="btn btn-outline score-compare" href="${appPath('result',j.parent_id)}" data-open-job="${safe(j.parent_id)}">⇄ Comparer les versions</a>`:''}
           <details class="score-download"><summary class="btn btn-primary"><span aria-hidden="true">↓</span> Télécharger</summary>
             <div class="score-download-menu"><div id="score-download-job">${versionChoice&&!j.preview_limit&&menu?'<h3>Relevé d’origine</h3>':''}${menu}</div><div id="score-download-version"></div></div></details>
           ${notice?`<p class="score-bar-notice" role="status">${safe(notice)}</p>`:''}`
@@ -2174,6 +2216,17 @@
       else{clearInterval(state.poll);state.poll=null;await refresh();}
     }catch(e){
       if(!current())return;
+      if(!guest&&(e.status===404||e.status===403)){
+        // Someone else's song, a deleted one or a mistyped address: same answer, nothing leaks.
+        clearInterval(state.poll);state.poll=null;
+        document.title='Création introuvable — Tablurio.com';
+        $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">CRÉATION INTROUVABLE</span>
+          <h1>Ce son n’est pas dans ton espace</h1>
+          <p class="result-meta">Le lien est peut-être erroné, ou la création appartient à un autre compte.</p>
+          <div class="result-actions"><button type="button" class="btn btn-primary" data-score-back>Ma bibliothèque</button>
+          <a class="btn btn-outline" href="/app/new" data-nav="create">Nouvelle partition ↗</a></div></div>`;
+        return;
+      }
       if(!guest){toast(e.message,true);return;}
       if(e.status===404)rememberGuestTrack(null);
       $('result-content').innerHTML=`<div class="result-hero"><p role="alert">${safe(e.message)}</p>
@@ -2196,6 +2249,8 @@
         toast(error.message,true);
       }
     }
+    const back=takeReturn();
+    if(back){go(back);await refresh();return;}
     startApp('library');
     await refresh();
   }
@@ -2238,7 +2293,7 @@
       if(checkout&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){e.preventDefault();await checkoutClick(checkout);return;}
       if(e.target.closest('#sidebar-plan-action[data-account="1"]')){e.preventDefault();showAppPage('account');return;}
       const openJob=e.target.closest('[data-open-job]');
-      if(openJob){e.preventDefault();openResult(openJob.dataset.openJob);return;}
+      if(openJob){if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();openResult(openJob.dataset.openJob);return;}
       const unlock=e.target.closest('[data-unlock]');
       if(unlock&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){
         e.preventDefault();
@@ -2261,7 +2316,7 @@
       }
       const demoGenerate=e.target.closest('[data-demo-generate]');
       if(demoGenerate){e.preventDefault();await revealDemo(demoGenerate.dataset.demoGenerate);return;}
-      const job=e.target.closest('button[data-job]');if(job){openResult(job.dataset.job);return;}
+      const job=e.target.closest('[data-job]');if(job){if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();openResult(job.dataset.job);return;}
       const cycle=e.target.closest('#pricing-view [data-cycle]');
       if(cycle)syncPricing(cycle.dataset.cycle);
     });
@@ -2355,9 +2410,9 @@
   const sessionReady=loadUser();
   async function init(){wire();howShowStep(1);await sessionReady;
     const audioUrl=rememberedTrackLink();
-    if(audioUrl&&location.pathname==='/app')state.activePage='create';
+    if(audioUrl&&location.pathname==='/app')history.replaceState({},'','/app/new'+location.search);
     const guestId=guestTrackId();
-    if(state.user&&guestId&&['/app','/inscription','/connexion'].includes(location.pathname)){
+    if(state.user&&guestId&&(isAppPath(location.pathname)||['/inscription','/connexion'].includes(location.pathname))){
       try{await finishAuth();}catch(error){toast(error.message,true);go('/inscription',true);}
       return;
     }

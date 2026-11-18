@@ -12,6 +12,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/app/:path*",
+      "destination": "/index.html"
+    },
+    {
       "source": "/apercu",
       "destination": "/index.html"
     },

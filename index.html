@@ -10,13 +10,13 @@
   <script>document.documentElement.classList.toggle('has-overlay-header', /^\/(?:tarifs\/?|upgrade\/?)?$/.test(location.pathname.toLowerCase()));</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=13" />
-  <script src="/assets/audio-source.js?v=6" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=31" defer></script>
+  <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=14" />
+  <script src="/assets/audio-source.js?v=7" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=32" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=15" />
   <script src="/backend/web/score-player.js?v=22" defer></script>
-  <link rel="stylesheet" href="/assets/guitar-comparison.css?v=9" />
-  <script src="/assets/guitar-result-comparison.js?v=12" defer></script>
+  <link rel="stylesheet" href="/assets/guitar-comparison.css?v=10" />
+  <script src="/assets/guitar-result-comparison.js?v=13" defer></script>
   <script src="/assets/wait-survey.js?v=2" defer></script>
   <style>
 :root{--ink:#211c35;--muted:#7d7a8c;--purple:#7549eb;--purple-dark:#6136d0;--purple-pale:#f0ebff;--line:#eae7f0;--canvas:#fbfaff;--white:#fff;--radius:20px}
@@ -755,7 +755,7 @@
 .track-guest-lock-content{display:grid;justify-items:center;gap:14px;padding:24px;text-align:center}
 .track-guest-lock-content .btn{white-space:normal}
 </style>
-<link rel="stylesheet" href="/assets/score-view.css?v=3" />
+<link rel="stylesheet" href="/assets/score-view.css?v=4" />
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -972,7 +972,7 @@
           <div class="upgrade-price"><strong data-plan-price="essential">10 €</strong><span>/ mois</span></div>
           <p class="upgrade-charge" data-plan-billed="essential">10 € facturés chaque mois</p>
           <p class="upgrade-saving" data-plan-saved="essential" hidden></p>
-          <p class="upgrade-limit">1 analyse par jour</p>
+          <p class="upgrade-limit">1 morceau complet par jour</p>
           <ul class="upgrade-features">
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Transcriptions illimitées*</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Tous les instruments</span></li>
@@ -988,7 +988,7 @@
           <div class="upgrade-price"><strong data-plan-price="unlimited">19 €</strong><span>/ mois</span></div>
           <p class="upgrade-charge" data-plan-billed="unlimited">19 € facturés chaque mois</p>
           <p class="upgrade-saving" data-plan-saved="unlimited" hidden></p>
-          <p class="upgrade-limit">Sans quota hebdomadaire*</p>
+          <p class="upgrade-limit">Sans limite quotidienne*</p>
           <ul class="upgrade-features">
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Transcriptions illimitées*</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Tous les instruments</span></li>
@@ -1003,17 +1003,17 @@
           <p class="upgrade-description">Pour garder ton accès avec un seul paiement.</p>
           <div class="upgrade-price"><strong data-plan-price="lifetime">99 €</strong><span>une fois</span></div>
           <p class="upgrade-charge" data-plan-billed="lifetime">Paiement unique de 99 €</p>
-          <p class="upgrade-limit">Sans quota hebdomadaire*</p>
+          <p class="upgrade-limit">Sans limite quotidienne*</p>
           <ul class="upgrade-features">
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Transcriptions illimitées*</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Tous les instruments</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Exports PDF, MIDI et MusicXML</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Accès sans renouvellement</span></li>
           </ul>
-          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_tXX5q8JhuWQui">Choisir l’accès à vie</a>
+          <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_tXX5q8JhuWQui" data-plan-checkout="lifetime">Choisir l’accès à vie</a>
         </article>
       </div>
-      <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Les analyses Starter sont non cumulables.</p>
+      <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Starter : le morceau du jour se recharge à minuit (heure de Paris) et ne se cumule pas.</p>
     </div>
   </section>
 <section class="sub-section pricing-faq"><div class="container"><div class="sub-title"><h2>Questions sur les abonnements</h2></div><div class="simple-faq">
@@ -1030,19 +1030,19 @@
 <details><summary>Quels instruments sont prévus ? <span>+</span></summary><p>Piano, guitare, violon, basse et voix. Le moteur expérimental relève avant tout la mélodie principale et non un arrangement complet de tous les instruments.</p></details>
 <details><summary>La partition est-elle toujours correcte ? <span>+</span></summary><p>Non. La qualité dépend de la source. Les mélodies isolées sont plus simples à analyser que les morceaux avec accords, percussions et plusieurs instruments superposés.</p></details>
 <details><summary>Quels fichiers puis-je récupérer ? <span>+</span></summary><p>Un PDF pour lire et imprimer, un fichier MIDI et un MusicXML pour reprendre la transcription dans un logiciel de musique.</p></details>
-<details><summary>Y a-t-il un essai gratuit ? <span>+</span></summary><p>Non. Les offres prévues sont Essentiel (10 €/mois), Illimité (19 €/mois) et À vie (99 €), avec une réduction de 35 % en annuel sur les abonnements.</p></details>
+<details><summary>Y a-t-il un essai gratuit ? <span>+</span></summary><p>Non. Les offres sont Starter (10 €/mois, 1 morceau complet par jour), Pro (19 €/mois, sans limite quotidienne) et Lifetime (99 € une fois), avec une réduction de 35 % en annuel sur les abonnements.</p></details>
 <details><summary>Les abonnements et la génération sont-ils actifs ? <span>+</span></summary><p>Non, le site public est une démonstration. Les vrais paiements et le traitement audio en ligne seront activés après intégration et tests.</p></details>
 </div></div></section></main>
 <main id="workspace" class="hidden">
-    <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><button id="menu-create" class="side-new" type="button"><span aria-hidden="true">＋</span> Nouvelle partition</button><nav class="side-nav" aria-label="Ton espace"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button></nav><span class="sidebar-label side-recents-label" hidden>RÉCENTS</span><nav id="side-recents" class="side-recents" aria-label="Partitions récentes"></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Démo</strong><small>Offre de démonstration</small><a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
+    <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><button id="menu-create" class="side-new" type="button"><span aria-hidden="true">＋</span> Nouvelle partition</button><nav class="side-nav" aria-label="Ton espace"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button><button id="menu-account"><span>◇</span> Mon abonnement</button></nav><span class="sidebar-label side-recents-label" hidden>RÉCENTS</span><nav id="side-recents" class="side-recents" aria-label="Partitions récentes"></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Gratuit</strong><small id="sidebar-plan-detail">Aperçus de 30 s</small><a class="btn btn-primary" id="sidebar-plan-action" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
     <div class="app-layout"><header class="app-header"><a href="/" class="brand track-guest-brand" data-nav="home" aria-label="SongToSheet, accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><span class="small-credit"><span>◇</span> <b id="top-credits">Démo</b> · accès</span><div class="user-avatar" id="user-avatar">S</div></div></header><div class="app-scroll">
       <section id="dashboard-page" class="app-page"><div class="app-welcome"><div><span class="dashboard-kicker">TON STUDIO PERSONNEL ✦</span><h1>Prêt à jouer quelque chose<br/><span>de nouveau ?</span></h1><p>Transforme tes enregistrements en partitions en quelques étapes.</p></div><div class="welcome-decor">♫</div></div><div class="overview-cards"><div class="overview-card"><span class="metric-symbol purple">◇</span><div><strong id="metric-credits">Démo</strong><small>Accès actuel</small></div></div><div class="overview-card"><span class="metric-symbol green">▤</span><div><strong id="metric-total">0</strong><small>Partitions générées</small></div></div><div class="overview-card"><span class="metric-symbol orange">✧</span><div><strong id="metric-progress">0</strong><small>Générations en cours</small></div></div></div><div class="dashboard-grid"><div class="dashboard-create"><div><span class="section-label">CRÉATION RAPIDE</span><h2>Ta prochaine partition est à un clic.</h2><p>Dépose un morceau et laisse SongToSheet faire le premier relevé.</p><button id="dashboard-start" class="btn btn-primary">Nouvelle partition <span>↗</span></button></div><div class="dashboard-illustration">♬</div></div><div class="dashboard-helper"><span class="helper-symbol">✦</span><h3>Comment ça marche ?</h3><p>Importe ton fichier audio, choisis ton instrument, puis lance la génération. Le résultat sera sauvegardé dans ta bibliothèque.</p><a href="/#comment-ca-marche" id="learn-more">Voir les étapes <span>↗</span></a></div></div><div class="list-heading"><h2>Dernières partitions</h2><button id="view-all">Tout voir →</button></div><div id="recent-jobs" class="jobs-list"></div><p id="admin-guitar-comparison" hidden><a class="btn btn-outline" href="/statistiques.html">Statistiques des moteurs</a> <a class="btn btn-outline" href="/comparatif.html">Comparer les tablatures guitare</a></p></section>
 
-      <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><div id="track-onboarding"></div><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Essentiel : 1 musique tous les 7 jours.</p></div><div class="tip-line"><i>✓</i><p>L'illimité prévoit un usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><a class="btn btn-outline" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></aside></div></section>
+      <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><div id="track-onboarding"></div><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Starter : 1 morceau complet par jour.</p></div><div class="tip-line"><i>✓</i><p>Pro et Lifetime : sans limite, usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><a class="btn btn-outline" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></aside></div></section>
 
       <section id="library-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">TA BIBLIOTHÈQUE</span><h1>Toutes tes partitions.</h1><p>Retrouve et télécharge les musiques que tu as transcrites.</p></div><button id="library-new" class="btn btn-primary">＋ Nouvelle partition</button></div><div class="library-toolbar"><span id="library-count">0 partition</span><div class="search-wrapper"><span>⌕</span><input id="library-search" placeholder="Rechercher un morceau..."/></div></div><div id="library-jobs" class="jobs-list library-jobs"></div></section>
 
-      <section id="result-page" class="app-page hidden"><button id="back-to-library" class="back-link">← Retour à ma bibliothèque</button><div id="result-content"></div></section>
+      <section id="account-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">MON ABONNEMENT</span><h1>Ton offre et ton quota.</h1><p>Statut, renouvellement et morceaux complets disponibles.</p></div><span class="app-title-icon">◇</span></div><div id="account-content" class="account-content" aria-live="polite"><p>Chargement…</p></div></section><section id="result-page" class="app-page hidden"><button id="back-to-library" class="back-link">← Retour à ma bibliothèque</button><div id="result-content"></div></section>
 
     </div></div>
   </main>
@@ -1147,7 +1147,7 @@
 
   <main id="auth-view" class="hidden"><div class="auth-container"><a href="/" class="brand auth-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><div class="auth-card"><span class="auth-flower">✦</span><h1 id="auth-title">Bienvenue sur SongToSheet</h1><p id="auth-subtitle">Crée ton compte pour retrouver toutes tes partitions.</p><form id="auth-form"><label for="auth-email">Adresse email</label><input id="auth-email" class="field" type="email" autocomplete="email" placeholder="toi@exemple.com" required/><label for="auth-password">Mot de passe</label><input id="auth-password" class="field" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum" required/><p id="auth-password-hint" class="auth-demo-hint">8 caractères minimum. Ton mot de passe est haché sur le serveur et n’est jamais conservé en clair.</p><p id="auth-error" class="auth-error hidden"></p><button id="auth-submit" class="btn btn-primary" type="submit">Créer mon compte <span>↗</span></button></form><p id="auth-alternate" class="auth-alternate">Déjà un compte ? <a href="/connexion" data-nav="login">Se connecter</a></p></div><p class="auth-footer">SongToSheet · Ton studio de musique en ligne</p></div><div class="auth-art"><div class="auth-art-inner"><span>♫</span><h2>Chaque morceau a une histoire.<br/>À toi de la <i>jouer.</i></h2><div class="auth-art-card"><div class="auth-lines"></div><span>Ta prochaine partition commence ici. ✦</span></div></div></div></main>
 
-  <main id="legal-view" class="hidden legal-view"><div class="container"><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><h1>Informations légales & limites de la V1</h1><p>SongToSheet est un prototype technique. Avant commercialisation, il faudra publier les mentions légales, CGV, politique de confidentialité, politique de remboursement et documents RGPD de l'entité exploitante.</p><p>Utilisez uniquement des audios dont vous possédez les droits ou disposez des autorisations nécessaires. Les liens externes servent de référence ; leur contenu n'est pas téléchargé. Le moteur de transcription expérimental peut produire des erreurs musicales.</p><p>Les abonnements présentés sont des tarifs provisoires. Les paiements seront activés après intégration sécurisée de Stripe et de la gestion des droits.</p></div></main>
+  <main id="legal-view" class="hidden legal-view"><div class="container"><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><h1>Informations légales & limites de la V1</h1><p>SongToSheet est un prototype technique. Avant commercialisation, il faudra publier les mentions légales, CGV, politique de confidentialité, politique de remboursement et documents RGPD de l'entité exploitante.</p><p>Utilisez uniquement des audios dont vous possédez les droits ou disposez des autorisations nécessaires. Les liens externes servent de référence ; leur contenu n'est pas téléchargé. Le moteur de transcription expérimental peut produire des erreurs musicales.</p><p>Les paiements sont traités par Whop. Ton abonnement se gère depuis « Mon abonnement », dans ton espace.</p></div></main>
 
   <footer id="public-footer" class="site-footer"><div class="container footer-wrap">
 <div><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>song<span class="brand-to">to</span>sheet<span class="brand-dot">.ai</span></span></a><p>Ta musique mérite d'être jouée.</p></div>
@@ -1331,7 +1331,8 @@
       }
       if(!canOpenStudio(state.activePage)){go('/inscription',true);return;}
       $('workspace').classList.toggle('track-guest',!state.user);
-      showAppPage(state.activePage);
+      if(state.user&&new URLSearchParams(location.search).get('abonnement')==='merci'){welcomeBack();}
+      else showAppPage(state.activePage);
     }
     if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth();}
     if(window.SongToSheetFlow)window.SongToSheetFlow.render(pathname);
@@ -1381,6 +1382,8 @@
     $('nav-cta').textContent=signedIn?'Ouvrir mon espace ↗':'Commencer ↗';
     $('mobile-start').textContent=signedIn?'Ouvrir mon espace':'Créer ma partition';
     $('public-header').removeAttribute('data-session-pending');
+    showPlan(user?.plan);
+    if(user)resumeCheckout();
   }
   async function loadUser(){try{const data=await api('/api/auth/me');setCurrentUser(data.user);}catch{setCurrentUser(null);}}
   async function refresh(){if(!state.user)return;
@@ -1459,10 +1462,11 @@
     if(page!=='result')stopPlayer();
     if(page!=='create')trackWizard?.pause();
     state.activePage=page;
-    for(const p of ['dashboard','create','library','result'])show(p+'-page',page===p);
-    const side=page==='dashboard'?'menu-dashboard':page==='library'||page==='result'?'menu-library':'menu-create';
-    for(const id of ['menu-dashboard','menu-create','menu-library'])$(id).classList.toggle('side-active',id===side);
-    const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition'};
+    for(const p of ['dashboard','create','library','result','account'])show(p+'-page',page===p);
+    const side=page==='dashboard'?'menu-dashboard':page==='library'||page==='result'?'menu-library':page==='account'?'menu-account':'menu-create';
+    for(const id of ['menu-dashboard','menu-create','menu-library','menu-account'])$(id).classList.toggle('side-active',id===side);
+    const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition',account:'Mon abonnement'};
+    if(page==='account')renderAccount();
     $('page-crumb').textContent=names[page]||'Mon espace';
     if(page!=='result')$('result-page').classList.remove('is-score');
     renderRecents();
@@ -1529,6 +1533,96 @@
     container.querySelector('[role="status"]').textContent=annual
       ?'Facturation annuelle sélectionnée. Les prix affichés par mois sont des équivalents.'
       :'Facturation mensuelle sélectionnée.';
+  }
+
+  // ---- Abonnement : plan du compte, paiement relié au compte, page « Mon abonnement » ----
+  const PLAN_NAMES={free:'Gratuit',starter:'Starter',pro:'Pro',lifetime:'Lifetime'};
+  const CHECKOUT_PLANS={essential:'starter',unlimited:'pro',lifetime:'lifetime'};
+  const checkoutKey='songtosheet:checkout';
+  function showPlan(plan='free'){
+    const paid=plan&&plan!=='free';
+    $('sidebar-credits').textContent=PLAN_NAMES[plan]||'Gratuit';
+    $('sidebar-plan-detail').textContent=plan==='starter'?'1 morceau complet par jour':paid?'Sans limite quotidienne':'Aperçus de 30 s';
+    const action=$('sidebar-plan-action');
+    action.textContent=paid?'Mon abonnement':'Voir les abonnements ↗';
+    action.dataset.account=paid?'1':'';
+    const balance=$('create-balance');
+    if(balance){balance.textContent=PLAN_NAMES[plan]||'Gratuit';balance.parentElement.lastChild.textContent=paid?' · abonnement actif':' · aperçus gratuits';}
+  }
+  function cycleOf(link){
+    const pressed=link.closest('#pricing-view,#unlock-dialog')?.querySelector('[data-cycle][aria-pressed="true"]');
+    return pressed?.dataset.cycle==='annual'?'annual':'monthly';
+  }
+  async function startCheckout(plan,period,fallback){
+    try{
+      const {url}=await post('/api/billing',{action:'checkout',plan,period});
+      sessionStorage.removeItem(checkoutKey);
+      location.href=url;
+    }catch(e){
+      sessionStorage.removeItem(checkoutKey);
+      // Without the server link, Whop's own page still works: the payment is matched by e-mail.
+      if(fallback&&/indisponible/i.test(e.message||''))location.href=fallback;
+      else toast(e.message||'Le paiement n’a pas pu démarrer.',true);
+    }
+  }
+  function resumeCheckout(){
+    let intent=null;
+    try{intent=JSON.parse(sessionStorage.getItem(checkoutKey)||'null');}catch{}
+    if(intent?.plan&&Date.now()-intent.at<30*60*1000)startCheckout(intent.plan,intent.period,intent.fallback);
+  }
+  async function checkoutClick(link){
+    const plan=CHECKOUT_PLANS[link.dataset.planCheckout];
+    if(!plan)return;
+    const period=cycleOf(link);
+    if(!state.user){
+      // A plan belongs to an account: sign up or log in first, then the payment opens.
+      sessionStorage.setItem(checkoutKey,JSON.stringify({plan,period,fallback:link.href,at:Date.now()}));
+      $('unlock-dialog')?.open&&$('unlock-dialog').close();
+      toast('Crée ton compte ou connecte-toi : le paiement s’ouvrira ensuite.');
+      go('/inscription');
+      return;
+    }
+    link.setAttribute('aria-busy','true');
+    await startCheckout(plan,period,link.href);
+    link.removeAttribute('aria-busy');
+  }
+  const accountDate=value=>value?new Date(value).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'';
+  const accountTime=value=>value?new Date(value).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+  async function renderAccount({thanks=false}={}){
+    const box=$('account-content');
+    let data;
+    try{data=await api('/api/billing');}
+    catch(e){box.innerHTML=`<p class="account-error">${safe(e.message||'Impossible de charger ton abonnement.')}</p>`;return null;}
+    const {tier,status,period_end:end,cancel_at_period_end:ending,manage_url:manage,quota}=data;
+    const paid=tier!=='free';
+    const statusText=!paid?'Aucun abonnement actif':status==='past_due'?'Paiement en attente — Whop va réessayer':
+      ending?`Actif jusqu’au ${accountDate(end)}, puis arrêté`:tier==='lifetime'?'Actif à vie':end?`Actif · renouvellement le ${accountDate(end)}`:'Actif';
+    const quotaText=tier==='starter'?
+      (quota.remaining>0?`<strong>1 morceau complet disponible aujourd’hui</strong>`:`<strong>Morceau du jour utilisé</strong>`)+
+        `<span>Se recharge à ${accountTime(quota.resets_at)} (minuit, heure de Paris). Non cumulable.</span>`:
+      paid?`<strong>Sans limite quotidienne</strong><span>${quota.used} morceau${quota.used>1?'x':''} complet${quota.used>1?'s':''} aujourd’hui · usage personnel raisonnable.</span>`:
+      `<strong>Aperçus de 30 secondes</strong><span>Choisis une offre pour générer les morceaux en entier.</span>`;
+    box.innerHTML=`${thanks?`<p class="account-thanks">${paid?'Merci ! Ton abonnement est actif.':'Paiement reçu, on active ton abonnement… Cette page se met à jour toute seule.'}</p>`:''}
+      <div class="account-card"><span class="account-label">Offre</span><strong class="account-plan">${safe(PLAN_NAMES[tier]||tier)}</strong><p class="account-status">${safe(statusText)}</p></div>
+      <div class="account-card"><span class="account-label">Quota</span><p class="account-quota">${quotaText}</p></div>
+      <div class="account-actions">
+        ${manage?`<a class="btn btn-outline" href="${safe(manage)}" target="_blank" rel="noopener">Gérer mon paiement ↗</a>`:''}
+        ${tier==='starter'?`<a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Passer au Pro ↗</a>`:''}
+        ${!paid?`<a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a>`:''}
+      </div>
+      ${manage?'<p class="account-note">Changer de carte, d’offre ou résilier se fait sur Whop, notre prestataire de paiement. Une résiliation garde ton accès jusqu’à la fin de la période payée.</p>':''}`;
+    if(state.user&&state.user.plan!==tier){state.user.plan=tier;showPlan(tier);}
+    return data;
+  }
+  async function welcomeBack(){
+    // Back from Whop: the webhook may land a few seconds after the redirect.
+    history.replaceState(null,'',location.pathname);
+    showAppPage('account');
+    for(let attempt=0;attempt<10;attempt++){
+      const data=await renderAccount({thanks:true});
+      if(data&&data.tier!=='free')return;
+      await new Promise(resolve=>setTimeout(resolve,3000));
+    }
   }
 
   let unlockTrigger;
@@ -2100,6 +2194,9 @@
       if(!unlockDialog.open&&unlockTrigger?.isConnected)unlockTrigger.focus({preventScroll:true});
     });
     document.addEventListener('click',async(e)=>{
+      const checkout=e.target.closest('[data-plan-checkout]');
+      if(checkout&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){e.preventDefault();await checkoutClick(checkout);return;}
+      if(e.target.closest('#sidebar-plan-action[data-account="1"]')){e.preventDefault();showAppPage('account');return;}
       const unlock=e.target.closest('[data-unlock]');
       if(unlock&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){
         e.preventDefault();
@@ -2188,7 +2285,7 @@
       });
     }
     $('sidebar-logout').onclick=logout;$('mobile-sidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('mobile-open');
-    $('menu-dashboard').onclick=()=>showAppPage('dashboard');$('menu-create').onclick=()=>showAppPage('create');$('menu-library').onclick=()=>showAppPage('library');
+    $('menu-dashboard').onclick=()=>showAppPage('dashboard');$('menu-create').onclick=()=>showAppPage('create');$('menu-library').onclick=()=>showAppPage('library');$('menu-account').onclick=()=>showAppPage('account');
     $('dashboard-start').onclick=()=>showAppPage('create');$('view-all').onclick=()=>showAppPage('library');$('library-new').onclick=()=>showAppPage('create');
     $('back-to-library').onclick=()=>showAppPage('library');
     $('side-recents').addEventListener('click',e=>{

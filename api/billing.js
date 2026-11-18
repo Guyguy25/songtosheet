@@ -70,7 +70,7 @@ async function checkout(req,res,user){
   const {plan,period}=req.body||{};
   const planId=CHECKOUT_PLANS[plan]?.[plan==='lifetime'?'once':period==='annual'?'annual':'monthly'];
   if(!planId)return json(res,400,{detail:'Offre inconnue.'});
-  const origin='https://songtosheet.vercel.app';
+  const origin='https://tablurio.com';
   const configuration=await store.whop('/checkout_configurations',{method:'POST',body:{
     account_id:'biz_7EpgzhL8mQlG1B',mode:'payment',variant_id:planId,metadata:{user_id:String(user._id)},redirect_url:origin+'/app?abonnement=merci'}});
   const target=String(configuration?.purchase_url||'');

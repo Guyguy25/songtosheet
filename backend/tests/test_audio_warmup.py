@@ -48,3 +48,28 @@ def test_yourmt3_warm_clip_is_a_full_preview():
     clip = warm_clip()
     assert len(clip) == 16000 * 30  # same shape as a real 30 s preview (15 segments, one batch)
     assert float(abs(clip).max()) > .05  # audible: silent windows would be skipped
+
+
+def test_yourmt3_preload_warms_through_the_request_path(monkeypatch):
+    import sys
+    import threading
+    import types
+
+    import yourmt3_engine
+
+    fake = types.ModuleType("mt3_infer")
+    fake.transcribe = lambda *args, **kwargs: None
+    monkeypatch.setitem(sys.modules, "mt3_infer", fake)
+    monkeypatch.setattr(yourmt3_engine, "_LOCK", threading.Lock())
+    monkeypatch.setattr(yourmt3_engine, "_bigger_batches", lambda: None)
+    seen = []
+
+    def run(audio, destination, checkpoint, device):
+        import soundfile
+
+        assert not yourmt3_engine._LOCK.locked()  # run() takes the lock itself
+        info = soundfile.info(str(audio))
+        seen.append((info.samplerate, info.channels, round(info.duration)))
+    monkeypatch.setattr(yourmt3_engine, "run", run)
+    yourmt3_engine.preload("ckpt", "cuda")
+    assert seen == [(44100, 2, 30)]  # a real 30 s stereo file, read and resampled like a request

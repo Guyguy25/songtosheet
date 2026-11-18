@@ -71,7 +71,11 @@ engine = (
     # compile it once here and keep the result in the image.
     # A generic CPU target: the cache built here is valid on the (different) machines that run jobs.
     .env({"NUMBA_CACHE_DIR": "/opt/numba-cache", "NUMBA_CPU_NAME": "generic"})
-    .run_commands("mkdir -p /opt/numba-cache && python -c \"import numpy as np, librosa; t = np.arange(44100 * 4) / 44100; y = (.2 * np.sin(2 * np.pi * 196 * t)).astype('float32'); v = librosa.resample(y, orig_sr=44100, target_sr=16000); librosa.feature.rms(y=v, frame_length=1600, hop_length=800); s = librosa.resample(y, orig_sr=44100, target_sr=22050); librosa.beat.beat_track(y=s, sr=22050, hop_length=512); h = librosa.effects.harmonic(s); librosa.feature.chroma_cqt(y=h, sr=22050, hop_length=512); e = librosa.onset.onset_strength(y=s, sr=22050, hop_length=512); librosa.onset.onset_detect(onset_envelope=e, sr=22050, hop_length=512)\"")
+    .run_commands(
+        "mkdir -p /opt/numba-cache && python -c \"import numpy as np, librosa; t = np.arange(44100 * 4) / 44100; y = (.2 * np.sin(2 * np.pi * 196 * t)).astype('float32'); v = librosa.resample(y, orig_sr=44100, target_sr=16000); librosa.feature.rms(y=v, frame_length=1600, hop_length=800); s = librosa.resample(y, orig_sr=44100, target_sr=22050); librosa.beat.beat_track(y=s, sr=22050, hop_length=512); h = librosa.effects.harmonic(s); librosa.feature.chroma_cqt(y=h, sr=22050, hop_length=512); e = librosa.onset.onset_strength(y=s, sr=22050, hop_length=512); librosa.onset.onset_detect(onset_envelope=e, sr=22050, hop_length=512)\"",
+        # Same for the YourMT3+ venv, which reads and resamples every request with its own librosa.
+        "/opt/yourmt3/bin/python -c \"import numpy as np, soundfile, librosa; t = np.arange(44100 * 4) / 44100; y = (.2 * np.sin(2 * np.pi * 196 * t)).astype('float32'); soundfile.write('/tmp/w.wav', np.stack([y, y], axis=1), 44100); librosa.load('/tmp/w.wav', sr=16000, mono=True)\"",
+    )
     .env({
         "TRACK_YOURMT3_PYTHON": "/opt/yourmt3/bin/python",
         "TRACK_YOURMT3_CHECKPOINT": "/models/yourmt3.ckpt",

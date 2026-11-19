@@ -38,7 +38,7 @@
 .sp-roll-scroll{overflow-x:auto;overscroll-behavior-inline:contain;scrollbar-color:#504068 #151725}
 .sp-roll-scroll svg{display:block;cursor:crosshair;max-width:none}
 .sp-keyboard{overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;background:#161220;padding-block:8px}
-.sp-keyboard svg{display:block;width:100%;min-width:728px;height:auto}
+.sp-keyboard svg{display:block;width:min(100%,940px);min-width:728px;height:auto;margin-inline:auto}
 .sp-key-light{fill:#f1eff7;stroke:#6a6577;stroke-width:.65}
 .sp-key-dark{fill:#37354a;stroke:#625976;stroke-width:.65}
 .sp-key-light.is-playing,.sp-key-dark.is-playing{fill:#a567ff;stroke:#efe3ff;stroke-width:1}
@@ -49,7 +49,8 @@
 .sp-grid-line{stroke:#363650;stroke-width:1}
 .sp-note{fill:#9b66fa;stroke:#bc98ff;stroke-width:.7}
 .sp-playhead{stroke:#ff779d;stroke-width:2;pointer-events:none}
-.sp-controls{position:sticky;bottom:0;z-index:2}
+/* Keyboard and controls stay pinned to the bottom while the score scrolls. */
+.sp-dock{position:sticky;bottom:0;z-index:2;border-top:1px solid #2d253e;box-shadow:0 -10px 24px #0d0a1426}
 .sp-controls .sp-play{background:#783ee7;color:#fff;border-radius:50%;width:40px;height:40px;flex:0 0 40px;font-size:15px}
 .sp-controls .sp-restart{font-size:19px}
 .sp-time{font:11px ui-monospace,monospace;white-space:nowrap}
@@ -62,7 +63,7 @@
 .sp-sr{position:absolute;width:1px;height:1px;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
 .score-player:fullscreen{margin:0;border-radius:0;display:flex;flex-direction:column}
 .score-player:fullscreen .sp-body{flex:1;min-height:0;overflow-y:auto}
-.score-player:fullscreen .sp-controls{position:static}
+.score-player:fullscreen .sp-dock{position:static}
 .track-progress,.track-result-waiting{width:min(100%,540px);margin-inline:auto}
 .track-progress{margin-block:12px 22px;padding:18px clamp(12px,3vw,23px);border:1px solid #e9e0f7;border-radius:16px;background:#fff;color:#32264a;text-align:center}
 .track-progress-heading{display:grid;grid-template-columns:32px minmax(0,1fr) 32px;align-items:center;gap:6px}

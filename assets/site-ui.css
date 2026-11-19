@@ -84,3 +84,4 @@
 /* Sign-up phone field: lays out like the other fields of the form. */
 .auth-phone-row{display:contents}
 .auth-phone-row.hidden{display:none!important}
+.auth-error a{color:inherit;font-weight:800;text-decoration:underline}

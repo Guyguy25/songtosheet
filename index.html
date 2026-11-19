@@ -10,7 +10,7 @@
   <script>document.documentElement.classList.toggle('has-overlay-header', /^\/(?:tarifs\/?|upgrade\/?)?$/.test(location.pathname.toLowerCase()));</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
-  <link rel="stylesheet" href="/assets/site-ui.css?v=5" />
+  <link rel="stylesheet" href="/assets/site-ui.css?v=6" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=15" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=34" defer></script>
@@ -1387,7 +1387,7 @@
       if(state.user&&new URLSearchParams(location.search).get('abonnement')==='merci'){welcomeBack();}
       else showAppPage(state.activePage,{replace:true});
     }
-    if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth();}
+    if(authPage){state.authMode=pathname==='/connexion'?'login':'signup';renderAuth({clearError:true});}
     if(window.SongToSheetFlow)window.SongToSheetFlow.render(pathname);
     window.SongToSheetWaitSurvey?.mount($('demo-wait-survey'),state.user?.id,pathname==='/generation');
     const titles={'/':'Tablurio.com — Partitions et tablatures de vos musiques préférées',
@@ -1410,7 +1410,7 @@
       requestAnimationFrame(()=>$('comment-ca-marche').scrollIntoView({behavior:'smooth',block:'start'}));
     }
   }
-  function renderAuth(){const login=state.authMode==='login';
+  function renderAuth({clearError=false}={}){const login=state.authMode==='login';
     show('auth-phone-row',!login);$('auth-phone').required=!login;
     $('auth-title').textContent=login?'Content de te revoir !':'Bienvenue sur Tablurio';
     $('auth-subtitle').textContent=login?'Retrouve ton studio de transcription.':'Crée ton compte pour retrouver toutes tes partitions.';
@@ -1424,7 +1424,8 @@
     $('auth-password').required=!claimOnly;if(claimOnly)$('auth-phone').required=false;
     if(claimOnly)$('auth-submit').textContent='Réessayer d’ouvrir mon aperçu';
     $('auth-password-hint').textContent=login?'Connecte-toi avec le mot de passe de ton compte.':'8 caractères minimum. Ton mot de passe est haché de façon sécurisée sur le serveur.';
-    show('auth-error',false);
+    // Kept after a failed attempt so the reason stays visible; cleared when the page changes.
+    if(clearError)show('auth-error',false);
     if(window.SongToSheetFlow)window.SongToSheetFlow.configureAuth(login);
   }
   function setCurrentUser(user){
@@ -2406,7 +2407,17 @@
       $('auth-password').value='';
       if(pending&&pending.completed===true)window.SongToSheetFlow.clearPending();
       await finishAuth();
-    }catch(err){$('auth-error').textContent=err.message;show('auth-error',true);}
+    }catch(err){
+      const box=$('auth-error');
+      box.textContent=err.message;
+      if(err.body?.reason==='email_taken'){
+        box.append(' ');
+        const link=Object.assign(document.createElement('a'),{href:'/connexion',textContent:'Se connecter'});
+        link.dataset.nav='login';
+        box.append(link);
+      }
+      show('auth-error',true);
+    }
     finally{btn.disabled=false;renderAuth();}
   }
   async function logout(){try{await post('/api/auth/logout',{});}catch(e){toast(e.message,true);return;}window.SongToSheetFlow?.clearPending();rememberTrackLink();trackWizard?.pause();trackWizard=null;setCurrentUser(null);state.jobs=[];state.activePage='dashboard';state.guestStudio=false;state.file=null;state.link='';go('/');toast('Tu es déconnecté.');}

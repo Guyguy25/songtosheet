@@ -13,7 +13,7 @@
   <link rel="stylesheet" href="/assets/site-ui.css?v=5" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=15" />
   <script src="/assets/audio-source.js?v=7" defer></script>
-  <script src="/backend/web/track-onboarding.js?v=33" defer></script>
+  <script src="/backend/web/track-onboarding.js?v=34" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=16" />
   <script src="/backend/web/score-player.js?v=23" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=10" />
@@ -767,7 +767,7 @@
       <h2 id="start-dialog-title">Quel morceau veux-tu jouer&nbsp;?</h2>
       <p class="start-dialog-lead">Colle un lien ou importe un audio. Tu choisis ton instrument juste après.</p>
       <div id="start-dialog-body"></div>
-      <ul class="start-dialog-steps"><li>Aperçu de 30&nbsp;s offert</li><li>Aucune carte demandée</li><li>Piano, guitare, basse, violon, voix</li></ul>
+      <ul class="start-dialog-steps"><li>Aperçu de 30&nbsp;s offert</li><li>Aucune carte demandée</li><li>Guitare, piano et voix</li></ul>
       <p class="start-dialog-foot">Déjà un compte&nbsp;? <a href="/connexion" data-nav="login">Se connecter</a></p>
     </div>
   </dialog>
@@ -851,12 +851,12 @@
 <section class="dark center" id="fonctionnalites"><div class="w">
 <span class="pill">🎼 Instruments</span>
 <h2>Un morceau, <b>plusieurs façons de le jouer</b></h2>
-<p class="sub">Choisis ton instrument : tu obtiens une tablature ou une partition adaptée. Guitare, piano, basse et voix sont disponibles ; violon et batterie arrivent bientôt.</p>
+<p class="sub">Choisis ton instrument : tu obtiens une tablature ou une partition adaptée. Guitare, piano et voix sont disponibles ; la basse (en bêta), le violon et la batterie arrivent bientôt.</p>
 <div class="showcase">
 <div class="ilist" role="group" aria-label="Instrument">
 <button type="button" class="ib" data-ins="guitare" aria-pressed="true"><span class="e">🎸</span><span><b>Guitare</b><small>Tablature et partition</small></span><span class="st">Disponible</span></button>
 <button type="button" class="ib" data-ins="piano" aria-pressed="false"><span class="e">🎹</span><span><b>Piano</b><small>Partition</small></span><span class="st">Disponible</span></button>
-<button type="button" class="ib" data-ins="basse" aria-pressed="false"><span class="e">🎵</span><span><b>Basse</b><small>Tablature 4 cordes et partition</small></span><span class="st">Disponible</span></button>
+<button type="button" class="ib" data-ins="basse" aria-pressed="false"><span class="e">🎵</span><span><b>Basse</b><small>Tablature 4 cordes et partition</small></span><span class="st b">Bêta</span></button>
 <button type="button" class="ib" data-ins="voix" aria-pressed="false"><span class="e">🎤</span><span><b>Voix</b><small>Ligne de chant en partition</small></span><span class="st">Disponible</span></button>
 <button type="button" class="ib" data-ins="violon" aria-pressed="false"><span class="e">🎻</span><span><b>Violon</b><small>Partition en clé de sol</small></span><span class="st b">Bientôt</span></button>
 <button type="button" class="ib" data-ins="batterie" aria-pressed="false"><span class="e">🥁</span><span><b>Batterie</b><small>Notation batterie</small></span><span class="st b">Bientôt</span></button>
@@ -892,7 +892,7 @@
    <label><input type="radio" name="how-instrument" value="guitare"/><span>🎸 <b>Guitare</b></span></label>
    <label><input type="radio" name="how-instrument" value="violon"/><span>🎻 <b>Violon</b></span></label>
    <label><input type="radio" name="how-instrument" value="voix"/><span>🎤 <b>Voix</b></span></label>
-   <label><input type="radio" name="how-instrument" value="basse"/><span>🎵 <b>Basse</b></span></label>
+   <label><input type="radio" name="how-instrument" value="basse" disabled/><span>🎵 <b>Basse</b> <small>Bêta</small></span></label>
   </div>
   <div class="how-buttons"><button id="how-back-source" type="button" class="how-back-btn">← Retour</button><button id="how-next-instrument" type="button" class="how-main-btn">Générer ma partition <span aria-hidden="true">→</span></button></div>
  </div>
@@ -914,7 +914,7 @@
 <div class="r"><div class="y">Ta partition en 30 secondes</div><div class="n">Des heures à relever à l'oreille</div></div>
 <div class="r"><div class="y">Un accès, tous tes morceaux</div><div class="n">Chaque partition payée à l'unité</div></div>
 <div class="r"><div class="y">Des millions de titres via YouTube, Spotify, Deezer</div><div class="n">Catalogues limités, titres récents introuvables</div></div>
-<div class="r"><div class="y">Le même morceau pour guitare, piano, basse ou voix</div><div class="n">Une partition, un instrument</div></div>
+<div class="r"><div class="y">Le même morceau pour guitare, piano ou voix</div><div class="n">Une partition, un instrument</div></div>
 </div>
 <div class="why">
 <div><i>01</i><b>Gain de temps</b><p>Une partition générée en 30 secondes.</p></div>
@@ -939,9 +939,9 @@
 <div class="faq"><div><span class="pill">FAQ</span><h2>Les réponses avant de jouer.</h2><p class="sub">Une dernière question avant de commencer ? La réponse est sûrement ici.</p></div>
 <div>
 <details open><summary>Quels liens puis-je utiliser ?</summary><p>N'importe quel morceau disponible sur YouTube, Spotify ou Deezer. Tu peux aussi importer ton propre fichier audio.</p></details>
-<details><summary>Quels instruments sont disponibles ?</summary><p>Guitare, piano, basse et voix sont disponibles. Le violon et la batterie arrivent bientôt.</p></details>
+<details><summary>Quels instruments sont disponibles ?</summary><p>Guitare, piano et voix sont disponibles. La basse est en bêta et arrive bientôt, comme le violon et la batterie.</p></details>
 <details><summary>98 % de précision, ça veut dire quoi ?</summary><p>C'est la part de notes correctement relevées, en moyenne, sur nos morceaux de test*. Sur un titre très dense, quelques passages peuvent demander une retouche.</p></details>
-<details><summary>Partition ou tablature ?</summary><p>Les deux. Pour la guitare et la basse, tu choisis entre tablature et partition classique.</p></details>
+<details><summary>Partition ou tablature ?</summary><p>Les deux. Pour la guitare, tu choisis entre tablature et partition classique. La tablature basse arrive avec la sortie de bêta.</p></details>
 <details><summary>Dans quels formats je récupère le résultat ?</summary><p>L'aperçu gratuit se lit directement à l'écran. La version complète s'exporte en PDF pour lire ou imprimer, et en MIDI ou MusicXML pour l'ouvrir dans ton logiciel de notation.</p></details>
 </div></div>
 <p class="fnote">* Précision moyenne des notes mesurée sur notre jeu de morceaux de test ; le résultat varie selon l'enregistrement et la densité de l'arrangement.</p>
@@ -1078,7 +1078,7 @@
     <label class="flow-instrument"><input type="radio" name="flow-instrument" value="guitare"><span>🎸</span><b>Guitare</b><span class="flow-radio-check">✓</span></label>
     <label class="flow-instrument"><input type="radio" name="flow-instrument" value="violon"><span>🎻</span><b>Violon</b><span class="flow-radio-check">✓</span></label>
     <label class="flow-instrument"><input type="radio" name="flow-instrument" value="voix"><span>🎤</span><b>Voix</b><span class="flow-radio-check">✓</span></label>
-    <label class="flow-instrument"><input type="radio" name="flow-instrument" value="basse"><span>🎸</span><b>Basse</b><span class="flow-radio-check">✓</span></label>
+    <label class="flow-instrument"><input type="radio" name="flow-instrument" value="basse" disabled><span>🎸</span><b>Basse <small>Bêta</small></b><span class="flow-radio-check">✓</span></label>
    </fieldset>
    <button id="flow-select-continue" class="flow-main-btn" type="button">Continuer <span aria-hidden="true">↗</span></button>
    <p class="flow-note"><strong>Simulation :</strong> aucun audio n’est réellement transcrit. L’extrait présenté est illustratif.</p>

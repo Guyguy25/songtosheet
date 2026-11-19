@@ -5,7 +5,7 @@
   const TOO_LONG='Tablurio ne prend pas encore les audios de plus de 10 minutes. Choisis un morceau plus court.';
 
   const instruments=[
-    ['piano','🎹','Piano'],['guitare','🎸','Guitare'],['basse','♫','Basse']
+    ['piano','🎹','Piano'],['guitare','🎸','Guitare']
   ];
   const formats=[
     ['partition','𝄞','Partition','Lis le relevé sur une portée.'],
@@ -540,11 +540,11 @@
           ?`<button type="button" class="track-choice-text" value="${value}" aria-pressed="${draft[field]===value}">${name}</button>`
           :        `<button type="button" class="track-choice" value="${value}" aria-pressed="${draft[field]===value}">
           <span class="track-choice-icon" aria-hidden="true">${icon}</span>
-          <span><strong>${name}${field==='instrument'&&value==='basse'?' <span class="track-beta">Bêta</span>':''}</strong>${detail?`<small>${detail}</small>`:''}</span>
+          <span><strong>${name}</strong>${detail?`<small>${detail}</small>`:''}</span>
           <span class="track-choice-arrow" aria-hidden="true">→</span></button>`).join(''):'';
       if(field==='instrument'){
         choices.insertAdjacentHTML('beforeend',[
-          ['🎻','Violon'],['🥁','Batterie']
+          ['🎸','Basse'],['🎻','Violon'],['🥁','Batterie']
         ].map(([icon,name])=>`<div class="track-choice track-instrument-preview">
           <span class="track-choice-icon" aria-hidden="true">${icon}</span>
           <span><strong>${name} <span class="track-beta">Bêta</span></strong><small>Bientôt disponible</small></span>

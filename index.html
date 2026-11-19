@@ -2432,6 +2432,15 @@
       if(guest&&j.status==='failed')rememberGuestTrack(null);
       if(j.track){
         state.currentTrack=j;
+        if(state.user?.role==='admin'&&j.preview_limit&&!j.variant&&j.status==='completed'){
+          // Admin account: no 30 s step, straight to the whole song started by the server.
+          const full=Object.values(j.full_jobs||{})[0];
+          if(full){openResult(full);return;}
+          if((state.adminWait=(state.adminWait||0)+1)<=3){
+            $('result-content').textContent='Lancement du morceau entier…';
+            state.poll=setTimeout(()=>{if(current())loadResult(id);},1500);return;
+          }
+        }else state.adminWait=0;
         const links={pdf:'Télécharger le PDF',musicxml:'Partition MusicXML',tab:'Tablature MusicXML',mid:'MIDI'};
         const completed=j.status==='completed';
         const waiting=['queued','processing'].includes(j.status);

@@ -56,10 +56,14 @@ def encode_vocals(original, source, output, limit, bitrate="64k", rate="24000"):
     mix, _ = librosa.load(original, sr=analysis_rate, mono=True)
     frames = librosa.feature.rms(y=voice, frame_length=1600, hop_length=800)[0]
     threshold = max(.003, float(np.sqrt(np.mean(mix ** 2))) * .12)
-    if np.count_nonzero(frames > threshold) >= 8:
+    heard = int(np.count_nonzero(frames > threshold))
+    if heard >= 8:
         run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(source),
              "-t", str(limit), "-map_metadata", "-1", "-ac", "1",
              "-ar", rate, "-b:a", bitrate, str(output)], timeout=60)
+        print(f"voix isolée gardée : {output.stat().st_size // 1024} Ko, {heard} trames audibles", flush=True)
+    else:
+        print(f"voix isolée retirée : trop faible ({heard} trames audibles)", flush=True)
 
 
 def include_vocals(exports, vocals):
@@ -67,6 +71,8 @@ def include_vocals(exports, vocals):
         voice = base64.b64encode(vocals.read_bytes()).decode("ascii")
         if 0 < len(voice) <= 420_000 and sum(map(len, exports.values())) + len(voice) <= 4_000_000:
             exports["vocals"] = voice
+        else:
+            print(f"voix isolée non jointe : {len(voice)} caractères, exports trop lourds", flush=True)
 
 
 def compare_versions(audio, data, directory, job, report, guitar_engine, solo_engine, piano_engine):

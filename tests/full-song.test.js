@@ -2,7 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert');
 const {ObjectId}=require('mongodb');
-const {createFullSong}=require('../lib/full-song.js');
+const {createFullSong,autoFullSong}=require('../lib/full-song.js');
 const billingStore=require('../lib/billing-store.js');
 
 function fakeDb(){
@@ -118,7 +118,25 @@ test('the whole song asks for the isolated voice unless the audio was declared i
   await createFullSong(mixed.db,mixed.user,{id:String(mixed.preview._id),variant:'arrangement'},NOW);
   assert.strictEqual(mixed.db.data.track_jobs.find(j=>j.variant==='arrangement').full_vocals,true);
   const instrumental=setup('pro');
-  instrumental.preview.source_content='instrument';
+  instrumental.preview.source_content='instrumental';
   await createFullSong(instrumental.db,instrumental.user,{id:String(instrumental.preview._id),variant:'arrangement'},NOW);
   assert.strictEqual(instrumental.db.data.track_jobs.find(j=>j.variant==='arrangement').full_vocals,undefined);
+});
+
+test('the admin account gets the whole song of the recommended version as soon as the preview is done',async()=>{
+  const {db,user,preview}=setup(null);
+  user.role='admin';
+  preview.piano_primary='solo';preview.piano_recommendation={version:3,recommended:'solo',scores:{solo:90,arrangement:70}};
+  let woke=0;
+  const id=await autoFullSong(db,preview,NOW,async()=>{woke++;});
+  const full=db.data.track_jobs.find(j=>j.variant==='solo');
+  assert.ok(full&&String(full._id)===id);
+  assert.strictEqual(woke,1);
+  assert.strictEqual(String(db.data.track_jobs[0].full_jobs.solo),id);
+});
+
+test('other accounts keep the 30 s preview',async()=>{
+  const {db,preview}=setup('pro');
+  assert.strictEqual(await autoFullSong(db,preview,NOW),null);
+  assert.strictEqual(db.data.track_jobs.length,1);
 });

@@ -14,6 +14,7 @@ const audioSource=require('../assets/audio-source');
 const {scheduleWake}=require('../lib/engine-wake');
 const {engineStats}=require('../lib/engine-stats');
 const {createFullSong,autoFullSong}=require('../lib/full-song');
+const {cacheKey,reuseCached}=require('../lib/track-cache');
 const {PIANO_CRITERIA,CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
@@ -126,6 +127,13 @@ function workerAuthorized(req){
   return timingSafeEqual(createHash('sha256').update(token.slice(7)).digest(),Buffer.from(expected,'hex'));
 }
 
+// The version an admin's direct whole song is made in (the AI usually recommends these).
+function directVariant(instrument,guitarGoal){
+  if(instrument==='piano')return 'yourmt3';
+  if(instrument==='guitare'&&guitarGoal)return {solo:'solo-v2',chords:'held-v1'}[guitarGoal]||'original-v1';
+  return 'default';
+}
+
 async function begin(db,req,res,user,body){
   const {size,extension,instrument}=body;
   const title=typeof body.title==='string'?body.title.trim().slice(0,110):'';
@@ -196,19 +204,28 @@ async function begin(db,req,res,user,body){
   try{
     const input=source?.youtubeId?{youtube_id:source.youtubeId,source_kind:'link'}:
       link?{audio_url:link.href,source_kind:'link'}:{extension,size};
-    const result=await jobs.insertOne({user_id:user._id,title,instrument,...input,format,source_name,capo,preview_limit:PREVIEW_SECONDS,
+    // Admin account (content creation): a YouTube link goes straight to the whole song, no 30 s step.
+    const direct=user.role==='admin'&&Boolean(source?.youtubeId)&&!excerptKey;
+    const doc={user_id:user._id,title,instrument,...input,format,source_name,capo,
       ...(user.guest?{guest_expires_at:new Date(now.getTime()+GUEST_MS)}:{}),
-      ...(excerpt?{excerpt:{start_ms:excerpt.start_ms,end_ms:excerpt.end_ms}}:{}),
+      ...(excerpt&&!direct?{excerpt:{start_ms:excerpt.start_ms,end_ms:excerpt.end_ms}}:{}),
+      ...(direct?{variant:directVariant(instrument,guitarGoal),flexible_variant:true,
+        ...(body.source!=='instrumental'?{full_vocals:true}:{}),...(guitarGoal?{guitar_goal:guitarGoal}:{})}:{
+      preview_limit:PREVIEW_SECONDS,
       ...(instrument==='piano'&&body.source==='mixed'&&process.env.TRACK_PIANO_COMPARISON!=='0'?{piano_vocals:true}:{}),
       ...(guitarGoal?{guitar_goal:guitarGoal,guitar_presence:guitarPresence,guitar_compare:true,guitar_judge:true,guitar_choice:null,
         ...(body.source==='mixed'?{guitar_vocals:true}:{}),
-        ...(link?{song_key:sourceKey(source)+excerptKey}:{})}:{}),
+        ...(link?{song_key:sourceKey(source)+excerptKey}:{})}:{})}),
       source_content:body.source||null,
       isolated:body.source==null?body.isolated===true:['voice','instrument'].includes(body.source),status:link?'queued':'uploading',active:true,
       ...(link?{queued_at:now}:{}),
-      created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+(link?AUDIO_RETENTION_MS:UPLOAD_MS))});
-    if(link)await scheduleWake();
-    return json(res,201,{id:String(result.insertedId),chunk_bytes:CHUNK_BYTES});
+      created_at:now,authorized_at:now,expires_at:new Date(now.getTime()+(link?AUDIO_RETENTION_MS:UPLOAD_MS))};
+    doc.cache_key=cacheKey(doc);
+    const result=await jobs.insertOne(doc);
+    // Already generated (same video and settings): copied at once, the engine is not woken.
+    const cached=link&&await reuseCached(db,{_id:result.insertedId,cache_key:doc.cache_key,status:doc.status},now);
+    if(link&&!cached)await scheduleWake();
+    return json(res,201,{id:String(result.insertedId),chunk_bytes:CHUNK_BYTES,...(cached?{cached:true}:{}),...(direct?{direct:true}:{})});
   }catch(error){
     if(error.code===11000)return json(res,409,{detail:'Une transcription est déjà en cours. Retrouve-la dans ta bibliothèque.'});
     throw error;

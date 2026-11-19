@@ -18,6 +18,10 @@ module.exports=async(req,res)=>{
   }catch(e){return json(res,400,{detail:e.message});}
   try{
     const db=await database();await ensureIndexes(db);
+    // Existing address: say so plainly (checked first, before the phone number).
+    if(await db.collection('users').findOne({email:fields.email},{projection:{_id:1}})){
+      return json(res,409,{detail:'Un compte est déjà lié à cette adresse email.',reason:'email_taken'});
+    }
     const password_hash=await make(fields.password);
     const result=await db.collection('users').insertOne({email:fields.email,phone:fields.phone,password_hash,created_at:new Date(),tier:'free'});
     const user={_id:result.insertedId,email:fields.email};

@@ -85,7 +85,8 @@ test('the Starter day resets at midnight, Paris time',()=>{
 
 test('quotas: Starter one full song a day, Pro and Lifetime unlimited, free none',()=>{
   const now=new Date('2026-11-18T12:00:00Z');
-  assert.deepStrictEqual(billing.quota('starter',0,now),{limit:1,used:0,remaining:1,resets_at:new Date('2026-11-18T23:00:00Z')});
+  assert.deepStrictEqual(billing.quota('starter',0,now),{limit:1,used:0,remaining:1,resets_at:null});
+  assert.deepStrictEqual(billing.quota('starter',1,now,new Date('2026-11-19T12:00:00Z')).resets_at,new Date('2026-11-19T12:00:00Z'));
   assert.strictEqual(billing.quota('starter',1,now).remaining,0);
   assert.deepStrictEqual(billing.quota('pro',7,now),{limit:null,used:7,remaining:null,resets_at:null});
   assert.strictEqual(billing.quota('lifetime',0,now).limit,null);

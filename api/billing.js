@@ -1,4 +1,5 @@
 'use strict';
+const {effectiveTier}=require('../lib/billing');
 /**
  * SongToSheet billing endpoint (one function: Vercel's free plan counts functions).
  *   GET  /api/billing                    → the signed-in account's plan, status and quota
@@ -72,6 +73,12 @@ async function checkout(req,res,user){
   const {plan,period}=req.body||{};
   const planId=CHECKOUT_PLANS[plan]?.[plan==='lifetime'?'once':period==='annual'?'annual':'monthly'];
   if(!planId)return json(res,400,{detail:'Offre inconnue.'});
+  // Only upgrades: the same or a lower plan would be billed twice.
+  const rank={free:0,starter:1,pro:2,lifetime:3};
+  const current=effectiveTier(user);
+  if(rank[plan]<=rank[current]){
+    return json(res,409,{detail:plan===current?'Tu as déjà cette offre.':'Ton offre actuelle inclut déjà celle-ci.',reason:'already_included'});
+  }
   const origin='https://tablurio.com';
   const configuration=await store.whop('/checkout_configurations',{method:'POST',body:{
     account_id:'biz_7EpgzhL8mQlG1B',mode:'payment',variant_id:planId,metadata:{user_id:String(user._id)},redirect_url:origin+'/app?abonnement=merci'}});

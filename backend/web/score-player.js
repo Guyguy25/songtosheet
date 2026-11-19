@@ -619,20 +619,30 @@
           ?`Ton aperçu couvre ${time(seconds)} sur ${time(Math.round(sourceDuration))}.`:'La suite du morceau est masquée.')+
           ' Découvre les offres pour accéder au morceau complet.';
         // A paying account is not locked out: the whole song is one click away, launched by them.
-        const paid=(window.SongToSheetCurrentUser?.plan||'free')!=='free';
-        continuation.classList.toggle('is-included',paid);
+        const user=window.SongToSheetCurrentUser;
+        const paid=(user?.plan||'free')!=='free';
+        // Starter whose whole song of the 24 h is used: say when the next one comes, not "Générer la suite".
+        const waitMs=user?.plan==='starter'&&user.starter_until?new Date(user.starter_until).getTime()-Date.now():0;
+        const waiting=paid&&waitMs>0;
+        continuation.classList.toggle('is-included',paid&&!waiting);
+        continuation.classList.toggle('is-waiting',waiting);
         const badge=get('.sp-lock-badge');
         badge.replaceChildren();
         const icon=document.createElement('span');
         icon.setAttribute('aria-hidden','true');
         icon.textContent=paid?'✦':'🔒';
-        badge.append(icon,paid?' Inclus dans ton abonnement':' Suite masquée');
-        if(paid){
+        if(waiting)icon.textContent='⏳';
+        badge.append(icon,waiting?' Morceau du jour utilisé':paid?' Inclus dans ton abonnement':' Suite masquée');
+        if(waiting){
+          const minutes=Math.ceil(waitMs/60000),hours=Math.floor(minutes/60);
+          get('.sp-continuation-label strong').textContent=`Prochain morceau complet dans ${hours?hours+' h '+String(minutes%60).padStart(2,'0'):minutes+' min'}`;
+          get('.sp-continuation-label p').textContent='Starter inclut 1 morceau entier toutes les 24 h. Passe au Pro pour ne pas attendre.';
+        }else if(paid){
           get('.sp-continuation-label strong').textContent='Le morceau entier est inclus dans ton abonnement';
           get('.sp-continuation-label p').textContent='Génère la suite quand tu veux : elle est prête en général en moins d’une minute.';
         }
         const cta=get('.sp-lock-cta');
-        cta.textContent=(paid?cta.dataset.paidLabel||'Générer la suite':cta.dataset.freeLabel||'Débloquer la suite du morceau')+' ';
+        cta.textContent=(waiting?'Voir mes options':paid?cta.dataset.paidLabel||'Générer la suite':cta.dataset.freeLabel||'Débloquer la suite du morceau')+' ';
         const arrow=document.createElement('span');
         arrow.setAttribute('aria-hidden','true');
         arrow.textContent='↗';

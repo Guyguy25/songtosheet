@@ -15,7 +15,7 @@ function matches(doc,filter){
 }
 function fakeDb(){
   const data={};
-  const unique={billing_unlocks:doc=>doc.starter_day?`${doc.user_id}|${doc.starter_day}`:null};
+  const unique={billing_unlocks:doc=>doc.starter_slot==='open'?`${doc.user_id}|open`:null};
   const collection=name=>{
     const docs=data[name]??=[];
     return {
@@ -100,14 +100,19 @@ test('a cancelled subscription keeps access until the end of the paid period',as
   assert.strictEqual((await store.summary(db,account,LATER)).tier,'free');
 });
 
-test('Starter: one full song a day, a second is refused until midnight in Paris',async()=>{
+test('Starter: one full song per 24 hours, counted from the song that opened the window',async()=>{
   const db=fakeDb();const account=user(db);
   await store.applyEntitlement(db,grant({user_id:String(account._id)}),NOW);
   assert.deepStrictEqual(await store.reserveFullSong(db,account,{jobId:'j1',variant:'arrangement'},NOW),{ok:true,tier:'starter'});
-  assert.deepStrictEqual(await store.reserveFullSong(db,account,{jobId:'j1',variant:'solo'},NOW),{ok:false,reason:'daily_limit',tier:'starter'});
-  assert.strictEqual((await store.summary(db,account,NOW)).quota.remaining,0);
-  const tomorrow=new Date('2026-11-18T23:30:00Z');  // 00:30 in Paris
-  assert.strictEqual((await store.reserveFullSong(db,account,{jobId:'j2',variant:'solo'},tomorrow)).ok,true);
+  const until=new Date(NOW.getTime()+24*3600e3);
+  assert.deepStrictEqual(await store.reserveFullSong(db,account,{jobId:'j1',variant:'solo'},NOW),{ok:false,reason:'daily_limit',tier:'starter',resets_at:until});
+  const quota=(await store.summary(db,account,NOW)).quota;
+  assert.strictEqual(quota.remaining,0);
+  assert.deepStrictEqual(quota.resets_at,until);
+  // Midnight is no longer a reset: 23 h later it is still closed, 24 h later it opens again.
+  assert.strictEqual((await store.reserveFullSong(db,account,{jobId:'j2',variant:'solo'},new Date(NOW.getTime()+23*3600e3))).ok,false);
+  assert.strictEqual((await store.reserveFullSong(db,account,{jobId:'j2',variant:'solo'},until)).ok,true);
+  assert.strictEqual((await store.summary(db,account,until)).quota.remaining,0);
 });
 
 test('Pro: no daily limit; free accounts are sent to the plans',async()=>{
@@ -131,4 +136,16 @@ test('a whole song that failed is given back: it does not count and can be gener
   db.data.track_jobs.push({_id:retry,user_id:account._id,status:'processing'});
   assert.strictEqual(await store.usedToday(db,account._id,NOW),1);
   assert.strictEqual((await store.reserveFullSong(db,account,{jobId:new ObjectId(),variant:'held-v1'},NOW)).reason,'daily_limit');
+});
+
+test('upgrading to Pro stops the Starter from renewing (no double billing)',async()=>{
+  const db=fakeDb();const account=user(db);
+  await store.applyEntitlement(db,grant({user_id:String(account._id)}),NOW);
+  const calls=[];const realFetch=global.fetch;process.env.WHOP_API_KEY='apik_test';
+  global.fetch=async(url,options)=>{calls.push([options.method,String(url),options.body]);return new Response('{}',{status:200});};
+  try{
+    await store.applyEntitlement(db,grant({membership_id:'mem_p',tier:'pro',user_id:String(account._id)}),NOW);
+  }finally{global.fetch=realFetch;delete process.env.WHOP_API_KEY;}
+  assert.strictEqual(account.billing.tier,'pro');
+  assert.deepStrictEqual(calls,[['PATCH','https://api.whop.com/api/v1/memberships/mem_s','{"cancel_at_period_end":true}']]);
 });

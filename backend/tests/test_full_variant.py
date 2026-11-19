@@ -73,3 +73,28 @@ def test_unknown_variant_is_refused(tmp_path, monkeypatch):
         track_worker.generate_variant(tmp_path / "a.wav", tmp_path, tmp_path / "out",
                                       {"id": "j", "title": "t", "instrument": "piano", "variant": "solo"},
                                       lambda _: None, track_worker.Engines())
+
+
+def test_original_passes_the_voice_hook_to_the_stem_separation(tmp_path, monkeypatch):
+    seen = {}
+
+    def transcribe(audio, instrument, data, **kwargs):
+        seen.update(kwargs)
+        result = tmp_path / "result"
+        write(result, ["score.musicxml", "score.mid", "tab.musicxml", "tab.mid"])
+        (result / "notes.json").write_text('{"duration": 200.0, "notes": [1]}', encoding="utf-8")
+        return result
+    monkeypatch.setattr(track_worker, "transcribe", transcribe)
+    hook = lambda original, stems: None
+    track_worker.generate_variant(tmp_path / "a.wav", tmp_path, tmp_path / "out",
+                                  {"id": "j", "title": "t", "instrument": "guitare", "variant": "original-v1"},
+                                  lambda _: None, track_worker.Engines(), review_audio=hook)
+    assert seen["review_audio"] is hook
+
+
+def test_whole_song_voice_is_lighter_and_fits_ten_minutes():
+    bitrate, rate = track_worker.FULL_VOICE_QUALITY
+    # 10 minutes of 24 kbit/s mono, base64-encoded, stays under the voice limit and the 4 MB exports cap.
+    size = int(bitrate.rstrip("k")) * 1000 / 8 * track_worker.FULL_SONG_SECONDS * 4 / 3
+    assert size <= track_worker.FULL_VOICE_LIMIT < 4_000_000
+    assert rate == "16000"

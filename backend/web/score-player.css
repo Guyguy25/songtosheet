@@ -104,3 +104,10 @@
 }
 /* Paying account: the end of the preview is an invitation, not a lock */
 .sp-continuation.is-included .sp-lock-badge{background:#e9f8f0;color:#1f7a52}
+/* Whole songs with a voice: play the isolated voice along, with its own volume. */
+.sp-voice{display:flex;align-items:center;gap:8px}
+.sp-tools .sp-voice-toggle{min-height:32px;padding:5px 12px;border:1px solid #7e699e;border-radius:8px;background:#3e2f54;color:#fff;font:inherit;font-size:12.5px;font-weight:750;cursor:pointer}
+.sp-tools .sp-voice-toggle[aria-pressed="true"]{background:#e8d7ff;border-color:#e8d7ff;color:#30204f}
+.sp-voice-toggle:focus-visible{outline:2px solid #7549eb;outline-offset:2px}
+.sp-voice-volume{width:84px;accent-color:#7549eb}
+.sp-voice-volume[hidden]{display:none}

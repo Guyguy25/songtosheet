@@ -124,7 +124,7 @@
   }
 
   function mount(root,{scoreUrl,tabUrl,tabMidiUrl,midiUrl,instrument,sourceDuration,previewDuration,excerpt=false,preferTab=false,startAt=0,
-                       findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false,comparison=false,onReady,onNotation,loadVocals}){
+                       findEntry=false,entryMidiUrl,soloSustain=false,accompaniment=false,comparison=false,onReady,onNotation,loadVocals,voiceControl=false}){
     const controller=new AbortController();
     const {signal}=controller;
     const guitar=instrument==='guitare',piano=instrument==='piano';
@@ -139,6 +139,10 @@
         <div class="sp-tools">
           <span class="sp-instrument" hidden></span>
           ${tabUrl?'<label class="sp-kind"><span class="sp-sr">Notation</span><select><option value="score">Partition</option><option value="tab">Tablature</option></select></label>':''}
+          ${voiceControl&&loadVocals?`<div class="sp-voice" role="group" aria-label="Voix isolée">
+            <button type="button" class="sp-voice-toggle" aria-pressed="true" title="Retirer la voix isolée pendant l’écoute">Voix</button>
+            <input class="sp-voice-volume" type="range" min="0" max="100" step="1" value="65" aria-label="Volume de la voix · 65 %">
+          </div>`:''}
           <div class="sp-zoom" role="group" aria-label="Zoom de la partition">
             <button type="button" data-zoom="-1" aria-label="Réduire la partition">−</button>
             <button type="button" data-zoom="1" aria-label="Agrandir la partition">+</button>
@@ -202,7 +206,8 @@
     let activeKeys=new Set();
     const sounds=new Set();
     let sampleBuffers;
-    let vocalsEnabled=false,vocalsBuffer,vocalsSource,vocalsDecode,vocalsGain,voiceVolume=.65;
+    // With its own Voix control (whole songs), the voice plays along by default.
+    let vocalsEnabled=Boolean(voiceControl&&loadVocals),vocalsBuffer,vocalsSource,vocalsDecode,vocalsGain,voiceVolume=.65;
     const now=()=>playing?Math.min(duration,Math.max(0,(context.currentTime-anchor)*rate)):position;
     const noteEnd=note=>note.time+(note.ringDuration??note.duration);
 
@@ -730,6 +735,25 @@
       if(next===zoom)return;
       zoom=next;drawSheet();
     };
+    const voiceToggle=get('.sp-voice-toggle'),voiceSlider=get('.sp-voice-volume');
+    if(voiceToggle){
+      const showVoice=()=>{
+        voiceToggle.setAttribute('aria-pressed',String(vocalsEnabled));
+        voiceToggle.title=(vocalsEnabled?'Retirer':'Ajouter')+' la voix isolée pendant l’écoute';
+        voiceSlider.hidden=!vocalsEnabled;
+      };
+      voiceToggle.addEventListener('click',async()=>{
+        const enabled=!vocalsEnabled;
+        vocalsEnabled=enabled;showVoice();
+        try{await setVocals(enabled);}catch{vocalsEnabled=false;}
+        showVoice();
+      });
+      voiceSlider.addEventListener('input',()=>{
+        dispose.setVocalVolume(Number(voiceSlider.value)/100);
+        voiceSlider.setAttribute('aria-label',`Volume de la voix · ${voiceSlider.value} %`);
+      });
+      showVoice();
+    }
     dispose.setVocalVolume=value=>{
       voiceVolume=Math.min(1,Math.max(0,value));
       if(vocalsGain)vocalsGain.gain.setTargetAtTime(voiceVolume,context.currentTime,.025);

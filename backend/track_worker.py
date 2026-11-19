@@ -39,7 +39,13 @@ def read_exports(folder, mapping):
             for key, name in mapping.items() if (folder / name).is_file()}
 
 
-def encode_vocals(original, source, output, limit):
+# Whole songs (up to 10 minutes): a lighter voice track so it fits next to the score files.
+FULL_SONG_SECONDS = 600
+FULL_VOICE_QUALITY = ("24k", "16000")
+FULL_VOICE_LIMIT = 2_600_000
+
+
+def encode_vocals(original, source, output, limit, bitrate="64k", rate="24000"):
     if not source.is_file():
         return
     import librosa
@@ -52,7 +58,7 @@ def encode_vocals(original, source, output, limit):
     if np.count_nonzero(frames > threshold) >= 8:
         run(["ffmpeg", "-nostdin", "-v", "error", "-y", "-i", str(source),
              "-t", str(limit), "-map_metadata", "-1", "-ac", "1",
-             "-ar", "24000", "-b:a", "64k", str(output)], timeout=20)
+             "-ar", rate, "-b:a", bitrate, str(output)], timeout=60)
 
 
 def include_vocals(exports, vocals):
@@ -223,7 +229,7 @@ def fetch_audio(call, job, directory):
     return audio, section
 
 
-def generate_variant(audio, data, result, job, report, engines):
+def generate_variant(audio, data, result, job, report, engines, review_audio=None):
     """The whole song for one paid version ("Générer la suite"): only what that version needs
     is computed. Writes score/tab MusicXML and MIDI into result; returns (result, meta)."""
     import shutil
@@ -260,7 +266,8 @@ def generate_variant(audio, data, result, job, report, engines):
         solo = variant == "solo-v2"
         transcribed = transcribe(audio, "guitare", data, isolated=False, title=job["title"], progress=report,
                                  guitar_engine=engines.guitar, guitar_solo=solo, solo_engine=engines.solo,
-                                 has_voice=job.get("source_content") != "instrumental", compare_solo=solo)
+                                 has_voice=job.get("source_content") != "instrumental", compare_solo=solo,
+                                 review_audio=review_audio)
         meta = json.loads((transcribed / "notes.json").read_text(encoding="utf-8"))
         folder = transcribed / "solo" if solo else transcribed
         if not (folder / "tab.musicxml").is_file():
@@ -310,9 +317,36 @@ def process_job(call, job, data, guitar_engine=None, solo_engine=None, piano_eng
 
             if job.get("variant") not in (None, "default") and not job.get("preview_limit"):
                 # "Générer la suite": the whole song for the version the person paid for.
+                # The isolated voice to play along, when the preview of this song had one.
+                vocals = directory / "full-vocals.mp3"
+                voice_checked = []
+
+                def keep_voice(original, stems):
+                    voice_checked.append(True)
+                    try:
+                        encode_vocals(original, stems / "vocals.wav", vocals, FULL_SONG_SECONDS, *FULL_VOICE_QUALITY)
+                    except Exception as error:
+                        vocals.unlink(missing_ok=True)
+                        print(f"{job['id']}: piste voix indisponible : {type(error).__name__}", flush=True)
+
+                want_voice = bool(job.get("full_vocals"))
                 folder, meta = generate_variant(audio, data, directory / "full", job, report,
-                                                Engines(guitar_engine, solo_engine, piano_engine, solo_piano_engine))
+                                                Engines(guitar_engine, solo_engine, piano_engine, solo_piano_engine),
+                                                review_audio=keep_voice if want_voice else None)
+                if want_voice and not voice_checked:
+                    # Versions built without stem separation (chords, piano): separate the voice only.
+                    try:
+                        from stem_separation import separate
+
+                        separate("htdemucs", audio, directory, two_stems="vocals", timeout=240)
+                        keep_voice(audio, directory / "htdemucs" / audio.stem)
+                    except Exception as error:
+                        print(f"{job['id']}: piste voix indisponible : {type(error).__name__}", flush=True)
                 exports = read_exports(folder, EXPORTS)
+                if vocals.is_file():
+                    voice = base64.b64encode(vocals.read_bytes()).decode("ascii")
+                    if len(voice) <= FULL_VOICE_LIMIT and sum(map(len, exports.values())) + len(voice) <= 4_000_000:
+                        exports["vocals"] = voice
                 count = meta["notes"] if isinstance(meta["notes"], int) else len(meta["notes"])
                 call("preview", **identity, duration=meta["duration"], preview_duration=meta["duration"],
                      note_count=count, exports=exports, engine=meta.get("engine"))

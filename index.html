@@ -11,7 +11,7 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/assets/site-ui.css?v=6" />
-  <link rel="stylesheet" href="/assets/account.css?v=4" />
+  <link rel="stylesheet" href="/assets/account.css?v=5" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=15" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=34" defer></script>
@@ -770,6 +770,18 @@
       <p class="quota-dialog-text">Avec Starter, tu génères <b>1 morceau entier toutes les 24 h</b>. Le prochain sera disponible <b id="quota-dialog-at"></b>. En attendant, tes aperçus de 30 s restent disponibles.</p>
       <div class="quota-dialog-pro"><b>Pas envie d’attendre ?</b><span>Le Pro génère tes morceaux entiers sans limite quotidienne. Ton Starter s’arrête tout seul à la fin de la période déjà payée : jamais deux abonnements.</span></div>
       <div class="quota-dialog-actions"><button type="button" class="btn btn-outline" data-quota-close>J’attends</button><a class="btn btn-primary" href="/upgrade" data-quota-upgrade>Passer au Pro ↗</a></div>
+    </div>
+  </dialog>
+  <dialog id="welcome-dialog" class="welcome-dialog" aria-labelledby="welcome-title">
+    <div class="welcome-inner">
+      <button type="button" class="quota-dialog-close" data-welcome-close aria-label="Fermer">×</button>
+      <div class="welcome-mark" aria-hidden="true">✦</div>
+      <span class="welcome-badge" id="welcome-badge">Paiement reçu</span>
+      <h2 id="welcome-title" tabindex="-1">Merci pour ta confiance !</h2>
+      <p class="welcome-text" id="welcome-text">On active ton abonnement, ça prend quelques secondes…</p>
+      <div class="welcome-pending" id="welcome-pending" role="status"><span class="welcome-spinner" aria-hidden="true"></span> Activation en cours</div>
+      <div class="welcome-gets" id="welcome-gets" hidden><b>Ce que tu as débloqué</b><ul id="welcome-features"></ul></div>
+      <div class="quota-dialog-actions"><a class="btn btn-outline" href="/app/abonnement" data-welcome-account>Mon abonnement</a><a class="btn btn-primary" href="/app/new" id="welcome-go" data-welcome-go>Créer mon premier morceau entier</a></div>
     </div>
   </dialog>
   <dialog id="start-dialog" class="start-dialog" aria-labelledby="start-dialog-title">
@@ -1933,15 +1945,52 @@
       finally{button.disabled=false;}
     });
   }
+  // Back from Whop: a thank-you on the dashboard, with what the plan unlocks.
+  // The webhook may land a few seconds after the redirect, so the plan is polled.
+  const WELCOME_LINES={
+    starter:'Ton premier morceau entier est disponible dès maintenant, puis un nouveau toutes les 24 h.',
+    pro:'Génère tes morceaux en entier quand tu veux, sans attendre.',
+    lifetime:'Tu as accès à Tablurio à vie, sans renouvellement.'
+  };
   async function welcomeBack(){
-    // Back from Whop: the webhook may land a few seconds after the redirect.
     history.replaceState(null,'',location.pathname);
-    showAppPage('account',{replace:true});
-    for(let attempt=0;attempt<10;attempt++){
-      const data=await renderAccount({thanks:true});
-      if(data&&data.tier!=='free')return;
+    showAppPage('dashboard',{replace:true});
+    const dialog=$('welcome-dialog');
+    const name=state.user?.pseudo?` ${state.user.pseudo}`:'';
+    $('welcome-title').textContent=`Merci${name} !`;
+    $('welcome-badge').textContent='Paiement reçu';
+    $('welcome-text').textContent='On active ton abonnement, ça prend quelques secondes…';
+    $('welcome-pending').hidden=false;$('welcome-gets').hidden=true;
+    if(!dialog.open)dialog.showModal();
+    let data=null;
+    for(let attempt=0;attempt<12&&dialog.open;attempt++){
+      try{data=await api('/api/billing');}catch{data=null;}
+      if(data&&data.tier!=='free')break;
       await new Promise(resolve=>setTimeout(resolve,3000));
     }
+    $('welcome-pending').hidden=true;
+    if(!data||data.tier==='free'){
+      $('welcome-badge').textContent='Paiement reçu';
+      $('welcome-text').textContent='Ton paiement est bien reçu. L’activation prend parfois une minute de plus : elle apparaîtra toute seule dans « Mon abonnement ».';
+      return;
+    }
+    const tier=data.tier;
+    state.user.plan=tier;showPlan(tier);
+    state.user.starter_until=tier==='starter'&&data.quota?.resets_at?data.quota.resets_at:null;
+    renderIdentity();
+    $('welcome-badge').textContent=`✓ ${PLAN_NAMES[tier]||tier} activé`;
+    $('welcome-title').textContent=`Merci${name}, bienvenue dans le ${PLAN_NAMES[tier]||tier} !`;
+    $('welcome-text').textContent=WELCOME_LINES[tier]||'Ton abonnement est actif.';
+    $('welcome-features').innerHTML=(PLAN_FEATURES[tier]||[]).map(item=>`<li>${safe(item)}</li>`).join('');
+    $('welcome-gets').hidden=false;
+    // Pick up where they were: the latest preview gets its whole song.
+    if(!state.jobsLoaded)await refresh();
+    const last=songs().find(j=>j.status==='completed'&&j.preview_limit&&!j.full_jobs);
+    const go=$('welcome-go');
+    go.textContent=last?`Générer « ${last.title.length>32?last.title.slice(0,31)+'…':last.title} » en entier`:'Créer mon premier morceau entier';
+    go.href=last?appPath('result',last.id):'/app/new';
+    go.dataset.job=last?last.id:'';
+    $('welcome-title').focus({preventScroll:true});
   }
 
   let unlockTrigger;
@@ -2742,6 +2791,14 @@
     $('start-dialog').addEventListener('close',restoreHeroPanel);
     $('start-dialog').addEventListener('click',e=>{
       if(e.target.closest('[data-start-close]')||e.target===$('start-dialog'))$('start-dialog').close();
+    });
+    $('welcome-dialog').addEventListener('click',e=>{
+      const dialog=$('welcome-dialog');
+      if(e.target.closest('[data-welcome-close]')||e.target===dialog){dialog.close();return;}
+      if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;
+      if(e.target.closest('[data-welcome-account]')){e.preventDefault();dialog.close();showAppPage('account');return;}
+      const go=e.target.closest('[data-welcome-go]');
+      if(go){e.preventDefault();dialog.close();if(go.dataset.job)openResult(go.dataset.job);else showAppPage('create');}
     });
     const openFromHeader=()=>state.user?startApp('dashboard'):focusGenerator();
     $('nav-login').onclick=()=>go('/connexion');$('nav-cta').onclick=openFromHeader;$('mobile-login').onclick=()=>go('/connexion');$('mobile-start').onclick=openFromHeader;$('footer-start').onclick=focusGenerator;$('showcase-cta').onclick=focusGenerator;

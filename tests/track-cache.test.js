@@ -17,6 +17,8 @@ const base={youtube_id:'abcdefghijk',instrument:'piano',format:'partition',sourc
 test('the cache key separates previews, versions and settings',()=>{
   assert.strictEqual(cacheKey({...base,preview_limit:30}),'v1|abcdefghijk|piano|partition|mixed||0|preview30');
   assert.notStrictEqual(cacheKey({...base,variant:'solo'}),cacheKey({...base,variant:'arrangement'}));
+  assert.strictEqual(cacheKey({...base,variant:'solo-v2',guitar_goal:'solo'}),cacheKey({...base,variant:'solo-v2',guitar_goal:'original'}));
+  assert.notStrictEqual(cacheKey({...base,preview_limit:30,guitar_goal:'chords'}),cacheKey({...base,preview_limit:30,guitar_goal:'solo'}));
   assert.strictEqual(cacheKey({...base,excerpt:{start_ms:0,end_ms:1000},preview_limit:30}),null);
   assert.strictEqual(cacheKey({instrument:'piano',extension:'mp3'}),null);
 });

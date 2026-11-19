@@ -51,8 +51,9 @@ def encode_vocals(original, source, output, limit, bitrate="64k", rate="24000"):
     import librosa
     import numpy as np
 
-    voice, rate = librosa.load(source, sr=16000, mono=True)
-    mix, _ = librosa.load(original, sr=rate, mono=True)
+    # Analysis rate kept apart from `rate`, the output rate given to ffmpeg.
+    voice, analysis_rate = librosa.load(source, sr=16000, mono=True)
+    mix, _ = librosa.load(original, sr=analysis_rate, mono=True)
     frames = librosa.feature.rms(y=voice, frame_length=1600, hop_length=800)[0]
     threshold = max(.003, float(np.sqrt(np.mean(mix ** 2))) * .12)
     if np.count_nonzero(frames > threshold) >= 8:

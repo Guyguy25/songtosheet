@@ -11,11 +11,12 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/assets/site-ui.css?v=6" />
+  <link rel="stylesheet" href="/assets/account.css?v=2" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=15" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=34" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=18" />
-  <script src="/backend/web/score-player.js?v=24" defer></script>
+  <script src="/backend/web/score-player.js?v=25" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=10" />
   <script src="/assets/guitar-result-comparison.js?v=14" defer></script>
   <script src="/assets/wait-survey.js?v=3" defer></script>
@@ -760,6 +761,17 @@
 </head>
 <body>
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <dialog id="quota-dialog" class="quota-dialog" aria-labelledby="quota-dialog-title">
+    <div class="quota-dialog-inner">
+      <button type="button" class="quota-dialog-close" data-quota-close aria-label="Fermer">×</button>
+      <span class="quota-dialog-badge"><span aria-hidden="true">⏳</span> Morceau du jour utilisé</span>
+      <h2 id="quota-dialog-title">Ton prochain morceau complet arrive dans</h2>
+      <div class="quota-dialog-wait" data-until=""><div class="quota-clock" role="timer">--:--:--</div><div class="quota-bar" aria-hidden="true"><span></span></div></div>
+      <p class="quota-dialog-text">Avec Starter, tu génères <b>1 morceau entier toutes les 24 h</b>. Le prochain sera disponible <b id="quota-dialog-at"></b>. En attendant, tes aperçus de 30 s restent disponibles.</p>
+      <div class="quota-dialog-pro"><b>Pas envie d’attendre ?</b><span>Le Pro génère tes morceaux entiers sans limite quotidienne. Ton Starter s’arrête tout seul à la fin de la période déjà payée : jamais deux abonnements.</span></div>
+      <div class="quota-dialog-actions"><button type="button" class="btn btn-outline" data-quota-close>J’attends</button><a class="btn btn-primary" href="/upgrade" data-quota-upgrade>Passer au Pro ↗</a></div>
+    </div>
+  </dialog>
   <dialog id="start-dialog" class="start-dialog" aria-labelledby="start-dialog-title">
     <div class="start-dialog-inner">
       <button type="button" class="start-dialog-close" data-start-close aria-label="Fermer">×</button>
@@ -973,6 +985,7 @@
         <p>Compare les offres pour débloquer tes partitions complètes.</p>
       </header>
       <p id="upgrade-notice" class="upgrade-notice" role="status" hidden></p>
+      <p id="upgrade-current" class="upgrade-current" hidden></p>
       <div class="upgrade-cycle" role="group" aria-label="Fréquence de facturation">
         <button type="button" data-cycle="monthly" aria-pressed="true">Mensuel</button>
         <button type="button" data-cycle="annual" aria-pressed="false">Annuel <span>−35 %</span></button>
@@ -985,7 +998,7 @@
           <div class="upgrade-price"><strong data-plan-price="essential">10 €</strong><span>/ mois</span></div>
           <p class="upgrade-charge" data-plan-billed="essential">10 € facturés chaque mois</p>
           <p class="upgrade-saving" data-plan-saved="essential" hidden></p>
-          <p class="upgrade-limit">1 morceau complet par jour</p>
+          <p class="upgrade-limit">1 morceau complet toutes les 24 h</p>
           <ul class="upgrade-features">
             <li class="upgrade-unavailable"><span class="upgrade-feature-mark" aria-hidden="true">×</span><span class="upgrade-sr">Non inclus – </span><span>Transcriptions illimitées*</span></li>
             <li><span class="upgrade-feature-mark" aria-hidden="true">✓</span><span class="upgrade-sr">Inclus – </span><span>Tous les instruments</span></li>
@@ -1026,7 +1039,7 @@
           <a class="upgrade-plan-action" href="https://whop.com/checkout/plan_tXX5q8JhuWQui" data-plan-checkout="lifetime">Choisir l’accès à vie</a>
         </article>
       </div>
-      <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Starter : le morceau du jour se recharge à minuit (heure de Paris) et ne se cumule pas.</p>
+      <p class="upgrade-note">* Dans le cadre d’un usage personnel raisonnable. Starter : le morceau suivant est disponible 24 h après le précédent, sans cumul.</p>
     </div>
   </section>
 <section class="sub-section pricing-faq"><div class="container"><div class="sub-title"><h2>Questions sur les abonnements</h2></div><div class="simple-faq">
@@ -1048,14 +1061,14 @@
 </div></div></section></main>
 <main id="workspace" class="hidden">
     <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><button id="menu-create" class="side-new" type="button"><span aria-hidden="true">＋</span> Nouvelle partition</button><nav class="side-nav" aria-label="Ton espace"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button><button id="menu-account"><span>◇</span> Mon abonnement</button></nav><span class="sidebar-label side-recents-label" hidden>RÉCENTS</span><nav id="side-recents" class="side-recents" aria-label="Partitions récentes"></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Gratuit</strong><small id="sidebar-plan-detail">Aperçus de 30 s</small><a class="btn btn-primary" id="sidebar-plan-action" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
-    <div class="app-layout"><header class="app-header"><a href="/" class="brand track-guest-brand" data-nav="home" aria-label="Tablurio, accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><span class="small-credit"><span>◇</span> <b id="top-credits">Démo</b> · accès</span><div class="user-avatar" id="user-avatar">T</div></div></header><div class="app-scroll">
+    <div class="app-layout"><header class="app-header"><a href="/" class="brand track-guest-brand" data-nav="home" aria-label="Tablurio, accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><button type="button" class="small-credit" id="plan-pill" title="Mon abonnement"><span aria-hidden="true">◇</span> <b id="top-credits">Démo</b><span id="top-credits-detail" class="plan-pill-detail"></span></button><div class="user-menu"><button type="button" class="user-avatar" id="user-avatar" aria-haspopup="menu" aria-expanded="false" aria-controls="user-menu" aria-label="Ouvrir le menu du compte">T</button><div id="user-menu" class="user-menu-panel" role="menu" hidden><div class="user-menu-head"><span class="user-menu-photo" id="user-menu-photo" aria-hidden="true"></span><div><b id="user-menu-name"></b><small id="user-menu-email"></small></div></div><button type="button" role="menuitem" data-user-menu="profile"><span aria-hidden="true">☺</span>Profil et paramètres</button><button type="button" role="menuitem" data-user-menu="account"><span aria-hidden="true">◇</span>Mon abonnement</button><button type="button" role="menuitem" data-user-menu="upgrade" id="user-menu-upgrade"><span aria-hidden="true">✦</span><span>Passer au Pro</span></button><button type="button" role="menuitem" data-user-menu="library"><span aria-hidden="true">▤</span>Ma bibliothèque</button><hr><button type="button" role="menuitem" data-user-menu="logout" class="user-menu-logout"><span aria-hidden="true">⇥</span>Se déconnecter</button></div></div></div></header><div class="app-scroll">
       <section id="dashboard-page" class="app-page"><div class="app-welcome"><div><span class="dashboard-kicker">TON STUDIO PERSONNEL ✦</span><h1>Prêt à jouer quelque chose<br/><span>de nouveau ?</span></h1><p>Transforme tes enregistrements en partitions en quelques étapes.</p></div><div class="welcome-decor">♫</div></div><div class="overview-cards"><div class="overview-card"><span class="metric-symbol purple">◇</span><div><strong id="metric-credits">Démo</strong><small>Accès actuel</small></div></div><div class="overview-card"><span class="metric-symbol green">▤</span><div><strong id="metric-total">0</strong><small>Partitions générées</small></div></div><div class="overview-card"><span class="metric-symbol orange">✧</span><div><strong id="metric-progress">0</strong><small>Générations en cours</small></div></div></div><div class="dashboard-grid"><div class="dashboard-create"><div><span class="section-label">CRÉATION RAPIDE</span><h2>Ta prochaine partition est à un clic.</h2><p>Dépose un morceau et laisse Tablurio faire le premier relevé.</p><button id="dashboard-start" class="btn btn-primary">Nouvelle partition <span>↗</span></button></div><div class="dashboard-illustration">♬</div></div><div class="dashboard-helper"><span class="helper-symbol">✦</span><h3>Comment ça marche ?</h3><p>Importe ton fichier audio, choisis ton instrument, puis lance la génération. Le résultat sera sauvegardé dans ta bibliothèque.</p><a href="/#comment-ca-marche" id="learn-more">Voir les étapes <span>↗</span></a></div></div><div class="list-heading"><h2>Dernières partitions</h2><button id="view-all">Tout voir →</button></div><div id="recent-jobs" class="jobs-list"></div><p id="admin-guitar-comparison" hidden><a class="btn btn-outline" href="/statistiques.html">Statistiques des moteurs</a> <a class="btn btn-outline" href="/comparatif.html">Comparer les tablatures guitare</a></p></section>
 
       <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><div id="track-onboarding"></div><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Starter : 1 morceau complet par jour.</p></div><div class="tip-line"><i>✓</i><p>Pro et Lifetime : sans limite, usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><a class="btn btn-outline" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></aside></div></section>
 
       <section id="library-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">TA BIBLIOTHÈQUE</span><h1>Toutes tes partitions.</h1><p>Retrouve et télécharge les musiques que tu as transcrites.</p></div><button id="library-new" class="btn btn-primary">＋ Nouvelle partition</button></div><div class="library-toolbar"><span id="library-count">0 partition</span><div class="search-wrapper"><span>⌕</span><input id="library-search" placeholder="Rechercher un morceau..."/></div></div><div id="library-jobs" class="jobs-list library-jobs"></div></section>
 
-      <section id="account-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">MON ABONNEMENT</span><h1>Ton offre et ton quota.</h1><p>Statut, renouvellement et morceaux complets disponibles.</p></div><span class="app-title-icon">◇</span></div><div id="account-content" class="account-content" aria-live="polite"><p>Chargement…</p></div></section><section id="result-page" class="app-page hidden"><button id="back-to-library" class="back-link">← Retour à ma bibliothèque</button><div id="result-content"></div></section>
+      <section id="profile-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">PROFIL ET PARAMÈTRES</span><h1>Ton profil.</h1><p>Ce que tu choisis de montrer, et les informations de ton compte.</p></div><span class="app-title-icon">☺</span></div><div id="profile-content" class="profile-content"></div></section><section id="account-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">MON ABONNEMENT</span><h1>Ton offre et ton quota.</h1><p>Statut, renouvellement et morceaux complets disponibles.</p></div><span class="app-title-icon">◇</span></div><div id="account-content" class="account-content" aria-live="polite"><p>Chargement…</p></div></section><section id="result-page" class="app-page hidden"><button id="back-to-library" class="back-link">← Retour à ma bibliothèque</button><div id="result-content"></div></section>
 
     </div></div>
   </main>
@@ -1306,8 +1319,8 @@
     return Boolean(state.user||(state.guestStudio&&['create','result'].includes(page)));
   }
   // Studio URLs: /app, /app/new, /app/bibliotheque, /app/abonnement, /app/<id du son>.
-  const appSlugs={dashboard:'',create:'new',library:'bibliotheque',account:'abonnement'};
-  const appAliases={'':'dashboard',new:'create',nouveau:'create',bibliotheque:'library',library:'library',abonnement:'account',compte:'account'};
+  const appSlugs={dashboard:'',create:'new',library:'bibliotheque',account:'abonnement',profile:'profil'};
+  const appAliases={'':'dashboard',new:'create',nouveau:'create',bibliotheque:'library',library:'library',abonnement:'account',compte:'account',profil:'profile',parametres:'profile'};
   const isAppPath=(path)=>/^\/app(?:\/|$)/i.test(path);
   function appPath(page,id){
     if(page==='result')return id?'/app/'+encodeURIComponent(id):'/app/bibliotheque';
@@ -1348,6 +1361,7 @@
     show('upgrade-back',pathname==='/upgrade'&&Boolean(state.user));
     // Starter over its daily song: the plans page explains why Pro fits better.
     const upgradeNotice=$('upgrade-notice');
+    if(pathname==='/upgrade')markCurrentPlan();
     if(pathname==='/upgrade'&&state.upgradeNotice){
       const notice=state.upgradeNotice;
       upgradeNotice.textContent=typeof notice==='object'?notice.message:notice+' Le Pro est plus adapté à ton usage : sans limite quotidienne.';
@@ -1441,16 +1455,48 @@
     showPlan(user?.plan);
     if(user)resumeCheckout();
   }
+  // Header: plan pill (opens the subscription) and the account menu behind the avatar.
+  const displayName=user=>user?.pseudo||(user?.email||'').split('@')[0]||'Mon compte';
+  function paintAvatar(node,user){
+    node.replaceChildren();
+    if(user?.avatar){const img=new Image();img.src=user.avatar;img.alt='';node.append(img);}
+    else node.textContent=displayName(user).charAt(0).toUpperCase();
+  }
+  function starterLeft(user=state.user){
+    const until=user?.starter_until?new Date(user.starter_until).getTime():0;
+    return until>Date.now()?until-Date.now():0;
+  }
+  const hoursLeft=ms=>{const minutes=Math.ceil(ms/60000),h=Math.floor(minutes/60),m=minutes%60;return h?`${h} h ${String(m).padStart(2,'0')}`:`${m} min`;};
+  function renderIdentity(){
+    const user=state.user;if(!user)return;
+    paintAvatar($('user-avatar'),user);paintAvatar($('user-menu-photo'),user);
+    $('user-menu-name').textContent=displayName(user);
+    $('user-menu-email').textContent=user.email;
+    const plan=user.role==='admin'?'admin':user.plan||'free';
+    $('top-credits').textContent=plan==='admin'?'Admin':PLAN_NAMES[plan]||'Gratuit';
+    $('top-credits-detail').textContent=plan==='starter'?(starterLeft()?` · prochain dans ${hoursLeft(starterLeft())}`:' · morceau dispo')
+      :plan==='pro'||plan==='lifetime'||plan==='admin'?' · illimité':' · aperçus gratuits';
+    const upgrade=$('user-menu-upgrade');
+    upgrade.hidden=plan==='lifetime'||plan==='admin';
+    upgrade.lastElementChild.textContent=plan==='starter'?'Passer au Pro':plan==='pro'?'Passer à l’accès à vie':'Voir les abonnements';
+  }
+  function toggleUserMenu(open){
+    const menu=$('user-menu'),button=$('user-avatar');
+    open??=menu.hidden;
+    menu.hidden=!open;button.setAttribute('aria-expanded',String(open));
+    if(open)menu.querySelector('[role="menuitem"]:not([hidden])')?.focus();
+  }
+
   async function loadUser(){try{const data=await api('/api/auth/me');setCurrentUser(data.user);}catch{setCurrentUser(null);}}
   async function refresh(){if(!state.user)return;
-    try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);setCurrentUser(user.user);state.jobs=jobs.jobs||[];
+    try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);setCurrentUser(user.user);state.jobs=jobs.jobs||[];state.jobsLoaded=true;
       if(!state.user){go('/inscription');return;}
       const access=state.user.role==='admin'?'Admin':state.user.plan&&state.user.plan!=='free'?PLAN_NAMES[state.user.plan]||'Freemium':'Freemium';
       $('sidebar-credits').textContent=access;$('top-credits').textContent=access;$('metric-credits').textContent=access;
       $('create-balance').textContent='Démo';
       $('metric-total').textContent=songs().length;
       $('metric-progress').textContent=state.jobs.filter(j=>['processing','queued'].includes(j.status)).length;
-      $('user-avatar').textContent=state.user.email.charAt(0).toUpperCase();
+      renderIdentity();
       renderJobs('recent-jobs',songs().slice(0,5));renderJobs('library-jobs',filterJobs());renderRecents();
       $('library-count').textContent=`${songs().length} création${songs().length===1?'':'s'}`;
     }catch(e){toast(e.message,true);}
@@ -1547,13 +1593,15 @@
       if(replace)history.replaceState({},'',target+location.search+location.hash);
       else history.pushState({},'',target);
     }
-    const appTitles={dashboard:'Mon studio',create:'Nouvelle partition',library:'Ma bibliothèque',account:'Mon abonnement',result:'Ma partition'};
+    const appTitles={dashboard:'Mon studio',create:'Nouvelle partition',library:'Ma bibliothèque',account:'Mon abonnement',profile:'Mon profil',result:'Ma partition'};
     document.title=(appTitles[page]||'Mon studio')+' — Tablurio.com';
-    for(const p of ['dashboard','create','library','result','account'])show(p+'-page',page===p);
+    for(const p of ['dashboard','create','library','result','account','profile'])show(p+'-page',page===p);
+    toggleUserMenu(false);
     const side=page==='dashboard'?'menu-dashboard':page==='library'||page==='result'?'menu-library':page==='account'?'menu-account':'menu-create';
-    for(const id of ['menu-dashboard','menu-create','menu-library','menu-account'])$(id).classList.toggle('side-active',id===side);
-    const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition',account:'Mon abonnement'};
-    if(page==='account')renderAccount();
+    for(const id of ['menu-dashboard','menu-create','menu-library','menu-account'])$(id).classList.toggle('side-active',id===side&&page!=='profile');
+    const names={dashboard:'Vue d’ensemble',create:'Nouvelle partition',library:'Ma bibliothèque',result:'Ma partition',account:'Mon abonnement',profile:'Profil et paramètres'};
+    if(page==='account')renderAccount();else stopAccountClock();
+    if(page==='profile')renderProfile();
     $('page-crumb').textContent=names[page]||'Mon espace';
     if(page!=='result')$('result-page').classList.remove('is-score');
     renderRecents();
@@ -1617,9 +1665,38 @@
       saved.hidden=!annual;
       saved.textContent=annual?euros(monthly*12-yearly)+' économisés par an':'';
     }
-    container.querySelector('[role="status"]').textContent=annual
+    const cycleStatus=container.querySelector('.upgrade-sr[role="status"]');
+    if(cycleStatus)cycleStatus.textContent=annual
       ?'Facturation annuelle sélectionnée. Les prix affichés par mois sont des équivalents.'
       :'Facturation mensuelle sélectionnée.';
+  }
+
+  // Offers page for someone who already pays: their plan is marked, lower plans are included,
+  // higher ones read as an upgrade.
+  function markCurrentPlan(container=$('pricing-view')){
+    const plan=state.user?.role==='admin'?'lifetime':state.user?.plan||'free';
+    const rank=PLAN_RANK[plan]??0;
+    container.querySelectorAll('[data-plan-checkout]').forEach(link=>{
+      const card=link.closest('.upgrade-card');
+      const tier=CHECKOUT_PLANS[link.dataset.planCheckout];
+      const current=tier===plan,included=rank>PLAN_RANK[tier];
+      card.classList.toggle('is-current',current);
+      card.querySelector('.upgrade-current-badge')?.remove();
+      card.querySelector('.upgrade-card-badge:not(.upgrade-current-badge)')?.toggleAttribute('hidden',current);
+      if(current)card.insertAdjacentHTML('afterbegin','<span class="upgrade-card-badge upgrade-current-badge">Ton offre actuelle</span>');
+      const locked=current||included;
+      link.classList.toggle('is-disabled',locked);
+      if(locked){link.setAttribute('aria-disabled','true');link.tabIndex=-1;}else{link.removeAttribute('aria-disabled');link.removeAttribute('tabindex');}
+      link.textContent=current?'Ton offre actuelle ✓':included?'Inclus dans ton offre':
+        rank>0?(tier==='pro'?'Passer au Pro':'Passer à l’accès à vie'):{starter:'Choisir Starter',pro:'Choisir Pro',lifetime:'Choisir l’accès à vie'}[tier];
+    });
+    const banner=$('upgrade-current');
+    if(banner){
+      banner.hidden=rank===0;
+      banner.innerHTML=plan==='lifetime'?'Tu as l’<b>accès à vie</b> : tout est déjà inclus.'
+        :plan==='pro'?'Tu es sur <b>Pro</b>. Passe à l’accès à vie pour ne plus jamais renouveler : ton Pro s’arrête tout seul à la fin de la période déjà payée.'
+        :'Tu es actuellement sur <b>Starter</b>. En passant au Pro, ton Starter s’arrête tout seul à la fin de la période déjà payée : tu ne paies jamais deux abonnements.';
+    }
   }
 
   // ---- Abonnement : plan du compte, paiement relié au compte, page « Mon abonnement » ----
@@ -1629,7 +1706,7 @@
   function showPlan(plan='free'){
     const paid=plan&&plan!=='free';
     $('sidebar-credits').textContent=PLAN_NAMES[plan]||'Gratuit';
-    $('sidebar-plan-detail').textContent=plan==='starter'?'1 morceau complet par jour':paid?'Sans limite quotidienne':'3 aperçus gratuits de 30 s';
+    $('sidebar-plan-detail').textContent=plan==='starter'?'1 morceau complet / 24 h':paid?'Sans limite quotidienne':'3 aperçus gratuits de 30 s';
     const action=$('sidebar-plan-action');
     action.textContent=paid?'Mon abonnement':'Voir les abonnements ↗';
     action.dataset.account=paid?'1':'';
@@ -1675,31 +1752,186 @@
   }
   const accountDate=value=>value?new Date(value).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'';
   const accountTime=value=>value?new Date(value).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+  // ---- Mon abonnement : offre, quota Starter en direct, inclus, derniers morceaux entiers ----
+  const PLAN_RANK={free:0,starter:1,pro:2,lifetime:3};
+  const PLAN_FEATURES={
+    free:['3 aperçus gratuits de 30 secondes','Comparaison des versions','Lecture synchronisée'],
+    starter:['1 morceau entier toutes les 24 h','Tous les instruments disponibles','Exports PDF, MIDI et MusicXML','Voix isolée sur les morceaux chantés'],
+    pro:['Morceaux entiers sans limite quotidienne*','Tous les instruments disponibles','Exports PDF, MIDI et MusicXML','Voix isolée sur les morceaux chantés'],
+    lifetime:['Morceaux entiers sans limite quotidienne*','Accès à vie, sans renouvellement','Exports PDF, MIDI et MusicXML','Voix isolée sur les morceaux chantés']
+  };
+  const DAY_MS=24*60*60*1000;
+  const clockText=ms=>{const total=Math.max(0,Math.ceil(ms/1000)),h=Math.floor(total/3600),m=Math.floor(total%3600/60),sec=total%60;
+    return [h,m,sec].map(n=>String(n).padStart(2,'0')).join(':');};
+  const whenText=value=>{const date=new Date(value),today=new Date();
+    const tomorrow=new Date(today.getTime()+DAY_MS);
+    const day=date.toDateString()===today.toDateString()?'aujourd’hui':date.toDateString()===tomorrow.toDateString()?'demain':
+      date.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
+    return `${day} à ${date.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`;};
+  let accountClock=null;
+  function stopAccountClock(){clearInterval(accountClock);accountClock=null;}
+  // Live countdowns: every [data-until] inside root, with an optional progress bar over the 24 h window.
+  function runClocks(root,onDone){
+    const tick=()=>{
+      let done=false;
+      root.querySelectorAll('[data-until]').forEach(node=>{
+        const left=new Date(node.dataset.until).getTime()-Date.now();
+        node.querySelector('.quota-clock').textContent=clockText(left);
+        const bar=node.querySelector('.quota-bar span');
+        if(bar)bar.style.width=Math.min(100,Math.max(0,(1-left/DAY_MS)*100))+'%';
+        if(left<=0)done=true;
+      });
+      if(done){onDone?.();}
+    };
+    tick();return setInterval(tick,1000);
+  }
   async function renderAccount({thanks=false}={}){
+    stopAccountClock();
+    if(!state.jobsLoaded&&state.user)await refresh();
     const box=$('account-content');
     let data;
     try{data=await api('/api/billing');}
     catch(e){box.innerHTML=`<p class="account-error">${safe(e.message||'Impossible de charger ton abonnement.')}</p>`;return null;}
     const {tier,status,period_end:end,cancel_at_period_end:ending,manage_url:manage,quota}=data;
     const paid=tier!=='free';
+    if(state.user){
+      state.user.starter_until=tier==='starter'&&quota.resets_at?quota.resets_at:null;
+      if(state.user.plan!==tier){state.user.plan=tier;showPlan(tier);}
+      renderIdentity();
+    }
     const statusText=!paid?'Aucun abonnement actif':status==='past_due'?'Paiement en attente — Whop va réessayer':
-      ending?`Actif jusqu’au ${accountDate(end)}, puis arrêté`:tier==='lifetime'?'Actif à vie':end?`Actif · renouvellement le ${accountDate(end)}`:'Actif';
-    const quotaText=tier==='starter'?
-      (quota.remaining>0?`<strong>1 morceau complet disponible aujourd’hui</strong>`:`<strong>Morceau du jour utilisé</strong>`)+
-        `<span>Se recharge à ${accountTime(quota.resets_at)} (minuit, heure de Paris). Non cumulable.</span>`:
-      paid?`<strong>Sans limite quotidienne</strong><span>${quota.used} morceau${quota.used>1?'x':''} complet${quota.used>1?'s':''} aujourd’hui · usage personnel raisonnable.</span>`:
-      `<strong>3 aperçus gratuits de 30 secondes</strong><span>Choisis une offre pour générer les morceaux en entier.</span>`;
+      ending?`Actif jusqu’au ${accountDate(end)}, puis arrêté`:tier==='lifetime'?'Actif à vie':end?`Renouvellement le ${accountDate(end)}`:'Actif';
+    const chip=!paid?'<span class="account-chip is-free">Gratuit</span>':status==='past_due'?'<span class="account-chip is-warn">Paiement en attente</span>'
+      :ending?'<span class="account-chip is-warn">Se termine</span>':'<span class="account-chip">Actif</span>';
+    const fullSongs=state.jobs.filter(j=>j.variant);
+    const month=new Date();month.setDate(1);month.setHours(0,0,0,0);
+    const thisMonth=fullSongs.filter(j=>j.created_at*1000>=month.getTime()&&j.status!=='failed').length;
+    let quotaHtml;
+    if(tier==='starter'&&quota.remaining>0){
+      quotaHtml=`<div class="quota-state is-ready"><span class="quota-icon" aria-hidden="true">✓</span><div>
+        <strong>Ton morceau complet est disponible</strong>
+        <p>Ouvre un aperçu et clique sur « Générer la suite ». Le suivant sera disponible 24 h après l’avoir lancé.</p></div></div>`;
+    }else if(tier==='starter'){
+      quotaHtml=`<div class="quota-state is-waiting" data-until="${safe(quota.resets_at)}">
+        <span class="account-label">Prochain morceau complet dans</span>
+        <div class="quota-clock" role="timer" aria-live="off">${clockText(new Date(quota.resets_at)-Date.now())}</div>
+        <div class="quota-bar" aria-hidden="true"><span></span></div>
+        <p>Disponible ${safe(whenText(quota.resets_at))} · 24 h après ton dernier morceau entier.</p></div>`;
+    }else if(paid){
+      quotaHtml=`<div class="quota-state is-ready"><span class="quota-icon" aria-hidden="true">∞</span><div>
+        <strong>Sans limite quotidienne</strong>
+        <p>${thisMonth} morceau${thisMonth>1?'x':''} entier${thisMonth>1?'s':''} ce mois-ci · usage personnel raisonnable.</p></div></div>`;
+    }else{
+      quotaHtml=`<div class="quota-state"><span class="quota-icon" aria-hidden="true">♪</span><div>
+        <strong>3 aperçus gratuits de 30 secondes</strong>
+        <p>Choisis une offre pour générer tes morceaux en entier.</p></div></div>`;
+    }
+    const recent=fullSongs.slice(0,4).map(j=>`<a class="account-song" href="${appPath('result',j.id)}" data-job="${safe(j.id)}">
+      <span aria-hidden="true">${instrumentIcon[j.instrument]||'♫'}</span><span><b>${safe(j.title)}</b>
+      <small>${new Date(j.created_at*1000).toLocaleDateString('fr-FR',{day:'numeric',month:'long'})} · ${j.status==='completed'?'Morceau entier':j.status==='failed'?'Échec, non décompté':'En cours'}</small></span></a>`).join('');
     box.innerHTML=`${thanks?`<p class="account-thanks">${paid?'Merci ! Ton abonnement est actif.':'Paiement reçu, on active ton abonnement… Cette page se met à jour toute seule.'}</p>`:''}
-      <div class="account-card"><span class="account-label">Offre</span><strong class="account-plan">${safe(PLAN_NAMES[tier]||tier)}</strong><p class="account-status">${safe(statusText)}</p></div>
-      <div class="account-card"><span class="account-label">Quota</span><p class="account-quota">${quotaText}</p></div>
-      <div class="account-actions">
-        ${manage?`<a class="btn btn-outline" href="${safe(manage)}" target="_blank" rel="noopener">Gérer mon paiement ↗</a>`:''}
-        ${tier==='starter'?`<a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Passer au Pro ↗</a>`:''}
-        ${!paid?`<a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a>`:''}
+      <div class="account-grid">
+        <section class="account-card account-plan-card">
+          <div class="account-plan-top"><span class="account-label">Ton offre</span>${chip}</div>
+          <strong class="account-plan">${safe(PLAN_NAMES[tier]||tier)}</strong>
+          <p class="account-status">${safe(statusText)}</p>
+          <div class="account-actions">
+            ${tier==='starter'?'<a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Passer au Pro ↗</a>':''}
+            ${tier==='pro'?'<a class="btn btn-outline" href="/upgrade" data-nav="upgrade">Passer à l’accès à vie</a>':''}
+            ${!paid?'<a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a>':''}
+            ${manage?`<a class="btn btn-outline" href="${safe(manage)}" target="_blank" rel="noopener">Gérer mon paiement ↗</a>`:''}
+          </div>
+        </section>
+        <section class="account-card account-quota-card"><span class="account-label">Quota</span>${quotaHtml}</section>
+        <section class="account-card"><span class="account-label">Inclus dans ton offre</span>
+          <ul class="account-features">${(PLAN_FEATURES[tier]||PLAN_FEATURES.free).map(item=>`<li>${safe(item)}</li>`).join('')}</ul></section>
+        <section class="account-card"><span class="account-label">Derniers morceaux entiers</span>
+          ${recent?`<div class="account-songs">${recent}</div>`:`<p class="account-empty">Aucun morceau entier pour l’instant. ${paid?'Lance-en un depuis un aperçu avec « Générer la suite ».':''}</p>`}</section>
+        ${tier==='starter'?`<section class="account-card account-upsell"><div><span class="account-label">Besoin de plus ?</span>
+          <strong>Le Pro, sans attendre 24 h</strong><p>Morceaux entiers sans limite quotidienne. Ton Starter s’arrête tout seul à la fin de la période déjà payée : jamais deux abonnements.</p></div>
+          <a class="btn btn-primary" href="/upgrade" data-nav="upgrade">Voir le Pro ↗</a></section>`:''}
       </div>
-      ${manage?'<p class="account-note">Changer de carte, d’offre ou résilier se fait sur Whop, notre prestataire de paiement. Une résiliation garde ton accès jusqu’à la fin de la période payée.</p>':''}`;
-    if(state.user&&state.user.plan!==tier){state.user.plan=tier;showPlan(tier);}
+      ${manage?'<p class="account-note">Changer de carte ou résilier se fait sur Whop, notre prestataire de paiement. Une résiliation garde ton accès jusqu’à la fin de la période payée.</p>':''}`;
+    if(box.querySelector('[data-until]'))accountClock=runClocks(box,()=>{stopAccountClock();renderAccount();});
     return data;
+  }
+
+  // ---- Starter : morceau du jour déjà utilisé → fenêtre explicative (attendre ou passer au Pro) ----
+  let quotaDialogClock=null;
+  function openQuotaDialog(until){
+    const dialog=$('quota-dialog');
+    if(until&&state.user){state.user.starter_until=until;renderIdentity();}
+    const at=until||state.user?.starter_until;
+    dialog.querySelector('.quota-dialog-wait').dataset.until=at||'';
+    $('quota-dialog-at').textContent=at?whenText(at):'dans moins de 24 h';
+    clearInterval(quotaDialogClock);
+    if(at)quotaDialogClock=runClocks(dialog,()=>{clearInterval(quotaDialogClock);dialog.close();toast('Ton morceau complet est de nouveau disponible.');});
+    if(!dialog.open)dialog.showModal();
+  }
+
+  // ---- Profil et paramètres ----
+  const phoneText=value=>{const v=String(value||'');return /^\+33\d{9}$/.test(v)?('0'+v.slice(3)).replace(/(\d{2})(?=\d)/g,'$1 '):v;};
+  async function squareImage(file,size=192){
+    const bitmap=await createImageBitmap(file);
+    const canvas=Object.assign(document.createElement('canvas'),{width:size,height:size});
+    const side=Math.min(bitmap.width,bitmap.height);
+    canvas.getContext('2d').drawImage(bitmap,(bitmap.width-side)/2,(bitmap.height-side)/2,side,side,0,0,size,size);
+    let url=canvas.toDataURL('image/webp',.85);
+    if(!url.startsWith('data:image/webp'))url=canvas.toDataURL('image/jpeg',.85);
+    return url;
+  }
+  function renderProfile(){
+    const user=state.user;if(!user)return;
+    const box=$('profile-content');
+    box.innerHTML=`<form id="profile-form" class="profile-card" novalidate>
+        <div class="profile-photo-row"><div class="profile-photo" id="profile-photo"></div>
+          <div><b>Photo de profil</b><p>JPG, PNG ou WebP, recadrée en carré.</p>
+            <div class="profile-photo-actions"><label class="btn btn-outline">Changer la photo<input type="file" id="profile-photo-input" accept="image/jpeg,image/png,image/webp" hidden></label>
+            <button type="button" class="profile-link" id="profile-photo-remove">Retirer</button></div></div></div>
+        <label for="profile-pseudo">Pseudo</label>
+        <input id="profile-pseudo" class="field" maxlength="31" autocomplete="nickname" placeholder="Ton prénom ou ton nom d’artiste">
+        <label for="profile-bio">Bio</label>
+        <textarea id="profile-bio" class="field" maxlength="280" rows="4" placeholder="Ton instrument, ce que tu joues, ce que tu travailles en ce moment…"></textarea>
+        <small id="profile-bio-count" class="profile-count"></small>
+        <p class="profile-error" id="profile-error" hidden></p>
+        <div class="profile-actions"><button class="btn btn-primary" type="submit">Enregistrer</button><span id="profile-saved" class="profile-saved" hidden>✓ Enregistré</span></div>
+      </form>
+      <section class="profile-card profile-account"><h2>Informations du compte</h2>
+        <dl><div><dt>Adresse email</dt><dd>${safe(user.email)}</dd></div>
+          <div><dt>Téléphone</dt><dd>${safe(phoneText(user.phone))||'Non renseigné'}</dd></div>
+          <div><dt>Offre</dt><dd>${safe(PLAN_NAMES[user.plan]||'Gratuit')} · <a href="/app/abonnement" class="profile-link" data-profile-account>Mon abonnement</a></dd></div></dl>
+        <p class="profile-note">L’adresse email et le numéro identifient ton compte : ils ne se modifient pas ici.</p>
+        <button type="button" class="btn btn-outline" id="profile-logout">Se déconnecter</button></section>`;
+    const pseudo=$('profile-pseudo'),bio=$('profile-bio'),count=$('profile-bio-count'),photo=$('profile-photo');
+    let avatar;  // undefined: unchanged · null: removed · string: new photo
+    pseudo.value=user.pseudo||'';bio.value=user.bio||'';
+    const showCount=()=>{count.textContent=`${bio.value.length} / 280`;};showCount();
+    const showPhoto=()=>{paintAvatar(photo,{...user,avatar:avatar===undefined?user.avatar:avatar,pseudo:pseudo.value||user.pseudo});
+      $('profile-photo-remove').hidden=!(avatar===undefined?user.avatar:avatar);};
+    showPhoto();
+    bio.addEventListener('input',showCount);
+    pseudo.addEventListener('input',showPhoto);
+    $('profile-photo-input').addEventListener('change',async event=>{
+      const file=event.target.files[0];event.target.value='';if(!file)return;
+      if(file.size>15*1024*1024){toast('Cette photo est trop lourde (15 Mo maximum).',true);return;}
+      try{avatar=await squareImage(file);showPhoto();}catch{toast('Cette image ne peut pas être lue. Essaie une autre photo.',true);}
+    });
+    $('profile-photo-remove').addEventListener('click',()=>{avatar=null;showPhoto();});
+    $('profile-logout').addEventListener('click',logout);
+    box.querySelector('[data-profile-account]').addEventListener('click',event=>{event.preventDefault();showAppPage('account');});
+    $('profile-form').addEventListener('submit',async event=>{
+      event.preventDefault();
+      const button=event.target.querySelector('[type="submit"]'),error=$('profile-error');
+      button.disabled=true;error.hidden=true;$('profile-saved').hidden=true;
+      try{
+        const body={pseudo:pseudo.value,bio:bio.value,...(avatar!==undefined?{avatar}:{})};
+        const result=await api('/api/auth/me',{method:'PATCH',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+        Object.assign(state.user,{pseudo:result.user.pseudo,bio:result.user.bio,avatar:result.user.avatar});
+        avatar=undefined;renderIdentity();showPhoto();
+        $('profile-saved').hidden=false;
+      }catch(e){error.textContent=e.message;error.hidden=false;}
+      finally{button.disabled=false;}
+    });
   }
   async function welcomeBack(){
     // Back from Whop: the webhook may land a few seconds after the redirect.
@@ -1733,11 +1965,12 @@
   async function generateFull(jobId,variant){
     try{
       const result=await post('/api/track',{action:'full',id:jobId,variant});
+      if(!result.existing&&state.user?.plan==='starter'){state.user.starter_until=new Date(Date.now()+DAY_MS).toISOString();renderIdentity();}
       toast(result.existing?'Voici ton morceau entier.':'C’est parti : ton morceau entier se génère.');
       openResult(result.id);
       return true;
     }catch(e){
-      if(e.status===402&&e.body?.reason==='daily_limit'){state.upgradeNotice=e.message;go('/upgrade');return true;}
+      if(e.status===402&&e.body?.reason==='daily_limit'){openQuotaDialog(e.body.resets_at);return true;}
       if(e.status===402)return false;   // no plan after all: show the offers
       if(e.status===401){go('/connexion');return true;}
       toast(e.message||'La génération n’a pas pu démarrer.',true);
@@ -1749,6 +1982,8 @@
     if(dialog.open)return;
     const paid=(state.user?.plan||'free')!=='free';
     const previewJob=trigger.closest('#result-page')&&state.currentTrack?.preview_limit&&state.currentTrack.id===state.resultId;
+    // Starter whose song of the day is used: explain the wait (or the Pro) instead of the offers page.
+    if(paid&&previewJob&&state.user?.plan==='starter'&&starterLeft()){openQuotaDialog();return;}
     if(paid&&previewJob){
       if(trigger.getAttribute('aria-busy')==='true')return;
       trigger.setAttribute('aria-busy','true');
@@ -2442,6 +2677,7 @@
     });
     document.addEventListener('click',async(e)=>{
       const checkout=e.target.closest('[data-plan-checkout]');
+      if(checkout?.getAttribute('aria-disabled')==='true'){e.preventDefault();return;}
       if(checkout&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){e.preventDefault();await checkoutClick(checkout);return;}
       if(e.target.closest('#sidebar-plan-action[data-account="1"]')){e.preventDefault();showAppPage('account');return;}
       const openJob=e.target.closest('[data-open-job]');
@@ -2557,6 +2793,24 @@
       });
     }
     $('sidebar-logout').onclick=logout;$('mobile-sidebar').onclick=()=>document.querySelector('.sidebar').classList.toggle('mobile-open');
+    $('plan-pill').onclick=()=>showAppPage('account');
+    $('quota-dialog').addEventListener('click',event=>{
+      const dialog=$('quota-dialog');
+      if(event.target.closest('[data-quota-close]')||event.target===dialog)dialog.close();
+      if(event.target.closest('[data-quota-upgrade]')){event.preventDefault();dialog.close();go('/upgrade');}
+    });
+    $('quota-dialog').addEventListener('close',()=>clearInterval(quotaDialogClock));
+    $('user-avatar').onclick=event=>{event.stopPropagation();toggleUserMenu();};
+    $('user-menu').addEventListener('click',event=>{
+      const item=event.target.closest('[data-user-menu]');if(!item)return;
+      toggleUserMenu(false);
+      const action=item.dataset.userMenu;
+      if(action==='logout')logout();
+      else if(action==='upgrade')go('/upgrade');
+      else showAppPage(action);
+    });
+    document.addEventListener('click',event=>{if(!$('user-menu').hidden&&!event.target.closest('.user-menu'))toggleUserMenu(false);});
+    document.addEventListener('keydown',event=>{if(event.key==='Escape'&&!$('user-menu').hidden){toggleUserMenu(false);$('user-avatar').focus();}});
     $('menu-dashboard').onclick=()=>showAppPage('dashboard');$('menu-create').onclick=()=>showAppPage('create');$('menu-library').onclick=()=>showAppPage('library');$('menu-account').onclick=()=>showAppPage('account');
     $('dashboard-start').onclick=()=>showAppPage('create');$('view-all').onclick=()=>showAppPage('library');$('library-new').onclick=()=>showAppPage('create');
     $('back-to-library').onclick=()=>showAppPage('library');

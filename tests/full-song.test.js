@@ -20,7 +20,7 @@ function fakeDb(){
       find:f=>{const list=docs.filter(d=>matches(d,f));const c={sort:()=>c,limit:()=>c,toArray:async()=>list,next:async()=>list[0]||null};return c;},
       countDocuments:async f=>docs.filter(d=>matches(d,f)).length,
       insertOne:async d=>{
-        if(name==='billing_unlocks'&&d.starter_day&&docs.some(o=>o.starter_day===d.starter_day&&String(o.user_id)===String(d.user_id)))
+        if(name==='billing_unlocks'&&d.starter_slot==='open'&&docs.some(o=>o.starter_slot==='open'&&String(o.user_id)===String(d.user_id)))
           throw Object.assign(new Error('dup'),{code:11000});
         if(name==='track_jobs'&&d.active&&docs.some(o=>o.active&&String(o.user_id)===String(d.user_id)))
           throw Object.assign(new Error('dup'),{code:11000});

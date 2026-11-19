@@ -293,7 +293,7 @@ async function worker(db,res,body){
     return json(res,200,{job:job?{id:String(job._id),lease,title:job.title,instrument:job.instrument,
       excerpt:job.excerpt,isolated:job.isolated,source_content:job.source_content,preview_limit:job.preview_limit,guitar_goal:job.guitar_goal,
       guitar_compare:job.guitar_compare===true,guitar_judge:job.guitar_judge===true,guitar_vocals:job.guitar_vocals===true,
-      piano_vocals:job.piano_vocals===true,...(job.variant?{variant:job.variant}:{}),
+      piano_vocals:job.piano_vocals===true,...(job.variant?{variant:job.variant}:{}),...(job.full_vocals?{full_vocals:true}:{}),
       piano_compare:process.env.TRACK_PIANO_COMPARISON!=='0'&&body.piano_compare===true&&
         job.instrument==='piano'&&job.preview_limit===PREVIEW_SECONDS,
       review_audio:!job.isolated&&!job.preview_limit,format:job.format||'partition',capo:job.capo||0,...(job.youtube_id?{youtube_id:job.youtube_id}:job.audio_url?{audio_url:job.audio_url}:
@@ -358,6 +358,7 @@ async function worker(db,res,body){
     (job.song_key||typeof body.audio_hash==='string'&&/^[a-f0-9]{64}$/.test(body.audio_hash));
   const fullValid=validExports(exports)&&exports.musicxml&&exports.mid&&Number.isFinite(duration)&&duration>=.5&&
     Number.isInteger(note_count)&&note_count>=1&&pianoValid&&(!exports.vocals||
+      job.variant&&job.full_vocals===true&&exports.vocals.length<=2600000||
       ((comparison&&job.guitar_vocals)||(hasPianoFiles&&job.piano_vocals))&&
       job.preview_limit===PREVIEW_SECONDS&&exports.vocals.length<=420000)&&
     (comparison?compareValid:

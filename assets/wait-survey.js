@@ -1,6 +1,7 @@
 (() => {
   const states=new WeakMap();
-  function mount(root,userId,active){
+  // One batch per generation: the server picks the next questions and caps them per generation.
+  function mount(root,userId,active,jobId=''){
     if(!root)return;
     const previous=states.get(root);
     if(!userId||!active){
@@ -11,16 +12,16 @@
       }
       return;
     }
-    if(previous?.userId===userId){
+    if(previous?.userId===userId&&previous.jobId===jobId){
       root.hidden=!previous.questions?.length;
       return;
     }
-    const state={userId,questions:null};
+    const state={userId,jobId,questions:null};
     states.set(root,state);
     root.hidden=true;
     root.replaceChildren();
     async function request(options){
-      const response=await fetch('/api/auth/wait-survey',options);
+      const response=await fetch('/api/auth/wait-survey'+(options?'':jobId?'?job='+encodeURIComponent(jobId):''),options);
       if(!response.ok)throw new Error('Questionnaire indisponible.');
       return response.json();
     }
@@ -62,7 +63,7 @@
         saving=true;
         submit.disabled=skip.disabled=true;
         try{
-          await request({method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:question.id,answer})});
+          await request({method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:question.id,answer,...(jobId?{job:jobId}:{})})});
           state.questions.shift();
           render();
         }catch{

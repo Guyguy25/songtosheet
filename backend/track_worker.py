@@ -254,6 +254,9 @@ def generate_variant(audio, data, result, job, report, engines, review_audio=Non
         (result.parent / "piano").mkdir(parents=True, exist_ok=True)
         duration, variants, _ = generate(audio, result.parent / "piano", job["title"], report, engines.piano,
                                          solo_engine=engines.solo_piano, judge=False)
+        if variant not in variants and job.get("flexible_variant") and variants:
+            # Admin direct whole song: the preferred version, else the closest one produced.
+            variant = next(key for key in ("yourmt3", "arrangement", "solo", "playable", *variants) if key in variants)
         if variant not in variants:
             raise ValueError("Cette version n’est pas disponible pour ce morceau. Choisis-en une autre.")
         score, midi, count = variants[variant]
@@ -277,6 +280,8 @@ def generate_variant(audio, data, result, job, report, engines, review_audio=Non
                                  review_audio=review_audio)
         meta = json.loads((transcribed / "notes.json").read_text(encoding="utf-8"))
         folder = transcribed / "solo" if solo else transcribed
+        if solo and job.get("flexible_variant") and not (folder / "tab.musicxml").is_file():
+            folder = transcribed
         if not (folder / "tab.musicxml").is_file():
             raise ValueError("Cette version n’est pas disponible pour ce morceau. Choisis-en une autre.")
         keep(folder / "tab.musicxml", folder / "tab.mid")

@@ -124,7 +124,10 @@
     return item;
   }
 
-  function mount(root, job, {api, post}) {
+  function mount(root, job, {api, post, fullStatus = () => 'completed'}) {
+    // Versions whose whole song was generated (failed ones can be generated again).
+    const owned = Object.fromEntries(Object.entries(job.full_jobs || {})
+      .filter(([, id]) => fullStatus(id) !== 'failed'));
     const piano = job.instrument === 'piano';
     const question = piano ? 'Quelle partition piano préfères-tu ?' : 'Quelle tablature préfères-tu ?';
     const chosenTitle = piano ? 'Ta partition piano' : 'Ta tablature';
@@ -166,7 +169,14 @@
         const chosen = data.selected === card.key;
         card.vote.textContent = chosen ? 'Ton choix ✓' : piano || cards.length > 1 ? 'Choisir cette version' : 'Choisir cette tablature';
         card.vote.classList.toggle('is-chosen', chosen);
-        card.vote.hidden = !piano && !data.token && !chosen;
+        card.vote.hidden = (!piano && !data.token && !chosen) || Boolean(owned[card.key]);
+        if (Object.keys(owned).length && !owned[card.key]) {
+          // Another version is already paid for: this one is unlocked from here, for its whole song.
+          card.vote.textContent = '🔒 Débloquer cette version en entier';
+          card.vote.classList.remove('is-chosen');
+          card.vote.hidden = false;
+          card.vote.disabled = saving;
+        }
         card.vote.disabled = chosen || (!piano && !data.token) || saving || card.listen.disabled;
       }
       status.textContent = data.selected ? (justVoted ? 'Ton choix a été enregistré.' : '') :
@@ -391,6 +401,16 @@
         const score = add(card, 'section', 'score-player guitar-option-player');
         const vote = add(card, 'button', 'btn btn-primary guitar-option-vote', 'Choisir cette version');
         vote.type = 'button';
+        const fullId = owned[version.key];
+        if (fullId) {
+          // The version already paid for: open its whole song instead of the 30 s preview.
+          card.classList.add('is-complete');
+          const done = fullStatus(fullId) === 'completed';
+          header.insertBefore(add(header, 'span', 'guitar-option-full', done ? 'Morceau entier ✓' : 'Morceau entier en cours'), listen);
+          const open = add(card, 'a', 'btn btn-primary guitar-option-open', done ? 'Ouvrir le morceau entier' : 'Suivre la génération');
+          open.href = '/app/' + encodeURIComponent(fullId);
+          open.dataset.openJob = fullId;
+        }
         const item = {key: version.key, element:card, badge, listen, vote, title, files: version, player: null, summary};
         cards.push(item);
         item.player = window.SongToSheetPlayer.mount(score, {
@@ -461,7 +481,10 @@
             if (selected && !quiet) focusOption(selected, true);
           }
         };
-        vote.onclick = () => choose();
+        vote.onclick = () => {
+          const lock = Object.keys(owned).length && !owned[version.key] && card.querySelector('.sp-lock-cta');
+          if (lock) lock.click(); else choose();
+        };
         // Unlocking a version from its own card is the clearest choice there is: it counts as
         // choosing that version (like downloading the take you prefer), then the unlock opens.
         card.addEventListener('click', event => {
@@ -479,7 +502,8 @@
       update(0);
       decorate(data);
       const selected = cards.find(card => card.key === data.selected);
-      focusOption(selected || null);
+      // Once a whole song exists, this page is the overview: every version, the paid one marked.
+      focusOption(Object.keys(owned).length ? null : selected || null);
     }
 
     if (piano) display({

@@ -63,3 +63,10 @@
 .piano-option-criteria { margin: 4px 0 0; color: #3f3a4a; font-size: 12px; font-weight: 650; letter-spacing: .01em; }
 .piano-option-ai { margin: 6px 0 0; padding: 8px 10px; border-radius: 10px; background: #f4eeff; color: #3d2470; font-size: 13px; line-height: 1.4; }
 .piano-option-ai::before { content: "✦ "; color: #7b4fd1; }
+
+/* Version already generated in full: marked, and opens the whole song. */
+.guitar-option.is-complete { border-color:#9fd9bb; box-shadow:0 0 0 1px #9fd9bb inset; }
+.guitar-option-full { padding:4px 8px; border-radius:20px; background:#e3f6ec; color:#1f7a52; font-size:11px; font-weight:800; white-space:nowrap; }
+.guitar-option.is-complete .guitar-option-vote { display:none; }
+.guitar-option-open { box-sizing:border-box; width:100%; justify-content:center; text-align:center; text-decoration:none; }
+.piano-comparison-grid .guitar-option-open { margin-top:auto; }

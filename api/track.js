@@ -159,6 +159,10 @@ async function begin(db,req,res,user,body){
   if(!title||!INSTRUMENTS.has(instrument)||(!link&&(!AUDIO_TYPES.has(extension)||!Number.isInteger(size)||size<1024||size>MAX_BYTES))){
     return json(res,400,{detail:'Choisis un titre, une piste et un fichier audio de 25 Mo maximum.'});
   }
+  // Bass is in beta: closed to users for now (admins can still test it).
+  if(instrument==='basse'&&user.role!=='admin'){
+    return json(res,400,{detail:'La basse est en bêta et arrive bientôt. Choisis la guitare, le piano ou la voix.'});
+  }
   if(format!=='partition'&&(format!=='tablature'||!['guitare','basse'].includes(instrument))){
     return json(res,400,{detail:'La tablature est disponible pour la guitare et la basse.'});
   }

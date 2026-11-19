@@ -149,3 +149,17 @@ test('upgrading to Pro stops the Starter from renewing (no double billing)',asyn
   assert.strictEqual(account.billing.tier,'pro');
   assert.deepStrictEqual(calls,[['PATCH','https://api.whop.com/api/v1/memberships/mem_s','{"cancel_at_period_end":true}']]);
 });
+
+test('a whole song launched before the 24 h window existed still counts for its 24 h',async()=>{
+  const db=fakeDb();const account=user(db);
+  await store.applyEntitlement(db,grant({user_id:String(account._id)}),NOW);
+  const job=new ObjectId();
+  db.collection('billing_unlocks');db.collection('track_jobs');
+  const launched=new Date(NOW.getTime()-3*3600e3);
+  db.data.billing_unlocks.push({user_id:account._id,day:'2026-11-18',tier:'starter',job_id:job,variant:'original-v1',created_at:launched,starter_day:'2026-11-18'});
+  db.data.track_jobs.push({_id:job,user_id:account._id,status:'completed'});
+  const until=new Date(launched.getTime()+24*3600e3);
+  assert.deepStrictEqual((await store.summary(db,account,NOW)).quota.resets_at,until);
+  assert.deepStrictEqual(await store.reserveFullSong(db,account,{jobId:new ObjectId(),variant:'held-v1'},NOW),{ok:false,reason:'daily_limit',tier:'starter',resets_at:until});
+  assert.strictEqual((await store.reserveFullSong(db,account,{jobId:new ObjectId(),variant:'held-v1'},until)).ok,true);
+});

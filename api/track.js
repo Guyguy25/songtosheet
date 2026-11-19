@@ -13,7 +13,7 @@ const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
 const {scheduleWake}=require('../lib/engine-wake');
 const {engineStats}=require('../lib/engine-stats');
-const {createFullSong}=require('../lib/full-song');
+const {createFullSong,autoFullSong}=require('../lib/full-song');
 const {PIANO_CRITERIA,CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
@@ -448,6 +448,11 @@ async function worker(db,res,body){
   const updated=await jobs.updateOne(filter,{$set:{...outcome,active:false,finished_at:now},$unset:{lease:'',lease_until:'',audio_url:''}});
   if(!updated.modifiedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   await chunks.deleteMany({job_id:job._id});
+  if(outcome.status==='completed'){
+    // Admin account: the whole song of the recommended version starts right away.
+    try{await autoFullSong(db,job,now,scheduleWake);}
+    catch(error){console.error('Morceau entier automatique (admin) :',error.message);}
+  }
   return json(res,200,{ok:true});
 }
 

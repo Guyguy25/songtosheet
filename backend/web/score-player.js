@@ -128,7 +128,8 @@
     const controller=new AbortController();
     const {signal}=controller;
     const guitar=instrument==='guitare',piano=instrument==='piano';
-    const showRoll=!guitar&&!(piano&&comparison);
+    // The score is the only view: the piano roll is no longer offered.
+    const showRoll=false;
     root.innerHTML=`
       <div class="sp-toolbar">
         ${showRoll?`<div class="sp-tabs" role="group" aria-label="Affichage">
@@ -157,12 +158,13 @@
             <strong></strong><div class="sp-lock-progress" aria-hidden="true"><span></span></div><p></p>
             <a class="sp-lock-cta" href="/upgrade" data-unlock="partition" aria-haspopup="dialog">Débloquer la suite du morceau <span aria-hidden="true">↗</span></a></div></div>
         </div>
-        ${piano?`<div class="sp-keyboard" aria-hidden="true"></div>`:''}
         ${showRoll?`<div class="sp-roll">
           <div class="sp-roll-heading"><span aria-hidden="true">●</span> Piano roll <small>Clique dans la grille pour te déplacer</small></div>
           <div class="sp-roll-scroll" tabindex="0" aria-label="Grille des notes"><p>Chargement des notes…</p></div>
         </div>`:''}
       </div>
+      <div class="sp-dock">
+      ${piano?`<div class="sp-keyboard" aria-hidden="true"></div>`:''}
       <div class="sp-controls">
         <button type="button" class="sp-restart" aria-label="Revenir au début" disabled>↶</button>
         <button type="button" class="sp-play" aria-label="Lire la transcription" disabled>▶</button>
@@ -174,11 +176,11 @@
         </select></label>
         <span class="sp-audio-label">Transcription MIDI</span>
         <a class="sp-audio-credit" hidden target="_blank" rel="noopener" aria-label="Crédits audio">ⓘ</a>
-      </div><p class="sp-source-duration" hidden></p>
+      </div></div><p class="sp-source-duration" hidden></p>
       <p class="sp-source-duration sp-technique-key" hidden><strong>Lire la tablature</strong> · Cases alignées : ensemble · Cases décalées : une à une · Gratté : un coup sur plusieurs cordes · sl. : glissé · P : pull-off</p>
       <p class="sp-status" role="status" hidden></p>`;
     const get=selector=>root.querySelector(selector);
-    const body=get('.sp-body'),pageScroll=root.closest('.app-scroll'),controls=get('.sp-controls');
+    const body=get('.sp-body'),pageScroll=root.closest('.app-scroll'),controls=get('.sp-dock');
     const sheet=get('.sp-sheet'),engraving=get('.sp-engraving'),sheetStatus=get('.sp-sheet p');
     const roll=get('.sp-roll'),scroll=get('.sp-roll-scroll'),play=get('.sp-play'),seek=get('.sp-seek');
     const keyboard=get('.sp-keyboard');

@@ -108,12 +108,17 @@ test('a single-version result (bass, voice) generates through the usual pipeline
   assert.strictEqual(result.status,201);
 });
 
-test('the whole song asks for the isolated voice only when the preview had one',async()=>{
+test('the whole song asks for the isolated voice unless the audio was declared instrumental',async()=>{
   const withVoice=setup('pro');
   withVoice.preview.downloads.push('vocals');
   await createFullSong(withVoice.db,withVoice.user,{id:String(withVoice.preview._id),variant:'arrangement'},NOW);
   assert.strictEqual(withVoice.db.data.track_jobs.find(j=>j.variant==='arrangement').full_vocals,true);
+  const mixed=setup('pro');
+  mixed.preview.source_content='mixed';
+  await createFullSong(mixed.db,mixed.user,{id:String(mixed.preview._id),variant:'arrangement'},NOW);
+  assert.strictEqual(mixed.db.data.track_jobs.find(j=>j.variant==='arrangement').full_vocals,true);
   const instrumental=setup('pro');
+  instrumental.preview.source_content='instrument';
   await createFullSong(instrumental.db,instrumental.user,{id:String(instrumental.preview._id),variant:'arrangement'},NOW);
   assert.strictEqual(instrumental.db.data.track_jobs.find(j=>j.variant==='arrangement').full_vocals,undefined);
 });

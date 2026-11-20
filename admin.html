@@ -99,7 +99,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   let regions=null;try{regions=new Intl.DisplayNames(['fr'],{type:'region'});}catch{}
   const flag=code=>/^[A-Z]{2}$/.test(code)?String.fromCodePoint(...[...code].map(c=>0x1F1E6+c.charCodeAt(0)-65)):'🌐';
   const country=code=>code&&code!=='??'?`${flag(code)} ${esc(regions?.of(code)||code)}`:'Inconnu';
-  const SOURCES={direct:'Direct (lien tapé, favori, appli sans info)',tiktok:'TikTok',instagram:'Instagram',youtube:'YouTube',google:'Google',facebook:'Facebook',x:'X / Twitter',bing:'Bing',reddit:'Reddit',whop:'Whop',chatgpt:'ChatGPT'};
+  const SOURCES={direct:'Direct (lien tapé, favori, appli sans info)',tiktok:'TikTok',instagram:'Instagram',meta:'Facebook / Meta (non précisé)',youtube:'YouTube',google:'Google',x:'X / Twitter',bing:'Bing',reddit:'Reddit',whop:'Whop',chatgpt:'ChatGPT'};
   const label=(field,key)=>{
     if(field==='country')return country(key);
     if(field==='source')return esc(SOURCES[key]||key);
@@ -169,21 +169,23 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   }
 
   function recent(rows){
-    return `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Compte</th><th>Source</th><th>Appareil</th><th>Pays</th><th class="n">Aperçus</th><th class="n">Entiers</th><th>Offre</th></tr></thead><tbody>
+    return `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Compte</th><th>Téléphone</th><th>Source</th><th>Appareil</th><th>Pays</th><th class="n">Aperçus</th><th class="n">Entiers</th><th>Offre</th></tr></thead><tbody>
       ${rows.length?rows.map(r=>`<tr><td class="muted">${date(r.created_at)}</td><td><div class="email" title="${esc(r.email)}">${esc(r.pseudo||r.email)}</div>${r.pseudo?`<div class="email muted">${esc(r.email)}</div>`:''}</td>
+        <td>${r.phone?`<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a><div><a class="muted" href="https://wa.me/${esc(r.phone.replace(/\D/g,''))}" target="_blank" rel="noopener">WhatsApp</a> · <a class="muted" href="sms:${esc(r.phone)}">SMS</a></div>`:'<span class="muted">—</span>'}</td>
         <td>${label('source',r.source)}${r.content?`<div class="muted">${esc(r.content)}</div>`:''}</td><td>${esc(r.device||'—')}</td><td>${r.country?country(r.country):'—'}</td>
         <td class="n">${num(r.previews)}</td><td class="n">${num(r.full)}</td><td><span class="pill ${esc(r.plan)}">${esc({free:'Gratuit',starter:'Starter',pro:'Pro',lifetime:'Lifetime'}[r.plan]||r.plan)}</span></td></tr>`).join('')
-        :'<tr><td colspan="8" class="muted">Aucune inscription sur cette période.</td></tr>'}
+        :'<tr><td colspan="9" class="muted">Aucune inscription sur cette période.</td></tr>'}
       </tbody></table></div>`;
   }
 
   function links(){
     const base=location.origin;
-    const bio=`${base}/tt`;
-    return `<div class="links"><div class="link-row"><label>Bio TikTok</label><code>${esc(bio)}</code><button type="button" class="btn" data-copy="${esc(bio)}">Copier</button></div></div>
-      <div class="builder"><input id="video-name" placeholder="Nom de la vidéo, ex. rehab-piano" maxlength="50"><button type="button" class="btn" id="make-link">Créer un lien pour cette vidéo</button></div>
+    const bio=`${base}/tt`,ig=`${base}/ig`;
+    return `<div class="links"><div class="link-row"><label>Bio TikTok</label><code>${esc(bio)}</code><button type="button" class="btn" data-copy="${esc(bio)}">Copier</button></div>
+      <div class="link-row"><label>Bio Instagram</label><code>${esc(ig)}</code><button type="button" class="btn" data-copy="${esc(ig)}">Copier</button></div></div>
+      <div class="builder"><select id="video-network" class="btn"><option value="tiktok">TikTok</option><option value="instagram">Instagram</option></select><input id="video-name" placeholder="Nom de la vidéo, ex. rehab-piano" maxlength="50"><button type="button" class="btn" id="make-link">Créer un lien pour cette vidéo</button></div>
       <div class="links" id="made-link" style="margin-top:8px"></div>
-      <p class="note">Chaque lien apparaît ensuite dans l’onglet « Vidéo / lien ». Le lien court /tt et l’adresse simple tablurio.com sont tous les deux reconnus comme TikTok quand on clique depuis l’appli.</p>`;
+      <p class="note">Chaque lien apparaît ensuite dans l’onglet « Vidéo / lien ». Depuis l’appli TikTok, même l’adresse simple tablurio.com est reconnue. Pour Instagram, mets plutôt /ig : son navigateur ressemble parfois à celui de Facebook.</p>`;
   }
 
   function render(){
@@ -220,7 +222,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     if(event.target.closest('#make-link')){
       const name=$('video-name').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,50);
       if(!name)return;
-      const url=`${location.origin}/?utm_source=tiktok&utm_medium=video&utm_content=${name}`;
+      const url=`${location.origin}/?utm_source=${$('video-network').value}&utm_medium=video&utm_content=${name}`;
       $('made-link').innerHTML=`<div class="link-row"><label>${esc(name)}</label><code>${esc(url)}</code><button type="button" class="btn" data-copy="${esc(url)}">Copier</button></div>`;
     }
   });

@@ -73,3 +73,11 @@ test('the funnel follows a TikTok visitor from the landing page to a paid plan',
   assert.strictEqual(result.recent[0].country,'US');
   assert.strictEqual(result.series.reduce((n,d)=>n+d.signups,0),1);
 });
+
+test('an untagged visit from the TikTok app is counted as the bio link',async()=>{
+  const db=fakeDb();
+  await collect(db,req(IPHONE),{visitor:'visitor-plain-link-01',step:'view',path:'/'},null,NOW);
+  const v=db.data.analytics_visitors[0];
+  assert.strictEqual(v.source,'tiktok');
+  assert.strictEqual(v.medium,'bio');
+});

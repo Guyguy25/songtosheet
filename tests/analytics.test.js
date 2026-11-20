@@ -90,3 +90,17 @@ test('Instagram and Meta are told apart, Meta link checkers are robots',()=>{
   assert.strictEqual(sourceOf({utm_source:'instagram'},'Mozilla/5.0 [FBAN/FBIOS]'),'instagram');
   assert.ok(require('../lib/analytics.js').BOT.test('meta-externalagent/1.1'));
 });
+
+test('the dashboard lists what was generated, by instrument',async()=>{
+  const db=fakeDb();
+  const user={_id:new ObjectId(),email:'g@b.fr',created_at:new Date('2026-11-20T09:00:00Z')};
+  db.data.users=[user];
+  db.data.track_jobs=[
+    {user_id:user._id,created_at:new Date('2026-11-20T10:00:00Z'),finished_at:new Date('2026-11-20T10:01:05Z'),preview_limit:30,status:'completed',instrument:'guitare',title:'Rehab',youtube_id:'abcdefghijk',guitar_goal:'solo'},
+    {user_id:user._id,created_at:new Date('2026-11-20T10:05:00Z'),variant:'yourmt3',status:'failed',instrument:'piano',title:'Back To Black'}];
+  const result=await stats(db,{days:7},NOW);
+  assert.strictEqual(result.generations[0].title,'Back To Black');
+  assert.strictEqual(result.generations[1].seconds,65);
+  assert.strictEqual(result.generations[1].account,'g@b.fr');
+  assert.deepStrictEqual(result.instruments.map(i=>[i.key,i.previews,i.full,i.failed]).sort(),[['guitare',1,0,0],['piano',0,1,1]]);
+});

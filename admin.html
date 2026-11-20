@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Tableau de bord KPI · Tablurio</title>
+<link rel="icon" href="/assets/favicon.svg">
+<style>
+:root{--ink:#1e1533;--muted:#6f6585;--line:#ebe5f5;--bg:#f6f4fb;--card:#fff;--purple:#6d3ddc;--purple-soft:#efe8ff;--green:#14966a;--green-soft:#e2f6ee;--amber:#b86e00;--amber-soft:#fff2dc;
+  --s1:#6d3ddc;--s2:#e0791f;--s3:#1a9e74;--s4:#2f6fd6;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg)}
+*{box-sizing:border-box}body{margin:0}a{color:var(--purple)}
+main{max-width:1240px;margin:0 auto;padding:28px 22px 70px}
+.top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap}
+.kicker{font-size:11px;font-weight:850;letter-spacing:.14em;color:var(--purple);text-transform:uppercase}
+h1{margin:6px 0 4px;font-size:clamp(28px,4vw,40px);letter-spacing:-.045em}
+.sub{margin:0;color:var(--muted);font-size:14px}
+.controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.chips{display:flex;padding:4px;background:#fff;border:1px solid var(--line);border-radius:12px}
+.chips button{border:0;background:none;padding:8px 12px;border-radius:9px;font:inherit;font-size:13px;font-weight:750;color:var(--muted);cursor:pointer}
+.chips button[aria-pressed=true]{background:var(--purple);color:#fff}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 13px;border:1px solid var(--line);border-radius:11px;background:#fff;color:var(--ink);font:inherit;font-size:13px;font-weight:750;text-decoration:none;cursor:pointer}
+.btn:hover{border-color:var(--purple)}
+.state{margin-top:24px;padding:28px;border:1px solid var(--line);border-radius:18px;background:#fff;color:var(--muted)}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:22px}
+.kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;min-width:0}
+.kpi span{display:block;font-size:12px;font-weight:750;color:var(--muted)}
+.kpi b{display:block;margin:6px 0 4px;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.kpi small{display:block;font-size:12px;color:var(--muted);line-height:1.4}
+.kpi.accent{background:linear-gradient(140deg,#2a1f45,#4a2f8c);border-color:transparent;color:#fff}
+.kpi.accent span,.kpi.accent small{color:#cfc3ef}
+.grid{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,1fr);gap:14px;margin-top:14px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px 18px 16px;min-width:0}
+.panel h2{margin:0 0 3px;font-size:17px;letter-spacing:-.02em}
+.panel>p{margin:0 0 14px;color:var(--muted);font-size:13px}
+.funnel{display:grid;gap:9px}
+.step{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:4px 12px;align-items:center}
+.step .label{font-size:13.5px;font-weight:700;min-width:0}
+.step .num{font-size:13.5px;font-weight:800;font-variant-numeric:tabular-nums;text-align:right}
+.step .track{grid-column:1/-1;height:10px;border-radius:6px;background:#f1edf8;overflow:hidden}
+.step .fill{height:100%;border-radius:6px;background:var(--purple)}
+.step .rate{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.drop{color:#b4361f;font-weight:750}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--muted);margin-bottom:8px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px;vertical-align:-1px}
+svg text{font-family:inherit}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:12px}
+.tabs button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:750;color:var(--muted);cursor:pointer}
+.tabs button[aria-selected=true]{background:var(--purple-soft);border-color:#d6c7fb;color:var(--purple)}
+.table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:9px 8px;border-bottom:1px solid #f3eff9;vertical-align:middle}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar{display:block;height:5px;margin-top:5px;border-radius:3px;background:#f1edf8;max-width:160px}
+.bar span{display:block;height:100%;border-radius:3px;background:var(--purple)}
+.pill{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11.5px;font-weight:800;white-space:nowrap}
+.pill.free{background:#f1edf8;color:var(--muted)}.pill.starter{background:var(--amber-soft);color:var(--amber)}.pill.pro,.pill.lifetime{background:var(--green-soft);color:var(--green)}
+.email{max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.muted{color:var(--muted)}
+.links{display:grid;gap:8px}
+.link-row{display:flex;gap:8px;align-items:center;padding:9px 10px;border:1px solid var(--line);border-radius:12px;background:#faf8fe;min-width:0}
+.link-row code{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:12.5px}
+.link-row label{font-size:12px;font-weight:800;color:var(--muted);white-space:nowrap}
+.builder{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.builder input{flex:1;min-width:160px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px}
+.full{grid-column:1/-1}
+.note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+@media(max-width:980px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}
+@media(max-width:520px){.kpis{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <div class="top">
+    <div>
+      <span class="kicker">Admin · Tablurio</span>
+      <h1>Tableau de bord KPI</h1>
+      <p class="sub" id="sub">Chargement…</p>
+    </div>
+    <div class="controls">
+      <div class="chips" role="group" aria-label="Période">
+        <button type="button" data-days="1">24 h</button><button type="button" data-days="7">7 j</button><button type="button" data-days="30" aria-pressed="true">30 j</button><button type="button" data-days="90">90 j</button><button type="button" data-days="365">1 an</button>
+      </div>
+      <button type="button" class="btn" id="refresh">↻ Actualiser</button>
+      <a class="btn" href="/app">← Mon espace</a>
+    </div>
+  </div>
+  <div id="content"></div>
+</main>
+<script>
+(function(){
+  'use strict';
+  const $=id=>document.getElementById(id);
+  const esc=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const nf=new Intl.NumberFormat('fr-FR');
+  const num=value=>nf.format(value||0);
+  const pct=value=>`${String(value||0).replace('.',',')} %`;
+  let regions=null;try{regions=new Intl.DisplayNames(['fr'],{type:'region'});}catch{}
+  const flag=code=>/^[A-Z]{2}$/.test(code)?String.fromCodePoint(...[...code].map(c=>0x1F1E6+c.charCodeAt(0)-65)):'🌐';
+  const country=code=>code&&code!=='??'?`${flag(code)} ${esc(regions?.of(code)||code)}`:'Inconnu';
+  const SOURCES={direct:'Direct (lien tapé, favori, appli sans info)',tiktok:'TikTok',instagram:'Instagram',youtube:'YouTube',google:'Google',facebook:'Facebook',x:'X / Twitter',bing:'Bing',reddit:'Reddit',whop:'Whop',chatgpt:'ChatGPT'};
+  const label=(field,key)=>{
+    if(field==='country')return country(key);
+    if(field==='source')return esc(SOURCES[key]||key);
+    if(field==='content')return key==='—'||!key?'<span class="muted">Sans vidéo précisée</span>':esc(key);
+    return esc(key);
+  };
+  const date=value=>new Date(value).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+  let days=30,data=null,tab='source';
+
+  async function load(){
+    $('sub').textContent='Chargement…';
+    try{
+      const response=await fetch(`/api/admin/stats?days=${days}`,{credentials:'same-origin'});
+      if(response.status===403||response.status===401){
+        $('content').innerHTML='<div class="state">Ce tableau de bord est réservé au compte admin. <a href="/connexion">Connecte-toi</a> avec ton compte administrateur.</div>';
+        $('sub').textContent='Accès refusé';return;
+      }
+      if(!response.ok)throw new Error();
+      data=await response.json();
+      render();
+    }catch{
+      $('content').innerHTML='<div class="state">Les statistiques n’ont pas pu être chargées. Réessaie dans un instant.</div>';
+      $('sub').textContent='Erreur de chargement';
+    }
+  }
+
+  function kpi(title,value,detail,accent){
+    return `<div class="kpi${accent?' accent':''}"><span>${title}</span><b>${value}</b><small>${detail}</small></div>`;
+  }
+
+  function chart(series){
+    const keys=[['visitors','Visiteurs','var(--s1)'],['signups','Inscriptions','var(--s2)'],['previews','Aperçus','var(--s3)'],['full','Morceaux entiers','var(--s4)']];
+    const W=620,H=210,L=34,B=24,T=10;
+    const max=Math.max(1,...series.flatMap(row=>keys.map(([k])=>row[k])));
+    const nice=Math.max(1,Math.ceil(max/4))*4;
+    const x=i=>L+(series.length===1?(W-L)/2:i*(W-L-10)/(series.length-1));
+    const y=v=>T+(H-T-B)*(1-v/nice);
+    const grid=[0,.25,.5,.75,1].map(f=>{const v=Math.round(nice*f);return `<line x1="${L}" x2="${W}" y1="${y(v)}" y2="${y(v)}" stroke="#eee9f6"/><text x="${L-6}" y="${y(v)+4}" font-size="10" fill="#8b81a0" text-anchor="end">${v}</text>`;}).join('');
+    const every=Math.max(1,Math.ceil(series.length/8));
+    const ticks=series.map((row,i)=>i%every===0||i===series.length-1?`<text x="${x(i)}" y="${H-6}" font-size="10" fill="#8b81a0" text-anchor="middle">${row.day.slice(8,10)}/${row.day.slice(5,7)}</text>`:'').join('');
+    const lines=keys.map(([k,,color])=>{
+      const pts=series.map((row,i)=>`${x(i).toFixed(1)},${y(row[k]).toFixed(1)}`).join(' ');
+      const dots=series.length<=31?series.map((row,i)=>row[k]?`<circle cx="${x(i)}" cy="${y(row[k])}" r="2.6" fill="${color}"><title>${row.day} · ${row[k]}</title></circle>`:'').join(''):'';
+      return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>${dots}`;
+    }).join('');
+    return `<div class="legend">${keys.map(([,name,color])=>`<span><i style="background:${color}"></i>${name}</span>`).join('')}</div>
+      <svg viewBox="0 0 ${W} ${H}" width="100%" role="img" aria-label="Évolution jour par jour">${grid}${ticks}${lines}</svg>`;
+  }
+
+  function funnel(steps){
+    const top=Math.max(1,steps[0].value);
+    return `<div class="funnel">${steps.map((step,index)=>`
+      <div class="step"><span class="label">${esc(step.label)}</span><span class="num">${num(step.value)}</span>
+        <div class="track"><div class="fill" style="width:${Math.max(step.value?2:0,step.value/top*100)}%;opacity:${1-index*.11}"></div></div>
+        <span class="rate">${index?`${pct(step.rate_from_previous)} de l’étape précédente · ${pct(step.rate_from_visit)} des visiteurs`:'Point de départ'}${index&&steps[index-1].value>step.value?` · <span class="drop">−${num(steps[index-1].value-step.value)}</span>`:''}</span></div>`).join('')}</div>`;
+  }
+
+  const TABS=[['source','Source'],['content','Vidéo / lien'],['device','Appareil'],['country','Pays'],['os','Système'],['browser','Navigateur'],['landing','Page d’arrivée']];
+  function breakdown(){
+    const rows=data.breakdowns[tab]||[];
+    const top=Math.max(1,...rows.map(r=>r.visitors));
+    return `<div class="tabs" role="tablist">${TABS.map(([key,name])=>`<button type="button" role="tab" data-tab="${key}" aria-selected="${key===tab}">${name}</button>`).join('')}</div>
+      <div class="table-wrap"><table><thead><tr><th>${esc(TABS.find(([k])=>k===tab)[1])}</th><th class="n">Visiteurs</th><th class="n">Aperçus</th><th class="n">Inscrits</th><th class="n">Taux d’inscription</th><th class="n">Payants</th></tr></thead><tbody>
+      ${rows.length?rows.map(r=>`<tr><td>${label(tab,r.key)}<span class="bar"><span style="width:${r.visitors/top*100}%"></span></span></td><td class="n">${num(r.visitors)}</td><td class="n">${num(r.preview)}</td><td class="n">${num(r.signup)}</td><td class="n">${pct(r.signup_rate)}</td><td class="n">${num(r.paid)}</td></tr>`).join('')
+        :'<tr><td colspan="6" class="muted">Pas encore de visiteur sur cette période.</td></tr>'}
+      </tbody></table></div>`;
+  }
+
+  function recent(rows){
+    return `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Compte</th><th>Source</th><th>Appareil</th><th>Pays</th><th class="n">Aperçus</th><th class="n">Entiers</th><th>Offre</th></tr></thead><tbody>
+      ${rows.length?rows.map(r=>`<tr><td class="muted">${date(r.created_at)}</td><td><div class="email" title="${esc(r.email)}">${esc(r.pseudo||r.email)}</div>${r.pseudo?`<div class="email muted">${esc(r.email)}</div>`:''}</td>
+        <td>${label('source',r.source)}${r.content?`<div class="muted">${esc(r.content)}</div>`:''}</td><td>${esc(r.device||'—')}</td><td>${r.country?country(r.country):'—'}</td>
+        <td class="n">${num(r.previews)}</td><td class="n">${num(r.full)}</td><td><span class="pill ${esc(r.plan)}">${esc({free:'Gratuit',starter:'Starter',pro:'Pro',lifetime:'Lifetime'}[r.plan]||r.plan)}</span></td></tr>`).join('')
+        :'<tr><td colspan="8" class="muted">Aucune inscription sur cette période.</td></tr>'}
+      </tbody></table></div>`;
+  }
+
+  function links(){
+    const base=location.origin;
+    const bio=`${base}/?utm_source=tiktok&utm_medium=bio`;
+    return `<div class="links"><div class="link-row"><label>Bio TikTok</label><code>${esc(bio)}</code><button type="button" class="btn" data-copy="${esc(bio)}">Copier</button></div></div>
+      <div class="builder"><input id="video-name" placeholder="Nom de la vidéo, ex. rehab-piano" maxlength="50"><button type="button" class="btn" id="make-link">Créer un lien pour cette vidéo</button></div>
+      <div class="links" id="made-link" style="margin-top:8px"></div>
+      <p class="note">Chaque lien apparaît ensuite dans l’onglet « Vidéo / lien ». Les visites depuis le navigateur de TikTok sont aussi reconnues sans lien marqué.</p>`;
+  }
+
+  function render(){
+    const k=data.kpis;
+    $('sub').textContent=`${days===1?'Dernières 24 h':`${days} derniers jours`} · mis à jour à ${new Date(data.generated_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} · ton compte admin est exclu`;
+    $('content').innerHTML=`
+      <div class="kpis">
+        ${kpi('Visiteurs réels',num(k.visitors),`${num(k.bots)} robots filtrés (aucune interaction)`)}
+        ${kpi('Inscriptions',num(k.signups),`${pct(k.visit_to_signup)} des visiteurs · ${num(k.total_users)} comptes au total`)}
+        ${kpi('Aperçus lancés',num(k.previews),`${num(k.guest_previews)} sans compte · ${num(k.failed_previews)} en échec`)}
+        ${kpi('Morceaux entiers',num(k.full_songs),`${num(k.cached)} servis depuis le cache`)}
+        ${kpi('Utilisateurs actifs',num(k.active_users),'Comptes ayant généré sur la période')}
+        ${kpi('Activation',pct(k.activation),'Des nouveaux inscrits ont lancé une génération')}
+        ${kpi('Abonnés payants',num(k.paying),`${num(k.starter)} Starter · ${num(k.pro)} Pro · ${num(k.lifetime)} Lifetime · ${num(k.new_paying)} nouveaux`)}
+        ${kpi('Revenu mensuel estimé',`${num(k.mrr)} €`,`Prix mensuels pleins · inscrit → payant : ${pct(k.signup_to_paid)}`,true)}
+      </div>
+      <div class="grid">
+        <section class="panel"><h2>Entonnoir de conversion</h2><p>Des visiteurs arrivés sur la période, combien sont allés jusqu’à chaque étape.</p>${funnel(data.funnel)}</section>
+        <section class="panel"><h2>Jour par jour</h2><p>Visiteurs réels, inscriptions et générations.</p>${chart(data.series)}</section>
+        <section class="panel full" id="breakdown"><h2>D’où viennent les visiteurs, et ce qu’ils font</h2><p>Visiteurs réels arrivés sur la période, par groupe.</p>${breakdown()}</section>
+        <section class="panel full"><h2>Dernières inscriptions</h2><p>Avec la source de leur toute première visite.</p>${recent(data.recent)}</section>
+        <section class="panel full"><h2>Liens à suivre</h2><p>Mets ces liens dans ta bio ou sous tes vidéos pour savoir lesquelles ramènent du monde.</p>${links()}</section>
+      </div>`;
+  }
+
+  document.addEventListener('click',async event=>{
+    const chip=event.target.closest('[data-days]');
+    if(chip){days=Number(chip.dataset.days);document.querySelectorAll('[data-days]').forEach(b=>b.setAttribute('aria-pressed',String(b===chip)));load();return;}
+    const tabButton=event.target.closest('[data-tab]');
+    if(tabButton&&data){tab=tabButton.dataset.tab;$('breakdown').innerHTML=`<h2>D’où viennent les visiteurs, et ce qu’ils font</h2><p>Visiteurs réels arrivés sur la période, par groupe.</p>${breakdown()}`;return;}
+    if(event.target.closest('#refresh')){load();return;}
+    const copy=event.target.closest('[data-copy]');
+    if(copy){try{await navigator.clipboard.writeText(copy.dataset.copy);copy.textContent='Copié ✓';setTimeout(()=>copy.textContent='Copier',1600);}catch{}return;}
+    if(event.target.closest('#make-link')){
+      const name=$('video-name').value.trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,50);
+      if(!name)return;
+      const url=`${location.origin}/?utm_source=tiktok&utm_medium=video&utm_content=${name}`;
+      $('made-link').innerHTML=`<div class="link-row"><label>${esc(name)}</label><code>${esc(url)}</code><button type="button" class="btn" data-copy="${esc(url)}">Copier</button></div>`;
+    }
+  });
+  load();
+})();
+</script>
+</body>
+</html>

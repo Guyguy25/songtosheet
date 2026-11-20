@@ -178,6 +178,31 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       </tbody></table></div>`;
   }
 
+  const INSTRUMENTS={piano:'🎹 Piano',guitare:'🎸 Guitare',basse:'🎵 Basse',voix:'🎤 Voix',violon:'🎻 Violon'};
+  const VARIANTS={yourmt3:'Version complète',arrangement:'Arrangement deux mains',solo:'Mélodie',playable:'Version jouable','original-v1':'Original','solo-v2':'Solo','held-v1':'Accords'};
+  const GOALS={original:'jouer l’original',solo:'solo',chords:'accords'};
+  const CONTENT={mixed:'avec voix',instrumental:'instrumental',voice:'voix seule',instrument:'instrument seul'};
+  function instruments(rows){
+    const top=Math.max(1,...rows.map(r=>r.previews+r.full));
+    return `<div class="table-wrap"><table><thead><tr><th>Instrument</th><th class="n">Aperçus</th><th class="n">Morceaux entiers</th><th class="n">Personnes</th><th class="n">Échecs</th></tr></thead><tbody>
+      ${rows.length?rows.map(r=>`<tr><td>${esc(INSTRUMENTS[r.key]||r.key)}<span class="bar"><span style="width:${(r.previews+r.full)/top*100}%"></span></span></td><td class="n">${num(r.previews)}</td><td class="n">${num(r.full)}</td><td class="n">${num(r.people)}</td><td class="n">${num(r.failed)}</td></tr>`).join('')
+        :'<tr><td colspan="5" class="muted">Aucune génération sur cette période.</td></tr>'}</tbody></table></div>`;
+  }
+  function generations(rows){
+    if(!rows.length)return '';
+    const status=r=>r.status==='completed'?(r.cached?'<span class="pill pro">Prête · cache</span>':'<span class="pill pro">Prête</span>')
+      :r.status==='failed'?'<span class="pill starter">Échec</span>':'<span class="pill free">En cours</span>';
+    return `<div class="table-wrap" style="margin-top:14px"><table><thead><tr><th>Date</th><th>Morceau</th><th>Instrument</th><th>Type</th><th>Compte</th><th>Durée</th><th>État</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr><td class="muted">${date(r.created_at)}</td>
+        <td><div class="email" title="${esc(r.title)}" style="max-width:300px">${r.youtube_id?`<a href="https://www.youtube.com/watch?v=${esc(r.youtube_id)}" target="_blank" rel="noopener">${esc(r.title)}</a>`:esc(r.title)}</div>
+          <div class="muted">${[CONTENT[r.content],GOALS[r.goal]].filter(Boolean).map(esc).join(' · ')||'&nbsp;'}</div></td>
+        <td>${esc(INSTRUMENTS[r.instrument]||r.instrument||'—')}</td>
+        <td>${r.kind==='full'?`Morceau entier${r.variant&&r.variant!=='default'?`<div class="muted">${esc(VARIANTS[r.variant]||r.variant)}</div>`:''}`:'Aperçu 30 s'}</td>
+        <td><div class="email">${esc(r.account)}</div>${r.source?`<div class="muted">${label('source',r.source)}</div>`:''}</td>
+        <td class="n">${r.seconds!=null?`${Math.floor(r.seconds/60)} min ${String(r.seconds%60).padStart(2,'0')}`:'—'}</td>
+        <td>${status(r)}</td></tr>`).join('')}</tbody></table></div>`;
+  }
+
   function links(){
     const base=location.origin;
     const bio=`${base}/tt`,ig=`${base}/ig`;
@@ -206,6 +231,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
         <section class="panel"><h2>Entonnoir de conversion</h2><p>Des visiteurs arrivés sur la période, combien sont allés jusqu’à chaque étape.</p>${funnel(data.funnel)}</section>
         <section class="panel"><h2>Jour par jour</h2><p>Visiteurs réels, inscriptions et générations.</p>${chart(data.series)}</section>
         <section class="panel full" id="breakdown"><h2>D’où viennent les visiteurs, et ce qu’ils font</h2><p>Visiteurs réels arrivés sur la période, par groupe.</p>${breakdown()}</section>
+        <section class="panel full"><h2>Ce que les gens génèrent</h2><p>Par instrument, puis les dernières générations une par une.</p>${instruments(data.instruments||[])}${generations(data.generations||[])}</section>
         <section class="panel full"><h2>Dernières inscriptions</h2><p>Avec la source de leur toute première visite.</p>${recent(data.recent)}</section>
         <section class="panel full"><h2>Liens à suivre</h2><p>Mets ces liens dans ta bio ou sous tes vidéos pour savoir lesquelles ramènent du monde.</p>${links()}</section>
       </div>`;

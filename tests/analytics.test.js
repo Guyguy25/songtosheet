@@ -81,3 +81,12 @@ test('an untagged visit from the TikTok app is counted as the bio link',async()=
   assert.strictEqual(v.source,'tiktok');
   assert.strictEqual(v.medium,'bio');
 });
+
+test('Instagram and Meta are told apart, Meta link checkers are robots',()=>{
+  assert.strictEqual(sourceOf({},'Mozilla/5.0 (iPhone) Instagram 309.0.0'),'instagram');
+  assert.strictEqual(sourceOf({referrer:'https://l.instagram.com/'}),'instagram');
+  assert.strictEqual(sourceOf({},'Mozilla/5.0 (iPhone) [FBAN/FBIOS;FBAV/440.0]'),'meta');
+  assert.strictEqual(sourceOf({referrer:'https://m.facebook.com/'}),'meta');
+  assert.strictEqual(sourceOf({utm_source:'instagram'},'Mozilla/5.0 [FBAN/FBIOS]'),'instagram');
+  assert.ok(require('../lib/analytics.js').BOT.test('meta-externalagent/1.1'));
+});

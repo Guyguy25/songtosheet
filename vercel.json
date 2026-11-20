@@ -8,6 +8,18 @@
   },
   "rewrites": [
     {
+      "source": "/api/collect",
+      "destination": "/api/health?route=collect"
+    },
+    {
+      "source": "/api/admin/stats",
+      "destination": "/api/health?route=stats"
+    },
+    {
+      "source": "/admin",
+      "destination": "/admin.html"
+    },
+    {
       "source": "/app",
       "destination": "/index.html"
     },

@@ -133,3 +133,5 @@ button.user-avatar:hover,button.user-avatar[aria-expanded="true"]{box-shadow:0 0
 .welcome-gets li{position:relative;padding-left:24px;color:#2a1d48;font-size:14px;line-height:1.45}
 .welcome-gets li::before{content:"✓";position:absolute;left:0;color:#1f9a62;font-weight:900}
 .welcome-dialog .quota-dialog-actions .btn{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.user-menu-admin{text-decoration:none}
+.user-menu-panel .user-menu-admin[hidden]{display:none}

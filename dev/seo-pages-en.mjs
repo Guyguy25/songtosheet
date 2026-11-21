@@ -32,7 +32,7 @@ export const PAGES_EN = [
       ['Is it free?', 'Your free account includes 3 previews of 30 seconds to judge the result on your own songs. Full songs and exports come with the Starter, Pro and Lifetime plans.'],
       ['What is the maximum video length?', '10 minutes of audio per generation. For longer songs, pick the excerpt you want to practise.'],
       ['Is the sheet music 100% accurate?', 'No, it’s an automatic transcription. It gets the vast majority of notes right, but a very busy passage may need a touch-up. Always check the result before playing.'],
-      ['Is Tablurio available in English?', 'These pages are in English, but the Tablurio app itself is in French for now. The steps are simple: paste a link, pick an instrument, get your notes.'],
+      ['Is Tablurio available in English?', 'Yes. Pick EN in the top-right corner: your choice is remembered, and the generation, sign-up and your studio stay in English.'],
     ],
   },
   {

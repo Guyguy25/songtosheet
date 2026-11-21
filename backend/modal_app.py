@@ -103,10 +103,10 @@ with light.imports():
 # Cost per second ≈ L4 0.000222 $ + 8 cores × 0.0000131 $ + 16 GiB × 0.00000222 $ ≈ 0.00036 $.
 @app.function(image=engine, gpu=["L4", "A10"], cpu=8.0, memory=16384, timeout=600, scaledown_window=5,
               max_containers=2, secrets=[secret, proxy_secret])
-def process_queue():
+def process_queue(idle_wait: int = 0):
     from engine_cloud import run_drain
 
-    taken = run_drain()
+    taken = run_drain(idle_wait=idle_wait)
     print(f"File traitée : {taken} demande(s).", flush=True)
     return taken
 
@@ -122,9 +122,11 @@ def wake(request: Request):
     if not wake_allowed(request.headers.get("authorization"), os.environ.get("ENGINE_WAKE_SECRET", "")):
         print("wake: secret refusé", flush=True)
         raise HTTPException(status_code=403, detail="Accès refusé.")
-    process_queue.spawn()
-    print("wake: moteur lancé", flush=True)
-    return {"started": True}
+    # ?warm=1: woken when a link is pasted; waits up to 90 s for the job to arrive.
+    warm = request.query_params.get("warm") == "1"
+    process_queue.spawn(idle_wait=90 if warm else 0)
+    print("wake: moteur préchauffé" if warm else "wake: moteur lancé", flush=True)
+    return {"started": True, "warm": warm}
 
 
 # Safety net for a lost wake call: rare now, so a 5-minute check is enough, and the

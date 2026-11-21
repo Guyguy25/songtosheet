@@ -163,3 +163,27 @@ test('a whole song launched before the 24 h window existed still counts for its 
   assert.deepStrictEqual(await store.reserveFullSong(db,account,{jobId:new ObjectId(),variant:'held-v1'},NOW),{ok:false,reason:'daily_limit',tier:'starter',resets_at:until});
   assert.strictEqual((await store.reserveFullSong(db,account,{jobId:new ObjectId(),variant:'held-v1'},until)).ok,true);
 });
+
+test('payment failed: access is kept while Whop retries (past_due), removed once the membership ends',async()=>{
+  const db=fakeDb();const account=user(db);const id=String(account._id);
+  await store.applyEntitlement(db,grant({user_id:id,tier:'pro',membership_id:'mem_p'}),NOW);
+  await store.applyEntitlement(db,grant({user_id:id,tier:'pro',membership_id:'mem_p',status:'past_due',active:true}),NOW);
+  assert.strictEqual((await store.summary(db,account,NOW)).tier,'pro');
+  await store.applyEntitlement(db,grant({user_id:id,tier:'pro',membership_id:'mem_p',status:'expired',active:false}),NOW);
+  assert.strictEqual((await store.summary(db,account,NOW)).tier,'free');
+});
+
+test('refund: the plan stops at once, even before the end of the paid period',async()=>{
+  const db=fakeDb();const account=user(db);const id=String(account._id);
+  await store.applyEntitlement(db,grant({user_id:id}),NOW);
+  await store.applyEntitlement(db,grant({user_id:id,status:'canceled',active:false}),NOW);
+  assert.strictEqual((await store.summary(db,account,NOW)).tier,'free');
+});
+
+test('lifetime refunded: back to free; lifetime kept never expires otherwise',async()=>{
+  const db=fakeDb();const account=user(db);const id=String(account._id);
+  await store.applyEntitlement(db,grant({user_id:id,tier:'lifetime',membership_id:'mem_l',period_end:null,status:'completed'}),NOW);
+  assert.strictEqual((await store.summary(db,account,new Date('2030-01-01T00:00:00Z'))).tier,'lifetime');
+  await store.applyEntitlement(db,grant({user_id:id,tier:'lifetime',membership_id:'mem_l',period_end:null,status:'canceled',active:false}),NOW);
+  assert.strictEqual((await store.summary(db,account,NOW)).tier,'free');
+});

@@ -8,6 +8,18 @@
   },
   "rewrites": [
     {
+      "source": "/api/auth/verify",
+      "destination": "/api/auth/signup?route=verify"
+    },
+    {
+      "source": "/api/auth/forgot",
+      "destination": "/api/auth/login?route=forgot"
+    },
+    {
+      "source": "/api/auth/reset",
+      "destination": "/api/auth/login?route=reset"
+    },
+    {
       "source": "/api/collect",
       "destination": "/api/health?route=collect"
     },

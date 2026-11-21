@@ -7,6 +7,7 @@ const {ensureIndexes}=require('../lib/generations');
 const {authenticated,json}=require('../lib/session');
 const {method}=require('../lib/authorization');
 const {collect,stats}=require('../lib/analytics');
+const {allow,clientIp}=require('../lib/rate-limit');
 
 async function collectRoute(req,res){
   if(!method(req,res,'POST'))return;
@@ -14,6 +15,8 @@ async function collectRoute(req,res){
   if(typeof body==='string'){try{body=JSON.parse(body);}catch{body=null;}}
   try{
     const db=await database();
+    // A script flooding the statistics is cut off; a real visitor sends a few reports a minute.
+    if(!await allow(db,`collect:${clientIp(req)}`,120,60000)){res.statusCode=204;return res.end();}
     const user=body?.step==='identify'?await authenticated(req):null;
     const result=await collect(db,req,body||{},user);
     res.statusCode=result.status;

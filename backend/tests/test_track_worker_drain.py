@@ -173,3 +173,20 @@ def test_guitar_job_leaves_transkun_off(monkeypatch):
     drain(lambda action, **kw: {"job": {"id": "g", "instrument": "guitare", "lease": "l"}}, Engines(solo_piano=Transkun()),
           Path("/tmp"), max_jobs=1)
     assert started == []
+
+
+def test_drain_waits_for_a_first_job_when_woken_early(monkeypatch):
+    seen = []
+    monkeypatch.setattr(track_worker, "process_job", lambda call, job, *args: seen.append(job["id"]))
+    answers = [None, None, {"id": "late", "lease": "l"}, None]
+    call = lambda action, **fields: {"job": answers.pop(0) if answers else None}
+    assert drain(call, Engines(), Path("/tmp"), idle_wait=30, poll_seconds=0) == 1
+    assert seen == ["late"]
+
+
+def test_drain_stops_at_once_on_an_empty_queue_without_idle_wait(monkeypatch):
+    monkeypatch.setattr(track_worker, "process_job", lambda *args: None)
+    calls = []
+    call = lambda action, **fields: calls.append(action) or {"job": None}
+    assert drain(call, Engines(), Path("/tmp")) == 0
+    assert len(calls) == 1

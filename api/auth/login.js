@@ -4,13 +4,20 @@ const {issue,publicUser,json}=require('../../lib/session');
 const {method,credentials,fail}=require('../../lib/authorization');
 const {matches}=require('../../lib/passwords');
 const {addGeneration}=require('../../lib/generations');
+const {forgot,reset}=require('../../lib/account-flows');
+const {allow,clientIp}=require('../../lib/rate-limit');
 const LIMIT=8,WINDOW=15*60*1000;
 module.exports=async(req,res)=>{
+  // /api/auth/forgot and /api/auth/reset, see vercel.json.
+  if(req.query?.route==='forgot')return forgot(req,res);
+  if(req.query?.route==='reset')return reset(req,res);
   if(!method(req,res,'POST'))return;
   let fields;try{fields=credentials(req.body);}catch(e){return json(res,400,{detail:e.message});}
   try{
     const db=await database(),coll=db.collection('login_limits');
     const key=fields.email;const now=new Date();
+    // Per connection too: many addresses tried from one place.
+    if(!await allow(db,`login-ip:${clientIp(req)}`,40,WINDOW))return json(res,429,{detail:'Trop de tentatives. Réessaie dans 15 minutes.'});
     const state=await coll.findOne({_id:key});
     if(state&&state.expires_at>now&&state.count>=LIMIT)return json(res,429,{detail:'Trop de tentatives. Réessaie dans 15 minutes.'});
     const user=await db.collection('users').findOne({email:key});

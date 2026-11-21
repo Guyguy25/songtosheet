@@ -4,13 +4,22 @@ const {fail}=require('../../lib/authorization');
 const {database}=require('../../lib/mongodb');
 const {cleanProfile}=require('../../lib/profile');
 const {starterUntil}=require('../../lib/billing-store');
+const {exportData,deleteAccount}=require('../../lib/account-flows');
 module.exports=async(req,res)=>{
-  if(!['GET','PATCH'].includes(req.method)){
-    res.setHeader('Allow','GET, PATCH');
+  if(!['GET','PATCH','DELETE'].includes(req.method)){
+    res.setHeader('Allow','GET, PATCH, DELETE');
     return json(res,405,{detail:'Méthode non autorisée.'});
   }
   try{
     const user=await authenticated(req);
+    if(req.method==='DELETE'){
+      if(!user)return json(res,401,{detail:'Connexion requise.'});
+      return deleteAccount(req,res,user);
+    }
+    if(req.method==='GET'&&req.query?.export){
+      if(!user)return json(res,401,{detail:'Connexion requise.'});
+      return exportData(req,res,user);
+    }
     if(req.method==='GET'){
       if(!user)return json(res,200,{user:null});
       // Starter: when the next whole song is available (open 24-hour window), shown on the CTAs.

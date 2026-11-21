@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" data-i18n="app">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -8,6 +8,8 @@
   <meta name="description" content="Tablurio transforme un lien YouTube, Spotify, Deezer ou un fichier audio en partition ou tablature (guitare, piano, voix). Exports PDF, MIDI, MusicXML. 3 aperçus gratuits de 30 s." />
   <title>Tablurio.com — Partitions et tablatures de vos musiques préférées</title>
   <link rel="canonical" href="https://tablurio.com/" id="canonical-link" />
+  <script src="/assets/i18n-en.js?v=1"></script>
+  <script src="/assets/i18n.js?v=1"></script>
   <script>(function(){var p=location.pathname.replace(/\/+$/,'')||'/';var pub={'/':1,'/fonctionnalites':1,'/resultats':1,'/tarifs':1,'/faq':1,'/legal':1};var l=document.getElementById('canonical-link');if(l){if(pub[p])l.href='https://tablurio.com'+p;else l.remove();}})();</script>
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Tablurio" />
@@ -676,6 +678,7 @@
 .wait-survey-skip{border:0;background:none;color:#5f4c7b;text-decoration:underline;font-size:12px;padding:7px}
 .wait-survey-note,.wait-survey-error{font-size:11px;color:#665777;margin:9px 0 0}
 .wait-survey-error:empty{display:none}
+.lang-switch{display:inline-flex;align-items:center;gap:2px;padding:3px;border-radius:100px;border:1px solid #8b7fae55;background:#ffffff10}.lang-switch button{border:0;background:none;color:#a99bd0;font:inherit;font-size:11px;font-weight:800;letter-spacing:.04em;padding:6px 9px;border-radius:100px;cursor:pointer;line-height:1}.lang-switch button:hover{color:#fff}.lang-switch button.active{background:#7549eb;color:#fff}.mobile-menu .lang-switch{justify-self:start;margin:4px 0}
 </style>
 
 
@@ -869,12 +872,12 @@
       <a href="/tarifs" data-nav="pricing">Tarifs</a>
       <a href="/faq" data-nav="faq">FAQ</a>
     </nav>
-    <div class="nav-actions"><button id="nav-login" class="nav-link-btn" type="button">Se connecter</button><button id="nav-cta" class="btn btn-primary btn-nav" type="button">Commencer ↗</button></div>
+    <div class="nav-actions"><div class="lang-switch" role="group" aria-label="Langue"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="nav-login" class="nav-link-btn" type="button">Se connecter</button><button id="nav-cta" class="btn btn-primary btn-nav" type="button">Commencer ↗</button></div>
     <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Afficher le menu" aria-controls="mobile-menu" aria-expanded="false">☰</button>
   </div>
   <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
     <a href="/#comment-ca-marche" data-nav="how">Comment ça marche ?</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a>
-    <button id="mobile-login" type="button">Se connecter</button><button id="mobile-start" type="button">Créer ma partition</button>
+    <div class="lang-switch" role="group" aria-label="Langue"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="mobile-login" type="button">Se connecter</button><button id="mobile-start" type="button">Créer ma partition</button>
   </div></header>
 <main id="landing">
 <section class="split-hero" aria-labelledby="hero-heading">
@@ -3023,7 +3026,7 @@ const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const li
 (()=>{
  const word=document.getElementById('hero-typed-word');
  if(!word||window.matchMedia('(prefers-reduced-motion: reduce)').matches)return;
- const words=['partition','tablature'];
+ const words=(window.TablurioI18n&&TablurioI18n.lang==='en')?['sheet music','tabs']:['partition','tablature'];
  let index=0,characters=words[0].length,deleting=true;
  function tick(){
   if(document.hidden){setTimeout(tick,500);return;}

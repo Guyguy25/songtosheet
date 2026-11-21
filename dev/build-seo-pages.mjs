@@ -1,6 +1,6 @@
 // Génère les pages outils SEO statiques de Tablurio dans /outils/<slug>.html.
 // Lancer : node dev/build-seo-pages.mjs  (puis committer les fichiers générés)
-import { writeFileSync, mkdirSync } from 'node:fs';
+import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PAGES_EN } from './seo-pages-en.mjs';
@@ -355,12 +355,49 @@ const UI = {
     errEmpty: 'Paste the song link, or upload an audio file.', errHttps: 'Paste a full link starting with https://', locale: 'en_US', inLang: 'en', brandAria: 'Tablurio, home' },
 };
 const VISUALS = { staff: staffSvg, tab: tabSvg, midi: midiSvg };
+
+// ---------- Pièces reprises telles quelles de la landing (index.html) ----------
+// Header, footer et styles sont extraits à chaque génération : les pages outils restent identiques à la landing.
+const INDEX = readFileSync(join(ROOT, 'index.html'), 'utf8');
+const between = (start, end) => { const a = INDEX.indexOf(start); const b = INDEX.indexOf(end, a); if (a < 0 || b < 0) throw new Error('Introuvable dans index.html : ' + start); return INDEX.slice(a, b + end.length); };
+const LANDING_HEADER = between('<header id="public-header"', '</header>').replace(' data-session-pending', '');
+const LANDING_FOOTER = between('<footer id="public-footer"', '</footer>').replace('<span id="footer-year"></span>', '2026');
+const LANDING_CSS = [...INDEX.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(m => m[1]).join('\n');
+const LANDING_LINKS = [...INDEX.matchAll(/<link rel="stylesheet" href="(\/assets\/site-ui\.css[^"]*)"/g)].map(m => m[1]);
+writeFileSync(join(ROOT, 'assets', 'landing.css'), '/* Généré par dev/build-seo-pages.mjs à partir des <style> de index.html — ne pas modifier à la main. */\n' + LANDING_CSS);
+const EN_DICT = (() => { const src = readFileSync(join(ROOT, 'assets', 'i18n-en.js'), 'utf8'); const k = 'window.TABLURIO_EN='; return JSON.parse(src.slice(src.indexOf(k) + k.length).trim().replace(/;$/, '')); })();
+const EN_LINKS = { '/youtube-en-partition': '/en/youtube-to-sheet-music', '/tablature-guitare': '/en/guitar-tab-generator', '/partition-piano': '/en/piano-sheet-music', '/mp3-en-partition': '/en/mp3-to-sheet-music', '/spotify-en-partition': '/en/spotify-to-sheet-music', '/deezer-en-partition': '/en/deezer-to-sheet-music', '/musicxml': '/en/musicxml', '/midi': '/en/midi' };
+function toEnglish(html) {
+  const t = v => { const k = v.replace(/\s+/g, ' ').trim(); return k && EN_DICT[k] ? v.replace(k, EN_DICT[k]) : v; };
+  return html
+    .replace(/>([^<>]+)</g, (m, txt) => '>' + t(txt) + '<')
+    .replace(/(aria-label|alt|placeholder|title)="([^"]*)"/g, (m, a, v) => `${a}="${esc(t(v))}"`)
+    .replace(/href="([^"]+)"/g, (m, h) => `href="${EN_LINKS[h] || h}"`);
+}
+const landingHeader = lang => (lang === 'en' ? toEnglish(LANDING_HEADER) : LANDING_HEADER);
+const landingFooter = lang => (lang === 'en' ? toEnglish(LANDING_FOOTER) : LANDING_FOOTER);
+const chromeScript = `<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  function go(u){location.href=u}
+  function tool(){var t=$('outil');if(t){t.scrollIntoView({behavior:'smooth',block:'center'});var i=t.querySelector('input');if(i)setTimeout(function(){i.focus({preventScroll:true})},350)}}
+  var map={'nav-login':function(){go('/connexion')},'mobile-login':function(){go('/connexion')},'nav-cta':tool,'mobile-start':function(){menu(false);tool()}};
+  Object.keys(map).forEach(function(id){var el=$(id);if(el)el.addEventListener('click',map[id])});
+  var btn=$('mobile-menu-btn'),mm=$('mobile-menu');
+  function menu(open){if(!mm||!btn)return;mm.classList.toggle('open',open);mm.setAttribute('aria-hidden',open?'false':'true');btn.setAttribute('aria-expanded',open?'true':'false')}
+  if(btn)btn.addEventListener('click',function(){menu(!mm.classList.contains('open'))});
+  if(mm)mm.addEventListener('click',function(e){if(e.target.tagName==='A')menu(false)});
+  var h=$('public-header');function compact(){if(h)h.classList.toggle('is-compact',window.scrollY>72)}
+  window.addEventListener('scroll',compact,{passive:true});compact();
+})();
+</script>`;
 const base = lang => (lang === 'en' ? '/en' : '');
 const listFor = lang => (lang === 'en' ? PAGES_EN : PAGES);
 const pairOf = (p, lang) => (lang === 'en' ? PAGES.find(f => f.slug === p.pair) : PAGES_EN.find(e => e.pair === p.slug));
 
 // ---------- Gabarit ----------
 const LOGO = '/assets/tablurio-wave-mark.svg';
+const CSS_V = '4';
 const header = (u) => `<header class="sp-header"><div class="wrap sp-nav">
   <a href="/" class="sp-brand" aria-label="${u.brandAria}"><img src="${LOGO}" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a>
   <nav class="sp-links" aria-label="Menu">${u.nav.map(([h, t]) => `<a href="${h}">${esc(t)}</a>`).join('')}</nav>
@@ -385,11 +422,11 @@ const visual = (v, u) => `<div class="sp-visual" aria-label="${esc(v.label)}">
 </div>`;
 
 const tool = (p, u) => `<div class="sp-tool" id="outil">
-  <form class="sp-tool-form" action="/" method="get" data-instrument="${p.instrument || ''}" novalidate>
-    <span aria-hidden="true">↗</span>
-    <label class="visually-hidden" for="sp-link" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">${u.linkLabel}</label>
-    <input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" placeholder="${esc(p.placeholder)}">
-    <button type="submit">${p.upload ? u.goUpload : u.go} →</button>
+  <form class="sp-tool-form hero-action-panel" action="/" method="get" data-instrument="${p.instrument || ''}" novalidate>
+    <div class="hero-action-row">
+      <label class="hero-input" for="sp-link"><span aria-hidden="true">↗</span><input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" aria-label="${u.linkLabel}" placeholder="${esc(p.placeholder)}"></label>
+      <button type="submit" class="split-submit">${p.upload ? u.goUpload : u.go} <span aria-hidden="true">→</span></button>
+    </div>
   </form>
   <p class="sp-tool-error" role="alert"></p>
   <div class="sp-tool-alt">${p.upload
@@ -436,8 +473,9 @@ function page(p, lang) {
   <link rel="alternate" hreflang="fr" href="${frUrl}">
   <link rel="alternate" hreflang="en" href="${enUrl}">
   <link rel="alternate" hreflang="x-default" href="${frUrl}">` : '';
+  const altAttrs = alt ? ` data-alt-fr="${lang === 'fr' ? '/' + p.slug : '/' + alt.slug}" data-alt-en="${lang === 'en' ? '/en/' + p.slug : '/en/' + alt.slug}"` : '';
   return `<!doctype html>
-<html lang="${lang}">
+<html lang="${lang}" class="has-overlay-header"${altAttrs}>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -457,24 +495,26 @@ function page(p, lang) {
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="${SITE}/assets/og-tablurio.jpg">
-  <link rel="stylesheet" href="/assets/seo-pages.css?v=1">
+${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
+  <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
+  <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
+  <script src="/assets/i18n.js?v=1"></script>
   <script type="application/ld+json">${JSON.stringify(jsonLd(p, lang))}</script>
 </head>
-<body>
-${header(u)}
-<main>
-  <section class="sp-hero">
-    <div class="wrap">
-      <nav class="sp-crumbs" aria-label="${u.crumbs}"><a href="/">${u.home}</a> › <span aria-current="page">${esc(p.nav)}</span></nav>
-      <div class="sp-hero-grid">
-        <div>
-          <span class="sp-kicker">${esc(p.kicker)}</span>
-          <h1>${p.h1}</h1>
-          <p class="sp-lead">${esc(p.lead)}</p>
-          ${tool(p, u)}
-        </div>
-        ${visual(p.visual, u)}
+<body class="has-public-header">
+${landingHeader(lang)}
+<main id="landing" class="sp-page">
+  <section class="split-hero sp-tool-hero" aria-labelledby="sp-h1">
+    <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
+    <div class="container split-inner">
+      <div class="split-copy">
+        <nav class="sp-crumbs" aria-label="${u.crumbs}"><a href="/">${u.home}</a> › <span aria-current="page">${esc(p.nav)}</span></nav>
+        <span class="sp-kicker">${esc(p.kicker)}</span>
+        <h1 id="sp-h1">${p.h1}</h1>
+        <p class="split-subtitle">${esc(p.lead)}</p>
+        ${tool(p, u)}
       </div>
+      <div class="sp-visual-wrap">${visual(p.visual, u)}</div>
     </div>
   </section>
 
@@ -527,7 +567,8 @@ ${header(u)}
     </div></div>
   </section>
 </main>
-${footer(p.slug, lang, alt)}
+${landingFooter(lang)}
+${chromeScript}
 ${toolScript(u)}
 </body>
 </html>

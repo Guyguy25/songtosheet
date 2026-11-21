@@ -145,8 +145,8 @@ html=html.replace(/<link rel="stylesheet" href="(\/[^"]+)"\s*\/?>/g,(_,href)=>`<
 // Scripts différés du projet → regroupés en fin de page, dans le même ordre d'exécution
 html=html.replace(/<script src="(\/[^"]+)" defer><\/script>/g,(_,src)=>{scripts.push(local(src));return '';});
 html=route(html);
-const mark='data:image/svg+xml;base64,'+b64(path.join(root,'assets/songtosheet-wave-mark.svg'));
-html=replaceAll(html,'/assets/songtosheet-wave-mark.svg',mark);
+const mark='data:image/svg+xml;base64,'+b64(path.join(root,'assets/tablurio-wave-mark.svg'));
+html=replaceAll(html,'/assets/tablurio-wave-mark.svg',mark);
 html=html.replace(/<link rel="icon"[^>]*>/g,'');
 if(/history\.(push|replace)State/.test(html))throw new Error('Navigation non convertie.');
 
@@ -162,7 +162,7 @@ for(const file of scripts){
   tail+=`<script>${inlineJs(code)}</script>\n`;
 }
 html=replaceAll(html,'<meta charset="UTF-8" />',`<meta charset="UTF-8" />\n<script>${inlineJs(shim)}</script>`);
-html=html.replace(/<title>[^<]*<\/title>/,'<title>SongToSheet — démo de l’écran partition</title>');
+html=html.replace(/<title>[^<]*<\/title>/,'<title>Tablurio — démo de l’écran partition</title>');
 const end=html.lastIndexOf('</body>');
 html=html.slice(0,end)+tail+html.slice(end);
 const out=path.join(example,'songtosheet-demo.html');

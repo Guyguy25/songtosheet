@@ -584,11 +584,14 @@ JOB_LIMIT_SECONDS = 300  # the site's processing deadline per job
 
 
 def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_only=False, piano_only=False,
-          warm=None):
+          warm=None, idle_wait=0, poll_seconds=2):
     """Process queued jobs until the queue is empty (cloud mode). Returns how many were taken.
 
     warm: optional slow model warm-up, run only once a job is claimed, while that
     job's audio downloads in the background (an empty queue never pays for it).
+
+    idle_wait: seconds to keep asking for a first job when the queue is empty (the engine
+    was woken early, when a link was pasted, so the job arrives a few seconds later).
 
     time_budget: seconds the container may still run; no job is claimed unless a full
     JOB_LIMIT_SECONDS remains.  A failing job does not stop the others; a connection
@@ -602,6 +605,9 @@ def drain(call, engines, cache, *, max_jobs=50, time_budget=None, guided_guitar_
         asked = time.monotonic()
         job = call("claim", **payload)["job"]
         if not job:
+            if done == 0 and time.monotonic() - started < idle_wait:
+                time.sleep(poll_seconds)
+                continue
             break
         done += 1
         job_started = time.monotonic()

@@ -33,7 +33,7 @@ def test_run_drain_logs_cost_and_subtracts_loading_time(monkeypatch, capsys):
     monkeypatch.setattr(engine_cloud, "prepare_engines", lambda: "engines")
     monkeypatch.setattr(engine_cloud, "warm_engines", lambda loaded: warmed.append(loaded))
 
-    def drain(call, loaded, cache, time_budget, warm):
+    def drain(call, loaded, cache, time_budget, warm, idle_wait=0):
         seen["budget"] = time_budget
         warm()  # waits for the warm-up started at boot
         assert warmed == ["engines"]
@@ -109,7 +109,7 @@ def test_warm_up_starts_before_the_claim(monkeypatch):
     monkeypatch.setattr(engine_cloud, "prepare_engines", lambda: "engines")
     monkeypatch.setattr(engine_cloud, "warm_engines", lambda loaded: warming.set())
 
-    def drain(call, loaded, cache, time_budget, warm):
+    def drain(call, loaded, cache, time_budget, warm, idle_wait=0):
         assert warming.wait(5), "the warm-up did not start before the first claim"
         warm()
         return 0

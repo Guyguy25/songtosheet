@@ -11,10 +11,14 @@ const {database}=require('../lib/mongodb');
 const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const audioSource=require('../assets/audio-source');
-const {scheduleWake}=require('../lib/engine-wake');
+const {scheduleWake,warmEngine,recentlyWarmed}=require('../lib/engine-wake');
 const {engineStats}=require('../lib/engine-stats');
 const {createFullSong,autoFullSong}=require('../lib/full-song');
 const {cacheKey,reuseCached}=require('../lib/track-cache');
+const {emailEnabled}=require('../lib/email');
+const {allow,clientIp}=require('../lib/rate-limit');
+const {shouldRetry,requeue,alertAdmins}=require('../lib/track-retry');
+const {notifyReady}=require('../lib/ready-email');
 const {PIANO_CRITERIA,CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
@@ -135,6 +139,9 @@ function directVariant(instrument,guitarGoal){
 }
 
 async function begin(db,req,res,user,body){
+  // A new account confirms its email (6-digit code) before its first generation.
+  if(!user.guest&&user.role!=='admin'&&user.email_verified===false&&emailEnabled())
+    return json(res,403,{detail:'Confirme ton adresse email pour lancer une génération.',reason:'email_unverified'});
   const {size,extension,instrument}=body;
   const title=typeof body.title==='string'?body.title.trim().slice(0,110):'';
   const source=audioSource.parse(body.audioUrl);
@@ -224,7 +231,8 @@ async function begin(db,req,res,user,body){
     const result=await jobs.insertOne(doc);
     // Already generated (same video and settings): copied at once, the engine is not woken.
     const cached=link&&await reuseCached(db,{_id:result.insertedId,cache_key:doc.cache_key,status:doc.status},now);
-    if(link&&!cached)await scheduleWake();
+    // An engine woken when the link was pasted is already polling for this job.
+    if(link&&!cached&&!await recentlyWarmed(db,now))await scheduleWake();
     return json(res,201,{id:String(result.insertedId),chunk_bytes:CHUNK_BYTES,...(cached?{cached:true}:{}),...(direct?{direct:true}:{})});
   }catch(error){
     if(error.code===11000)return json(res,409,{detail:'Une transcription est déjà en cours. Retrouve-la dans ta bibliothèque.'});
@@ -459,12 +467,21 @@ async function worker(db,res,body){
   }else if(completed){
     outcome={status:'completed',duration,note_count,exports,downloads:Object.keys(exports)};
   }else{
+    // First failure: a second try on its own, the person keeps waiting without noticing.
+    const message=typeof body.error==='string'?body.error:'';
+    if(shouldRetry(job,message,now)&&await requeue(db,filter,job,message,now)){
+      console.warn('Nouvelle tentative :',String(job._id),message.slice(0,160));
+      await scheduleWake();
+      return json(res,200,{ok:true,retried:true});
+    }
     outcome={status:'failed',error_message:typeof body.error==='string'?body.error.slice(0,300):'La transcription a échoué.',
       ...(typeof body.error_detail==='string'?{error_detail:body.error_detail.slice(0,500)}:{})};
   }
   const updated=await jobs.updateOne(filter,{$set:{...outcome,active:false,finished_at:now},$unset:{lease:'',lease_until:'',audio_url:''}});
   if(!updated.modifiedCount)return json(res,409,{detail:'Traitement expiré ou déjà terminé.'});
   await chunks.deleteMany({job_id:job._id});
+  if(outcome.status==='failed')await alertAdmins(db,job,outcome.error_detail||outcome.error_message);
+  if(outcome.status==='completed')await notifyReady(db,job,now);
   if(outcome.status==='completed'){
     // Admin account: the whole song of the recommended version starts right away.
     try{await autoFullSong(db,job,now,scheduleWake);}
@@ -530,6 +547,11 @@ module.exports=async(req,res)=>{
     if(req.method==='POST'&&WORKER_ACTIONS.has(body.action)){
       if(!workerAuthorized(req))return json(res,403,{detail:'Accès refusé.'});
       return await worker(await database(),res,body);
+    }
+    if(req.method==='POST'&&body.action==='warm'){
+      const db=await database();
+      if(!await allow(db,`warm:${clientIp(req)}`,15,3600000))return json(res,200,{warm:false});
+      return json(res,200,{warm:await warmEngine(db)});
     }
     const user=await authenticated(req);
     if(req.method==='GET'&&req.query.guest==='1'){

@@ -88,3 +88,17 @@ test('API key without member scope (403): the signed webhook still grants the pl
     assert.ok(end>Date.now()+25*86400e3&&end<Date.now()+40*86400e3);
   }finally{global.fetch=realFetch;delete process.env.WHOP_API_KEY;}
 });
+
+test('payment events point to the membership: a refund received as payment.refunded removes the plan',async()=>{
+  const account={_id:new ObjectId(),email:'r@b.fr',billing:null};
+  const db=fakeDb([account]);
+  process.env.WHOP_WEBHOOK_SECRET=SECRET;delete process.env.WHOP_API_KEY;
+  const handler=load(db);
+  const base={id:'mem_refund',status:'active',plan:{id:'plan_IDC4CtmdcNpi7'},metadata:{user_id:String(account._id)},renewal_period_end:Math.floor(Date.now()/1000)+30*86400};
+  const activation=JSON.stringify({type:'membership.activated',data:base});
+  let res=response();await handler(request(activation,signed(activation)),res);
+  const refund=JSON.stringify({type:'payment.refunded',data:{id:'pay_1',membership:{...base,status:'canceled'}}});
+  res=response();await handler(request(refund,signed(refund)),res);
+  assert.strictEqual(res.code,200);
+  assert.strictEqual(account.billing?.active,false);
+});

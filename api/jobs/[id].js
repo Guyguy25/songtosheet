@@ -21,7 +21,12 @@ module.exports=async(req,res)=>{
     if(!job&&req.method==='GET'){
       const access=user.role==='admin'?{}:{$or:[{preview_limit:PREVIEW_SECONDS},{variant:{$exists:true}}]};
       const track=await db.collection('track_jobs').findOne({...filter,...access},{projection:JOB_FIELDS});
-      if(track)return json(res,200,{...serialTrack(track),eta:await previewEta(db,track)});
+      if(track){
+        // The page is open: no « ready » email while the person is watching.
+        if(['queued','processing','uploading'].includes(track.status))
+          await db.collection('track_jobs').updateOne({_id:track._id},{$set:{watched_at:new Date()}}).catch(()=>null);
+        return json(res,200,{...serialTrack(track),eta:await previewEta(db,track)});
+      }
     }
     if(!job)return json(res,404,{detail:'Création introuvable.'});
     if(req.method==='POST'){

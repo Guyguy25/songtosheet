@@ -135,3 +135,25 @@ button.user-avatar:hover,button.user-avatar[aria-expanded="true"]{box-shadow:0 0
 .welcome-dialog .quota-dialog-actions .btn{min-width:0;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .user-menu-admin{text-decoration:none}
 .user-menu-panel .user-menu-admin[hidden]{display:none}
+
+/* Code par email (vérification, mot de passe oublié) */
+.code-dialog .welcome-inner{text-align:left}
+.code-dialog .welcome-mark,.code-dialog h2,.code-dialog .welcome-text{text-align:center}
+.code-fields{display:grid;gap:7px;margin:4px 0 6px}
+.code-fields label{font-size:13px;font-weight:750;color:#3d334f;margin-top:6px}
+.code-fields [hidden]{display:none}
+.code-input{font-size:24px;letter-spacing:.4em;text-align:center;font-weight:800}
+.auth-forgot{display:block;margin:-4px 0 8px auto;padding:0;border:0;background:none;color:#6d3ddc;font:inherit;font-size:13px;font-weight:700;cursor:pointer;text-align:right}
+.auth-forgot[hidden]{display:none}
+
+/* Données et suppression du compte */
+.profile-danger h3{margin:22px 0 4px;font-size:15px;color:#b4261a}
+.profile-delete{display:grid;gap:8px;max-width:420px}
+.profile-delete label{font-size:13px;font-weight:750;color:#3d334f}
+.btn-danger{background:#fff;color:#b4261a;border:1px solid #f1c4bf}
+.btn-danger:hover{background:#fff4f2;border-color:#b4261a}
+.auth-consent{display:flex!important;gap:9px;align-items:flex-start;margin:16px 0 0!important;font-size:12px!important;font-weight:500!important;color:#6f6785;line-height:1.45;cursor:pointer}
+.auth-consent[hidden],.auth-terms[hidden]{display:none!important}
+.auth-consent input{margin-top:2px;accent-color:#6d3ddc;flex:none}
+.auth-terms{margin:12px 0 0;font-size:11.5px;color:#9a93a4;line-height:1.5;text-align:center}
+.auth-terms a{color:#6d3ddc;font-weight:700}

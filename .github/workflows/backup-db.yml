@@ -1,0 +1,70 @@
+name: Sauvegarde de la base
+
+# Every night: dump MongoDB, encrypt it (the repository is public), keep it 30 days,
+# and prove it can be restored by restoring it into a temporary database.
+on:
+  schedule:
+    - cron: "17 2 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  backup:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    services:
+      restore:
+        image: mongo:7
+        ports:
+          - 27017:27017
+    env:
+      MONGODB_URI: ${{ secrets.MONGODB_URI }}
+      MONGODB_DB_NAME: ${{ secrets.MONGODB_DB_NAME }}
+      BACKUP_PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Vérifier la configuration
+        run: |
+          if [ -z "$MONGODB_URI" ] || [ -z "$BACKUP_PASSPHRASE" ]; then
+            echo "::error::Ajoute les secrets MONGODB_URI et BACKUP_PASSPHRASE dans GitHub (Settings > Secrets and variables > Actions)."
+            exit 1
+          fi
+
+      - name: Installer les outils MongoDB
+        run: |
+          curl -fsSL -o tools.deb https://fastdl.mongodb.org/tools/db/mongodb-database-tools-ubuntu2404-x86_64-100.10.0.deb
+          sudo apt-get install -y ./tools.deb >/dev/null
+          pip install --quiet pymongo==4.10.1
+
+      - name: Sauvegarder
+        run: |
+          DB="${MONGODB_DB_NAME:-$(python .github/scripts/db_backup.py name "$MONGODB_URI")}"
+          echo "DB=$DB" >> "$GITHUB_ENV"
+          echo "FILE=tablurio-$(date -u +%Y-%m-%d).archive.gz.enc" >> "$GITHUB_ENV"
+          python .github/scripts/db_backup.py counts "$MONGODB_URI" "$DB" before.json
+          mongodump --uri="$MONGODB_URI" --db="$DB" --archive=dump.archive.gz --gzip --quiet
+          ls -lh dump.archive.gz
+
+      - name: Chiffrer
+        run: |
+          openssl enc -aes-256-cbc -pbkdf2 -iter 200000 -salt -in dump.archive.gz -out "$FILE" -pass env:BACKUP_PASSPHRASE
+          rm dump.archive.gz
+
+      - name: Tester la restauration (depuis le fichier chiffré)
+        run: |
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000 -in "$FILE" -out restore.archive.gz -pass env:BACKUP_PASSPHRASE
+          mongorestore --uri="mongodb://localhost:27017" --archive=restore.archive.gz --gzip --quiet \
+            --nsFrom="$DB.*" --nsTo="restore_test.*"
+          python .github/scripts/db_backup.py verify "mongodb://localhost:27017" restore_test before.json
+          rm restore.archive.gz
+
+      - name: Garder la sauvegarde 30 jours
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ env.FILE }}
+          path: ${{ env.FILE }}
+          retention-days: 30
+          if-no-files-found: error

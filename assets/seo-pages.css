@@ -120,3 +120,21 @@ p{margin:0}
 .sp-footer a:hover{color:var(--purple)}
 .sp-footer small{display:block;margin-top:8px}
 @media(max-width:800px){.sp-footer-grid{grid-template-columns:1fr 1fr}}
+
+/* ---- Gabarit v2 : header, hero et footer de la landing ---- */
+.sp-page .sp-tool-hero{min-height:100vh;min-height:100svh;display:flex;align-items:center}
+.sp-page .sp-tool-hero>.split-inner{width:min(1180px,calc(100% - 48px));min-height:0}
+.sp-page .split-copy .sp-crumbs{font-size:12.5px;color:#b9aedb;margin:0 0 18px}
+.sp-page .split-copy .sp-crumbs a{color:#ddd3f5}
+.sp-page .split-copy .sp-crumbs a:hover{color:#fff}
+.sp-page .split-copy .sp-kicker{display:inline-flex;align-items:center;gap:8px;border:1px solid #ffffff24;background:#ffffff0d;border-radius:999px;padding:6px 13px;font-size:12px;font-weight:750;color:#e4dafc}
+.sp-page .split-copy h1 em{font-style:normal;background:linear-gradient(90deg,#b69cff,#8f8cff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.sp-page .sp-tool{margin-top:26px;max-width:560px}
+.sp-page .sp-tool-form.hero-action-panel{display:block;max-width:none;padding:0;border:0;background:none;box-shadow:none;backdrop-filter:none}
+.sp-page .sp-tool-form .split-submit{width:auto;margin:0;border-radius:999px;min-height:48px;padding:0 22px;white-space:nowrap}
+.sp-page .sp-tool-error{color:#ffb4c2;font-size:13px;margin-top:10px;min-height:1em}
+.sp-page .sp-tool-alt{margin-top:6px}
+.sp-page .sp-visual-wrap{display:flex;justify-content:center;padding-left:40px}
+.sp-page .sp-visual{width:100%;max-width:520px}
+@media(max-width:1000px){.sp-page .sp-tool-hero{min-height:auto}.sp-page .sp-tool-hero>.split-inner{grid-template-columns:minmax(0,1fr);gap:40px;padding-bottom:70px}.sp-page .sp-visual-wrap{padding-left:0;justify-content:flex-start}}
+@media(max-width:560px){.sp-page .sp-tool-form .hero-action-row{grid-template-columns:minmax(0,1fr);border-radius:22px}.sp-page .sp-tool-form .split-submit{width:100%}}

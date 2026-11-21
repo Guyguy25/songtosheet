@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" class="has-overlay-header" data-alt-fr="/musicxml" data-alt-en="/en/musicxml">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,37 +22,52 @@
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://tablurio.com/assets/og-tablurio.jpg">
-  <link rel="stylesheet" href="/assets/seo-pages.css?v=1">
+  <link rel="stylesheet" href="/assets/site-ui.css?v=6">
+  <link rel="stylesheet" href="/assets/landing.css?v=4">
+  <link rel="stylesheet" href="/assets/seo-pages.css?v=4">
+  <script src="/assets/i18n.js?v=1"></script>
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tablurio.com/en/musicxml#page","url":"https://tablurio.com/en/musicxml","name":"MusicXML Export: Open Your Sheet Music in MuseScore or Guitar Pro | Tablurio","description":"What is MusicXML and what is it for? Generate sheet music from a song, then export it to MusicXML to edit in MuseScore, Dorico, Sibelius or Guitar Pro.","inLanguage":"en","isPartOf":{"@id":"https://tablurio.com/#website"},"about":{"@id":"https://tablurio.com/#app"},"dateModified":"2026-11-21","breadcrumb":{"@id":"https://tablurio.com/en/musicxml#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://tablurio.com/en/musicxml#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Tablurio","item":"https://tablurio.com/"},{"@type":"ListItem","position":2,"name":"MusicXML export","item":"https://tablurio.com/en/musicxml"}]},{"@type":"FAQPage","@id":"https://tablurio.com/en/musicxml#faq","mainEntity":[{"@type":"Question","name":"Which software opens MusicXML?","acceptedAnswer":{"@type":"Answer","text":"Most score editors: MuseScore (free), Dorico, Sibelius, Guitar Pro, and many mobile apps."}},{"@type":"Question","name":"What’s the difference between MusicXML and MIDI?","acceptedAnswer":{"@type":"Answer","text":"MIDI describes played notes (pitch, duration, velocity), great for sound. MusicXML describes the written score (bars, clefs, tabs), great for notation."}},{"@type":"Question","name":"Is MusicXML export included in the free plan?","acceptedAnswer":{"@type":"Answer","text":"The free preview is read on screen. PDF, MIDI and MusicXML exports come with the Starter, Pro and Lifetime plans."}},{"@type":"Question","name":"Can I export a guitar tab to MusicXML?","acceptedAnswer":{"@type":"Answer","text":"Yes, and then open it in Guitar Pro or MuseScore to edit it."}}]}]}</script>
 </head>
-<body>
-<header class="sp-header"><div class="wrap sp-nav">
-  <a href="/" class="sp-brand" aria-label="Tablurio, home"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a>
-  <nav class="sp-links" aria-label="Menu"><a href="/en/youtube-to-sheet-music">YouTube</a><a href="/en/guitar-tab-generator">Guitar tabs</a><a href="/en/piano-sheet-music">Piano</a><a href="/tarifs">Pricing</a></nav>
-  <div class="sp-actions"><a class="sp-login" href="/connexion">Log in</a><a class="sp-cta" href="#outil">Get started ↗</a></div>
-</div></header>
-<main>
-  <section class="sp-hero">
-    <div class="wrap">
-      <nav class="sp-crumbs" aria-label="Breadcrumb"><a href="/">Tablurio</a> › <span aria-current="page">MusicXML export</span></nav>
-      <div class="sp-hero-grid">
-        <div>
-          <span class="sp-kicker">♬ MusicXML format</span>
-          <h1>Your sheet music in <em>MusicXML</em>, ready to edit</h1>
-          <p class="sp-lead">Generate sheet music or a tab from a song, then export it to MusicXML to fix, arrange or transpose it in your favourite notation software.</p>
-          <div class="sp-tool" id="outil">
-  <form class="sp-tool-form" action="/" method="get" data-instrument="" novalidate>
-    <span aria-hidden="true">↗</span>
-    <label class="visually-hidden" for="sp-link" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Song link</label>
-    <input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" placeholder="Paste a song link (YouTube, Spotify, Deezer)…">
-    <button type="submit">Get my sheet music →</button>
+<body class="has-public-header">
+<header id="public-header" class="site-header">
+  <div class="container nav-inner nav-capsule">
+    <a href="/" data-nav="home" class="brand" aria-label="Tablurio — Home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Tablurio logo" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a>
+    <nav class="top-nav" aria-label="Main menu">
+      <a href="/#comment-ca-marche" data-nav="how">How does it work?</a>
+      <a href="/fonctionnalites" data-nav="features">Features</a>
+      <a href="/resultats" data-nav="results">Results</a>
+      <a href="/tarifs" data-nav="pricing">Pricing</a>
+      <a href="/faq" data-nav="faq">FAQ</a>
+    </nav>
+    <div class="nav-actions"><div class="lang-switch" role="group" aria-label="Language"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="nav-login" class="nav-link-btn" type="button">Log in</button><button id="nav-cta" class="btn btn-primary btn-nav" type="button">Get started ↗</button></div>
+    <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Show menu" aria-controls="mobile-menu" aria-expanded="false">☰</button>
+  </div>
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <a href="/#comment-ca-marche" data-nav="how">How does it work?</a><a href="/fonctionnalites" data-nav="features">Features</a><a href="/resultats" data-nav="results">Results</a><a href="/tarifs" data-nav="pricing">Pricing</a><a href="/faq" data-nav="faq">FAQ</a>
+    <div class="lang-switch" role="group" aria-label="Language"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="mobile-login" type="button">Log in</button><button id="mobile-start" type="button">Get my sheet music</button>
+  </div></header>
+<main id="landing" class="sp-page">
+  <section class="split-hero sp-tool-hero" aria-labelledby="sp-h1">
+    <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
+    <div class="container split-inner">
+      <div class="split-copy">
+        <nav class="sp-crumbs" aria-label="Breadcrumb"><a href="/">Tablurio</a> › <span aria-current="page">MusicXML export</span></nav>
+        <span class="sp-kicker">♬ MusicXML format</span>
+        <h1 id="sp-h1">Your sheet music in <em>MusicXML</em>, ready to edit</h1>
+        <p class="split-subtitle">Generate sheet music or a tab from a song, then export it to MusicXML to fix, arrange or transpose it in your favourite notation software.</p>
+        <div class="sp-tool" id="outil">
+  <form class="sp-tool-form hero-action-panel" action="/" method="get" data-instrument="" novalidate>
+    <div class="hero-action-row">
+      <label class="hero-input" for="sp-link"><span aria-hidden="true">↗</span><input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" aria-label="Song link" placeholder="Paste a song link (YouTube, Spotify, Deezer)…"></label>
+      <button type="submit" class="split-submit">Get my sheet music <span aria-hidden="true">→</span></button>
+    </div>
   </form>
   <p class="sp-tool-error" role="alert"></p>
   <div class="sp-tool-alt"><span>No link?</span><a href="/?source=fichier">Upload an audio file</a></div>
   <div class="sp-badges"><span><b>✓</b>3 free 30-second previews</span><span><b>✓</b>Guitar, piano, vocals</span><span><b>✓</b>PDF · MIDI · MusicXML</span></div>
 </div>
-        </div>
-        <div class="sp-visual" aria-label="File excerpt">
+      </div>
+      <div class="sp-visual-wrap"><div class="sp-visual" aria-label="File excerpt">
   <div class="sp-visual-top"><span>File excerpt</span><b>● Ready</b></div>
   <h3>MusicXML</h3><small>A tab note described in XML</small>
   <pre style="margin:14px 0 10px;background:#17112e;color:#e6dcff;border-radius:12px;padding:16px;font-size:12px;line-height:1.55;overflow:auto"><code>&lt;note&gt;
@@ -64,8 +79,7 @@
   &lt;/technical&gt;&lt;/notations&gt;
 &lt;/note&gt;</code></pre>
   <div class="sp-chips"><span>↓ PDF</span><span>MIDI</span><span>MusicXML</span></div>
-</div>
-      </div>
+</div></div>
     </div>
   </section>
 
@@ -128,12 +142,27 @@
     </div></div>
   </section>
 </main>
-<footer class="sp-footer"><div class="wrap sp-footer-grid">
-  <div><a href="/" class="sp-brand"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a><small>Your music deserves to be played.</small><small><a href="/musicxml" hreflang="fr" style="font-weight:700">🌐 Français</a></small></div>
-  <div><h4>Tools</h4><nav aria-label="Tools"><a href="/en/youtube-to-sheet-music">YouTube to sheet music</a><a href="/en/guitar-tab-generator">Guitar tab generator</a><a href="/en/piano-sheet-music">Piano sheet music from a song</a><a href="/en/mp3-to-sheet-music">MP3 to sheet music</a></nav></div>
-  <div><h4>Sources and formats</h4><nav aria-label="Sources and formats"><a href="/en/spotify-to-sheet-music">Spotify to sheet music</a><a href="/en/deezer-to-sheet-music">Deezer to sheet music</a><a href="/en/musicxml" aria-current="page">MusicXML export</a><a href="/en/midi">MIDI export</a></nav></div>
-  <div><h4>Tablurio</h4><nav aria-label="Tablurio"><a href="/">Tablurio (French)</a><a href="/tarifs">Pricing</a><a href="/legal">Legal</a></nav><small>Sheet music and tabs generated by AI: always check the result before playing.</small><small>© 2026 Tablurio</small></div>
-</div></footer>
+<footer id="public-footer" class="site-footer"><div class="container footer-wrap">
+<div><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Tablurio logo" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><p>Your music deserves to be played.</p></div>
+<nav aria-label="Footer navigation"><a href="/#comment-ca-marche" data-nav="how">How it works</a><a href="/fonctionnalites" data-nav="features">Features</a><a href="/resultats" data-nav="results">Results</a><a href="/tarifs" data-nav="pricing">Pricing</a><a href="/faq" data-nav="faq">FAQ</a><a href="/legal" data-nav="legal">Legal</a></nav>
+<div><small>Sheet music and tabs generated by AI: always check the result before playing.</small><small>© 2026 Tablurio</small></div>
+</div><nav class="container footer-tools" aria-label="Outils Tablurio"><span>Tools</span><a href="/en/youtube-to-sheet-music">YouTube to sheet music</a><a href="/en/guitar-tab-generator">Guitar tab</a><a href="/en/piano-sheet-music">Piano sheet music</a><a href="/en/mp3-to-sheet-music">MP3 to sheet music</a><a href="/en/spotify-to-sheet-music">Spotify to sheet music</a><a href="/en/deezer-to-sheet-music">Deezer to sheet music</a><a href="/en/musicxml">MusicXML export</a><a href="/en/midi">MIDI export</a></nav>
+</footer>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  function go(u){location.href=u}
+  function tool(){var t=$('outil');if(t){t.scrollIntoView({behavior:'smooth',block:'center'});var i=t.querySelector('input');if(i)setTimeout(function(){i.focus({preventScroll:true})},350)}}
+  var map={'nav-login':function(){go('/connexion')},'mobile-login':function(){go('/connexion')},'nav-cta':tool,'mobile-start':function(){menu(false);tool()}};
+  Object.keys(map).forEach(function(id){var el=$(id);if(el)el.addEventListener('click',map[id])});
+  var btn=$('mobile-menu-btn'),mm=$('mobile-menu');
+  function menu(open){if(!mm||!btn)return;mm.classList.toggle('open',open);mm.setAttribute('aria-hidden',open?'false':'true');btn.setAttribute('aria-expanded',open?'true':'false')}
+  if(btn)btn.addEventListener('click',function(){menu(!mm.classList.contains('open'))});
+  if(mm)mm.addEventListener('click',function(e){if(e.target.tagName==='A')menu(false)});
+  var h=$('public-header');function compact(){if(h)h.classList.toggle('is-compact',window.scrollY>72)}
+  window.addEventListener('scroll',compact,{passive:true});compact();
+})();
+</script>
 <script>
 document.querySelectorAll('.sp-tool-form').forEach(function(form){
   form.addEventListener('submit',function(e){

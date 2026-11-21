@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" class="has-overlay-header" data-alt-fr="/mp3-en-partition" data-alt-en="/en/mp3-to-sheet-music">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,37 +22,52 @@
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://tablurio.com/assets/og-tablurio.jpg">
-  <link rel="stylesheet" href="/assets/seo-pages.css?v=1">
+  <link rel="stylesheet" href="/assets/site-ui.css?v=6">
+  <link rel="stylesheet" href="/assets/landing.css?v=4">
+  <link rel="stylesheet" href="/assets/seo-pages.css?v=4">
+  <script src="/assets/i18n.js?v=1"></script>
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tablurio.com/mp3-en-partition#page","url":"https://tablurio.com/mp3-en-partition","name":"Convertir un MP3 en partition (et WAV, M4A, FLAC) | Tablurio","description":"Convertis un fichier MP3, WAV, M4A ou FLAC en partition ou tablature pour guitare, piano ou voix. Jusqu’à 25 Mo et 10 minutes. Export PDF, MIDI, MusicXML.","inLanguage":"fr-FR","isPartOf":{"@id":"https://tablurio.com/#website"},"about":{"@id":"https://tablurio.com/#app"},"dateModified":"2026-11-21","breadcrumb":{"@id":"https://tablurio.com/mp3-en-partition#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://tablurio.com/mp3-en-partition#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Accueil","item":"https://tablurio.com/"},{"@type":"ListItem","position":2,"name":"Convertir un MP3 en partition","item":"https://tablurio.com/mp3-en-partition"}]},{"@type":"FAQPage","@id":"https://tablurio.com/mp3-en-partition#faq","mainEntity":[{"@type":"Question","name":"Quels formats audio sont acceptés ?","acceptedAnswer":{"@type":"Answer","text":"MP3, WAV, M4A et FLAC, jusqu’à 25 Mo."}},{"@type":"Question","name":"Y a-t-il une durée maximale ?","acceptedAnswer":{"@type":"Answer","text":"Oui, 10 minutes d’audio par génération."}},{"@type":"Question","name":"Puis-je convertir un mémo vocal de mon téléphone ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Les mémos vocaux de l’iPhone sont en M4A, un format accepté. Choisis « Voix » pour obtenir la ligne de chant en partition."}},{"@type":"Question","name":"La conversion est-elle gratuite ?","acceptedAnswer":{"@type":"Answer","text":"Tu as 3 aperçus gratuits de 30 secondes. Le morceau complet et les exports sont inclus dans les offres Starter, Pro et Lifetime."}},{"@type":"Question","name":"Mon fichier est-il conservé ?","acceptedAnswer":{"@type":"Answer","text":"Il sert à générer ta partition, que tu retrouves ensuite dans ta bibliothèque Tablurio."}},{"@type":"Question","name":"Je peux convertir un MP3 en MIDI ?","acceptedAnswer":{"@type":"Answer","text":"Oui : une fois la partition générée, exporte-la en MIDI avec une offre payante."}}]}]}</script>
 </head>
-<body>
-<header class="sp-header"><div class="wrap sp-nav">
-  <a href="/" class="sp-brand" aria-label="Tablurio, accueil"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a>
-  <nav class="sp-links" aria-label="Menu"><a href="/#comment-ca-marche">Comment ça marche ?</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a></nav>
-  <div class="sp-actions"><a class="sp-login" href="/connexion">Se connecter</a><a class="sp-cta" href="#outil">Commencer ↗</a></div>
-</div></header>
-<main>
-  <section class="sp-hero">
-    <div class="wrap">
-      <nav class="sp-crumbs" aria-label="Fil d’Ariane"><a href="/">Accueil</a> › <span aria-current="page">Convertir un MP3 en partition</span></nav>
-      <div class="sp-hero-grid">
-        <div>
-          <span class="sp-kicker">⇧ Audio → partition</span>
-          <h1>Convertir un <em>MP3 en partition</em></h1>
-          <p class="sp-lead">Un enregistrement de répétition, une démo, un morceau acheté en MP3 ? Importe le fichier audio : Tablurio le transforme en partition ou en tablature.</p>
-          <div class="sp-tool" id="outil">
-  <form class="sp-tool-form" action="/" method="get" data-instrument="" novalidate>
-    <span aria-hidden="true">↗</span>
-    <label class="visually-hidden" for="sp-link" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Lien du morceau</label>
-    <input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" placeholder="Ou colle un lien YouTube, Spotify, Deezer…">
-    <button type="submit">Continuer →</button>
+<body class="has-public-header">
+<header id="public-header" class="site-header">
+  <div class="container nav-inner nav-capsule">
+    <a href="/" data-nav="home" class="brand" aria-label="Tablurio — Accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a>
+    <nav class="top-nav" aria-label="Menu principal">
+      <a href="/#comment-ca-marche" data-nav="how">Comment ça marche ?</a>
+      <a href="/fonctionnalites" data-nav="features">Fonctionnalités</a>
+      <a href="/resultats" data-nav="results">Résultats</a>
+      <a href="/tarifs" data-nav="pricing">Tarifs</a>
+      <a href="/faq" data-nav="faq">FAQ</a>
+    </nav>
+    <div class="nav-actions"><div class="lang-switch" role="group" aria-label="Langue"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="nav-login" class="nav-link-btn" type="button">Se connecter</button><button id="nav-cta" class="btn btn-primary btn-nav" type="button">Commencer ↗</button></div>
+    <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Afficher le menu" aria-controls="mobile-menu" aria-expanded="false">☰</button>
+  </div>
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <a href="/#comment-ca-marche" data-nav="how">Comment ça marche ?</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a>
+    <div class="lang-switch" role="group" aria-label="Langue"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="mobile-login" type="button">Se connecter</button><button id="mobile-start" type="button">Créer ma partition</button>
+  </div></header>
+<main id="landing" class="sp-page">
+  <section class="split-hero sp-tool-hero" aria-labelledby="sp-h1">
+    <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
+    <div class="container split-inner">
+      <div class="split-copy">
+        <nav class="sp-crumbs" aria-label="Fil d’Ariane"><a href="/">Accueil</a> › <span aria-current="page">Convertir un MP3 en partition</span></nav>
+        <span class="sp-kicker">⇧ Audio → partition</span>
+        <h1 id="sp-h1">Convertir un <em>MP3 en partition</em></h1>
+        <p class="split-subtitle">Un enregistrement de répétition, une démo, un morceau acheté en MP3 ? Importe le fichier audio : Tablurio le transforme en partition ou en tablature.</p>
+        <div class="sp-tool" id="outil">
+  <form class="sp-tool-form hero-action-panel" action="/" method="get" data-instrument="" novalidate>
+    <div class="hero-action-row">
+      <label class="hero-input" for="sp-link"><span aria-hidden="true">↗</span><input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" aria-label="Lien du morceau" placeholder="Ou colle un lien YouTube, Spotify, Deezer…"></label>
+      <button type="submit" class="split-submit">Continuer <span aria-hidden="true">→</span></button>
+    </div>
   </form>
   <p class="sp-tool-error" role="alert"></p>
   <div class="sp-tool-alt"><a href="/?source=fichier">⇧ Importer un fichier audio (MP3, WAV, M4A, FLAC)</a></div>
   <div class="sp-badges"><span><b>✓</b>3 aperçus gratuits de 30 s</span><span><b>✓</b>Guitare, piano, voix</span><span><b>✓</b>PDF · MIDI · MusicXML</span></div>
 </div>
-        </div>
-        <div class="sp-visual" aria-label="Exemple illustratif">
+      </div>
+      <div class="sp-visual-wrap"><div class="sp-visual" aria-label="Exemple illustratif">
   <div class="sp-visual-top"><span>Exemple illustratif</span><b>● Prête</b></div>
   <h3>Partition</h3><small>Depuis un fichier MP3</small>
   <svg viewBox="0 0 520 170" role="img" aria-label="Exemple illustratif de partition sur portée">
@@ -62,8 +77,7 @@
   <ellipse cx="100" cy="138" rx="7" ry="5.2" transform="rotate(-20 100 138)"/><line x1="94" y1="138" x2="94" y2="170" stroke="#211c35" stroke-width="1.6"/><ellipse cx="200" cy="132" rx="7" ry="5.2" transform="rotate(-20 200 132)"/><line x1="194" y1="132" x2="194" y2="164" stroke="#211c35" stroke-width="1.6"/><ellipse cx="310" cy="138" rx="7" ry="5.2" transform="rotate(-20 310 138)"/><line x1="304" y1="138" x2="304" y2="170" stroke="#211c35" stroke-width="1.6"/><ellipse cx="410" cy="126" rx="7" ry="5.2" transform="rotate(-20 410 126)"/><line x1="404" y1="126" x2="404" y2="158" stroke="#211c35" stroke-width="1.6"/></g>
   <line x1="272" y1="30" x2="272" y2="156" stroke="#211c35" stroke-width="1.5"/><line x1="505" y1="30" x2="505" y2="156" stroke="#211c35" stroke-width="2.5"/></svg>
   <div class="sp-chips"><span>↓ PDF</span><span>MIDI</span><span>MusicXML</span></div>
-</div>
-      </div>
+</div></div>
     </div>
   </section>
 
@@ -127,12 +141,27 @@
     </div></div>
   </section>
 </main>
-<footer class="sp-footer"><div class="wrap sp-footer-grid">
-  <div><a href="/" class="sp-brand"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a><small>Ta musique mérite d’être jouée.</small><small><a href="/en/mp3-to-sheet-music" hreflang="en" style="font-weight:700">🌐 English</a></small></div>
-  <div><h4>Outils</h4><nav aria-label="Outils"><a href="/youtube-en-partition">YouTube en partition</a><a href="/tablature-guitare">Générateur de tablature guitare</a><a href="/partition-piano">Partition piano d’une chanson</a><a href="/mp3-en-partition" aria-current="page">Convertir un MP3 en partition</a></nav></div>
-  <div><h4>Sources et formats</h4><nav aria-label="Sources et formats"><a href="/spotify-en-partition">Spotify en partition</a><a href="/deezer-en-partition">Deezer en partition</a><a href="/musicxml">Export MusicXML</a><a href="/midi">Export MIDI</a></nav></div>
-  <div><h4>Tablurio</h4><nav aria-label="Tablurio"><a href="/">Accueil</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a><a href="/legal">Mentions</a></nav><small>Partitions et tablatures générées par IA : vérifie toujours le résultat avant de jouer.</small><small>© 2026 Tablurio</small></div>
-</div></footer>
+<footer id="public-footer" class="site-footer"><div class="container footer-wrap">
+<div><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><p>Ta musique mérite d'être jouée.</p></div>
+<nav aria-label="Navigation de bas de page"><a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a><a href="/legal" data-nav="legal">Mentions</a></nav>
+<div><small>Partitions et tablatures générées par IA : vérifie toujours le résultat avant de jouer.</small><small>© 2026 Tablurio</small></div>
+</div><nav class="container footer-tools" aria-label="Outils Tablurio"><span>Outils</span><a href="/youtube-en-partition">YouTube en partition</a><a href="/tablature-guitare">Tablature guitare</a><a href="/partition-piano">Partition piano</a><a href="/mp3-en-partition">MP3 en partition</a><a href="/spotify-en-partition">Spotify en partition</a><a href="/deezer-en-partition">Deezer en partition</a><a href="/musicxml">Export MusicXML</a><a href="/midi">Export MIDI</a></nav>
+</footer>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  function go(u){location.href=u}
+  function tool(){var t=$('outil');if(t){t.scrollIntoView({behavior:'smooth',block:'center'});var i=t.querySelector('input');if(i)setTimeout(function(){i.focus({preventScroll:true})},350)}}
+  var map={'nav-login':function(){go('/connexion')},'mobile-login':function(){go('/connexion')},'nav-cta':tool,'mobile-start':function(){menu(false);tool()}};
+  Object.keys(map).forEach(function(id){var el=$(id);if(el)el.addEventListener('click',map[id])});
+  var btn=$('mobile-menu-btn'),mm=$('mobile-menu');
+  function menu(open){if(!mm||!btn)return;mm.classList.toggle('open',open);mm.setAttribute('aria-hidden',open?'false':'true');btn.setAttribute('aria-expanded',open?'true':'false')}
+  if(btn)btn.addEventListener('click',function(){menu(!mm.classList.contains('open'))});
+  if(mm)mm.addEventListener('click',function(e){if(e.target.tagName==='A')menu(false)});
+  var h=$('public-header');function compact(){if(h)h.classList.toggle('is-compact',window.scrollY>72)}
+  window.addEventListener('scroll',compact,{passive:true});compact();
+})();
+</script>
 <script>
 document.querySelectorAll('.sp-tool-form').forEach(function(form){
   form.addEventListener('submit',function(e){

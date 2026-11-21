@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="fr">
+<html lang="fr" class="has-overlay-header" data-alt-fr="/musicxml" data-alt-en="/en/musicxml">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -22,37 +22,52 @@
   <meta property="og:image:height" content="630">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:image" content="https://tablurio.com/assets/og-tablurio.jpg">
-  <link rel="stylesheet" href="/assets/seo-pages.css?v=1">
+  <link rel="stylesheet" href="/assets/site-ui.css?v=6">
+  <link rel="stylesheet" href="/assets/landing.css?v=4">
+  <link rel="stylesheet" href="/assets/seo-pages.css?v=4">
+  <script src="/assets/i18n.js?v=1"></script>
   <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tablurio.com/musicxml#page","url":"https://tablurio.com/musicxml","name":"Export MusicXML : ouvrir ta partition dans MuseScore ou Guitar Pro | Tablurio","description":"Qu’est-ce que le MusicXML et à quoi ça sert ? Génère la partition d’un morceau puis exporte-la en MusicXML pour la modifier dans MuseScore, Dorico, Sibelius ou Guitar Pro.","inLanguage":"fr-FR","isPartOf":{"@id":"https://tablurio.com/#website"},"about":{"@id":"https://tablurio.com/#app"},"dateModified":"2026-11-21","breadcrumb":{"@id":"https://tablurio.com/musicxml#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://tablurio.com/musicxml#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Accueil","item":"https://tablurio.com/"},{"@type":"ListItem","position":2,"name":"Export MusicXML","item":"https://tablurio.com/musicxml"}]},{"@type":"FAQPage","@id":"https://tablurio.com/musicxml#faq","mainEntity":[{"@type":"Question","name":"Quels logiciels ouvrent le MusicXML ?","acceptedAnswer":{"@type":"Answer","text":"La plupart des éditeurs de partitions : MuseScore (gratuit), Dorico, Sibelius, Guitar Pro, et de nombreuses applications mobiles."}},{"@type":"Question","name":"Quelle différence entre MusicXML et MIDI ?","acceptedAnswer":{"@type":"Answer","text":"Le MIDI décrit des notes jouées (hauteur, durée, intensité), idéal pour le son. Le MusicXML décrit la partition écrite (mesures, clés, tablature), idéal pour la notation."}},{"@type":"Question","name":"L’export MusicXML est-il inclus dans l’offre gratuite ?","acceptedAnswer":{"@type":"Answer","text":"L’aperçu gratuit se lit à l’écran. Les exports PDF, MIDI et MusicXML sont inclus dans les offres Starter, Pro et Lifetime."}},{"@type":"Question","name":"Puis-je exporter une tablature guitare en MusicXML ?","acceptedAnswer":{"@type":"Answer","text":"Oui, et l’ouvrir ensuite dans Guitar Pro ou MuseScore pour la modifier."}},{"@type":"Question","name":"Le fichier a-t-il l’extension .musicxml ou .xml ?","acceptedAnswer":{"@type":"Answer","text":"Les deux désignent le même format ; les logiciels de notation reconnaissent le fichier exporté par Tablurio."}}]}]}</script>
 </head>
-<body>
-<header class="sp-header"><div class="wrap sp-nav">
-  <a href="/" class="sp-brand" aria-label="Tablurio, accueil"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a>
-  <nav class="sp-links" aria-label="Menu"><a href="/#comment-ca-marche">Comment ça marche ?</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a></nav>
-  <div class="sp-actions"><a class="sp-login" href="/connexion">Se connecter</a><a class="sp-cta" href="#outil">Commencer ↗</a></div>
-</div></header>
-<main>
-  <section class="sp-hero">
-    <div class="wrap">
-      <nav class="sp-crumbs" aria-label="Fil d’Ariane"><a href="/">Accueil</a> › <span aria-current="page">Export MusicXML</span></nav>
-      <div class="sp-hero-grid">
-        <div>
-          <span class="sp-kicker">♬ Format MusicXML</span>
-          <h1>Ta partition en <em>MusicXML</em>, prête à modifier</h1>
-          <p class="sp-lead">Génère la partition ou la tablature d’un morceau, puis exporte-la en MusicXML pour la retoucher, l’arranger ou la transposer dans ton logiciel de notation préféré.</p>
-          <div class="sp-tool" id="outil">
-  <form class="sp-tool-form" action="/" method="get" data-instrument="" novalidate>
-    <span aria-hidden="true">↗</span>
-    <label class="visually-hidden" for="sp-link" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Lien du morceau</label>
-    <input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" placeholder="Colle le lien d’un morceau (YouTube, Spotify, Deezer)…">
-    <button type="submit">Créer ma partition →</button>
+<body class="has-public-header">
+<header id="public-header" class="site-header">
+  <div class="container nav-inner nav-capsule">
+    <a href="/" data-nav="home" class="brand" aria-label="Tablurio — Accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a>
+    <nav class="top-nav" aria-label="Menu principal">
+      <a href="/#comment-ca-marche" data-nav="how">Comment ça marche ?</a>
+      <a href="/fonctionnalites" data-nav="features">Fonctionnalités</a>
+      <a href="/resultats" data-nav="results">Résultats</a>
+      <a href="/tarifs" data-nav="pricing">Tarifs</a>
+      <a href="/faq" data-nav="faq">FAQ</a>
+    </nav>
+    <div class="nav-actions"><div class="lang-switch" role="group" aria-label="Langue"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="nav-login" class="nav-link-btn" type="button">Se connecter</button><button id="nav-cta" class="btn btn-primary btn-nav" type="button">Commencer ↗</button></div>
+    <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Afficher le menu" aria-controls="mobile-menu" aria-expanded="false">☰</button>
+  </div>
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <a href="/#comment-ca-marche" data-nav="how">Comment ça marche ?</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a>
+    <div class="lang-switch" role="group" aria-label="Langue"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="mobile-login" type="button">Se connecter</button><button id="mobile-start" type="button">Créer ma partition</button>
+  </div></header>
+<main id="landing" class="sp-page">
+  <section class="split-hero sp-tool-hero" aria-labelledby="sp-h1">
+    <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
+    <div class="container split-inner">
+      <div class="split-copy">
+        <nav class="sp-crumbs" aria-label="Fil d’Ariane"><a href="/">Accueil</a> › <span aria-current="page">Export MusicXML</span></nav>
+        <span class="sp-kicker">♬ Format MusicXML</span>
+        <h1 id="sp-h1">Ta partition en <em>MusicXML</em>, prête à modifier</h1>
+        <p class="split-subtitle">Génère la partition ou la tablature d’un morceau, puis exporte-la en MusicXML pour la retoucher, l’arranger ou la transposer dans ton logiciel de notation préféré.</p>
+        <div class="sp-tool" id="outil">
+  <form class="sp-tool-form hero-action-panel" action="/" method="get" data-instrument="" novalidate>
+    <div class="hero-action-row">
+      <label class="hero-input" for="sp-link"><span aria-hidden="true">↗</span><input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" aria-label="Lien du morceau" placeholder="Colle le lien d’un morceau (YouTube, Spotify, Deezer)…"></label>
+      <button type="submit" class="split-submit">Créer ma partition <span aria-hidden="true">→</span></button>
+    </div>
   </form>
   <p class="sp-tool-error" role="alert"></p>
   <div class="sp-tool-alt"><span>Pas de lien ?</span><a href="/?source=fichier">Importer un fichier audio</a></div>
   <div class="sp-badges"><span><b>✓</b>3 aperçus gratuits de 30 s</span><span><b>✓</b>Guitare, piano, voix</span><span><b>✓</b>PDF · MIDI · MusicXML</span></div>
 </div>
-        </div>
-        <div class="sp-visual" aria-label="Extrait de fichier">
+      </div>
+      <div class="sp-visual-wrap"><div class="sp-visual" aria-label="Extrait de fichier">
   <div class="sp-visual-top"><span>Extrait de fichier</span><b>● Prête</b></div>
   <h3>MusicXML</h3><small>Une note de tablature décrite en XML</small>
   <pre style="margin:14px 0 10px;background:#17112e;color:#e6dcff;border-radius:12px;padding:16px;font-size:12px;line-height:1.55;overflow:auto"><code>&lt;note&gt;
@@ -64,8 +79,7 @@
   &lt;/technical&gt;&lt;/notations&gt;
 &lt;/note&gt;</code></pre>
   <div class="sp-chips"><span>↓ PDF</span><span>MIDI</span><span>MusicXML</span></div>
-</div>
-      </div>
+</div></div>
     </div>
   </section>
 
@@ -128,12 +142,27 @@
     </div></div>
   </section>
 </main>
-<footer class="sp-footer"><div class="wrap sp-footer-grid">
-  <div><a href="/" class="sp-brand"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a><small>Ta musique mérite d’être jouée.</small><small><a href="/en/musicxml" hreflang="en" style="font-weight:700">🌐 English</a></small></div>
-  <div><h4>Outils</h4><nav aria-label="Outils"><a href="/youtube-en-partition">YouTube en partition</a><a href="/tablature-guitare">Générateur de tablature guitare</a><a href="/partition-piano">Partition piano d’une chanson</a><a href="/mp3-en-partition">Convertir un MP3 en partition</a></nav></div>
-  <div><h4>Sources et formats</h4><nav aria-label="Sources et formats"><a href="/spotify-en-partition">Spotify en partition</a><a href="/deezer-en-partition">Deezer en partition</a><a href="/musicxml" aria-current="page">Export MusicXML</a><a href="/midi">Export MIDI</a></nav></div>
-  <div><h4>Tablurio</h4><nav aria-label="Tablurio"><a href="/">Accueil</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a><a href="/legal">Mentions</a></nav><small>Partitions et tablatures générées par IA : vérifie toujours le résultat avant de jouer.</small><small>© 2026 Tablurio</small></div>
-</div></footer>
+<footer id="public-footer" class="site-footer"><div class="container footer-wrap">
+<div><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><p>Ta musique mérite d'être jouée.</p></div>
+<nav aria-label="Navigation de bas de page"><a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a><a href="/legal" data-nav="legal">Mentions</a></nav>
+<div><small>Partitions et tablatures générées par IA : vérifie toujours le résultat avant de jouer.</small><small>© 2026 Tablurio</small></div>
+</div><nav class="container footer-tools" aria-label="Outils Tablurio"><span>Outils</span><a href="/youtube-en-partition">YouTube en partition</a><a href="/tablature-guitare">Tablature guitare</a><a href="/partition-piano">Partition piano</a><a href="/mp3-en-partition">MP3 en partition</a><a href="/spotify-en-partition">Spotify en partition</a><a href="/deezer-en-partition">Deezer en partition</a><a href="/musicxml">Export MusicXML</a><a href="/midi">Export MIDI</a></nav>
+</footer>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  function go(u){location.href=u}
+  function tool(){var t=$('outil');if(t){t.scrollIntoView({behavior:'smooth',block:'center'});var i=t.querySelector('input');if(i)setTimeout(function(){i.focus({preventScroll:true})},350)}}
+  var map={'nav-login':function(){go('/connexion')},'mobile-login':function(){go('/connexion')},'nav-cta':tool,'mobile-start':function(){menu(false);tool()}};
+  Object.keys(map).forEach(function(id){var el=$(id);if(el)el.addEventListener('click',map[id])});
+  var btn=$('mobile-menu-btn'),mm=$('mobile-menu');
+  function menu(open){if(!mm||!btn)return;mm.classList.toggle('open',open);mm.setAttribute('aria-hidden',open?'false':'true');btn.setAttribute('aria-expanded',open?'true':'false')}
+  if(btn)btn.addEventListener('click',function(){menu(!mm.classList.contains('open'))});
+  if(mm)mm.addEventListener('click',function(e){if(e.target.tagName==='A')menu(false)});
+  var h=$('public-header');function compact(){if(h)h.classList.toggle('is-compact',window.scrollY>72)}
+  window.addEventListener('scroll',compact,{passive:true});compact();
+})();
+</script>
 <script>
 document.querySelectorAll('.sp-tool-form').forEach(function(form){
   form.addEventListener('submit',function(e){

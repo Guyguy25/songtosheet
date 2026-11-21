@@ -60,3 +60,16 @@ test('without a Resend key nothing is sent, and templates carry the code',async(
   assert.match(mail.html,/123456/);
   assert.match(TEMPLATES.ready({title:'<b>x</b>',url:'https://tablurio.com/app/1'}).html,/&lt;b&gt;x/);
 });
+
+test('password reset token: works once, only for its address, and expires',async()=>{
+  const {issueToken,useToken}=require('../lib/account-flows.js');
+  const db=fakeDb();
+  db.collection('email_codes').deleteOne=async({_id})=>db.data.email_codes.delete(_id);
+  const token=await issueToken(db,'a@b.fr',new Date());
+  assert.strictEqual(await useToken(db,'c@d.fr',token),false);
+  assert.strictEqual(await useToken(db,'a@b.fr','0'.repeat(48)),false);
+  assert.strictEqual(await useToken(db,'a@b.fr',token),true);
+  assert.strictEqual(await useToken(db,'a@b.fr',token),false);
+  const old=await issueToken(db,'a@b.fr',new Date(Date.now()-16*60000));
+  assert.strictEqual(await useToken(db,'a@b.fr',old),false);
+});

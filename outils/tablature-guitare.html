@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Générateur de tablature guitare à partir d’une chanson | Tablurio</title>
+  <meta name="description" content="Génère la tablature guitare d’un morceau à partir d’un lien YouTube, Spotify, Deezer ou d’un fichier audio. Tab ou partition classique, export PDF, MIDI, MusicXML.">
+  <link rel="canonical" href="https://tablurio.com/tablature-guitare">
+  <link rel="alternate" hreflang="fr" href="https://tablurio.com/tablature-guitare">
+  <link rel="alternate" hreflang="en" href="https://tablurio.com/en/guitar-tab-generator">
+  <link rel="alternate" hreflang="x-default" href="https://tablurio.com/tablature-guitare">
+  <meta name="theme-color" content="#0b0719">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-wave-32.png?v=1">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Tablurio">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:url" content="https://tablurio.com/tablature-guitare">
+  <meta property="og:title" content="Générateur de tablature guitare à partir d’une chanson | Tablurio">
+  <meta property="og:description" content="Génère la tablature guitare d’un morceau à partir d’un lien YouTube, Spotify, Deezer ou d’un fichier audio. Tab ou partition classique, export PDF, MIDI, MusicXML.">
+  <meta property="og:image" content="https://tablurio.com/assets/og-tablurio.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://tablurio.com/assets/og-tablurio.jpg">
+  <link rel="stylesheet" href="/assets/seo-pages.css?v=1">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tablurio.com/tablature-guitare#page","url":"https://tablurio.com/tablature-guitare","name":"Générateur de tablature guitare à partir d’une chanson | Tablurio","description":"Génère la tablature guitare d’un morceau à partir d’un lien YouTube, Spotify, Deezer ou d’un fichier audio. Tab ou partition classique, export PDF, MIDI, MusicXML.","inLanguage":"fr-FR","isPartOf":{"@id":"https://tablurio.com/#website"},"about":{"@id":"https://tablurio.com/#app"},"dateModified":"2026-11-21","breadcrumb":{"@id":"https://tablurio.com/tablature-guitare#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://tablurio.com/tablature-guitare#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Accueil","item":"https://tablurio.com/"},{"@type":"ListItem","position":2,"name":"Générateur de tablature guitare","item":"https://tablurio.com/tablature-guitare"}]},{"@type":"FAQPage","@id":"https://tablurio.com/tablature-guitare#faq","mainEntity":[{"@type":"Question","name":"Le générateur de tablature est-il gratuit ?","acceptedAnswer":{"@type":"Answer","text":"Tu as 3 aperçus gratuits de 30 secondes pour tester sur tes propres morceaux. Le morceau complet et les exports sont inclus dans les offres Starter (10 €/mois), Pro (19 €/mois) et Lifetime (99 € une fois)."}},{"@type":"Question","name":"Puis-je obtenir une partition au lieu d’une tablature ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Pour la guitare, tu choisis entre tablature et partition classique."}},{"@type":"Question","name":"Quel accordage est utilisé ?","acceptedAnswer":{"@type":"Answer","text":"La tablature est écrite pour une guitare 6 cordes en accordage standard (mi la ré sol si mi)."}},{"@type":"Question","name":"Puis-je ouvrir la tab dans Guitar Pro ou MuseScore ?","acceptedAnswer":{"@type":"Answer","text":"Oui, exporte-la en MusicXML : c’est le format d’échange accepté par la plupart des logiciels de notation, dont MuseScore et Guitar Pro."}},{"@type":"Question","name":"Ça marche avec un fichier audio que j’ai enregistré ?","acceptedAnswer":{"@type":"Answer","text":"Oui. Importe ton fichier MP3, WAV, M4A ou FLAC (25 Mo maximum) au lieu de coller un lien."}},{"@type":"Question","name":"Et pour la basse ?","acceptedAnswer":{"@type":"Answer","text":"La tablature basse 4 cordes est en bêta : elle sera disponible à la sortie de bêta."}}]}]}</script>
+</head>
+<body>
+<header class="sp-header"><div class="wrap sp-nav">
+  <a href="/" class="sp-brand" aria-label="Tablurio, accueil"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a>
+  <nav class="sp-links" aria-label="Menu"><a href="/#comment-ca-marche">Comment ça marche ?</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a></nav>
+  <div class="sp-actions"><a class="sp-login" href="/connexion">Se connecter</a><a class="sp-cta" href="#outil">Commencer ↗</a></div>
+</div></header>
+<main>
+  <section class="sp-hero">
+    <div class="wrap">
+      <nav class="sp-crumbs" aria-label="Fil d’Ariane"><a href="/">Accueil</a> › <span aria-current="page">Générateur de tablature guitare</span></nav>
+      <div class="sp-hero-grid">
+        <div>
+          <span class="sp-kicker">🎸 Tablature guitare</span>
+          <h1>Générateur de <em>tablature guitare</em> à partir d’une chanson</h1>
+          <p class="sp-lead">Plus besoin de chercher une tab qui n’existe pas ou de relever à l’oreille pendant des heures. Colle le lien du morceau, choisis la guitare, et récupère ta tablature.</p>
+          <div class="sp-tool" id="outil">
+  <form class="sp-tool-form" action="/" method="get" data-instrument="guitare" novalidate>
+    <span aria-hidden="true">↗</span>
+    <label class="visually-hidden" for="sp-link" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Lien du morceau</label>
+    <input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" placeholder="Colle le lien du morceau (YouTube, Spotify, Deezer)…">
+    <button type="submit">Créer ma partition →</button>
+  </form>
+  <p class="sp-tool-error" role="alert"></p>
+  <div class="sp-tool-alt"><span>Pas de lien ?</span><a href="/?source=fichier">Importer un fichier audio</a></div>
+  <div class="sp-badges"><span><b>✓</b>3 aperçus gratuits de 30 s</span><span><b>✓</b>Guitare, piano, voix</span><span><b>✓</b>PDF · MIDI · MusicXML</span></div>
+</div>
+        </div>
+        <div class="sp-visual" aria-label="Exemple illustratif">
+  <div class="sp-visual-top"><span>Exemple illustratif</span><b>● Prête</b></div>
+  <h3>Tablature guitare</h3><small>Accordage standard</small>
+  <svg viewBox="0 0 520 150" role="img" aria-label="Exemple illustratif de tablature guitare à six cordes">
+  <g stroke="#c9c2dc" stroke-width="1.3"><line x1="40" y1="22" x2="505" y2="22"/><line x1="40" y1="42" x2="505" y2="42"/><line x1="40" y1="62" x2="505" y2="62"/><line x1="40" y1="82" x2="505" y2="82"/><line x1="40" y1="102" x2="505" y2="102"/><line x1="40" y1="122" x2="505" y2="122"/></g>
+  <line x1="40" y1="22" x2="40" y2="122" stroke="#211c35" stroke-width="2"/><line x1="272" y1="22" x2="272" y2="122" stroke="#211c35" stroke-width="1.5"/><line x1="505" y1="22" x2="505" y2="122" stroke="#211c35" stroke-width="2.5"/>
+  <text x="14" y="50" font-size="15" font-weight="800" fill="#211c35">T</text><text x="14" y="74" font-size="15" font-weight="800" fill="#211c35">A</text><text x="14" y="98" font-size="15" font-weight="800" fill="#211c35">B</text>
+  <g font-size="15" font-weight="800" fill="#6136d0" text-anchor="middle">
+    <text x="78" y="127">3</text><text x="112" y="87">2</text><text x="146" y="67">0</text><text x="180" y="47">1</text><text x="214" y="27">0</text><text x="246" y="47">1</text>
+    <text x="304" y="107">0</text><text x="338" y="87">2</text><text x="372" y="67">2</text><text x="406" y="47">1</text><text x="440" y="27">0</text><text x="474" y="47">1</text>
+  </g></svg>
+  <div class="sp-chips"><span>↓ PDF</span><span>MIDI</span><span>MusicXML</span></div>
+</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-section alt">
+    <div class="wrap sp-center">
+      <span class="sp-label">Comment ça marche ?</span>
+      <h2>Ta tab guitare en 3 étapes</h2>
+      <div class="sp-steps" style="text-align:left"><div class="sp-step"><i>1</i><h3>Ajoute ton morceau</h3><p>Colle un lien YouTube, Spotify ou Deezer, ou importe un fichier audio (MP3, WAV, M4A, FLAC).</p></div><div class="sp-step"><i>2</i><h3>Choisis « Guitare » puis « Tablature »</h3><p>Tu peux aussi demander une partition classique si tu lis le solfège.</p></div><div class="sp-step"><i>3</i><h3>Joue avec la lecture audio</h3><p>Suis la tab à l’écran en écoutant le morceau, puis exporte-la en PDF, MIDI ou MusicXML avec une offre payante.</p></div></div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap narrow">
+      <span class="sp-label">Le guide</span>
+      <h2>Tablature ou partition : laquelle choisir ?</h2>
+      <div class="sp-prose"><p>La <strong>tablature</strong> est la notation préférée des guitaristes : chacune des six lignes représente une corde, et chaque chiffre indique la case à jouer. Pas besoin de savoir lire le solfège pour s’en servir, c’est pour ça qu’elle est si populaire chez les autodidactes.</p>
+<p>La <strong>partition classique</strong>, elle, donne la hauteur exacte des notes et leur rythme sur une portée. Elle est plus précise pour le rythme et se partage avec d’autres instrumentistes.</p>
+<p>Sur Tablurio, tu n’as pas à choisir une fois pour toutes : pour la guitare, tu demandes la tablature ou la partition selon ce que tu préfères lire.</p>
+<h3>Comment lire la tablature générée</h3>
+<ul><li>La ligne du <strong>haut</strong> correspond à la corde de mi aigu, celle du <strong>bas</strong> au mi grave.</li>
+<li>Un <strong>0</strong> signifie corde à vide, un <strong>3</strong> signifie 3e case.</li>
+<li>Les chiffres alignés verticalement se jouent en même temps (un accord).</li></ul>
+<h3>Pour quels morceaux ?</h3>
+<p>Riffs, arpèges, mélodies, intros acoustiques : la transcription est la plus fiable quand la guitare ou la mélodie ressort bien du mix. Sur un morceau très chargé, certains passages peuvent demander une retouche, que tu peux faire dans un logiciel comme Guitar Pro ou MuseScore grâce à l’export MusicXML.</p>
+<p>Tu joues de la basse ? La tablature 4 cordes est en bêta et arrive bientôt.</p></div>
+    </div>
+  </section>
+
+  <section class="sp-section dark">
+    <div class="wrap sp-center">
+      <span class="sp-label">Pourquoi Tablurio</span>
+      <h2>Moins de temps à chercher. Plus de temps à jouer.</h2>
+      <div class="sp-cards" style="text-align:left">
+        <div class="sp-card"><span class="emoji">⚡</span><b>Rapide</b><p>Ta partition en une trentaine de secondes à une minute, au lieu d’heures à relever à l’oreille.</p></div>
+        <div class="sp-card"><span class="emoji">♾️</span><b>Fini l’achat à l’unité</b><p>Un accès pour tous tes morceaux : change de titre aussi souvent que tu veux.</p></div>
+        <div class="sp-card"><span class="emoji">🎸</span><b>Plusieurs instruments</b><p>Le même morceau pour guitare (tab ou partition), piano ou voix.</p></div>
+        <div class="sp-card"><span class="emoji">📄</span><b>Formats utiles</b><p>PDF pour imprimer, MIDI et MusicXML pour retravailler dans ton logiciel.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap sp-faq-grid">
+      <div><span class="sp-label">FAQ</span><h2>Les réponses avant de jouer.</h2><p class="sp-intro">Une autre question ? Consulte la <a href="/faq" style="color:var(--purple);font-weight:700">FAQ complète</a> ou les <a href="/tarifs" style="color:var(--purple);font-weight:700">tarifs</a>.</p></div>
+      <div class="sp-faq"><details open><summary>Le générateur de tablature est-il gratuit ?</summary><p>Tu as 3 aperçus gratuits de 30 secondes pour tester sur tes propres morceaux. Le morceau complet et les exports sont inclus dans les offres Starter (10 €/mois), Pro (19 €/mois) et Lifetime (99 € une fois).</p></details><details><summary>Puis-je obtenir une partition au lieu d’une tablature ?</summary><p>Oui. Pour la guitare, tu choisis entre tablature et partition classique.</p></details><details><summary>Quel accordage est utilisé ?</summary><p>La tablature est écrite pour une guitare 6 cordes en accordage standard (mi la ré sol si mi).</p></details><details><summary>Puis-je ouvrir la tab dans Guitar Pro ou MuseScore ?</summary><p>Oui, exporte-la en MusicXML : c’est le format d’échange accepté par la plupart des logiciels de notation, dont MuseScore et Guitar Pro.</p></details><details><summary>Ça marche avec un fichier audio que j’ai enregistré ?</summary><p>Oui. Importe ton fichier MP3, WAV, M4A ou FLAC (25 Mo maximum) au lieu de coller un lien.</p></details><details><summary>Et pour la basse ?</summary><p>La tablature basse 4 cordes est en bêta : elle sera disponible à la sortie de bêta.</p></details></div>
+    </div>
+  </section>
+
+  <section class="sp-section alt">
+    <div class="wrap">
+      <span class="sp-label">Autres outils</span>
+      <h2>Toutes les façons d’obtenir tes notes</h2>
+      <div class="sp-related"><a href="/youtube-en-partition"><b>YouTube en partition</b><span>Colle un lien YouTube, obtiens les notes</span></a><a href="/partition-piano"><b>Partition piano d’une chanson</b><span>La partition piano de tes morceaux</span></a><a href="/mp3-en-partition"><b>Convertir un MP3 en partition</b><span>Importe un fichier audio, récupère les notes</span></a><a href="/spotify-en-partition"><b>Spotify en partition</b><span>Un titre Spotify devient une partition</span></a><a href="/deezer-en-partition"><b>Deezer en partition</b><span>Un titre Deezer devient une partition</span></a><a href="/musicxml"><b>Export MusicXML</b><span>Ouvre tes partitions dans MuseScore, Dorico…</span></a><a href="/midi"><b>Export MIDI</b><span>Les notes d’un morceau en fichier MIDI</span></a></div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap"><div class="sp-cta-band">
+      <h2>La prochaine musique que tu vas jouer commence ici.</h2>
+      <p>3 aperçus gratuits de 30 secondes pour tester sur tes propres morceaux.</p>
+      <a href="#outil">Créer ma partition ↗</a>
+    </div></div>
+  </section>
+</main>
+<footer class="sp-footer"><div class="wrap sp-footer-grid">
+  <div><a href="/" class="sp-brand"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a><small>Ta musique mérite d’être jouée.</small><small><a href="/en/guitar-tab-generator" hreflang="en" style="font-weight:700">🌐 English</a></small></div>
+  <div><h4>Outils</h4><nav aria-label="Outils"><a href="/youtube-en-partition">YouTube en partition</a><a href="/tablature-guitare" aria-current="page">Générateur de tablature guitare</a><a href="/partition-piano">Partition piano d’une chanson</a><a href="/mp3-en-partition">Convertir un MP3 en partition</a></nav></div>
+  <div><h4>Sources et formats</h4><nav aria-label="Sources et formats"><a href="/spotify-en-partition">Spotify en partition</a><a href="/deezer-en-partition">Deezer en partition</a><a href="/musicxml">Export MusicXML</a><a href="/midi">Export MIDI</a></nav></div>
+  <div><h4>Tablurio</h4><nav aria-label="Tablurio"><a href="/">Accueil</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a><a href="/legal">Mentions</a></nav><small>Partitions et tablatures générées par IA : vérifie toujours le résultat avant de jouer.</small><small>© 2026 Tablurio</small></div>
+</div></footer>
+<script>
+document.querySelectorAll('.sp-tool-form').forEach(function(form){
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var input=form.querySelector('input'),err=form.parentNode.querySelector('.sp-tool-error'),v=input.value.trim();
+    if(!v){err.textContent="Colle le lien du morceau, ou importe un fichier audio.";input.focus();return;}
+    if(!/^https:\/\//i.test(v)){err.textContent="Colle un lien complet qui commence par https://";input.focus();return;}
+    var q=new URLSearchParams({lien:v});if(form.dataset.instrument)q.set('instrument',form.dataset.instrument);
+    location.href='/?'+q.toString();
+  });
+});
+</script>
+</body>
+</html>

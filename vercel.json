@@ -74,6 +74,70 @@
     {
       "source": "/faq",
       "destination": "/index.html"
+    },
+    {
+      "source": "/youtube-en-partition",
+      "destination": "/outils/youtube-en-partition.html"
+    },
+    {
+      "source": "/tablature-guitare",
+      "destination": "/outils/tablature-guitare.html"
+    },
+    {
+      "source": "/partition-piano",
+      "destination": "/outils/partition-piano.html"
+    },
+    {
+      "source": "/mp3-en-partition",
+      "destination": "/outils/mp3-en-partition.html"
+    },
+    {
+      "source": "/spotify-en-partition",
+      "destination": "/outils/spotify-en-partition.html"
+    },
+    {
+      "source": "/deezer-en-partition",
+      "destination": "/outils/deezer-en-partition.html"
+    },
+    {
+      "source": "/musicxml",
+      "destination": "/outils/musicxml.html"
+    },
+    {
+      "source": "/midi",
+      "destination": "/outils/midi.html"
+    },
+    {
+      "source": "/en/youtube-to-sheet-music",
+      "destination": "/outils/en/youtube-to-sheet-music.html"
+    },
+    {
+      "source": "/en/guitar-tab-generator",
+      "destination": "/outils/en/guitar-tab-generator.html"
+    },
+    {
+      "source": "/en/piano-sheet-music",
+      "destination": "/outils/en/piano-sheet-music.html"
+    },
+    {
+      "source": "/en/mp3-to-sheet-music",
+      "destination": "/outils/en/mp3-to-sheet-music.html"
+    },
+    {
+      "source": "/en/spotify-to-sheet-music",
+      "destination": "/outils/en/spotify-to-sheet-music.html"
+    },
+    {
+      "source": "/en/deezer-to-sheet-music",
+      "destination": "/outils/en/deezer-to-sheet-music.html"
+    },
+    {
+      "source": "/en/musicxml",
+      "destination": "/outils/en/musicxml.html"
+    },
+    {
+      "source": "/en/midi",
+      "destination": "/outils/en/midi.html"
     }
   ],
   "headers": [
@@ -251,6 +315,16 @@
       "source": "/ig",
       "destination": "/?utm_source=instagram&utm_medium=bio",
       "permanent": false
+    },
+    {
+      "source": "/outils/:slug.html",
+      "destination": "/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/outils/en/:slug.html",
+      "destination": "/en/:slug",
+      "permanent": true
     }
   ]
 }

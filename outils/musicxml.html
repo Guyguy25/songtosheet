@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Export MusicXML : ouvrir ta partition dans MuseScore ou Guitar Pro | Tablurio</title>
+  <meta name="description" content="Qu’est-ce que le MusicXML et à quoi ça sert ? Génère la partition d’un morceau puis exporte-la en MusicXML pour la modifier dans MuseScore, Dorico, Sibelius ou Guitar Pro.">
+  <link rel="canonical" href="https://tablurio.com/musicxml">
+  <link rel="alternate" hreflang="fr" href="https://tablurio.com/musicxml">
+  <link rel="alternate" hreflang="en" href="https://tablurio.com/en/musicxml">
+  <link rel="alternate" hreflang="x-default" href="https://tablurio.com/musicxml">
+  <meta name="theme-color" content="#0b0719">
+  <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-wave-32.png?v=1">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Tablurio">
+  <meta property="og:locale" content="fr_FR">
+  <meta property="og:url" content="https://tablurio.com/musicxml">
+  <meta property="og:title" content="Export MusicXML : ouvrir ta partition dans MuseScore ou Guitar Pro | Tablurio">
+  <meta property="og:description" content="Qu’est-ce que le MusicXML et à quoi ça sert ? Génère la partition d’un morceau puis exporte-la en MusicXML pour la modifier dans MuseScore, Dorico, Sibelius ou Guitar Pro.">
+  <meta property="og:image" content="https://tablurio.com/assets/og-tablurio.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://tablurio.com/assets/og-tablurio.jpg">
+  <link rel="stylesheet" href="/assets/seo-pages.css?v=1">
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tablurio.com/musicxml#page","url":"https://tablurio.com/musicxml","name":"Export MusicXML : ouvrir ta partition dans MuseScore ou Guitar Pro | Tablurio","description":"Qu’est-ce que le MusicXML et à quoi ça sert ? Génère la partition d’un morceau puis exporte-la en MusicXML pour la modifier dans MuseScore, Dorico, Sibelius ou Guitar Pro.","inLanguage":"fr-FR","isPartOf":{"@id":"https://tablurio.com/#website"},"about":{"@id":"https://tablurio.com/#app"},"dateModified":"2026-11-21","breadcrumb":{"@id":"https://tablurio.com/musicxml#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://tablurio.com/musicxml#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Accueil","item":"https://tablurio.com/"},{"@type":"ListItem","position":2,"name":"Export MusicXML","item":"https://tablurio.com/musicxml"}]},{"@type":"FAQPage","@id":"https://tablurio.com/musicxml#faq","mainEntity":[{"@type":"Question","name":"Quels logiciels ouvrent le MusicXML ?","acceptedAnswer":{"@type":"Answer","text":"La plupart des éditeurs de partitions : MuseScore (gratuit), Dorico, Sibelius, Guitar Pro, et de nombreuses applications mobiles."}},{"@type":"Question","name":"Quelle différence entre MusicXML et MIDI ?","acceptedAnswer":{"@type":"Answer","text":"Le MIDI décrit des notes jouées (hauteur, durée, intensité), idéal pour le son. Le MusicXML décrit la partition écrite (mesures, clés, tablature), idéal pour la notation."}},{"@type":"Question","name":"L’export MusicXML est-il inclus dans l’offre gratuite ?","acceptedAnswer":{"@type":"Answer","text":"L’aperçu gratuit se lit à l’écran. Les exports PDF, MIDI et MusicXML sont inclus dans les offres Starter, Pro et Lifetime."}},{"@type":"Question","name":"Puis-je exporter une tablature guitare en MusicXML ?","acceptedAnswer":{"@type":"Answer","text":"Oui, et l’ouvrir ensuite dans Guitar Pro ou MuseScore pour la modifier."}},{"@type":"Question","name":"Le fichier a-t-il l’extension .musicxml ou .xml ?","acceptedAnswer":{"@type":"Answer","text":"Les deux désignent le même format ; les logiciels de notation reconnaissent le fichier exporté par Tablurio."}}]}]}</script>
+</head>
+<body>
+<header class="sp-header"><div class="wrap sp-nav">
+  <a href="/" class="sp-brand" aria-label="Tablurio, accueil"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a>
+  <nav class="sp-links" aria-label="Menu"><a href="/#comment-ca-marche">Comment ça marche ?</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a></nav>
+  <div class="sp-actions"><a class="sp-login" href="/connexion">Se connecter</a><a class="sp-cta" href="#outil">Commencer ↗</a></div>
+</div></header>
+<main>
+  <section class="sp-hero">
+    <div class="wrap">
+      <nav class="sp-crumbs" aria-label="Fil d’Ariane"><a href="/">Accueil</a> › <span aria-current="page">Export MusicXML</span></nav>
+      <div class="sp-hero-grid">
+        <div>
+          <span class="sp-kicker">♬ Format MusicXML</span>
+          <h1>Ta partition en <em>MusicXML</em>, prête à modifier</h1>
+          <p class="sp-lead">Génère la partition ou la tablature d’un morceau, puis exporte-la en MusicXML pour la retoucher, l’arranger ou la transposer dans ton logiciel de notation préféré.</p>
+          <div class="sp-tool" id="outil">
+  <form class="sp-tool-form" action="/" method="get" data-instrument="" novalidate>
+    <span aria-hidden="true">↗</span>
+    <label class="visually-hidden" for="sp-link" style="position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%)">Lien du morceau</label>
+    <input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" placeholder="Colle le lien d’un morceau (YouTube, Spotify, Deezer)…">
+    <button type="submit">Créer ma partition →</button>
+  </form>
+  <p class="sp-tool-error" role="alert"></p>
+  <div class="sp-tool-alt"><span>Pas de lien ?</span><a href="/?source=fichier">Importer un fichier audio</a></div>
+  <div class="sp-badges"><span><b>✓</b>3 aperçus gratuits de 30 s</span><span><b>✓</b>Guitare, piano, voix</span><span><b>✓</b>PDF · MIDI · MusicXML</span></div>
+</div>
+        </div>
+        <div class="sp-visual" aria-label="Extrait de fichier">
+  <div class="sp-visual-top"><span>Extrait de fichier</span><b>● Prête</b></div>
+  <h3>MusicXML</h3><small>Une note de tablature décrite en XML</small>
+  <pre style="margin:14px 0 10px;background:#17112e;color:#e6dcff;border-radius:12px;padding:16px;font-size:12px;line-height:1.55;overflow:auto"><code>&lt;note&gt;
+  &lt;pitch&gt;&lt;step&gt;E&lt;/step&gt;&lt;octave&gt;4&lt;/octave&gt;&lt;/pitch&gt;
+  &lt;duration&gt;1&lt;/duration&gt;
+  &lt;type&gt;quarter&lt;/type&gt;
+  &lt;notations&gt;&lt;technical&gt;
+    &lt;string&gt;1&lt;/string&gt;&lt;fret&gt;0&lt;/fret&gt;
+  &lt;/technical&gt;&lt;/notations&gt;
+&lt;/note&gt;</code></pre>
+  <div class="sp-chips"><span>↓ PDF</span><span>MIDI</span><span>MusicXML</span></div>
+</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-section alt">
+    <div class="wrap sp-center">
+      <span class="sp-label">Comment ça marche ?</span>
+      <h2>Obtenir un fichier MusicXML</h2>
+      <div class="sp-steps" style="text-align:left"><div class="sp-step"><i>1</i><h3>Génère ta partition</h3><p>À partir d’un lien YouTube, Spotify, Deezer ou d’un fichier audio, pour guitare, piano ou voix.</p></div><div class="sp-step"><i>2</i><h3>Exporte en MusicXML</h3><p>Depuis l’écran de la partition, télécharge le fichier (offres Starter, Pro et Lifetime).</p></div><div class="sp-step"><i>3</i><h3>Ouvre-le dans ton logiciel</h3><p>MuseScore, Dorico, Sibelius, Guitar Pro et la plupart des éditeurs de partitions l’importent.</p></div></div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap narrow">
+      <span class="sp-label">Le guide</span>
+      <h2>MusicXML, c’est quoi ?</h2>
+      <div class="sp-prose"><p>Le <strong>MusicXML</strong> est un format ouvert, créé pour échanger des partitions entre logiciels. Contrairement à un PDF (une image figée) ou au MIDI (des notes jouées, sans mise en page), il décrit la partition elle-même : notes, rythmes, mesures, clés, altérations, et même cordes et cases pour une tablature.</p>
+<h3>Pourquoi l’exporter ?</h3>
+<ul><li><strong>Corriger</strong> une note ou un rythme après la transcription automatique.</li>
+<li><strong>Transposer</strong> le morceau dans une tonalité plus confortable pour ta voix ou ton instrument.</li>
+<li><strong>Arranger</strong> : ajouter des doigtés, des nuances, une seconde voix.</li>
+<li><strong>Partager</strong> la partition avec un professeur ou ton groupe, qui l’ouvrira dans son propre logiciel.</li></ul>
+<h3>MusicXML, MIDI ou PDF ?</h3>
+<p>Le <strong>PDF</strong> sert à lire et imprimer. Le <a href="/midi"><strong>MIDI</strong></a> sert à rejouer et produire du son. Le <strong>MusicXML</strong> sert à éditer la partition. Avec une offre Tablurio, tu récupères les trois.</p></div>
+    </div>
+  </section>
+
+  <section class="sp-section dark">
+    <div class="wrap sp-center">
+      <span class="sp-label">Pourquoi Tablurio</span>
+      <h2>Moins de temps à chercher. Plus de temps à jouer.</h2>
+      <div class="sp-cards" style="text-align:left">
+        <div class="sp-card"><span class="emoji">⚡</span><b>Rapide</b><p>Ta partition en une trentaine de secondes à une minute, au lieu d’heures à relever à l’oreille.</p></div>
+        <div class="sp-card"><span class="emoji">♾️</span><b>Fini l’achat à l’unité</b><p>Un accès pour tous tes morceaux : change de titre aussi souvent que tu veux.</p></div>
+        <div class="sp-card"><span class="emoji">🎸</span><b>Plusieurs instruments</b><p>Le même morceau pour guitare (tab ou partition), piano ou voix.</p></div>
+        <div class="sp-card"><span class="emoji">📄</span><b>Formats utiles</b><p>PDF pour imprimer, MIDI et MusicXML pour retravailler dans ton logiciel.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap sp-faq-grid">
+      <div><span class="sp-label">FAQ</span><h2>Les réponses avant de jouer.</h2><p class="sp-intro">Une autre question ? Consulte la <a href="/faq" style="color:var(--purple);font-weight:700">FAQ complète</a> ou les <a href="/tarifs" style="color:var(--purple);font-weight:700">tarifs</a>.</p></div>
+      <div class="sp-faq"><details open><summary>Quels logiciels ouvrent le MusicXML ?</summary><p>La plupart des éditeurs de partitions : MuseScore (gratuit), Dorico, Sibelius, Guitar Pro, et de nombreuses applications mobiles.</p></details><details><summary>Quelle différence entre MusicXML et MIDI ?</summary><p>Le MIDI décrit des notes jouées (hauteur, durée, intensité), idéal pour le son. Le MusicXML décrit la partition écrite (mesures, clés, tablature), idéal pour la notation.</p></details><details><summary>L’export MusicXML est-il inclus dans l’offre gratuite ?</summary><p>L’aperçu gratuit se lit à l’écran. Les exports PDF, MIDI et MusicXML sont inclus dans les offres Starter, Pro et Lifetime.</p></details><details><summary>Puis-je exporter une tablature guitare en MusicXML ?</summary><p>Oui, et l’ouvrir ensuite dans Guitar Pro ou MuseScore pour la modifier.</p></details><details><summary>Le fichier a-t-il l’extension .musicxml ou .xml ?</summary><p>Les deux désignent le même format ; les logiciels de notation reconnaissent le fichier exporté par Tablurio.</p></details></div>
+    </div>
+  </section>
+
+  <section class="sp-section alt">
+    <div class="wrap">
+      <span class="sp-label">Autres outils</span>
+      <h2>Toutes les façons d’obtenir tes notes</h2>
+      <div class="sp-related"><a href="/youtube-en-partition"><b>YouTube en partition</b><span>Colle un lien YouTube, obtiens les notes</span></a><a href="/tablature-guitare"><b>Générateur de tablature guitare</b><span>La tab guitare de n’importe quel morceau</span></a><a href="/partition-piano"><b>Partition piano d’une chanson</b><span>La partition piano de tes morceaux</span></a><a href="/mp3-en-partition"><b>Convertir un MP3 en partition</b><span>Importe un fichier audio, récupère les notes</span></a><a href="/spotify-en-partition"><b>Spotify en partition</b><span>Un titre Spotify devient une partition</span></a><a href="/deezer-en-partition"><b>Deezer en partition</b><span>Un titre Deezer devient une partition</span></a><a href="/midi"><b>Export MIDI</b><span>Les notes d’un morceau en fichier MIDI</span></a></div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap"><div class="sp-cta-band">
+      <h2>La prochaine musique que tu vas jouer commence ici.</h2>
+      <p>3 aperçus gratuits de 30 secondes pour tester sur tes propres morceaux.</p>
+      <a href="#outil">Créer ma partition ↗</a>
+    </div></div>
+  </section>
+</main>
+<footer class="sp-footer"><div class="wrap sp-footer-grid">
+  <div><a href="/" class="sp-brand"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a><small>Ta musique mérite d’être jouée.</small><small><a href="/en/musicxml" hreflang="en" style="font-weight:700">🌐 English</a></small></div>
+  <div><h4>Outils</h4><nav aria-label="Outils"><a href="/youtube-en-partition">YouTube en partition</a><a href="/tablature-guitare">Générateur de tablature guitare</a><a href="/partition-piano">Partition piano d’une chanson</a><a href="/mp3-en-partition">Convertir un MP3 en partition</a></nav></div>
+  <div><h4>Sources et formats</h4><nav aria-label="Sources et formats"><a href="/spotify-en-partition">Spotify en partition</a><a href="/deezer-en-partition">Deezer en partition</a><a href="/musicxml" aria-current="page">Export MusicXML</a><a href="/midi">Export MIDI</a></nav></div>
+  <div><h4>Tablurio</h4><nav aria-label="Tablurio"><a href="/">Accueil</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a><a href="/legal">Mentions</a></nav><small>Partitions et tablatures générées par IA : vérifie toujours le résultat avant de jouer.</small><small>© 2026 Tablurio</small></div>
+</div></footer>
+<script>
+document.querySelectorAll('.sp-tool-form').forEach(function(form){
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var input=form.querySelector('input'),err=form.parentNode.querySelector('.sp-tool-error'),v=input.value.trim();
+    if(!v){err.textContent="Colle le lien du morceau, ou importe un fichier audio.";input.focus();return;}
+    if(!/^https:\/\//i.test(v)){err.textContent="Colle un lien complet qui commence par https://";input.focus();return;}
+    var q=new URLSearchParams({lien:v});if(form.dataset.instrument)q.set('instrument',form.dataset.instrument);
+    location.href='/?'+q.toString();
+  });
+});
+</script>
+</body>
+</html>

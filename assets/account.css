@@ -166,3 +166,9 @@ button.user-avatar:hover,button.user-avatar[aria-expanded="true"]{box-shadow:0 0
 .auth-verify .code-input{width:100%;min-height:60px}
 .auth-verify-links{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin:18px 0 0;font-size:13px;color:#9a93a4}
 .auth-verify-links button{border:0;background:none;padding:0;color:#6d3ddc;font:inherit;font-weight:750;cursor:pointer}
+
+/* Sélecteur de langue dans l'espace (en-tête clair) */
+.app-header .lang-switch{border-color:#e3dcf0;background:#fff}
+.app-header .lang-switch button{color:#8a7fa1}
+.app-header .lang-switch button:hover{color:#5a36c4}
+.app-header .lang-switch button.active{background:#7549eb;color:#fff}

@@ -5,8 +5,58 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#160D2D" />
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-wave-32.png?v=1" />
-  <meta name="description" content="Tablurio.com : obtenez des partitions et, prochainement, des tablatures de vos musiques préférées depuis un lien ou un fichier audio. Découvrez la V1." />
+  <meta name="description" content="Tablurio transforme un lien YouTube, Spotify, Deezer ou un fichier audio en partition ou tablature (guitare, piano, voix). Exports PDF, MIDI, MusicXML. 3 aperçus gratuits de 30 s." />
   <title>Tablurio.com — Partitions et tablatures de vos musiques préférées</title>
+  <link rel="canonical" href="https://tablurio.com/" id="canonical-link" />
+  <script>(function(){var p=location.pathname.replace(/\/+$/,'')||'/';var pub={'/':1,'/fonctionnalites':1,'/resultats':1,'/tarifs':1,'/faq':1,'/legal':1};var l=document.getElementById('canonical-link');if(l){if(pub[p])l.href='https://tablurio.com'+p;else l.remove();}})();</script>
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Tablurio" />
+  <meta property="og:locale" content="fr_FR" />
+  <meta property="og:url" content="https://tablurio.com/" />
+  <meta property="og:title" content="Tablurio — Partitions et tablatures de vos musiques préférées" />
+  <meta property="og:description" content="Colle un lien YouTube, Spotify ou Deezer et obtiens la partition ou la tablature du morceau (guitare, piano, voix). Exports PDF, MIDI et MusicXML." />
+  <meta name="twitter:card" content="summary" />
+  <meta name="twitter:title" content="Tablurio — Partitions et tablatures de vos musiques préférées" />
+  <meta name="twitter:description" content="Colle un lien YouTube, Spotify ou Deezer et obtiens la partition ou la tablature du morceau." />
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://tablurio.com/#organization",
+        "name": "Tablurio",
+        "url": "https://tablurio.com/",
+        "logo": "https://tablurio.com/assets/tablurio-wave-mark.svg"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://tablurio.com/#website",
+        "name": "Tablurio",
+        "url": "https://tablurio.com/",
+        "inLanguage": "fr-FR",
+        "publisher": { "@id": "https://tablurio.com/#organization" }
+      },
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://tablurio.com/#app",
+        "name": "Tablurio",
+        "url": "https://tablurio.com/",
+        "applicationCategory": "MultimediaApplication",
+        "operatingSystem": "Web",
+        "inLanguage": "fr-FR",
+        "description": "Transforme un lien YouTube, Spotify, Deezer ou un fichier audio en partition ou en tablature pour guitare, piano et voix, avec exports PDF, MIDI et MusicXML.",
+        "publisher": { "@id": "https://tablurio.com/#organization" },
+        "offers": [
+          { "@type": "Offer", "name": "Gratuit", "price": "0", "priceCurrency": "EUR", "description": "3 aperçus gratuits de 30 secondes", "url": "https://tablurio.com/tarifs" },
+          { "@type": "Offer", "name": "Starter", "price": "10", "priceCurrency": "EUR", "description": "1 morceau complet toutes les 24 h", "url": "https://tablurio.com/tarifs", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "10", "priceCurrency": "EUR", "unitText": "mois", "billingDuration": "P1M" } },
+          { "@type": "Offer", "name": "Pro", "price": "19", "priceCurrency": "EUR", "description": "Sans limite quotidienne, tous les instruments, exports PDF, MIDI et MusicXML", "url": "https://tablurio.com/tarifs", "priceSpecification": { "@type": "UnitPriceSpecification", "price": "19", "priceCurrency": "EUR", "unitText": "mois", "billingDuration": "P1M" } },
+          { "@type": "Offer", "name": "Lifetime", "price": "99", "priceCurrency": "EUR", "description": "Paiement unique, accès sans renouvellement", "url": "https://tablurio.com/tarifs" }
+        ]
+      }
+    ]
+  }
+  </script>
   <!-- Vercel Web Analytics: anonymous visitor and page-view tracking -->
   <script>
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
@@ -585,6 +635,8 @@
 .split-copy h1 .hero-word-cycle{display:inline-grid;vertical-align:baseline;white-space:nowrap;background:none;color:inherit;-webkit-text-fill-color:initial}
 .split-copy h1 .hero-word-cycle > span{grid-area:1 / 1;white-space:nowrap}
 .split-copy h1 .hero-word-cycle .hero-word-measure{visibility:hidden;pointer-events:none}
+.hero-word-cycle [data-word]::before{content:attr(data-word)}
+.seo-sr{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap;border:0}
 /* Let the gradient paint the full glyph without widening the heading. */
 .split-copy h1 .hero-word-cycle .hero-word-typed{justify-self:start;padding-inline-end:.14em;margin-inline-end:-.14em;background:linear-gradient(100deg,#bf9dff,#7d7efa,#c5acff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;position:relative}
 .split-copy h1 .hero-word-cycle .hero-word-typed:after{content:"";position:absolute;right:.03em;top:.13em;height:.82em;width:2.5px;background:#bf9dff;border-radius:3px;animation:hero-type-caret .85s steps(1,end) infinite}
@@ -803,7 +855,7 @@
   </dialog>
   <header id="public-header" class="site-header" data-session-pending>
   <div class="container nav-inner nav-capsule">
-    <a href="/" data-nav="home" class="brand" aria-label="Tablurio — Accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a>
+    <a href="/" data-nav="home" class="brand" aria-label="Tablurio — Accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a>
     <nav class="top-nav" aria-label="Menu principal">
       <a href="/#comment-ca-marche" data-nav="how">Comment ça marche ?</a>
       <a href="/fonctionnalites" data-nav="features">Fonctionnalités</a>
@@ -823,7 +875,7 @@
  <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
  <div class="container split-inner">
  <div class="split-copy">
- <h1 id="hero-heading">Obtenez la <span class="hero-word-cycle" aria-label="partition ou tablature"><span class="hero-word-measure" aria-hidden="true">partition</span><span class="hero-word-measure" aria-hidden="true">tablature</span><span id="hero-typed-word" class="hero-word-typed" aria-hidden="true">partition</span></span><br>de vos <span class="hero-heading-ending">musiques préférées.</span></h1>
+ <h1 id="hero-heading">Obtenez la <span class="hero-word-cycle" aria-hidden="true"><span class="hero-word-measure" data-word="partition"></span><span class="hero-word-measure" data-word="tablature"></span><span id="hero-typed-word" class="hero-word-typed" data-word="partition"></span></span><span class="seo-sr">partition ou la tablature </span><br>de vos <span class="hero-heading-ending">musiques préférées.</span></h1>
  <p class="split-subtitle">Collez un lien YouTube, Spotify ou Deezer, ou importez un audio. Choisissez votre instrument et <strong>obtenez votre partition ou tablature.</strong></p>
  <div class="hero-action-panel">
    <div class="rev-mode" role="tablist" aria-label="Source de musique"><button id="tab-link" class="active" type="button" role="tab" aria-selected="true">🔗 Lien musical</button><button id="tab-upload" type="button" role="tab" aria-selected="false">⇧ Fichier audio</button></div>
@@ -846,7 +898,7 @@
    </div>
    <div class="source-tags"><span class="tag-yt"><i>▶</i> YouTube</span><span class="tag-spotify"><i>◉</i> Spotify</span><span class="tag-deezer"><i>▥</i> Deezer</span></div>
    <div class="morph-arrow" aria-hidden="true"><div class="arrow-stem"></div><div class="arrow-head">➜</div><span class="arrow-spark">✦</span></div>
-   <div class="morph-sheet"><div class="sheet-toolbar"><span>tablurio<span>.com</span></span><span class="sheet-ready"><i></i> PARTITION PRÊTE</span></div><div class="sheet-paper"><div class="sheet-overline">TRANSCRIPTION • DÉMONSTRATION</div><h3>Ma partition</h3><p>Arrangement de mélodie • Piano</p><svg class="hero-score-svg" viewBox="0 0 300 236" role="img" aria-label="Partition musicale illustrant six notes">
+   <div class="morph-sheet"><div class="sheet-toolbar"><span>tablurio<span>.com</span></span><span class="sheet-ready"><i></i> PARTITION PRÊTE</span></div><div class="sheet-paper"><div class="sheet-overline">TRANSCRIPTION • DÉMONSTRATION</div><h3>Ma partition</h3><p>Arrangement de mélodie • Piano</p><svg class="hero-score-svg" viewBox="0 0 300 236" role="img" aria-label="Exemple de partition générée par Tablurio à partir d'un morceau">
 <text x="12" y="21" fill="#a7a0b1" font-size="9" font-family="sans-serif" font-weight="700">PIANO • MELODIE</text>
 <g fill="none" stroke="#c3becd" stroke-width="1.15"><path d="M18 66H282M18 80H282M18 94H282M18 108H282M18 122H282"/><path d="M18 169H282M18 183H282M18 197H282M18 211H282M18 225H282"/></g>
 <text x="20" y="118" font-size="61" fill="#282338" font-family="serif">𝄞</text>
@@ -892,7 +944,7 @@
 <button type="button" class="ib" data-ins="batterie" aria-pressed="false"><span class="e">🥁</span><span><b>Batterie</b><small>Notation batterie</small></span><span class="st b">Bientôt</span></button>
 </div>
 <div class="pvsheet"><div class="pvhead"><div><small>EXEMPLE ILLUSTRATIF</small><h3 id="lp2-pv-title">Tablature guitare</h3><p id="lp2-pv-sub">Accordage standard</p></div><span class="ready">● PRÊTE EN 0:30</span></div>
-<svg id="lp2-pv" viewBox="0 0 520 190" role="img" aria-label="Aperçu de notation"></svg>
+<svg id="lp2-pv" viewBox="0 0 520 190" role="img" aria-label="Aperçu de tablature ou de partition selon l'instrument choisi"></svg>
 <div class="fm"><span>↓ PDF</span><span>MIDI</span><span>MusicXML</span></div></div>
 </div>
 <div class="try"><h3>Teste par toi-même</h3>
@@ -1069,17 +1121,17 @@
 <section class="sub-hero"><div class="container sub-hero-center"><span class="sub-kicker">CENTRE D'AIDE</span><h1>Une question ?<br><em>On t'explique tout.</em></h1><p>Tout ce qu'il faut savoir avant de transformer ta musique en partition.</p></div></section>
 <section class="sub-section"><div class="container faq-page-grid"><aside><span class="sub-kicker">LES RÉPONSES</span><h2>Une expérience simple, sans jargon musical.</h2><p>Le produit évolue encore. Nous affichons clairement ses limites actuelles.</p><button type="button" class="sub-primary" data-start>Créer ma partition ↗</button></aside>
 <div class="simple-faq faq-full">
-<details open><summary>À quoi sert Tablurio ? <span>+</span></summary><p>À obtenir un relevé musical sous forme de partition, à partir d'un fichier audio autorisé, afin d'apprendre plus facilement à jouer un morceau.</p></details>
+<details open><summary>À quoi sert Tablurio ? <span>+</span></summary><p>À obtenir un relevé musical sous forme de partition ou de tablature, à partir d'un lien YouTube, Spotify, Deezer ou d'un fichier audio autorisé, afin d'apprendre plus facilement à jouer un morceau.</p></details>
 <details><summary>Un lien YouTube, Spotify ou Deezer suffit-il ? <span>+</span></summary><p>Oui, si la vidéo YouTube est accessible ou si une version YouTube du morceau est proposée. Sinon, tu peux importer ton fichier audio.</p></details>
-<details><summary>Quels instruments sont prévus ? <span>+</span></summary><p>Piano, guitare, violon, basse et voix. Le moteur expérimental relève avant tout la mélodie principale et non un arrangement complet de tous les instruments.</p></details>
+<details><summary>Quels instruments sont disponibles ? <span>+</span></summary><p>Guitare (partition ou tablature), piano et voix sont disponibles. La basse est en bêta ; le violon et la batterie arrivent bientôt.</p></details>
 <details><summary>La partition est-elle toujours correcte ? <span>+</span></summary><p>Non. La qualité dépend de la source. Les mélodies isolées sont plus simples à analyser que les morceaux avec accords, percussions et plusieurs instruments superposés.</p></details>
 <details><summary>Quels fichiers puis-je récupérer ? <span>+</span></summary><p>Un PDF pour lire et imprimer, un fichier MIDI et un MusicXML pour reprendre la transcription dans un logiciel de musique.</p></details>
 <details><summary>Y a-t-il un essai gratuit ? <span>+</span></summary><p>Tu as 3 aperçus gratuits de 30 secondes pour juger le résultat sur tes propres morceaux. Ensuite, les offres sont Starter (10 €/mois, 1 morceau complet par jour), Pro (19 €/mois, sans limite quotidienne) et Lifetime (99 € une fois), avec une réduction de 35 % en annuel sur les abonnements.</p></details>
-<details><summary>Les abonnements et la génération sont-ils actifs ? <span>+</span></summary><p>Non, le site public est une démonstration. Les vrais paiements et le traitement audio en ligne seront activés après intégration et tests.</p></details>
+<details><summary>Les abonnements et la génération sont-ils actifs ? <span>+</span></summary><p>Oui. Ton compte gratuit inclut 3 aperçus de 30 secondes ; avec une offre Starter, Pro ou Lifetime, tu génères le morceau complet. Le paiement est sécurisé par Whop.</p></details>
 </div></div></section></main>
 <main id="workspace" class="hidden">
-    <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><button id="menu-create" class="side-new" type="button"><span aria-hidden="true">＋</span> Nouvelle partition</button><nav class="side-nav" aria-label="Ton espace"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button><button id="menu-account"><span>◇</span> Mon abonnement</button></nav><span class="sidebar-label side-recents-label" hidden>RÉCENTS</span><nav id="side-recents" class="side-recents" aria-label="Partitions récentes"></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Gratuit</strong><small id="sidebar-plan-detail">Aperçus de 30 s</small><a class="btn btn-primary" id="sidebar-plan-action" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
-    <div class="app-layout"><header class="app-header"><a href="/" class="brand track-guest-brand" data-nav="home" aria-label="Tablurio, accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><button type="button" class="small-credit" id="plan-pill" title="Mon abonnement"><span aria-hidden="true">◇</span> <b id="top-credits">Démo</b><span id="top-credits-detail" class="plan-pill-detail"></span></button><div class="user-menu"><button type="button" class="user-avatar" id="user-avatar" aria-haspopup="menu" aria-expanded="false" aria-controls="user-menu" aria-label="Ouvrir le menu du compte">T</button><div id="user-menu" class="user-menu-panel" role="menu" hidden><div class="user-menu-head"><span class="user-menu-photo" id="user-menu-photo" aria-hidden="true"></span><div><b id="user-menu-name"></b><small id="user-menu-email"></small></div></div><button type="button" role="menuitem" data-user-menu="profile"><span aria-hidden="true">☺</span>Profil et paramètres</button><button type="button" role="menuitem" data-user-menu="account"><span aria-hidden="true">◇</span>Mon abonnement</button><button type="button" role="menuitem" data-user-menu="upgrade" id="user-menu-upgrade"><span aria-hidden="true">✦</span><span>Passer au Pro</span></button><button type="button" role="menuitem" data-user-menu="library"><span aria-hidden="true">▤</span>Ma bibliothèque</button><a role="menuitem" href="/admin" id="user-menu-admin" class="user-menu-admin" hidden><span aria-hidden="true">▦</span>Tableau de bord KPI</a><hr><button type="button" role="menuitem" data-user-menu="logout" class="user-menu-logout"><span aria-hidden="true">⇥</span>Se déconnecter</button></div></div></div></header><div class="app-scroll">
+    <aside class="sidebar"><a href="/" class="brand sidebar-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><button id="menu-create" class="side-new" type="button"><span aria-hidden="true">＋</span> Nouvelle partition</button><nav class="side-nav" aria-label="Ton espace"><button id="menu-dashboard" class="side-active"><span>⌂</span> Vue d'ensemble</button><button id="menu-library"><span>▤</span> Ma bibliothèque</button><button id="menu-account"><span>◇</span> Mon abonnement</button></nav><span class="sidebar-label side-recents-label" hidden>RÉCENTS</span><nav id="side-recents" class="side-recents" aria-label="Partitions récentes"></nav><div class="side-bottom"><div class="credit-panel"><div><span>◇</span> Mon abonnement</div><strong id="sidebar-credits">Gratuit</strong><small id="sidebar-plan-detail">Aperçus de 30 s</small><a class="btn btn-primary" id="sidebar-plan-action" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></div><button id="sidebar-logout" class="side-logout">⇥ &nbsp; Se déconnecter</button></div></aside>
+    <div class="app-layout"><header class="app-header"><a href="/" class="brand track-guest-brand" data-nav="home" aria-label="Tablurio, accueil"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div><span class="app-breadcrumb">MON ESPACE <span> / </span> <strong id="page-crumb">Vue d'ensemble</strong></span></div><div class="app-header-right"><button id="mobile-sidebar" class="mobile-dashboard-menu">☰</button><button type="button" class="small-credit" id="plan-pill" title="Mon abonnement"><span aria-hidden="true">◇</span> <b id="top-credits">Démo</b><span id="top-credits-detail" class="plan-pill-detail"></span></button><div class="user-menu"><button type="button" class="user-avatar" id="user-avatar" aria-haspopup="menu" aria-expanded="false" aria-controls="user-menu" aria-label="Ouvrir le menu du compte">T</button><div id="user-menu" class="user-menu-panel" role="menu" hidden><div class="user-menu-head"><span class="user-menu-photo" id="user-menu-photo" aria-hidden="true"></span><div><b id="user-menu-name"></b><small id="user-menu-email"></small></div></div><button type="button" role="menuitem" data-user-menu="profile"><span aria-hidden="true">☺</span>Profil et paramètres</button><button type="button" role="menuitem" data-user-menu="account"><span aria-hidden="true">◇</span>Mon abonnement</button><button type="button" role="menuitem" data-user-menu="upgrade" id="user-menu-upgrade"><span aria-hidden="true">✦</span><span>Passer au Pro</span></button><button type="button" role="menuitem" data-user-menu="library"><span aria-hidden="true">▤</span>Ma bibliothèque</button><a role="menuitem" href="/admin" id="user-menu-admin" class="user-menu-admin" hidden><span aria-hidden="true">▦</span>Tableau de bord KPI</a><hr><button type="button" role="menuitem" data-user-menu="logout" class="user-menu-logout"><span aria-hidden="true">⇥</span>Se déconnecter</button></div></div></div></header><div class="app-scroll">
       <section id="dashboard-page" class="app-page"><div class="app-welcome"><div><span class="dashboard-kicker">TON STUDIO PERSONNEL ✦</span><h1>Prêt à jouer quelque chose<br/><span>de nouveau ?</span></h1><p>Transforme tes enregistrements en partitions en quelques étapes.</p></div><div class="welcome-decor">♫</div></div><div class="overview-cards"><div class="overview-card"><span class="metric-symbol purple">◇</span><div><strong id="metric-credits">Démo</strong><small>Accès actuel</small></div></div><div class="overview-card"><span class="metric-symbol green">▤</span><div><strong id="metric-total">0</strong><small>Partitions générées</small></div></div><div class="overview-card"><span class="metric-symbol orange">✧</span><div><strong id="metric-progress">0</strong><small>Générations en cours</small></div></div></div><div class="dashboard-grid"><div class="dashboard-create"><div><span class="section-label">CRÉATION RAPIDE</span><h2>Ta prochaine partition est à un clic.</h2><p>Dépose un morceau et laisse Tablurio faire le premier relevé.</p><button id="dashboard-start" class="btn btn-primary">Nouvelle partition <span>↗</span></button></div><div class="dashboard-illustration">♬</div></div><div class="dashboard-helper"><span class="helper-symbol">✦</span><h3>Comment ça marche ?</h3><p>Importe ton fichier audio, choisis ton instrument, puis lance la génération. Le résultat sera sauvegardé dans ta bibliothèque.</p><a href="/#comment-ca-marche" id="learn-more">Voir les étapes <span>↗</span></a></div></div><div class="list-heading"><h2>Dernières partitions</h2><button id="view-all">Tout voir →</button></div><div id="recent-jobs" class="jobs-list"></div><p id="admin-guitar-comparison" hidden><a class="btn btn-primary" href="/admin">Tableau de bord KPI</a> <a class="btn btn-outline" href="/statistiques.html">Statistiques des moteurs</a> <a class="btn btn-outline" href="/comparatif.html">Comparer les tablatures guitare</a></p></section>
 
       <section id="create-page" class="app-page hidden"><div class="app-title-row"><div><span class="dashboard-kicker">NOUVELLE CRÉATION</span><h1>Créons ta partition <span>✦</span></h1><p>Ton morceau, ton instrument, ta partition.</p></div><span class="app-title-icon">♫</span></div><div class="create-grid"><div class="create-box"><div class="create-step-head"><span>1</span><div><h3>Choisis ta source audio</h3><p>Importe un enregistrement autorisé à la transcription.</p></div></div><label class="workspace-upload" id="workspace-drop" for="workspace-file"><span>⇧</span><strong id="workspace-file-name">Glisse un fichier ici, ou clique pour choisir</strong><small>MP3 · WAV · M4A · FLAC · OGG · AAC — 25 Mo max.</small><input type="file" id="workspace-file" accept="audio/*,.mp3,.wav,.m4a,.flac,.ogg,.aac" /></label><label class="label-form" for="workspace-url">Lien de référence (facultatif)</label><input id="workspace-url" class="field" placeholder="https://youtube.com/watch?v=..."/><p class="form-caption">Nous n'extrayons pas le son des plateformes. Le fichier doit être fourni séparément.</p><div class="create-divider"></div><div class="create-step-head"><span>2</span><div><h3>Personnalise le relevé</h3><p>Choisis un titre et l'instrument à afficher.</p></div></div><label for="workspace-title" class="label-form">Nom de la partition</label><input class="field" id="workspace-title" maxlength="90" placeholder="Ex. Mon morceau au piano" value="Ma partition"/><label for="workspace-instrument" class="label-form">Instrument</label><select id="workspace-instrument" class="field select-field"><option value="piano">🎹 Piano</option><option value="guitare">🎸 Guitare</option><option value="violon">🎻 Violon</option><option value="voix">🎙️ Voix</option><option value="basse">🎼 Basse</option></select><div id="track-onboarding"></div><div class="submit-row"><button id="workspace-generate" class="btn btn-primary">Générer la partition <span>↗</span></button><span id="create-plan-note">◇ <b id="create-balance">Démo</b> · aucun paiement actif</span></div><p id="upload-feedback" class="upload-feedback hidden"></p></div><aside class="create-aside"><span>✦</span><h3>Avant de commencer</h3><div class="tip-line"><i>✓</i><p>Starter : 1 morceau complet par jour.</p></div><div class="tip-line"><i>✓</i><p>Pro et Lifetime : sans limite, usage personnel raisonnable.</p></div><div class="tip-line"><i>✓</i><p>Les mélodies isolées donnent de meilleurs relevés en V1.</p></div><a class="btn btn-outline" href="/upgrade" data-nav="upgrade">Voir les abonnements ↗</a></aside></div></section>
@@ -1094,7 +1146,7 @@
 
 <main id="generation-view" class="hidden">
  <div class="flow-shell">
-  <header class="flow-header"><a href="/" class="flow-logo"><img src="/assets/songtosheet-wave-mark.svg" alt=""><span>tablurio.com</span></a><button type="button" id="flow-back" class="flow-back">← Modifier mon morceau</button></header>
+  <header class="flow-header"><a href="/" class="flow-logo"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio"><span>tablurio.com</span></a><button type="button" id="flow-back" class="flow-back">← Modifier mon morceau</button></header>
   <section id="flow-select" class="flow-card flow-select-card hidden" aria-labelledby="flow-select-title">
    <span class="flow-eyebrow">✦ Étape 2 sur 4 · Choisis ton instrument</span>
    <h1 id="flow-select-title">Quel instrument veux-tu <em>jouer ?</em></h1>
@@ -1189,14 +1241,14 @@
  </div>
 </main>
 
-  <main id="auth-view" class="hidden"><div class="auth-container"><a href="/" class="brand auth-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div class="auth-card"><span class="auth-flower">✦</span><h1 id="auth-title">Bienvenue sur Tablurio</h1><p id="auth-subtitle">Crée ton compte pour retrouver toutes tes partitions.</p><form id="auth-form"><label for="auth-email">Adresse email</label><input id="auth-email" class="field" type="email" autocomplete="email" placeholder="toi@exemple.com" required/><div id="auth-phone-row" class="auth-phone-row"><label for="auth-phone">Numéro de téléphone</label><input id="auth-phone" class="field" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" maxlength="24"/></div><label for="auth-password">Mot de passe</label><input id="auth-password" class="field" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum" required/><p id="auth-password-hint" class="auth-demo-hint">8 caractères minimum. Ton mot de passe est haché sur le serveur et n’est jamais conservé en clair.</p><p id="auth-error" class="auth-error hidden"></p><button id="auth-submit" class="btn btn-primary" type="submit">Créer mon compte <span>↗</span></button></form><p id="auth-alternate" class="auth-alternate">Déjà un compte ? <a href="/connexion" data-nav="login">Se connecter</a></p></div><p class="auth-footer">SongToSheet · Ton studio de musique en ligne</p></div><div class="auth-art"><div class="auth-art-inner"><span>♫</span><h2>Chaque morceau a une histoire.<br/>À toi de la <i>jouer.</i></h2><div class="auth-art-card"><div class="auth-lines"></div><span>Ta prochaine partition commence ici. ✦</span></div></div></div></main>
+  <main id="auth-view" class="hidden"><div class="auth-container"><a href="/" class="brand auth-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div class="auth-card"><span class="auth-flower">✦</span><h1 id="auth-title">Bienvenue sur Tablurio</h1><p id="auth-subtitle">Crée ton compte pour retrouver toutes tes partitions.</p><form id="auth-form"><label for="auth-email">Adresse email</label><input id="auth-email" class="field" type="email" autocomplete="email" placeholder="toi@exemple.com" required/><div id="auth-phone-row" class="auth-phone-row"><label for="auth-phone">Numéro de téléphone</label><input id="auth-phone" class="field" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" maxlength="24"/></div><label for="auth-password">Mot de passe</label><input id="auth-password" class="field" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum" required/><p id="auth-password-hint" class="auth-demo-hint">8 caractères minimum. Ton mot de passe est haché sur le serveur et n’est jamais conservé en clair.</p><p id="auth-error" class="auth-error hidden"></p><button id="auth-submit" class="btn btn-primary" type="submit">Créer mon compte <span>↗</span></button></form><p id="auth-alternate" class="auth-alternate">Déjà un compte ? <a href="/connexion" data-nav="login">Se connecter</a></p></div><p class="auth-footer">Tablurio · Ton studio de musique en ligne</p></div><div class="auth-art"><div class="auth-art-inner"><span>♫</span><h2>Chaque morceau a une histoire.<br/>À toi de la <i>jouer.</i></h2><div class="auth-art-card"><div class="auth-lines"></div><span>Ta prochaine partition commence ici. ✦</span></div></div></div></main>
 
-  <main id="legal-view" class="hidden legal-view"><div class="container"><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><h1>Informations légales & limites de la V1</h1><p>Tablurio est un prototype technique. Avant commercialisation, il faudra publier les mentions légales, CGV, politique de confidentialité, politique de remboursement et documents RGPD de l'entité exploitante.</p><p>Utilisez uniquement des audios dont vous possédez les droits ou disposez des autorisations nécessaires. Les liens externes servent de référence ; leur contenu n'est pas téléchargé. Le moteur de transcription expérimental peut produire des erreurs musicales.</p><p>Les paiements sont traités par Whop. Ton abonnement se gère depuis « Mon abonnement », dans ton espace.</p></div></main>
+  <main id="legal-view" class="hidden legal-view"><div class="container"><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><h1>Informations légales & limites de la V1</h1><p>Tablurio est un prototype technique. Avant commercialisation, il faudra publier les mentions légales, CGV, politique de confidentialité, politique de remboursement et documents RGPD de l'entité exploitante.</p><p>Utilisez uniquement des audios dont vous possédez les droits ou disposez des autorisations nécessaires. Les liens externes servent de référence ; leur contenu n'est pas téléchargé. Le moteur de transcription expérimental peut produire des erreurs musicales.</p><p>Les paiements sont traités par Whop. Ton abonnement se gère depuis « Mon abonnement », dans ton espace.</p></div></main>
 
   <footer id="public-footer" class="site-footer"><div class="container footer-wrap">
-<div><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/songtosheet-wave-mark.svg" alt="" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><p>Ta musique mérite d'être jouée.</p></div>
+<div><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><p>Ta musique mérite d'être jouée.</p></div>
 <nav aria-label="Navigation de bas de page"><a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a><a href="/legal" data-nav="legal">Mentions</a></nav>
-<div><small>Version de démonstration. La transcription audio en ligne reste en développement.</small><small>© <span id="footer-year"></span> Tablurio</small></div>
+<div><small>Partitions et tablatures générées par IA : vérifie toujours le résultat avant de jouer.</small><small>© <span id="footer-year"></span> Tablurio</small></div>
 </div></footer>
 <dialog id="unlock-dialog" class="unlock-dialog" aria-labelledby="unlock-dialog-title">
   <button class="unlock-close" type="button" data-unlock-close aria-label="Fermer">×</button>
@@ -2942,6 +2994,24 @@ const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const li
 <script src="/assets/conversion-flow.js?v=19" defer></script>
 
 <script>
+/* SEO: FAQPage structured data built from the FAQ visible on the current page (/ or /faq). */
+(()=>{
+ const path=location.pathname.replace(/\/+$/,'')||'/';
+ const root=path==='/'?document.getElementById('faq'):path==='/faq'?document.getElementById('faq-view'):null;
+ if(!root)return;
+ const clean=t=>(t||'').replace(/\s*\+\s*$/,'').replace(/\s+/g,' ').trim();
+ const items=[...root.querySelectorAll('details')].map(d=>{
+  const q=clean(d.querySelector('summary')?.textContent),a=clean(d.querySelector('p')?.textContent);
+  return q&&a?{'@type':'Question',name:q,acceptedAnswer:{'@type':'Answer',text:a}}:null;
+ }).filter(Boolean);
+ if(!items.length)return;
+ const s=document.createElement('script');s.type='application/ld+json';
+ s.textContent=JSON.stringify({'@context':'https://schema.org','@type':'FAQPage',mainEntity:items});
+ document.head.appendChild(s);
+})();
+</script>
+
+<script>
 /* Hero typewriter: partition <-> tablature. */
 (()=>{
  const word=document.getElementById('hero-typed-word');
@@ -2951,10 +3021,10 @@ const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const li
  function tick(){
   if(document.hidden){setTimeout(tick,500);return;}
   if(deleting){
-   if(characters>0){word.textContent=words[index].slice(0,--characters);setTimeout(tick,60);}
+   if(characters>0){word.dataset.word=words[index].slice(0,--characters);setTimeout(tick,60);}
    else{index=(index+1)%words.length;deleting=false;setTimeout(tick,150);}
   }else{
-   if(characters<words[index].length){word.textContent=words[index].slice(0,++characters);setTimeout(tick,95);}
+   if(characters<words[index].length){word.dataset.word=words[index].slice(0,++characters);setTimeout(tick,95);}
    else{deleting=true;setTimeout(tick,2050);}
   }
  }

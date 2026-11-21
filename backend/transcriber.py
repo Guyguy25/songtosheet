@@ -156,7 +156,7 @@ def _diatonic_y(midi:int,base:float)->float:
 def export_pdf(notes:list[dict],title:str,instrument:str,bpm:int,path:str):
     c=canvas.Canvas(path,pagesize=A4)
     pagew,pageh=A4
-    c.setTitle(f'{title} — SongToSheet')
+    c.setTitle(f'{title} — Tablurio')
     def page_header(first):
         c.setFillColor(colors.HexColor('#24223C')); c.setFont('Helvetica-Bold',17 if first else 11)
         c.drawString(52,pageh-60,title[:56] if first else f'{title[:50]} (suite)')
@@ -186,7 +186,7 @@ def export_pdf(notes:list[dict],title:str,instrument:str,bpm:int,path:str):
             for ledger in range(1,int((y-(base+40))/10)+1): c.line(x-8,base+40+ledger*10,x+8,base+40+ledger*10)
         x+=step; count+=1
     c.setFont('Helvetica',7); c.setFillColor(colors.HexColor('#8B899A'))
-    c.drawString(52,33,'SongToSheet · Relevé automatique approximatif : vérifiez les hauteurs et rythmes avant utilisation.')
+    c.drawString(52,33,'Tablurio · Relevé automatique approximatif : vérifiez les hauteurs et rythmes avant utilisation.')
     c.save()
 
 

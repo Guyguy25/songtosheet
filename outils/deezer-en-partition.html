@@ -6,6 +6,9 @@
   <title>Deezer en partition : la partition d’un titre Deezer | Tablurio</title>
   <meta name="description" content="Colle un lien de titre Deezer et obtiens sa partition ou sa tablature pour guitare, piano ou voix. Tablurio retrouve le morceau et transcrit les notes.">
   <link rel="canonical" href="https://tablurio.com/deezer-en-partition">
+  <link rel="alternate" hreflang="fr" href="https://tablurio.com/deezer-en-partition">
+  <link rel="alternate" hreflang="en" href="https://tablurio.com/en/deezer-to-sheet-music">
+  <link rel="alternate" hreflang="x-default" href="https://tablurio.com/deezer-en-partition">
   <meta name="theme-color" content="#0b0719">
   <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-wave-32.png?v=1">
   <meta property="og:type" content="website">
@@ -25,7 +28,7 @@
 <body>
 <header class="sp-header"><div class="wrap sp-nav">
   <a href="/" class="sp-brand" aria-label="Tablurio, accueil"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a>
-  <nav class="sp-links" aria-label="Menu principal"><a href="/#comment-ca-marche">Comment ça marche ?</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a></nav>
+  <nav class="sp-links" aria-label="Menu"><a href="/#comment-ca-marche">Comment ça marche ?</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a></nav>
   <div class="sp-actions"><a class="sp-login" href="/connexion">Se connecter</a><a class="sp-cta" href="#outil">Commencer ↗</a></div>
 </div></header>
 <main>
@@ -121,7 +124,7 @@
   </section>
 </main>
 <footer class="sp-footer"><div class="wrap sp-footer-grid">
-  <div><a href="/" class="sp-brand"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a><small>Ta musique mérite d’être jouée.</small></div>
+  <div><a href="/" class="sp-brand"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="37" height="37"><span>tablurio<span>.com</span></span></a><small>Ta musique mérite d’être jouée.</small><small><a href="/en/deezer-to-sheet-music" hreflang="en" style="font-weight:700">🌐 English</a></small></div>
   <div><h4>Outils</h4><nav aria-label="Outils"><a href="/youtube-en-partition">YouTube en partition</a><a href="/tablature-guitare">Générateur de tablature guitare</a><a href="/partition-piano">Partition piano d’une chanson</a><a href="/mp3-en-partition">Convertir un MP3 en partition</a></nav></div>
   <div><h4>Sources et formats</h4><nav aria-label="Sources et formats"><a href="/spotify-en-partition">Spotify en partition</a><a href="/deezer-en-partition" aria-current="page">Deezer en partition</a><a href="/musicxml">Export MusicXML</a><a href="/midi">Export MIDI</a></nav></div>
   <div><h4>Tablurio</h4><nav aria-label="Tablurio"><a href="/">Accueil</a><a href="/fonctionnalites">Fonctionnalités</a><a href="/tarifs">Tarifs</a><a href="/faq">FAQ</a><a href="/legal">Mentions</a></nav><small>Partitions et tablatures générées par IA : vérifie toujours le résultat avant de jouer.</small><small>© 2026 Tablurio</small></div>
@@ -131,8 +134,8 @@ document.querySelectorAll('.sp-tool-form').forEach(function(form){
   form.addEventListener('submit',function(e){
     e.preventDefault();
     var input=form.querySelector('input'),err=form.parentNode.querySelector('.sp-tool-error'),v=input.value.trim();
-    if(!v){err.textContent='Colle le lien du morceau, ou importe un fichier audio.';input.focus();return;}
-    if(!/^https:\/\//i.test(v)){err.textContent='Colle un lien complet qui commence par https://';input.focus();return;}
+    if(!v){err.textContent="Colle le lien du morceau, ou importe un fichier audio.";input.focus();return;}
+    if(!/^https:\/\//i.test(v)){err.textContent="Colle un lien complet qui commence par https://";input.focus();return;}
     var q=new URLSearchParams({lien:v});if(form.dataset.instrument)q.set('instrument',form.dataset.instrument);
     location.href='/?'+q.toString();
   });

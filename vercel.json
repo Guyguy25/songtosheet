@@ -106,6 +106,38 @@
     {
       "source": "/midi",
       "destination": "/outils/midi.html"
+    },
+    {
+      "source": "/en/youtube-to-sheet-music",
+      "destination": "/outils/en/youtube-to-sheet-music.html"
+    },
+    {
+      "source": "/en/guitar-tab-generator",
+      "destination": "/outils/en/guitar-tab-generator.html"
+    },
+    {
+      "source": "/en/piano-sheet-music",
+      "destination": "/outils/en/piano-sheet-music.html"
+    },
+    {
+      "source": "/en/mp3-to-sheet-music",
+      "destination": "/outils/en/mp3-to-sheet-music.html"
+    },
+    {
+      "source": "/en/spotify-to-sheet-music",
+      "destination": "/outils/en/spotify-to-sheet-music.html"
+    },
+    {
+      "source": "/en/deezer-to-sheet-music",
+      "destination": "/outils/en/deezer-to-sheet-music.html"
+    },
+    {
+      "source": "/en/musicxml",
+      "destination": "/outils/en/musicxml.html"
+    },
+    {
+      "source": "/en/midi",
+      "destination": "/outils/en/midi.html"
     }
   ],
   "headers": [
@@ -287,6 +319,11 @@
     {
       "source": "/outils/:slug.html",
       "destination": "/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/outils/en/:slug.html",
+      "destination": "/en/:slug",
       "permanent": true
     }
   ]

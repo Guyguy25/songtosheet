@@ -361,7 +361,7 @@
       $('flow-preview-source').textContent=request?request.name:'Ta musique';
       $('flow-preview-title').innerHTML='Voici ta <em>'+formatLongName(request)+'.</em>';
       $('flow-preview-instrument').textContent=(request?(instrumentNames[request.instrument]||'Piano'):'Piano')+' · '+formatLabel(request);
-      $('flow-preview-paper-label').textContent=chosenFormat(request)==='tablature'?'Tablature originale de démonstration':'Mélodie originale de démonstration';
+      $('flow-preview-paper-label').textContent=chosenFormat(request)==='tablature'?'Tablature d’exemple':'Mélodie d’exemple';
       $('flow-paywall-title').textContent='Tu n’as accès qu’aux 30 premières secondes de ta '+formatLongName(request);
       $('flow-plans').dataset.unlock=formatLongName(request);
       $('flow-plans-label').textContent='Débloquer la '+formatLongName(request)+' complète';
@@ -455,7 +455,7 @@
     }else if(!login){
       title.textContent='Entre dans ton studio musical';
       sub.textContent='Enregistre tes créations et retrouve-les dans ta bibliothèque.';
-      submit.innerHTML='Accéder au studio de démo <span>↗</span>';
+      submit.innerHTML='Accéder à mon studio <span>↗</span>';
     }
     var password=$('auth-password');
     if(password){password.hidden=false;password.required=true;password.minLength=8;password.autocomplete=login?'current-password':'new-password';}
@@ -464,7 +464,7 @@
     var info=$('flow-auth-disclaimer');
     if(!info){
       info=document.createElement('p');info.id='flow-auth-disclaimer';info.className='flow-auth-disclaimer';
-      info.textContent='Tes créations sont conservées dans ton compte. L’aperçu musical est une démonstration illustrée : aucune transcription réelle n’est encore effectuée.';
+      info.textContent='Tes créations sont conservées dans ton compte. Une fois connecté, Tablurio lance la vraie transcription de ton morceau : 3 aperçus gratuits de 30 secondes.';
       var form=$('auth-form');if(form)form.insertAdjacentElement('afterend',info);
     }
   }
@@ -502,7 +502,7 @@
   }
   function staffSvg(){
     var pitches=[0,1,2,4,3,2,1,0,2,4,5,4,2,1,3,2,0,2,4,3,1,0,2,1,3,5,4,2,1,0,2,4,3,2,1,0,1,3,4,5,4,2,0,1,2,4,3,1];
-    var shapes=['<svg viewBox="0 0 740 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Extrait de partition illustratif : mélodie originale de démonstration">'];
+    var shapes=['<svg viewBox="0 0 740 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Extrait de partition illustratif : mélodie d’exemple">'];
     for(var row=0;row<4;row++){
       var top=43+row*115;
       for(var line=0;line<5;line++){
@@ -527,7 +527,7 @@
     var strings=bass?['G','D','A','E']:['e','B','G','D','A','E'];
     var pitches=bass?[[0,2,4,2,0,2,4,5],[0,2,2,4,5,4,2,0],[0,0,2,4,2,0,2,4],[2,4,5,4,2,0,2,0]]:
       [[0,3,2,0,2,3,0,2],[1,1,3,1,0,1,3,1],[0,2,0,2,0,2,0,2],[2,0,2,3,2,0,3,2]];
-    var cells=['<svg viewBox="0 0 740 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tablature originale illustrative de démonstration">'];
+    var cells=['<svg viewBox="0 0 740 480" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Tablature d’exemple illustrative">'];
     for(var row=0;row<4;row++){
       var top=31+row*115;
       for(var line=0;line<strings.length;line++){

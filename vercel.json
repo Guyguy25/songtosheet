@@ -74,6 +74,38 @@
     {
       "source": "/faq",
       "destination": "/index.html"
+    },
+    {
+      "source": "/youtube-en-partition",
+      "destination": "/outils/youtube-en-partition.html"
+    },
+    {
+      "source": "/tablature-guitare",
+      "destination": "/outils/tablature-guitare.html"
+    },
+    {
+      "source": "/partition-piano",
+      "destination": "/outils/partition-piano.html"
+    },
+    {
+      "source": "/mp3-en-partition",
+      "destination": "/outils/mp3-en-partition.html"
+    },
+    {
+      "source": "/spotify-en-partition",
+      "destination": "/outils/spotify-en-partition.html"
+    },
+    {
+      "source": "/deezer-en-partition",
+      "destination": "/outils/deezer-en-partition.html"
+    },
+    {
+      "source": "/musicxml",
+      "destination": "/outils/musicxml.html"
+    },
+    {
+      "source": "/midi",
+      "destination": "/outils/midi.html"
     }
   ],
   "headers": [
@@ -251,6 +283,11 @@
       "source": "/ig",
       "destination": "/?utm_source=instagram&utm_medium=bio",
       "permanent": false
+    },
+    {
+      "source": "/outils/:slug.html",
+      "destination": "/:slug",
+      "permanent": true
     }
   ]
 }

@@ -396,6 +396,7 @@
 .site-footer .footer-wrap nav{display:grid;grid-template-columns:repeat(2,1fr);gap:13px}
 .site-footer .footer-wrap nav a{color:#807589;font-size:12px;font-weight:700}
 .site-footer .footer-wrap nav a:hover{color:#754ee0}
+.site-footer .footer-tools{display:flex;flex-wrap:wrap;align-items:center;gap:10px 22px;border-top:1px solid #f0edf5;padding:18px 0 26px}.site-footer .footer-tools span{color:#aba4b5;font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}.site-footer .footer-tools a{color:#807589;font-size:12px;font-weight:700}.site-footer .footer-tools a:hover{color:#754ee0}
 .site-footer .footer-wrap>div:last-child small{color:#aba4b5;font-size:10px;line-height:1.7;display:block;margin-bottom:10px}
 @media(max-width:850px){.feature-wide{padding:30px}.result-showcase-body{grid-template-columns:1fr}.result-to{transform:rotate(90deg)}.result-sound{min-height:205px}.result-disc{height:90px;width:90px}.faq-page-grid{grid-template-columns:1fr;gap:20px}.site-footer .footer-wrap{grid-template-columns:1fr 1fr}.site-footer .footer-wrap>div:last-child{grid-column:span 2}}
 @media(max-width:650px){.sub-hero{padding:70px 0 75px}.sub-hero h1{font-size:clamp(36px,10vw,55px)}.sub-hero p{font-size:13px}.sub-section{padding:60px 0}.feature-mosaic{grid-template-columns:1fr;gap:15px}.feature-wide{grid-column:span 1;grid-template-columns:1fr;padding:25px}.feature-tile{padding:24px}.tile-art{height:145px}.feature-tile h2{font-size:26px}.feature-wide h2{font-size:32px}.link-stack{margin:15px 0 0}.link-stack>span{padding:10px}.link-stack small{font-size:9px}.result-showcase{padding:12px}.result-showcase-top{font-size:10px}.result-score{padding:14px}.result-score-head b{font-size:11px}.result-detail-grid{grid-template-columns:1fr;gap:12px}.result-detail-grid article{padding:21px}.sub-pricing{padding:20px 0 70px;margin:0}.faq-page-grid aside h2{font-size:28px}.site-footer .footer-wrap{grid-template-columns:1fr;padding:30px 0}.site-footer .footer-wrap>div:last-child{grid-column:span 1}.sub-cta h2{font-size:31px}}
@@ -1254,7 +1255,8 @@
 <div><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><p>Ta musique mérite d'être jouée.</p></div>
 <nav aria-label="Navigation de bas de page"><a href="/#comment-ca-marche" data-nav="how">Comment ça marche</a><a href="/fonctionnalites" data-nav="features">Fonctionnalités</a><a href="/resultats" data-nav="results">Résultats</a><a href="/tarifs" data-nav="pricing">Tarifs</a><a href="/faq" data-nav="faq">FAQ</a><a href="/legal" data-nav="legal">Mentions</a></nav>
 <div><small>Partitions et tablatures générées par IA : vérifie toujours le résultat avant de jouer.</small><small>© <span id="footer-year"></span> Tablurio</small></div>
-</div></footer>
+</div><nav class="container footer-tools" aria-label="Outils Tablurio"><span>Outils</span><a href="/youtube-en-partition">YouTube en partition</a><a href="/tablature-guitare">Tablature guitare</a><a href="/partition-piano">Partition piano</a><a href="/mp3-en-partition">MP3 en partition</a><a href="/spotify-en-partition">Spotify en partition</a><a href="/deezer-en-partition">Deezer en partition</a><a href="/musicxml">Export MusicXML</a><a href="/midi">Export MIDI</a></nav>
+</footer>
 <dialog id="unlock-dialog" class="unlock-dialog" aria-labelledby="unlock-dialog-title">
   <button class="unlock-close" type="button" data-unlock-close aria-label="Fermer">×</button>
   <h2 id="unlock-dialog-title" tabindex="-1">Tu veux jouer la suite ?</h2>
@@ -3080,6 +3082,27 @@ const blob=new Blob([bytes],{type});const url=URL.createObjectURL(blob);const li
       /* même chemin que la touche Entrée dans le hero : lance le parcours existant */
       hero.dispatchEvent(new KeyboardEvent("keydown",{key:"Enter",bubbles:true,cancelable:true}))}
   });
+})();
+</script>
+<script>
+/* Pages outils SEO (/youtube-en-partition, /tablature-guitare…) : /?lien=…&instrument=… relance le parcours du hero, /?source=fichier ouvre l'import audio. */
+(()=>{const q=new URLSearchParams(location.search);
+  const link=(q.get('lien')||'').trim(),instrument=q.get('instrument'),upload=q.get('source')==='fichier';
+  if(location.pathname!=='/'||(!link&&!upload))return;
+  ['lien','instrument','source'].forEach(k=>q.delete(k));
+  const rest=q.toString();history.replaceState(history.state,'','/'+(rest?'?'+rest:'')+location.hash);
+  window.addEventListener('load',()=>setTimeout(()=>{
+    const select=document.getElementById('hero-instrument');
+    if(instrument&&select&&[...select.options].some(o=>o.value===instrument))select.value=instrument;
+    if(upload){const tab=document.getElementById('tab-upload');if(tab)tab.click();
+      const drop=document.getElementById('hero-drop');if(drop)drop.scrollIntoView({block:'center'});return;}
+    const tabLink=document.getElementById('tab-link'),hero=document.getElementById('hero-link');
+    if(tabLink)tabLink.click();if(!hero)return;
+    hero.scrollIntoView({block:'center'});hero.focus({preventScroll:true});
+    hero.value=link;hero.dispatchEvent(new Event('input',{bubbles:true}));
+    /* même chemin que la touche Entrée dans le hero */
+    hero.dispatchEvent(new KeyboardEvent('keydown',{key:'Enter',bubbles:true,cancelable:true}));
+  },0),{once:true});
 })();
 </script>
 </body>

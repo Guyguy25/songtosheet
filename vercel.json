@@ -64,6 +64,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/verification",
+      "destination": "/index.html"
+    },
+    {
       "source": "/legal",
       "destination": "/index.html"
     },
@@ -199,6 +203,15 @@
     },
     {
       "source": "/inscription",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/verification",
       "headers": [
         {
           "key": "X-Robots-Tag",

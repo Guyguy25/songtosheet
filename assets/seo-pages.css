@@ -138,3 +138,10 @@ p{margin:0}
 .sp-page .sp-visual{width:100%;max-width:520px}
 @media(max-width:1000px){.sp-page .sp-tool-hero{min-height:auto}.sp-page .sp-tool-hero>.split-inner{grid-template-columns:minmax(0,1fr);gap:40px;padding-bottom:70px}.sp-page .sp-visual-wrap{padding-left:0;justify-content:flex-start}}
 @media(max-width:560px){.sp-page .sp-tool-form .hero-action-row{grid-template-columns:minmax(0,1fr);border-radius:22px}.sp-page .sp-tool-form .split-submit{width:100%}}
+
+/* Pages À propos / Contact */
+.sp-info .sp-info-logo{width:min(260px,60vw);height:auto;filter:drop-shadow(0 30px 60px #7549eb66)}
+.sp-info .sp-mail{display:inline-flex;width:auto;padding:0 26px;border-radius:999px;min-height:52px;margin:0;text-decoration:none}
+.sp-info .sp-prose a,.sp-info .sp-intro a{color:var(--purple);font-weight:700}
+.sp-info .sp-cta-band a+a{background:transparent;color:#fff;border:1px solid #ffffff80;margin-left:6px}
+@media(max-width:1000px){.sp-info .sp-visual-wrap{display:none}}

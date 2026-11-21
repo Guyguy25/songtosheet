@@ -777,6 +777,7 @@ window.TABLURIO_EN={
 "À générer": "To generate",
 "À lire et imprimer": "To read and print",
 "À obtenir un relevé musical sous forme de partition ou de tablature, à partir d'un lien YouTube, Spotify, Deezer ou d'un fichier audio autorisé, afin d'apprendre plus facilement à jouer un morceau.": "To get a musical transcription as sheet music or tab, from a YouTube, Spotify or Deezer link or an authorised audio file, to make it easier to learn a song.",
+"À propos": "About",
 "À quoi sert Tablurio ?": "What is Tablurio for?",
 "À toi de la": "Your turn to",
 "À vie": "Lifetime",

@@ -154,6 +154,22 @@
     {
       "source": "/en/midi",
       "destination": "/outils/en/midi.html"
+    },
+    {
+      "source": "/a-propos",
+      "destination": "/outils/info/a-propos.html"
+    },
+    {
+      "source": "/contact",
+      "destination": "/outils/info/contact.html"
+    },
+    {
+      "source": "/en/about",
+      "destination": "/outils/info/en/about.html"
+    },
+    {
+      "source": "/en/contact",
+      "destination": "/outils/info/en/contact.html"
     }
   ],
   "headers": [
@@ -350,6 +366,11 @@
       "source": "/outils/en/:slug.html",
       "destination": "/en/:slug",
       "permanent": true
+    },
+    {
+      "source": "/outils/info/:path*",
+      "destination": "/",
+      "permanent": false
     }
   ]
 }

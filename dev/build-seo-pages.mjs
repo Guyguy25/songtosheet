@@ -4,6 +4,7 @@ import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PAGES_EN } from './seo-pages-en.mjs';
+import { INFO_PAGES, INFO_CONST } from './info-pages.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE = 'https://tablurio.com';
@@ -366,7 +367,7 @@ const LANDING_CSS = [...INDEX.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(
 const LANDING_LINKS = [...INDEX.matchAll(/<link rel="stylesheet" href="(\/assets\/site-ui\.css[^"]*)"/g)].map(m => m[1]);
 writeFileSync(join(ROOT, 'assets', 'landing.css'), '/* Généré par dev/build-seo-pages.mjs à partir des <style> de index.html — ne pas modifier à la main. */\n' + LANDING_CSS);
 const EN_DICT = (() => { const src = readFileSync(join(ROOT, 'assets', 'i18n-en.js'), 'utf8'); const k = 'window.TABLURIO_EN='; return JSON.parse(src.slice(src.indexOf(k) + k.length).trim().replace(/;$/, '')); })();
-const EN_LINKS = { '/youtube-en-partition': '/en/youtube-to-sheet-music', '/tablature-guitare': '/en/guitar-tab-generator', '/partition-piano': '/en/piano-sheet-music', '/mp3-en-partition': '/en/mp3-to-sheet-music', '/spotify-en-partition': '/en/spotify-to-sheet-music', '/deezer-en-partition': '/en/deezer-to-sheet-music', '/musicxml': '/en/musicxml', '/midi': '/en/midi' };
+const EN_LINKS = { '/a-propos': '/en/about', '/contact': '/en/contact', '/youtube-en-partition': '/en/youtube-to-sheet-music', '/tablature-guitare': '/en/guitar-tab-generator', '/partition-piano': '/en/piano-sheet-music', '/mp3-en-partition': '/en/mp3-to-sheet-music', '/spotify-en-partition': '/en/spotify-to-sheet-music', '/deezer-en-partition': '/en/deezer-to-sheet-music', '/musicxml': '/en/musicxml', '/midi': '/en/midi' };
 function toEnglish(html) {
   const t = v => { const k = v.replace(/\s+/g, ' ').trim(); return k && EN_DICT[k] ? v.replace(k, EN_DICT[k]) : v; };
   return html
@@ -579,12 +580,88 @@ ${toolScript(u)}
 }
 
 mkdirSync(join(OUT, 'en'), { recursive: true });
+// ---------- Pages À propos / Contact ----------
+function infoPage(p) {
+  const lang = p.lang, u = UI[lang], url = `${SITE}/${p.path}`;
+  const fr = lang === 'fr' ? p.path : p.alt, en = lang === 'en' ? p.path : p.alt;
+  const ld = { '@context': 'https://schema.org', '@graph': [
+    { '@type': p.type, '@id': `${url}#page`, url, name: strip(p.title), description: p.description, inLanguage: u.inLang, isPartOf: { '@id': `${SITE}/#website` }, about: { '@id': `${SITE}/#organization` } },
+    { '@type': 'Organization', '@id': `${SITE}/#organization`, name: 'Tablurio', url: `${SITE}/`, logo: `${SITE}/assets/favicon-512.png`, email: INFO_CONST.EMAIL,
+      founder: { '@type': 'Person', name: 'Tanguy Bois' }, sameAs: [INFO_CONST.TRUSTPILOT],
+      contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: INFO_CONST.EMAIL, availableLanguage: ['French', 'English'] } } ] };
+  const emailBlock = p.email ? `<div class="sp-tool" id="outil"><a class="split-submit sp-mail" href="mailto:${INFO_CONST.EMAIL}">✉ ${INFO_CONST.EMAIL}</a>
+        <div class="sp-badges"><span><b>✓</b>${lang === 'en' ? 'Answers in French or English' : 'Réponses en français ou en anglais'}</span><span><b>✓</b>${lang === 'en' ? 'Small French team' : 'Service français'}</span></div></div>` : '';
+  const commitments = p.commitments ? `
+  <section class="sp-section dark"><div class="wrap sp-center"><h2>${esc(p.commitmentsTitle)}</h2>
+    <div class="sp-cards" style="text-align:left">${p.commitments.map(([t, d]) => `<div class="sp-card"><b>${esc(t)}</b><p>${esc(d)}</p></div>`).join('')}</div></div></section>` : '';
+  const html = `<!doctype html>
+<html lang="${lang}" class="has-overlay-header" data-alt-fr="/${fr}" data-alt-en="/${en}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${esc(p.title)}</title>
+  <meta name="description" content="${esc(p.description)}">
+  <link rel="canonical" href="${url}">
+  <link rel="alternate" hreflang="fr" href="${SITE}/${fr}">
+  <link rel="alternate" hreflang="en" href="${SITE}/${en}">
+  <link rel="alternate" hreflang="x-default" href="${SITE}/${fr}">
+  <meta name="theme-color" content="#0b0719">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96.png?v=2">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png?v=2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=2">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Tablurio">
+  <meta property="og:locale" content="${u.locale}">
+  <meta property="og:url" content="${url}">
+  <meta property="og:title" content="${esc(p.title)}">
+  <meta property="og:description" content="${esc(p.description)}">
+  <meta property="og:image" content="${SITE}/assets/og-tablurio.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
+  <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
+  <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
+  <script src="/assets/i18n.js?v=1"></script>
+  <script type="application/ld+json">${JSON.stringify(ld)}</script>
+</head>
+<body class="has-public-header">
+${landingHeader(lang)}
+<main id="landing" class="sp-page sp-info">
+  <section class="split-hero sp-tool-hero" aria-labelledby="sp-h1">
+    <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
+    <div class="container split-inner">
+      <div class="split-copy">
+        <nav class="sp-crumbs" aria-label="${u.crumbs}"><a href="/">${u.home}</a> › <span aria-current="page">${esc(p.nav)}</span></nav>
+        <span class="sp-kicker">${esc(p.kicker)}</span>
+        <h1 id="sp-h1">${p.h1}</h1>
+        <p class="split-subtitle">${esc(p.lead)}</p>
+        ${emailBlock}
+      </div>
+      <div class="sp-visual-wrap"><img class="sp-info-logo" src="/assets/favicon-512.png" alt="Logo Tablurio" width="260" height="260"></div>
+    </div>
+  </section>
+${p.sections.map(([t, body], i) => `  <section class="sp-section${i % 2 ? ' alt' : ''}"><div class="wrap narrow"><h2>${esc(t)}</h2><div class="sp-prose">${body}</div></div></section>`).join('\n')}
+${commitments}
+  <section class="sp-section"><div class="wrap"><div class="sp-cta-band">
+    <h2>${esc(p.ctaTitle)}</h2><p>${esc(p.ctaText)}</p>
+    <a href="mailto:${INFO_CONST.EMAIL}">✉ ${INFO_CONST.EMAIL}</a>&nbsp; <a href="${INFO_CONST.TRUSTPILOT}" target="_blank" rel="noopener">★ Trustpilot</a>
+  </div></div></section>
+</main>
+${landingFooter(lang)}
+${chromeScript}
+</body>
+</html>
+`;
+  mkdirSync(dirname(join(OUT, 'info', `${p.path}.html`)), { recursive: true });
+  writeFileSync(join(OUT, 'info', `${p.path}.html`), html);
+}
+for (const p of INFO_PAGES) infoPage(p);
 for (const p of PAGES) writeFileSync(join(OUT, `${p.slug}.html`), page(p, 'fr'));
 for (const p of PAGES_EN) writeFileSync(join(OUT, 'en', `${p.slug}.html`), page(p, 'en'));
 
 // Sitemap : pages publiques de la landing + pages outils.
 const core = ['/', '/fonctionnalites', '/resultats', '/tarifs', '/faq'];
-const urls = [...core, ...PAGES.map(p => `/${p.slug}`), ...PAGES_EN.map(p => `/en/${p.slug}`)];
+const urls = [...core, ...INFO_PAGES.map(p => `/${p.path}`), ...PAGES.map(p => `/${p.slug}`), ...PAGES_EN.map(p => `/en/${p.slug}`)];
 writeFileSync(join(ROOT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `  <url><loc>${SITE}${u}</loc><lastmod>${TODAY}</lastmod></url>`).join('\n')}

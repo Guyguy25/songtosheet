@@ -772,5 +772,5 @@
     };
     return dispose;
   }
-  window.SongToSheetPlayer={mount};
+  window.SongToSheetPlayer={mount,tabNotes};
 })();

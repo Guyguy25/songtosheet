@@ -84,6 +84,7 @@
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=34" defer></script>
   <link rel="stylesheet" href="/backend/web/score-player.css?v=19" />
+  <link rel="stylesheet" href="/backend/web/learn-mode.css?v=1" />
   <script src="/backend/web/score-player.js?v=26" defer></script>
   <link rel="stylesheet" href="/assets/guitar-comparison.css?v=11" />
   <script src="/assets/guitar-result-comparison.js?v=15" defer></script>
@@ -1178,6 +1179,7 @@
   </main>
 
 
+<div id="learn-view" class="hidden" aria-label="Mode Apprentissage"></div>
 <main id="generation-view" class="hidden">
  <div class="flow-shell">
   <header class="flow-header"><a href="/" class="flow-logo"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio"><span>tablurio.com</span></a><button type="button" id="flow-back" class="flow-back">← Modifier mon morceau</button></header>
@@ -1461,14 +1463,17 @@
   const isAppPath=(path)=>/^\/app(?:\/|$)/i.test(path);
   function appPath(page,id){
     if(page==='result')return id?'/app/'+encodeURIComponent(id):'/app/bibliotheque';
+    if(page==='learn')return '/app/'+encodeURIComponent(id)+'/apprendre';
     const slug=appSlugs[page]??'';
     return slug?'/app/'+slug:'/app';
   }
   function parseAppPath(path){
-    const match=path.match(/^\/app(?:\/([^/]+))?\/?$/i);
+    const match=path.match(/^\/app(?:\/([^/]+))?(?:\/(apprendre))?\/?$/i);
     if(!match)return null;
     let segment='';
     try{segment=match[1]?decodeURIComponent(match[1]):'';}catch{return null;}
+    // /app/<id du son>/apprendre : le mode Apprentissage de ce son.
+    if(match[2])return segment&&!appAliases[segment.toLowerCase()]?{page:'learn',id:segment}:null;
     const page=appAliases[segment.toLowerCase()];
     return page?{page}:{page:'result',id:segment};
   }
@@ -1486,6 +1491,7 @@
     const app=isAppPath(pathname);
     const route=app?parseAppPath(location.pathname):null;
     if(app&&!route){go('/app',true);return;}
+    if(route?.page!=='learn')closeLearn();
     if(!app){stopPlayer();trackWizard?.pause();}
     const authPage=pathname==='/connexion'||pathname==='/inscription'||pathname==='/verification';
     show('public-header',marketing);
@@ -1537,6 +1543,7 @@
       }
       $('workspace').classList.toggle('track-guest',!state.user);
       if(state.user&&new URLSearchParams(location.search).get('abonnement')==='merci'){welcomeBack();}
+      else if(route.page==='learn')openLearn(route.id);
       else showAppPage(state.activePage,{replace:true});
     }
     if(pathname==='/verification'&&!state.user){go('/connexion',true);return;}
@@ -1724,6 +1731,44 @@
   }
   let closePlayer;
   function stopPlayer(){closePlayer?.();closePlayer=undefined;}
+  // Mode Apprentissage : vue plein écran par-dessus le studio, scripts chargés à la demande.
+  let closeLearnView,learnOpen=null;
+  const learnScripts=new Map();
+  function learnScript(file){
+    if(!learnScripts.has(file))learnScripts.set(file,new Promise((resolve,reject)=>{
+      const script=document.createElement('script');
+      script.src='/backend/web/'+file+'?v=1';script.onload=resolve;
+      script.onerror=()=>{learnScripts.delete(file);script.remove();reject(new Error('Jeu indisponible.'));};
+      document.head.append(script);
+    }));
+    return learnScripts.get(file);
+  }
+  function closeLearn(){
+    closeLearnView?.();closeLearnView=undefined;learnOpen=null;
+    $('learn-view').replaceChildren();show('learn-view',false);document.body.classList.remove('learn-open');
+  }
+  async function openLearn(id){
+    const key=location.pathname+location.search;
+    if(learnOpen===key)return;
+    closeLearn();stopPlayer();learnOpen=key;
+    const view=$('learn-view');
+    show('learn-view',true);document.body.classList.add('learn-open');
+    view.innerHTML='<div class="learn"><div class="learn-loading"><span class="learn-spinner" aria-hidden="true"></span><p>Chargement du jeu…</p></div></div>';
+    const back=appPath('result',id);
+    try{
+      const job=await api(`/api/jobs/${encodeURIComponent(id)}`);
+      if(!job.track||job.status!=='completed')throw new Error('Ce son n’est pas encore prêt.');
+      for(const file of ['learn-core.js','learn-audio.js','learn-mode.js'])await learnScript(file);
+      if(learnOpen!==key)return;
+      const root=document.createElement('div');
+      view.replaceChildren(root);
+      root.addEventListener('learn:back',()=>go(back));
+      closeLearnView=window.TablurioLearn.mount(root,{job,version:new URLSearchParams(location.search).get('version'),backHref:back});
+    }catch(error){
+      if(learnOpen!==key)return;
+      view.innerHTML=`<div class="learn"><div class="learn-loading"><p>${safe(error.message||'Le jeu ne peut pas charger ce morceau.')}</p><a class="learn-btn learn-btn-light" href="${back}" data-nav>Retour à la partition</a></div></div>`;
+    }
+  }
   // The landing generator moves into the start dialog and back, so its wiring stays the same.
   let heroAnchor=null;
   const heroMovable=()=>[document.querySelector('.hero-action-panel'),$('hero-source-error')];
@@ -2761,6 +2806,7 @@
           <div class="score-bar-title"><h1 title="${safe(j.title)}">${safe(j.title)}</h1><p>${meta}</p></div>
           <div id="score-bar-controls" class="score-bar-controls"></div>
           ${j.parent_id?`<a class="btn btn-outline score-compare" href="${appPath('result',j.parent_id)}" data-open-job="${safe(j.parent_id)}">⇄ Comparer les versions</a>`:''}
+          <a class="btn btn-outline score-learn" href="${appPath('learn',id)}" data-learn="${safe(id)}" title="Apprendre ce son en jouant"><span aria-hidden="true">🎮</span><span class="score-learn-label">Apprendre</span></a>
           <details class="score-download"><summary class="btn btn-primary"><span aria-hidden="true">↓</span> Télécharger</summary>
             <div class="score-download-menu"><div id="score-download-job">${versionChoice&&!j.preview_limit&&menu?'<h3>Relevé d’origine</h3>':''}${menu}</div><div id="score-download-version"></div></div></details>
           ${notice?`<p class="score-bar-notice" role="status">${safe(notice)}</p>`:''}`
@@ -2999,6 +3045,13 @@
       if(checkout?.getAttribute('aria-disabled')==='true'){e.preventDefault();return;}
       if(checkout&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){e.preventDefault();await checkoutClick(checkout);return;}
       if(e.target.closest('#sidebar-plan-action[data-account="1"]')){e.preventDefault();showAppPage('account');return;}
+      const learn=e.target.closest('[data-learn]');
+      if(learn&&!e.metaKey&&!e.ctrlKey&&!e.shiftKey&&!e.altKey){
+        e.preventDefault();
+        // La version affichée (guitare originale, solo, rythmée) est celle qu'on apprend.
+        const version=document.querySelector('#guitar-versions [aria-pressed="true"]')?.dataset.version;
+        go(appPath('learn',learn.dataset.learn)+(version?'?version='+encodeURIComponent(version):''));return;
+      }
       const openJob=e.target.closest('[data-open-job]');
       if(openJob){if(e.metaKey||e.ctrlKey||e.shiftKey||e.altKey)return;e.preventDefault();openResult(openJob.dataset.openJob);return;}
       const unlock=e.target.closest('[data-unlock]');

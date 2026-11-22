@@ -267,7 +267,7 @@
     /* ---------- Micro ---------- */
     const micChoice=()=>{try{return localStorage.getItem(MIC_KEY);}catch{return null;}};
     const setMicChoice=v=>{try{localStorage.setItem(MIC_KEY,v);}catch{}};
-    async function ensureMic(overlay){
+    async function ensureMic(overlay,alive=()=>true){
       if(mic?.running)return true;
       if(micChoice()==='off')return false;
       if(!Audio.MicListener.supported()){setMicChoice('off');return false;}
@@ -275,13 +275,15 @@
         <p>${t('Tablurio écoute ton instrument pour valider tes notes. Rien n’est enregistré ni envoyé.')}</p>
         <p class="learn-card-hint">🎧 ${t('Avec des écouteurs, c’est encore plus précis.')}</p>`,
         [['on',t('Activer le micro'),true],['off',t('Jouer sans micro')]]);
+      if(!alive())return false;
       if(choice!=='on'){setMicChoice('off');return false;}
-      return calibrate(overlay);
+      return calibrate(overlay,alive);
     }
-    async function calibrate(overlay){
+    async function calibrate(overlay,alive){
       try{
         mic=mic||new Audio.MicListener();
         await mic.start();
+        if(!alive())return false;
       }catch{
         mic=null;setMicChoice('off');
         await card(overlay,`<span class="learn-card-icon">🎙️</span><h2>${t('Micro indisponible')}</h2><p>${t('Le navigateur n’a pas donné accès au micro. Tu peux jouer sans micro.')}</p>`,[['off',t('Jouer sans micro'),true]]);
@@ -295,7 +297,7 @@
         const off=mic.onFrame(f=>{bar.style.width=Math.min(100,f.level*900)+'%';});
         const result=await mic.calibrate(5000);
         off();
-        if(signal.aborted)return false;
+        if(signal.aborted||!alive())return false;
         if(result.ok){overlay.hidden=true;setMicChoice('on');return true;}
         const again=await card(overlay,`<span class="learn-card-icon">🤔</span><h2>${t('On n’a rien entendu')}</h2><p>${t('Rapproche-toi du micro ou joue plus fort, puis réessaie.')}</p>`,
           [['retry',t('Réessayer'),true],['off',t('Jouer sans micro')]]);
@@ -324,7 +326,11 @@
       const beat=60/bpm;
       const s=state(level.index);
       let phase=level.boss?'challenge':'listen';
-      let speed=Math.max(Core.SPEEDS[0],s?.best_speed||Core.SPEEDS[0]);
+      // Le boss se joue à vitesse réelle ; les niveaux reprennent à la dernière vitesse réussie.
+      let speed=level.boss?1:Math.max(Core.SPEEDS[0],s?.best_speed||Core.SPEEDS[0]);
+      // Faux dès qu'on quitte le niveau : tout ce qui reprend après un await s'arrête là.
+      let alive=true;
+      const isAlive=()=>alive&&!signal.aborted;
       let guide=false,micOn=mic?.running&&micChoice()==='on';
       root.innerHTML=`${header()}<div class="learn-level">
         <div class="learn-level-bar">
@@ -393,7 +399,7 @@
 
       /* --- horloge et état du jeu --- */
       const LEAD=3*beat;
-      let songTime=level.start-LEAD,running=false,raf=0,lastFrame=0,clockStart=0,audioStart=0,mode=null;
+      let songTime=level.start-LEAD,running=false,raf=0,lastFrame=0,clockStart=0,audioStart=0,audioLatency=0,mode=null,clickTimes=[];
       let marks=new Map(),score=0,combo=0,bestCombo=0,waitIndex=0,wrong=0,matchMs=0,onsetSinceWait=false,lastOnset=-1,detected=null,finishing=false;
       const particles=[],pops=[];
       const perfNow=()=>performance.now()/1000;
@@ -561,13 +567,16 @@
       };
       const repeated=i=>i>0&&attacks[i-1].midis.join()===attacks[i].midis.join();
       function onFrame(frame,at){
+        if(!isAlive())return;
+        // Trames autour d'un clic de métronome : c'est le jeu qu'on entend, pas l'instrument.
+        if(Core.nearClick(clickTimes,at))return;
         if(frame.onset){lastOnset=at;onsetSinceWait=true;}
         if(!running)return;
         if(mode==='train'){
           const a=attacks[waitIndex];
           if(!a||songTime<a.time-.02)return;
-          if(matches(frame,a)){matchMs+=16;if(matchMs>=120&&(onsetSinceWait||!repeated(waitIndex)))validate(waitIndex,'good');}
-          else{matchMs=Math.max(0,matchMs-8);if(frame.onset&&frame.pitch)wrong++;}
+          if(matches(frame,a)){matchMs+=(frame.dt||.016)*1000;if(matchMs>=120&&(onsetSinceWait||!repeated(waitIndex)))validate(waitIndex,'good');}
+          else{matchMs=Math.max(0,matchMs-(frame.dt||.016)*500);if(frame.onset&&frame.pitch)wrong++;}
         }else if(mode==='challenge'){
           const time=songTime-(perfNow()-at)*speed;
           for(let i=0;i<attacks.length;i++){
@@ -595,19 +604,27 @@
 
       /* --- boucle --- */
       function start(newMode,{withAudio}){
+        if(!isAlive())return;
         cancelAnimationFrame(raf);silence();resetRun();
         mode=newMode;running=true;
         const rate=newMode==='listen'?Core.LISTEN_SPEED:speed;
         songTime=level.start-(newMode==='train'?.8:LEAD);
         const ac=audioContext();
-        clockStart=perfNow();audioStart=ac.currentTime+.05;
+        // L'image et le jugement suivent ce que l'on entend : départ audio différé + latence de sortie.
+        audioLatency=ac.outputLatency||ac.baseLatency||0;
+        audioStart=ac.currentTime+.05;
+        clockStart=perfNow()+.05+audioLatency;
         const at=song=>audioStart+(song-songTime)/rate;
         const origin=songTime;
         if(withAudio)for(const n of level.notes)playNote(n.midi,at(n.time),n.duration/rate,n.velocity);
+        clickTimes=[];
         if(newMode!=='train'){
           for(let b=Math.ceil(origin/beat)*beat;b<level.end;b+=beat){
             const count=b<level.start;
-            if(count||(newMode==='challenge'&&micOn))click(at(b),count&&Math.abs(b-level.start)<1e-6);
+            if(count||(newMode==='challenge'&&micOn)){
+              click(at(b),count&&Math.abs(b-level.start)<1e-6);
+              clickTimes.push(clockStart+(b-origin)/rate);
+            }
           }
         }
         lastFrame=perfNow();
@@ -652,6 +669,7 @@
         });
       }
       function speedChips(){
+        if(level.boss)return '';
         return `<div class="learn-speed" role="group" aria-label="${t('Vitesse')}"><span>${t('Vitesse')}</span>${Core.SPEEDS.map(v=>
           `<button type="button" data-speed="${v}" aria-pressed="${v===speed}">${fmtSpeed(v)}</button>`).join('')}</div>`;
       }
@@ -684,15 +702,17 @@
         draw();
       }
       async function action(go){
-        if(go==='listen'){await loadSamples();start('listen',{withAudio:true});panel.innerHTML=`<div><h2>🔊 ${t('Écouter le passage')}</h2></div>`;return;}
+        if(go==='listen'){await loadSamples();if(!isAlive())return;start('listen',{withAudio:true});panel.innerHTML=`<div><h2>🔊 ${t('Écouter le passage')}</h2></div>`;return;}
         if(go==='to-train'){markStep('train');stop();showPhase('train');return;}
         if(go==='to-challenge'){stop();showPhase('challenge');return;}
-        if(go==='mic'){try{localStorage.removeItem(MIC_KEY);}catch{}await ensureMic(overlay);listenMic();showPhase(phase);return;}
+        if(go==='mic'){try{localStorage.removeItem(MIC_KEY);}catch{}await ensureMic(overlay,isAlive);if(!isAlive())return;listenMic();showPhase(phase);return;}
         if(go==='checked'){report(1,false);return;}
         if(go==='train'||go==='challenge'){
-          await ensureMic(overlay);listenMic();
+          await ensureMic(overlay,isAlive);if(!isAlive())return;
+          listenMic();
           const noMic=!micOn;
           if(guide||noMic||go==='challenge')await loadSamples();
+          if(!isAlive())return;
           panel.innerHTML=`<div><h2>${go==='train'?t('Étape 2 · Entraîne'):level.boss?'👑 '+esc(levelLabel(level)):t('Étape 3 · Défi')}</h2>
             <p>${go==='train'?(noMic?t('Clique ou appuie sur Espace quand tu as joué la note.'):t('Joue la note qui arrive sur la ligne violette.')):noMic?t('Joue en même temps que le passage.'):t('Joue en rythme, note après note !')}</p></div>
             ${go==='train'&&noMic?`<div class="learn-panel-actions"><button type="button" class="learn-btn" data-tap>✓ ${t('Note jouée')}</button></div>`:''}`;
@@ -711,6 +731,7 @@
 
       /* --- résultat --- */
       async function report(accuracy,withMic){
+        if(!isAlive())return;
         stop();
         const stars=withMic?Core.starsFor(accuracy,speed):0;
         let saved=null,failed=false;
@@ -724,6 +745,7 @@
           progress.levels={...progress.levels,[level.index]:saved.level};
           progress.xp_total=saved.xp_total;progress.streak=saved.streak;
         }
+        if(!isAlive())return;
         const gained=saved?.xp_gained??0;
         const title=!withMic?t('Validé ✓'):stars===3?t('Parfait, tu maîtrises ce passage !'):stars===2?t('Bien joué !'):stars===1?t('Pas mal, continue !'):t('Encore un essai');
         const list=regular(),pos=list.indexOf(level),boss=levels.find(l=>l.boss&&l.section===level.section);
@@ -770,6 +792,8 @@
           const pitch=440*2**((midis[0]-69)/12);
           for(let k=0;k<10;k++)setTimeout(()=>onFrame({pitch,chroma,onset:k===0,level:.2},perfNow()),k*16);
         };
+        window.TablurioLearn._debugClock=()=>running&&audio?{song:songTime,
+          heard:songTime-(perfNow()-clockStart)*(mode==='listen'?Core.LISTEN_SPEED:speed)+(audio.currentTime-audioStart-audioLatency)*(mode==='listen'?Core.LISTEN_SPEED:speed)}:null;
         window.TablurioLearn._debugExpected=()=>{
           if(mode==='train')return attacks[waitIndex]?.midis||null;
           const i=attacks.findIndex((x,k)=>!marks.has(k)&&Math.abs(x.time-songTime)/speed<.08);
@@ -782,6 +806,7 @@
       showPhase(phase);
       resize();
       return ()=>{
+        alive=false;
         stop();observer.disconnect();offMic?.();document.removeEventListener('keydown',onKey);
         if(audio&&audio.state!=='closed')audio.close().catch(()=>{});
       };

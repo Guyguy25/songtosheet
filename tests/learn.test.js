@@ -90,3 +90,12 @@ test('learnStats : joueurs, niveaux, part micro, clics déblocage',async()=>{
   assert.deepEqual(await learnStats(db,new Date(0)),{players:1,levels_done:2,songs:1,mic_share:.5,unlock_clicks:1});
   assert.deepEqual(await learnStats(db,new Date(Date.now()+60000)),{players:0,levels_done:0,songs:0,mic_share:0,unlock_clicks:0});
 });
+
+test('aperçu freemium : fin de niveau absente ou invalide refusée',async()=>{
+  const {db,user,job}=setup({preview_limit:30,preview_duration:30});
+  const base=run({id:job,level:9,notes:10});
+  delete base.end;
+  await assert.rejects(saveResult(db,user,base),/aperçu/);
+  await assert.rejects(saveResult(db,user,{...base,end:'abc'}),/aperçu/);
+  await assert.rejects(saveResult(db,user,{...base,end:-1}),/aperçu/);
+});

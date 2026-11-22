@@ -10,6 +10,8 @@
 })(typeof self!=='undefined'?self:this,function(){
   'use strict';
   const MIN_FREQ=60,MAX_FREQ=1400,YIN_THRESHOLD=.15;
+  // YIN sur les 2048 derniers échantillons (assez pour un Mi grave à 48 kHz), analyse ~40 fois par seconde : tenable sur mobile.
+  const PITCH_WINDOW=2048,ANALYSIS_STEP=.025;
 
   const rms=samples=>{let sum=0;for(let i=0;i<samples.length;i++)sum+=samples[i]*samples[i];return Math.sqrt(sum/samples.length);};
 
@@ -94,23 +96,27 @@
       this.wave=new Float32Array(this.analyser.fftSize);
       this.db=new Float32Array(this.analyser.frequencyBinCount);
       this.mags=new Float32Array(this.analyser.frequencyBinCount);
-      this.average=0;this.lastOnset=0;this.running=true;
+      this.average=0;this.lastOnset=0;this.lastFrame=0;this.running=true;
       const loop=()=>{if(!this.running)return;this.frame();this.raf=requestAnimationFrame(loop);};
       loop();
     }
     frame(){
       const {analyser,context}=this;
+      const time=context.currentTime;
+      if(time-this.lastFrame<ANALYSIS_STEP)return;
+      const dt=this.lastFrame?Math.min(.1,time-this.lastFrame):ANALYSIS_STEP;
+      this.lastFrame=time;
       analyser.getFloatTimeDomainData(this.wave);
       analyser.getFloatFrequencyData(this.db);
       for(let i=0;i<this.db.length;i++)this.mags[i]=Number.isFinite(this.db[i])?Math.pow(10,this.db[i]/20):0;
-      const level=rms(this.wave),time=context.currentTime;
-      // Moyenne glissante d'environ 300 ms (une trame ≈ 16 ms).
-      this.average+=(level-this.average)*.05;
+      const level=rms(this.wave);
+      // Moyenne glissante d'environ 300 ms.
+      this.average+=(level-this.average)*Math.min(1,dt/.3);
       const onset=level>this.noise*1.5&&level>this.average*1.8&&time-this.lastOnset>.08;
       if(onset)this.lastOnset=time;
       const loud=level>this.noise;
-      const pitch=loud?detectPitch(this.wave,context.sampleRate,this.noise):null;
-      const frame={pitch:pitch?.freq||null,chroma:loud?chroma(this.mags,context.sampleRate,analyser.fftSize):null,onset,level,time};
+      const pitch=loud?detectPitch(this.wave.subarray(this.wave.length-PITCH_WINDOW),context.sampleRate,this.noise):null;
+      const frame={pitch:pitch?.freq||null,chroma:loud?chroma(this.mags,context.sampleRate,analyser.fftSize):null,onset,level,time,dt};
       for(const cb of this.callbacks)cb(frame);
     }
     onFrame(cb){this.callbacks.add(cb);return ()=>this.callbacks.delete(cb);}
@@ -136,5 +142,5 @@
     }
   }
 
-  return {detectPitch,midiOf,matchesNote,chroma,matchesChord,MicListener};
+  return {detectPitch,midiOf,matchesNote,chroma,matchesChord,MicListener,PITCH_WINDOW};
 });

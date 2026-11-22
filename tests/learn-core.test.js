@@ -48,3 +48,14 @@ test('accords groupés à 60 ms',()=>{
   const attacks=groupAttacks([{time:1,midi:40},{time:1.03,midi:47},{time:1.5,midi:52}]);
   assert.deepEqual(attacks.map(a=>a.midis),[[40,47],[52]]);
 });
+
+test('boss : le bonus de couronne demande la vitesse réelle',()=>{
+  assert.equal(xpFor({notes:20,accuracy:1,speed:.6,boss:true}),120);
+  assert.equal(xpFor({notes:20,accuracy:1,speed:1,boss:true}),300);
+});
+test('clic du métronome : les trames proches sont ignorées',()=>{
+  const {nearClick}=require('../backend/web/learn-core.js');
+  assert.equal(nearClick([1,2,3],2.05),true);
+  assert.equal(nearClick([1,2,3],2.2),false);
+  assert.equal(nearClick([],2),false);
+});

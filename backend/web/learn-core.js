@@ -104,8 +104,12 @@
 
   function xpFor({notes,accuracy,speed,boss}){
     const n=Math.round(clamp(notes,0,300)),a=clamp(accuracy,0,1),s=clamp(speed,SPEEDS[0],1);
-    return Math.round(n*a*10*s)+(boss&&starsFor(a,s)>=1?100:0);
+    // La couronne du boss se gagne à vitesse réelle seulement.
+    return Math.round(n*a*10*s)+(boss&&s>=1&&starsFor(a,s)>=1?100:0);
   }
 
-  return {buildLevels,groupAttacks,judge,multiplier,starsFor,xpFor,SPEEDS,LISTEN_SPEED};
+  // Le clic du métronome sort par le haut-parleur : le micro l'entend, on ignore les trames autour.
+  const nearClick=(clicks,time,width=.07)=>(clicks||[]).some(c=>Math.abs(c-time)<width);
+
+  return {buildLevels,groupAttacks,judge,multiplier,starsFor,xpFor,nearClick,SPEEDS,LISTEN_SPEED};
 });

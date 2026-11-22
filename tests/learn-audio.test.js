@@ -41,3 +41,10 @@ test('accord : 60 % des classes attendues',()=>{
   const one=new Float32Array(12);one[4]=1;
   assert.ok(!matchesChord(one,[40,47,56]));
 });
+
+test('hauteur estimée sur une fenêtre réduite (mobile) à 48 kHz',()=>{
+  const {PITCH_WINDOW}=require('../backend/web/learn-audio.js');
+  assert.equal(PITCH_WINDOW,2048);
+  const low=Float32Array.from({length:PITCH_WINDOW},(_,i)=>Math.sin(2*Math.PI*82.41*i/48000)*.3+Math.sin(2*Math.PI*164.82*i/48000)*.15);
+  assert.ok(Math.abs(midiOf(detectPitch(low,48000).freq)-40)<.5);
+});

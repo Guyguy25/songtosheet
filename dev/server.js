@@ -98,7 +98,7 @@ http.createServer(async(req,res)=>{
     const doc=learn[data.id+'|'+data.version]??={levels:{},xp:0};
     if(data.action==='unlock')return json(res,200,{ok:true});
     const job=jobs.find(item=>item.id===data.id);
-    if(job?.preview_limit&&data.end>job.preview_duration+.5)return json(res,403,{detail:'Niveau hors de ton aperçu.'});
+    if(job?.preview_limit&&!(Number(data.end)>0&&Number(data.end)<=job.preview_duration+.5))return json(res,403,{detail:'Niveau hors de ton aperçu.'});
     const mic=data.mic===true,acc=Math.min(1,Math.max(0,+data.accuracy||0)),speed=Math.min(1,Math.max(.6,+data.speed||0));
     const stars=mic?starsFor(acc,speed):0,gained=mic?xpFor({...data,accuracy:acc,speed}):0;
     const before=doc.levels[data.level]||{stars:0,checked:false,best_accuracy:0,best_speed:0,attempts:0};

@@ -8,6 +8,10 @@
   },
   "rewrites": [
     {
+      "source": "/api/learn",
+      "destination": "/api/jobs?route=learn"
+    },
+    {
       "source": "/api/auth/verify",
       "destination": "/api/auth/signup?route=verify"
     },

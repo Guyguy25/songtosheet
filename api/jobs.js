@@ -4,7 +4,10 @@ const {authenticated,json}=require('../lib/session');
 const {method,fail}=require('../lib/authorization');
 const {serial,addGeneration}=require('../lib/generations');
 const {serialTrack,JOB_FIELDS,PREVIEW_SECONDS}=require('../lib/track-jobs');
+const {learnRoute}=require('../lib/learn');
 module.exports=async(req,res)=>{
+  // /api/learn (mode Apprentissage) partage cette fonction : la limite Vercel est atteinte.
+  if(req.query?.route==='learn')return learnRoute(req,res);
   if(req.method!=='GET'&&req.method!=='POST'){res.setHeader('Allow','GET, POST');return json(res,405,{detail:'Méthode non autorisée.'});}
   if(!method(req,res,req.method))return;
   try{

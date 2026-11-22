@@ -41,6 +41,7 @@ const versions=[
   {key:'solo-demo',score:'solotab',midi:'solomid',recommended:true,recommendation_source:'ai'},
   {key:'held-demo',score:'rhythmtab',midi:'rhythmmid',recommended:false,recommendation_source:null}
 ];
+const learn={},learnUser={xp:0,streak:null};
 const json=(res,status,data)=>{res.writeHead(status,{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'});res.end(JSON.stringify(data));};
 const send=(res,file,download)=>{
   fs.readFile(file,(error,data)=>{
@@ -83,8 +84,30 @@ http.createServer(async(req,res)=>{
     const asset={score:'opensheetmusicdisplay',midi:'@tonejs/midi'}[url.searchParams.get('asset')];
     return asset?send(res,require.resolve(asset,{paths:[root]})):json(res,404,{detail:'Ressource introuvable.'});
   }
+  if(route==='/api/learn'){
+    // Progression du mode Apprentissage, gardée en mémoire le temps de la démo.
+    const {starsFor,xpFor}=require('../backend/web/learn-core.js');
+    const {nextStreak,currentStreak}=require('../lib/learn.js');
+    if(req.method==='GET'){
+      const doc=learn[url.searchParams.get('id')+'|'+url.searchParams.get('version')];
+      return json(res,200,{levels:doc?.levels||{},xp:doc?.xp||0,xp_total:learnUser.xp,streak:currentStreak(learnUser.streak,url.searchParams.get('day'))});
+    }
+    const data=await body(req);
+    const doc=learn[data.id+'|'+data.version]??={levels:{},xp:0};
+    if(data.action==='unlock')return json(res,200,{ok:true});
+    const job=jobs.find(item=>item.id===data.id);
+    if(job?.preview_limit&&data.end>job.preview_duration+.5)return json(res,403,{detail:'Niveau hors de ton aperçu.'});
+    const mic=data.mic===true,acc=Math.min(1,Math.max(0,+data.accuracy||0)),speed=Math.min(1,Math.max(.6,+data.speed||0));
+    const stars=mic?starsFor(acc,speed):0,gained=mic?xpFor({...data,accuracy:acc,speed}):0;
+    const before=doc.levels[data.level]||{stars:0,checked:false,best_accuracy:0,best_speed:0,attempts:0};
+    const level={...before,stars:Math.max(before.stars,stars),checked:before.checked||!mic,best_accuracy:Math.max(before.best_accuracy,mic?acc:0),
+      best_speed:stars?Math.max(before.best_speed,speed):before.best_speed,attempts:before.attempts+1,mic:before.mic||Boolean(stars)};
+    doc.levels[data.level]=level;doc.xp+=gained;learnUser.xp+=gained;
+    if(stars||!mic)learnUser.streak=nextStreak(learnUser.streak,data.day);
+    return json(res,200,{level,xp_gained:gained,xp_total:learnUser.xp,streak:currentStreak(learnUser.streak,data.day)});
+  }
   if(route.startsWith('/api/'))return json(res,404,{detail:'Indisponible dans la démo locale.'});
-  const file=route==='/'||pages.includes(route)?'index.html':path.normalize(decodeURIComponent(route)).replace(/^([/\\]|\.\.)+/,'');
+  const file=route==='/'||pages.includes(route)||/^\/app(\/|$)/.test(route)?'index.html':path.normalize(decodeURIComponent(route)).replace(/^([/\\]|\.\.)+/,'');
   const target=path.join(root,file);
   if(!target.startsWith(root))return json(res,403,{});
   send(res,target);

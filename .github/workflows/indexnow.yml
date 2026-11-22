@@ -1,0 +1,26 @@
+# Envoie toutes les URL du sitemap à IndexNow (Bing, Yandex, Seznam, Naver…)
+# après chaque mise en production, et à la demande (onglet Actions → IndexNow → Run workflow).
+name: IndexNow
+on:
+  push:
+    branches: [main]
+    paths: ['sitemap.xml', 'outils/**', 'index.html']
+  workflow_dispatch:
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Attendre le déploiement Vercel
+        if: github.event_name == 'push'
+        run: sleep 150
+      - name: Soumettre le sitemap à IndexNow
+        run: |
+          KEY=994eca95694dc6b66d6651d7f48331b1
+          curl -sf "https://tablurio.com/$KEY.txt" | grep -q "$KEY" || { echo "Fichier de clé introuvable en ligne"; exit 1; }
+          URLS=$(grep -o '<loc>[^<]*</loc>' sitemap.xml | sed 's#</\?loc>##g' | jq -R . | jq -s .)
+          echo "URL envoyées : $(echo "$URLS" | jq length)"
+          BODY=$(jq -n --arg key "$KEY" --argjson urls "$URLS" '{host:"tablurio.com",key:$key,keyLocation:("https://tablurio.com/"+$key+".txt"),urlList:$urls}')
+          CODE=$(curl -s -o /tmp/out -w '%{http_code}' -X POST https://api.indexnow.org/indexnow -H 'Content-Type: application/json; charset=utf-8' -d "$BODY")
+          echo "Réponse IndexNow : HTTP $CODE"; cat /tmp/out || true
+          case "$CODE" in 200|202) echo "✅ Soumission acceptée";; *) echo "❌ Soumission refusée"; exit 1;; esac

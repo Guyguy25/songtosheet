@@ -34,7 +34,7 @@
     'Étape 1 · Écoute':'Step 1 · Listen','Écoute le passage et regarde les notes arriver sur la ligne.':'Listen to the passage and watch the notes reach the line.',
     'Écouter':'Listen','Réécouter':'Listen again','Passer':'Skip','Je suis prêt':'I’m ready',
     'Étape 2 · Entraîne':'Step 2 · Practice','Joue chaque note à ton rythme : le jeu t’attend et avance dès qu’il t’entend.':'Play each note at your own pace: the game waits and moves on as soon as it hears you.',
-    'Note jouée':'Note played','Clique ou appuie sur Espace quand tu as joué la note.':'Click or press Space once you have played the note.',
+    'Note jouée':'Note played','Joue en même temps que le passage.':'Play along with the passage.','Joue en rythme, note après note !':'Play in time, note after note!','Joue la note qui arrive sur la ligne violette.':'Play the note reaching the purple line.','Clique ou appuie sur Espace quand tu as joué la note.':'Click or press Space once you have played the note.',
     'Commencer':'Start','Étape 3 · Défi':'Step 3 · Challenge','Joue le passage en rythme. Parfait, Bien ou Raté : chaque note compte.':'Play the passage in time. Perfect, Good or Miss: every note counts.',
     'Vitesse':'Speed','Lancer le défi':'Start the challenge','Lancer le passage':'Play the passage','Je l’ai joué ✓':'I played it ✓',
     'Joue toute la section d’une traite, à vitesse réelle.':'Play the whole section in one go, at full speed.','Affronter le boss':'Face the boss',
@@ -426,7 +426,8 @@
         if(!black(m)){const i=whites.indexOf(m);return {x:i*w,w,y:kbTop,h:kbH};}
         const left=whites.indexOf(m-1);return {x:(left+1)*w-w*.32,w:w*.64,y:kbTop,h:kbH*.62};
       }
-      const window_=()=>3.2;          // secondes de morceau visibles devant la ligne
+      // Secondes de morceau visibles devant la ligne (moins sur un écran étroit, pour garder les notes lisibles).
+      const window_=()=>guitar?Math.max(1.6,Math.min(3.2,width/260)):3.2;
       function draw(){
         if(!width)return;
         const c=ctx2d;c.setTransform(dpr,0,0,dpr,0,0);
@@ -656,7 +657,8 @@
       }
       function showPhase(name,after=false){
         phase=name;markStep(name);
-        const noMic=!(mic?.running&&micChoice()==='on');
+        // Sans choix encore fait, on présente le jeu au micro : la question vient au lancement.
+        const noMic=!(mic?.running&&micChoice()==='on')&&(micChoice()==='off'||!Audio.MicListener.supported());
         let html;
         if(name==='listen'){
           html=`<div><h2>${t('Étape 1 · Écoute')}</h2><p>${t('Écoute le passage et regarde les notes arriver sur la ligne.')}</p></div>
@@ -692,7 +694,7 @@
           const noMic=!micOn;
           if(guide||noMic||go==='challenge')await loadSamples();
           panel.innerHTML=`<div><h2>${go==='train'?t('Étape 2 · Entraîne'):level.boss?'👑 '+esc(levelLabel(level)):t('Étape 3 · Défi')}</h2>
-            <p>${go==='train'&&noMic?t('Clique ou appuie sur Espace quand tu as joué la note.'):t('Prêt ?')}</p></div>
+            <p>${go==='train'?(noMic?t('Clique ou appuie sur Espace quand tu as joué la note.'):t('Joue la note qui arrive sur la ligne violette.')):noMic?t('Joue en même temps que le passage.'):t('Joue en rythme, note après note !')}</p></div>
             ${go==='train'&&noMic?`<div class="learn-panel-actions"><button type="button" class="learn-btn" data-tap>✓ ${t('Note jouée')}</button></div>`:''}`;
           panel.querySelector('[data-tap]')?.addEventListener('click',tap);
           start(go,{withAudio:go==='challenge'&&(guide||noMic)});

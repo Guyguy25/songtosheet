@@ -34,6 +34,8 @@ const jobs=[
   {...base,id:'exemple-en-cours',title:'Balade d’exemple (transcription en cours)',created_at:now-300,status:'processing',
     stage:'processing',note_count:0,diagnostic:undefined,downloads:[]}
 ];
+jobs.push({...base,id:'exemple-piano',title:'Balade d’exemple (piano)',instrument:'piano',format:'partition',guitar_compare:false,guitar_goal:undefined,
+  created_at:now-5000,downloads:['mid','musicxml','pdf']});
 for(let i=1;i<=7;i++)jobs.push({...base,id:'exemple-ancien-'+i,title:'Ancienne partition '+i,created_at:now-(3+i)*86400,
   downloads:['mid','musicxml','tab','pdf','solotab','solomid','rhythmtab','rhythmmid']});
 const choices={'exemple-choisi':'solo-demo'};

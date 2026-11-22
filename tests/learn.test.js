@@ -81,3 +81,12 @@ test('entrées invalides refusées',async()=>{
   await assert.rejects(saveResult(db,user,run({id:job,day:'hier'})),/invalide/);
   await assert.rejects(saveResult(db,user,run({id:'nope'})),/invalide/);
 });
+
+test('learnStats : joueurs, niveaux, part micro, clics déblocage',async()=>{
+  const {db,user,job}=setup();
+  await saveResult(db,user,run({id:job,level:0,notes:10}));
+  await saveResult(db,user,run({id:job,level:1,notes:10,mic:false,end:8}));
+  await recordUnlockClick(db,user,{id:job,version:'direct'});
+  assert.deepEqual(await learnStats(db,new Date(0)),{players:1,levels_done:2,songs:1,mic_share:.5,unlock_clicks:1});
+  assert.deepEqual(await learnStats(db,new Date(Date.now()+60000)),{players:0,levels_done:0,songs:0,mic_share:0,unlock_clicks:0});
+});

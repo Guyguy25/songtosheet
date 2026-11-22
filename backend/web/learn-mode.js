@@ -19,7 +19,7 @@
 
   /* ---------- Langue : le jeu dessine aussi sur un canvas, il traduit donc lui-même ---------- */
   const EN={
-    'Partition':'Sheet music','Mode Apprentissage':'Learning mode','Apprends ce son, niveau par niveau':'Learn this song, level by level',
+    'Partition':'Sheet music','Guitare':'Guitar','Mode Apprentissage':'Learning mode','Apprends ce son, niveau par niveau':'Learn this song, level by level',
     'Joue, gagne des étoiles, débloque la suite : à la fin, tu connais ton morceau.':'Play, earn stars, unlock what comes next: by the end, you know your song.',
     'Progression du morceau':'Song progress','Continuer : {x}':'Continue: {x}','Commencer : {x}':'Start: {x}','Rejouer le boss':'Replay the boss',
     'Section {n}':'Section {n}','Niveau {n}':'Level {n}','Boss':'Boss','Boss de la section {n}':'Section {n} boss',
@@ -197,7 +197,7 @@
       const streak=progress.streak?.count||0;
       return `<header class="learn-top">
         <a class="learn-back" href="${esc(backHref)}" data-learn-back>← <span>${t('Partition')}</span></a>
-        <div class="learn-top-title"><strong>${esc(job.title||'')}</strong><small>${esc(job.instrument||'')}</small></div>
+        <div class="learn-top-title"><strong>${esc(job.title||'')}</strong><small>${esc(t({guitare:'Guitare',piano:'Piano'}[job.instrument]||job.instrument||''))}</small></div>
         <div class="learn-stats"><span class="learn-chip learn-chip-fire" title="${streak} ${t(streak>1?'jours de suite':'jour de suite')}">🔥 <b>${streak}</b></span>
         <span class="learn-chip learn-chip-xp">⚡ <b>${Number(progress.xp_total||0).toLocaleString(lang())}</b> ${t('XP')}</span></div>
       </header>`;
@@ -778,6 +778,7 @@
       }
 
       listenMic();
+      updateHud();
       showPhase(phase);
       resize();
       return ()=>{

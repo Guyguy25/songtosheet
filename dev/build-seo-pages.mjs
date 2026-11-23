@@ -5,6 +5,7 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { PAGES_EN } from './seo-pages-en.mjs';
 import { INFO_PAGES, INFO_CONST } from './info-pages.mjs';
+import { HUBS, ARTICLES } from './articles.mjs';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 const SITE = 'https://tablurio.com';
@@ -367,7 +368,7 @@ const LANDING_CSS = [...INDEX.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(
 const LANDING_LINKS = [...INDEX.matchAll(/<link rel="stylesheet" href="(\/assets\/site-ui\.css[^"]*)"/g)].map(m => m[1]);
 writeFileSync(join(ROOT, 'assets', 'landing.css'), '/* Généré par dev/build-seo-pages.mjs à partir des <style> de index.html — ne pas modifier à la main. */\n' + LANDING_CSS);
 const EN_DICT = (() => { const src = readFileSync(join(ROOT, 'assets', 'i18n-en.js'), 'utf8'); const k = 'window.TABLURIO_EN='; return JSON.parse(src.slice(src.indexOf(k) + k.length).trim().replace(/;$/, '')); })();
-const EN_LINKS = { '/a-propos': '/en/about', '/contact': '/en/contact', '/youtube-en-partition': '/en/youtube-to-sheet-music', '/tablature-guitare': '/en/guitar-tab-generator', '/partition-piano': '/en/piano-sheet-music', '/mp3-en-partition': '/en/mp3-to-sheet-music', '/spotify-en-partition': '/en/spotify-to-sheet-music', '/deezer-en-partition': '/en/deezer-to-sheet-music', '/musicxml': '/en/musicxml', '/midi': '/en/midi' };
+const EN_LINKS = { '/apprendre': '/en/learn', '/apprendre/lire-une-tablature-guitare': '/en/learn/how-to-read-guitar-tabs', '/a-propos': '/en/about', '/contact': '/en/contact', '/youtube-en-partition': '/en/youtube-to-sheet-music', '/tablature-guitare': '/en/guitar-tab-generator', '/partition-piano': '/en/piano-sheet-music', '/mp3-en-partition': '/en/mp3-to-sheet-music', '/spotify-en-partition': '/en/spotify-to-sheet-music', '/deezer-en-partition': '/en/deezer-to-sheet-music', '/musicxml': '/en/musicxml', '/midi': '/en/midi' };
 function toEnglish(html) {
   const t = v => { const k = v.replace(/\s+/g, ' ').trim(); return k && EN_DICT[k] ? v.replace(k, EN_DICT[k]) : v; };
   return html
@@ -503,6 +504,8 @@ ${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
   <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
   <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
   <script src="/assets/i18n.js?v=1"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/assets/tb-analytics.js?v=1"></script>
   <script type="application/ld+json">${JSON.stringify(jsonLd(p, lang))}</script>
 </head>
 <body class="has-public-header">
@@ -622,6 +625,8 @@ ${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
   <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
   <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
   <script src="/assets/i18n.js?v=1"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/assets/tb-analytics.js?v=1"></script>
   <script type="application/ld+json">${JSON.stringify(ld)}</script>
 </head>
 <body class="has-public-header">
@@ -656,12 +661,110 @@ ${chromeScript}
   writeFileSync(join(OUT, 'info', `${p.path}.html`), html);
 }
 for (const p of INFO_PAGES) infoPage(p);
+
+// ---------- Blog : hub /apprendre + articles ----------
+function shell({ lang, path, alt, title, description, ld, crumbs, kicker, h1, lead, heroExtra = '', right = '', body, ogType = 'website' }) {
+  const u = UI[lang], url = `${SITE}/${path}`, fr = lang === 'fr' ? path : alt, en = lang === 'en' ? path : alt;
+  return `<!doctype html>
+<html lang="${lang}" class="has-overlay-header" data-alt-fr="/${fr}" data-alt-en="/${en}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>${esc(title)}</title>
+  <meta name="description" content="${esc(description)}">
+  <link rel="canonical" href="${url}">
+  <link rel="alternate" hreflang="fr" href="${SITE}/${fr}">
+  <link rel="alternate" hreflang="en" href="${SITE}/${en}">
+  <link rel="alternate" hreflang="x-default" href="${SITE}/${fr}">
+  <meta name="theme-color" content="#0b0719">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96.png?v=2">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png?v=2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=2">
+  <meta property="og:type" content="${ogType}">
+  <meta property="og:site_name" content="Tablurio">
+  <meta property="og:locale" content="${u.locale}">
+  <meta property="og:url" content="${url}">
+  <meta property="og:title" content="${esc(title)}">
+  <meta property="og:description" content="${esc(description)}">
+  <meta property="og:image" content="${SITE}/assets/og-tablurio.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
+  <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
+  <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
+  <script src="/assets/i18n.js?v=1"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/assets/tb-analytics.js?v=1"></script>
+  <script type="application/ld+json">${JSON.stringify(ld)}</script>
+</head>
+<body class="has-public-header">
+${landingHeader(lang)}
+<main id="landing" class="sp-page sp-info sp-blog">
+  <section class="split-hero sp-tool-hero" aria-labelledby="sp-h1">
+    <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
+    <div class="container split-inner">
+      <div class="split-copy">
+        <nav class="sp-crumbs" aria-label="${u.crumbs}">${crumbs.map(([h, t], i) => i < crumbs.length - 1 ? `<a href="${h}">${esc(t)}</a>` : `<span aria-current="page">${esc(t)}</span>`).join(' › ')}</nav>
+        <span class="sp-kicker">${esc(kicker)}</span>
+        <h1 id="sp-h1">${h1}</h1>
+        <p class="split-subtitle">${esc(lead)}</p>
+        ${heroExtra}
+      </div>
+      <div class="sp-visual-wrap">${right}</div>
+    </div>
+  </section>
+${body}
+</main>
+${landingFooter(lang)}
+${chromeScript}
+</body>
+</html>
+`;
+}
+const out = (path, html) => { const f = join(OUT, 'blog', `${path}.html`); mkdirSync(dirname(f), { recursive: true }); writeFileSync(f, html); };
+const BLOG_ROUTES = [];
+const breadcrumbLd = items => ({ '@type': 'BreadcrumbList', itemListElement: items.map(([h, t], i) => ({ '@type': 'ListItem', position: i + 1, name: t, item: SITE + h })) });
+for (const lang of ['fr', 'en']) {
+  const hub = HUBS[lang], other = HUBS[lang === 'fr' ? 'en' : 'fr'], u = UI[lang];
+  const home = [['/', u.home]];
+  // Hub
+  const cards = ARTICLES.map(a => { const x = a[lang]; return `<a href="/${hub.path}/${x.slug}"><b>${esc(x.nav)}</b><span>${esc(x.teaser)}</span><span class="sp-meta">${a.minutes} ${hub.minutes} · ${hub.readLabel}</span></a>`; }).join('');
+  const hubBody = `  <section class="sp-section"><div class="wrap"><h2>${esc(hub.listTitle)}</h2><div class="sp-related sp-articles">${cards}</div>
+    <p class="sp-note" style="margin-top:28px"><b>${esc(hub.soonTitle)}${lang === 'fr' ? ' :' : ':'}</b> ${hub.soon.map(esc).join(' · ')}</p></div></section>`;
+  out(hub.path, shell({ lang, path: hub.path, alt: hub.alt, title: hub.title, description: hub.description, crumbs: [...home, ['/' + hub.path, hub.nav]],
+    kicker: hub.kicker, h1: hub.h1, lead: hub.lead, right: '<img class="sp-info-logo" src="/assets/favicon-512.png" alt="Logo Tablurio" width="260" height="260">', body: hubBody,
+    ld: { '@context': 'https://schema.org', '@graph': [{ '@type': 'CollectionPage', '@id': `${SITE}/${hub.path}#page`, url: `${SITE}/${hub.path}`, name: strip(hub.title), description: hub.description, inLanguage: u.inLang, isPartOf: { '@id': `${SITE}/#website` },
+      hasPart: ARTICLES.map(a => ({ '@type': 'Article', headline: strip(a[lang].h1), url: `${SITE}/${hub.path}/${a[lang].slug}` })) }, breadcrumbLd([...home, ['/' + hub.path, hub.nav]])] } }));
+  BLOG_ROUTES.push(hub.path);
+  // Articles
+  for (const a of ARTICLES) {
+    const x = a[lang], y = a[lang === 'fr' ? 'en' : 'fr'], path = `${hub.path}/${x.slug}`, url = `${SITE}/${path}`;
+    const crumbs = [...home, ['/' + hub.path, hub.nav], ['/' + path, x.nav]];
+    const ids = x.body.map((_, i) => `s${i + 1}`);
+    const toc = `<nav class="sp-toc" aria-label="${esc(x.toc)}"><b>${esc(x.toc)}</b><ol>${x.body.map(([t], i) => `<li><a href="#${ids[i]}">${esc(t)}</a></li>`).join('')}</ol></nav>`;
+    const sections = x.body.map(([t, html], i) => `<h2 id="${ids[i]}">${esc(t)}</h2>\n${html}`).join('\n');
+    const faq = `<h2 id="faq">FAQ</h2><div class="sp-faq">${x.faq.map(([q, r], i) => `<details${i === 0 ? ' open' : ''}><summary>${esc(q)}</summary><p>${esc(r)}</p></details>`).join('')}</div>`;
+    const by = lang === 'fr' ? `Par Tanguy Bois · ${a.minutes} min de lecture · ${new Date(a.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}` : `By Tanguy Bois · ${a.minutes} min read · ${new Date(a.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+    const body = `  <section class="sp-section"><div class="wrap narrow"><article class="sp-prose sp-article">${toc}\n${sections}\n${faq}</article></div></section>
+  <section class="sp-section"><div class="wrap"><div class="sp-cta-band"><h2>${esc(x.ctaTitle)}</h2><p>${esc(x.ctaText)}</p><a href="${x.ctaHref}">${esc(x.ctaBtn)}</a></div></div></section>`;
+    out(path, shell({ lang, path, alt: `${other.path}/${y.slug}`, title: x.title, description: x.description, crumbs, kicker: hub.kicker, h1: x.h1, lead: x.lead, ogType: 'article',
+      heroExtra: `<p class="sp-byline">${esc(by)}</p>`, right: tabSvg().replace('<svg', '<svg class="sp-article-visual"'), body,
+      ld: { '@context': 'https://schema.org', '@graph': [
+        { '@type': 'Article', '@id': `${url}#article`, headline: strip(x.h1), description: x.description, url, inLanguage: u.inLang, datePublished: a.date, dateModified: a.date,
+          author: { '@type': 'Person', name: 'Tanguy Bois', url: `${SITE}/${lang === 'fr' ? 'a-propos' : 'en/about'}` }, publisher: { '@id': `${SITE}/#organization` },
+          image: `${SITE}/assets/og-tablurio.jpg`, mainEntityOfPage: url },
+        { '@type': 'FAQPage', '@id': `${url}#faq`, mainEntity: x.faq.map(([q, r]) => ({ '@type': 'Question', name: q, acceptedAnswer: { '@type': 'Answer', text: r } })) },
+        breadcrumbLd(crumbs)] } }));
+    BLOG_ROUTES.push(path);
+  }
+}
+writeFileSync(join(OUT, 'blog', 'routes.json'), JSON.stringify(BLOG_ROUTES, null, 2) + '\n');
 for (const p of PAGES) writeFileSync(join(OUT, `${p.slug}.html`), page(p, 'fr'));
 for (const p of PAGES_EN) writeFileSync(join(OUT, 'en', `${p.slug}.html`), page(p, 'en'));
 
 // Sitemap : pages publiques de la landing + pages outils.
 const core = ['/', '/fonctionnalites', '/resultats', '/tarifs', '/faq'];
-const urls = [...core, ...INFO_PAGES.map(p => `/${p.path}`), ...PAGES.map(p => `/${p.slug}`), ...PAGES_EN.map(p => `/en/${p.slug}`)];
+const urls = [...core, ...BLOG_ROUTES.map(p => `/${p}`), ...INFO_PAGES.map(p => `/${p.path}`), ...PAGES.map(p => `/${p.slug}`), ...PAGES_EN.map(p => `/en/${p.slug}`)];
 writeFileSync(join(ROOT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${urls.map(u => `  <url><loc>${SITE}${u}</loc><lastmod>${TODAY}</lastmod></url>`).join('\n')}

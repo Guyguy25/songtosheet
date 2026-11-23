@@ -2,7 +2,7 @@
 const test=require('node:test');
 const assert=require('node:assert');
 const {ObjectId}=require('mongodb');
-const {collect,stats,sourceOf,device,browser}=require('../lib/analytics.js');
+const {collect,stats,sourceOf,channelOf,device,browser}=require('../lib/analytics.js');
 
 function fakeDb(){
   const data={};
@@ -103,4 +103,16 @@ test('the dashboard lists what was generated, by instrument',async()=>{
   assert.strictEqual(result.generations[1].seconds,65);
   assert.strictEqual(result.generations[1].account,'g@b.fr');
   assert.deepStrictEqual(result.instruments.map(i=>[i.key,i.previews,i.full,i.failed]).sort(),[['guitare',1,0,0],['piano',0,1,1]]);
+});
+
+test('channelOf groups sources into SEO, AI, social, direct and other sites',()=>{
+  assert.strictEqual(channelOf(sourceOf({referrer:'https://www.google.fr/'})),'organic');
+  assert.strictEqual(channelOf(sourceOf({referrer:'https://www.bing.com/search?q=tablurio'})),'organic');
+  assert.strictEqual(channelOf(sourceOf({referrer:'https://www.qwant.com/'})),'organic');
+  assert.strictEqual(channelOf(sourceOf({referrer:'https://gemini.google.com/app'})),'ai');
+  assert.strictEqual(channelOf(sourceOf({referrer:'https://chatgpt.com/'})),'ai');
+  assert.strictEqual(channelOf('tiktok'),'social');
+  assert.strictEqual(channelOf('direct'),'direct');
+  assert.strictEqual(channelOf('inconnue'),'direct');
+  assert.strictEqual(channelOf('lepetitmusicien.fr'),'referral');
 });

@@ -174,6 +174,22 @@
     {
       "source": "/en/contact",
       "destination": "/outils/info/en/contact.html"
+    },
+    {
+      "source": "/apprendre",
+      "destination": "/outils/blog/apprendre.html"
+    },
+    {
+      "source": "/apprendre/lire-une-tablature-guitare",
+      "destination": "/outils/blog/apprendre/lire-une-tablature-guitare.html"
+    },
+    {
+      "source": "/en/learn",
+      "destination": "/outils/blog/en/learn.html"
+    },
+    {
+      "source": "/en/learn/how-to-read-guitar-tabs",
+      "destination": "/outils/blog/en/learn/how-to-read-guitar-tabs.html"
     }
   ],
   "headers": [

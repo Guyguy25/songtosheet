@@ -6,7 +6,7 @@ const {make}=require('../../lib/passwords');
 const {normalizePhone}=require('../../lib/phone');
 const {cleanGeneration,addGeneration,ensureIndexes}=require('../../lib/generations');
 const {verify,sendVerification}=require('../../lib/account-flows');
-const {emailEnabled}=require('../../lib/email');
+const {emailEnabled,langOf}=require('../../lib/email');
 const {allow,clientIp}=require('../../lib/rate-limit');
 module.exports=async(req,res)=>{
   // /api/auth/verify → ?route=verify (email code), see vercel.json.
@@ -30,11 +30,11 @@ module.exports=async(req,res)=>{
     }
     const password_hash=await make(fields.password);
     // With email set up, the address is confirmed by a 6-digit code before generating.
-    const verifying=emailEnabled();
-    const result=await db.collection('users').insertOne({email:fields.email,phone:fields.phone,password_hash,created_at:new Date(),tier:'free',
+    const verifying=emailEnabled(),lang=langOf(req);
+    const result=await db.collection('users').insertOne({email:fields.email,phone:fields.phone,password_hash,created_at:new Date(),tier:'free',lang,
       marketing_consent:req.body?.marketing_consent===true,...(req.body?.marketing_consent===true?{marketing_consent_at:new Date()}:{}),
       ...(verifying?{email_verified:false}:{})});
-    const user={_id:result.insertedId,email:fields.email,phone:fields.phone,...(verifying?{email_verified:false}:{})};
+    const user={_id:result.insertedId,email:fields.email,phone:fields.phone,lang,...(verifying?{email_verified:false}:{})};
     if(pending)await addGeneration(db,String(user._id),pending);
     issue(res,user);
     const sent=verifying?await sendVerification(db,user):{sent:false};

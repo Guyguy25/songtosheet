@@ -19,6 +19,8 @@
   if (stored !== 'fr' && stored !== 'en') stored = null;
   var lang = stored || (pageLang === 'en' ? 'en' : 'fr');
   if (!stored && pageLang === 'en') write('en');
+  // Le serveur lit ce cookie pour envoyer les emails dans la bonne langue.
+  try { if (stored || pageLang === 'en') document.cookie = 'tablurio_lang=' + lang + ';path=/;max-age=31536000;samesite=lax'; } catch (e) {}
 
   // Pages outils : aller directement à la version dans la langue choisie.
   var alt = root.getAttribute('data-alt-' + lang);
@@ -38,11 +40,45 @@
     [/^Lien (\w+) reconnu/, '$1 link recognised'],
   ];
 
+  // Clés avec nombres variables : "{n} notes estimées." → "{n} estimated notes."
+  var NUMDICT = {};
+  for (var dk in DICT) if (Object.prototype.hasOwnProperty.call(DICT, dk) && dk.indexOf('{n}') !== -1) NUMDICT[dk] = DICT[dk];
+  var NUM = /\d+(?:[.,:]\d+)*/g;
+  function one(key) {
+    if (Object.prototype.hasOwnProperty.call(DICT, key)) return DICT[key];
+    for (var i = 0; i < PATTERNS.length; i++) if (PATTERNS[i][0].test(key)) return key.replace(PATTERNS[i][0], PATTERNS[i][1]);
+    var nums = key.match(NUM);
+    if (nums) {
+      var tpl = key.replace(NUM, '{n}');
+      if (Object.prototype.hasOwnProperty.call(NUMDICT, tpl)) { var k = 0; return NUMDICT[tpl].replace(/\{n\}/g, function () { return nums[k++]; }); }
+    }
+    return null;
+  }
+  // Morceaux séparés par « · » (méta d'un morceau : instrument · format · accès).
+  function dots(key) {
+    if (key.indexOf(' · ') === -1) return null;
+    // Plus long groupe de morceaux connu d'abord (« Aperçu gratuit · 30 s » est une seule clé).
+    var parts = key.split(' · '), out = [], hit = false, i = 0;
+    while (i < parts.length) {
+      var j = parts.length, t = null;
+      for (; j > i; j--) { t = one(parts.slice(i, j).join(' · ')); if (t !== null) break; }
+      if (t !== null) { out.push(t); hit = true; i = j; } else { out.push(parts[i]); i++; }
+    }
+    return hit ? out.join(' · ') : null;
+  }
   function tr(text) {
     var key = text.replace(/\s+/g, ' ').trim();
     if (!key) return null;
-    if (Object.prototype.hasOwnProperty.call(DICT, key)) return DICT[key];
-    for (var i = 0; i < PATTERNS.length; i++) if (PATTERNS[i][0].test(key)) return key.replace(PATTERNS[i][0], PATTERNS[i][1]);
+    var t = one(key);
+    if (t !== null) return t;
+    if ((t = dots(key)) !== null) return t;
+    // Phrases assemblées par le code : traduites une par une.
+    var sentences = key.replace(/([.!?…])\s+(?=[A-ZÀ-ÖØ-Þ«(])/g, '$1\u0001').split('\u0001');
+    if (sentences.length > 1) {
+      var hit = false;
+      for (var i = 0; i < sentences.length; i++) { var s = one(sentences[i]); if (s === null) s = dots(sentences[i]); if (s !== null) { sentences[i] = s; hit = true; } }
+      if (hit) return sentences.join(' ');
+    }
     return null;
   }
   function textNode(n) {

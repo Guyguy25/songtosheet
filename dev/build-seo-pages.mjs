@@ -503,7 +503,7 @@ function page(p, lang) {
 ${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
   <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
   <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
-  <script src="/assets/i18n.js?v=1"></script>
+  <script src="/assets/i18n.js?v=2"></script>
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/assets/tb-analytics.js?v=1"></script>
   <script type="application/ld+json">${JSON.stringify(jsonLd(p, lang))}</script>
@@ -624,7 +624,7 @@ function infoPage(p) {
 ${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
   <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
   <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
-  <script src="/assets/i18n.js?v=1"></script>
+  <script src="/assets/i18n.js?v=2"></script>
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/assets/tb-analytics.js?v=1"></script>
   <script type="application/ld+json">${JSON.stringify(ld)}</script>
@@ -692,7 +692,7 @@ function shell({ lang, path, alt, title, description, ld, crumbs, kicker, h1, le
 ${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
   <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
   <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
-  <script src="/assets/i18n.js?v=1"></script>
+  <script src="/assets/i18n.js?v=2"></script>
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/assets/tb-analytics.js?v=1"></script>
   <script type="application/ld+json">${JSON.stringify(ld)}</script>

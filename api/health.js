@@ -33,9 +33,14 @@ async function statsRoute(req,res){
   const user=await authenticated(req);
   if(user?.role!=='admin')return json(res,403,{detail:'Réservé à l’administrateur.'});
   const days=Math.min(365,Math.max(1,Number.parseInt(req.query?.days,10)||30));
-  return json(res,200,await stats(await database(),{days}));
+  const db=await database();
+  const data=await stats(db,{days});
+  // Mode Apprentissage : un incident ici ne doit pas priver l'admin des autres KPI.
+  data.learn=await learnStats(db,new Date(Date.now()-days*86400000)).catch(()=>null);
+  return json(res,200,data);
 }
 
+const {learnStats}=require('../lib/learn');
 module.exports=async(req,res)=>{
   res.setHeader('Cache-Control','no-store');
   const route=req.query?.route;

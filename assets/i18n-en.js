@@ -827,5 +827,12 @@ window.TABLURIO_EN={
 "🎼 Instruments": "🎼 Instruments",
 "🔒 Débloquer cette version en entier": "🔒 Unlock this full version",
 "🔗 Coller un lien": "🔗 Paste a link",
-"🔗 Lien musical": "🔗 Music link"
+"🔗 Lien musical": "🔗 Music link",
+"Apprendre": "Learn",
+"Apprendre ce son en jouant": "Learn this song by playing",
+"Chargement du jeu…": "Loading the game…",
+"Retour à la partition": "Back to the sheet music",
+"Ce son n’est pas encore prêt.": "This song is not ready yet.",
+"Mode Apprentissage": "Learning mode",
+"Le jeu ne peut pas charger ce morceau.": "The game cannot load this song."
 };

@@ -23,6 +23,7 @@ h1{margin:6px 0 4px;font-size:clamp(28px,4vw,40px);letter-spacing:-.045em}
 .btn:hover{border-color:var(--purple)}
 .state{margin-top:24px;padding:28px;border:1px solid var(--line);border-radius:18px;background:#fff;color:var(--muted)}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:22px}
+.learn-kpis{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:4px}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;min-width:0}
 .kpi span{display:block;font-size:12px;font-weight:750;color:var(--muted)}
 .kpi b{display:block;margin:6px 0 4px;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
@@ -231,6 +232,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
         <section class="panel"><h2>Entonnoir de conversion</h2><p>Des visiteurs arrivés sur la période, combien sont allés jusqu’à chaque étape.</p>${funnel(data.funnel)}</section>
         <section class="panel"><h2>Jour par jour</h2><p>Visiteurs réels, inscriptions et générations.</p>${chart(data.series)}</section>
         <section class="panel full" id="breakdown"><h2>D’où viennent les visiteurs, et ce qu’ils font</h2><p>Visiteurs réels arrivés sur la période, par groupe.</p>${breakdown()}</section>
+        ${data.learn?`<section class="panel full"><h2>Mode Apprentissage</h2><p>Joueurs et niveaux terminés sur la période.</p>
+          <div class="kpis learn-kpis">
+            ${kpi('Joueurs',num(data.learn.players),'Comptes ayant terminé au moins un niveau')}
+            ${kpi('Niveaux terminés',num(data.learn.levels_done),'Avec étoiles ou validés sans micro')}
+            ${kpi('Morceaux joués',num(data.learn.songs),'Morceaux ouverts en mode jeu avec un niveau terminé')}
+            ${kpi('Part au micro',pct(Math.round(data.learn.mic_share*100)),'Niveaux réussis en jouant au micro')}
+            ${kpi('Clics « Débloquer »',num(data.learn.unlock_clicks),'Depuis la carte du jeu (comptes gratuits)',true)}
+          </div></section>`:''}
         <section class="panel full"><h2>Ce que les gens génèrent</h2><p>Par instrument, puis les dernières générations une par une.</p>${instruments(data.instruments||[])}${generations(data.generations||[])}</section>
         <section class="panel full"><h2>Dernières inscriptions</h2><p>Avec la source de leur toute première visite.</p>${recent(data.recent)}</section>
         <section class="panel full"><h2>Liens à suivre</h2><p>Mets ces liens dans ta bio ou sous tes vidéos pour savoir lesquelles ramènent du monde.</p>${links()}</section>

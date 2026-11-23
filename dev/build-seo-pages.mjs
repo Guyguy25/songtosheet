@@ -368,7 +368,7 @@ const LANDING_CSS = [...INDEX.matchAll(/<style[^>]*>([\s\S]*?)<\/style>/g)].map(
 const LANDING_LINKS = [...INDEX.matchAll(/<link rel="stylesheet" href="(\/assets\/site-ui\.css[^"]*)"/g)].map(m => m[1]);
 writeFileSync(join(ROOT, 'assets', 'landing.css'), '/* Généré par dev/build-seo-pages.mjs à partir des <style> de index.html — ne pas modifier à la main. */\n' + LANDING_CSS);
 const EN_DICT = (() => { const src = readFileSync(join(ROOT, 'assets', 'i18n-en.js'), 'utf8'); const k = 'window.TABLURIO_EN='; return JSON.parse(src.slice(src.indexOf(k) + k.length).trim().replace(/;$/, '')); })();
-const EN_LINKS = { '/apprendre': '/en/learn', '/apprendre/lire-une-tablature-guitare': '/en/learn/how-to-read-guitar-tabs', '/a-propos': '/en/about', '/contact': '/en/contact', '/youtube-en-partition': '/en/youtube-to-sheet-music', '/tablature-guitare': '/en/guitar-tab-generator', '/partition-piano': '/en/piano-sheet-music', '/mp3-en-partition': '/en/mp3-to-sheet-music', '/spotify-en-partition': '/en/spotify-to-sheet-music', '/deezer-en-partition': '/en/deezer-to-sheet-music', '/musicxml': '/en/musicxml', '/midi': '/en/midi' };
+const EN_LINKS = { '/apprendre': '/en/learn', '/apprendre/lire-une-tablature-guitare': '/en/learn/how-to-read-guitar-tabs', '/apprendre/transformer-video-youtube-en-tablature': '/en/learn/youtube-to-guitar-tabs', '/a-propos': '/en/about', '/contact': '/en/contact', '/youtube-en-partition': '/en/youtube-to-sheet-music', '/tablature-guitare': '/en/guitar-tab-generator', '/partition-piano': '/en/piano-sheet-music', '/mp3-en-partition': '/en/mp3-to-sheet-music', '/spotify-en-partition': '/en/spotify-to-sheet-music', '/deezer-en-partition': '/en/deezer-to-sheet-music', '/musicxml': '/en/musicxml', '/midi': '/en/midi' };
 function toEnglish(html) {
   const t = v => { const k = v.replace(/\s+/g, ' ').trim(); return k && EN_DICT[k] ? v.replace(k, EN_DICT[k]) : v; };
   return html
@@ -503,7 +503,7 @@ function page(p, lang) {
 ${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
   <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
   <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
-  <script src="/assets/i18n.js?v=1"></script>
+  <script src="/assets/i18n.js?v=2"></script>
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/assets/tb-analytics.js?v=1"></script>
   <script type="application/ld+json">${JSON.stringify(jsonLd(p, lang))}</script>
@@ -624,7 +624,7 @@ function infoPage(p) {
 ${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
   <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
   <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
-  <script src="/assets/i18n.js?v=1"></script>
+  <script src="/assets/i18n.js?v=2"></script>
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/assets/tb-analytics.js?v=1"></script>
   <script type="application/ld+json">${JSON.stringify(ld)}</script>
@@ -692,7 +692,7 @@ function shell({ lang, path, alt, title, description, ld, crumbs, kicker, h1, le
 ${LANDING_LINKS.map(h => `  <link rel="stylesheet" href="${h}">`).join('\n')}
   <link rel="stylesheet" href="/assets/landing.css?v=${CSS_V}">
   <link rel="stylesheet" href="/assets/seo-pages.css?v=${CSS_V}">
-  <script src="/assets/i18n.js?v=1"></script>
+  <script src="/assets/i18n.js?v=2"></script>
   <script defer src="/_vercel/insights/script.js"></script>
   <script defer src="/assets/tb-analytics.js?v=1"></script>
   <script type="application/ld+json">${JSON.stringify(ld)}</script>

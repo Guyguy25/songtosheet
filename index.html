@@ -11,8 +11,8 @@
   <meta name="description" content="Tablurio transforme un lien YouTube, Spotify, Deezer ou un fichier audio en partition ou tablature (guitare, piano, voix). Exports PDF, MIDI, MusicXML. 3 aperçus gratuits de 30 s." />
   <title>Tablurio.com — Partitions et tablatures de vos musiques préférées</title>
   <link rel="canonical" href="https://tablurio.com/" id="canonical-link" />
-  <script src="/assets/i18n-en.js?v=2"></script>
-  <script src="/assets/i18n.js?v=1"></script>
+  <script src="/assets/i18n-en.js?v=3"></script>
+  <script src="/assets/i18n.js?v=2"></script>
   <script>(function(){var p=location.pathname.replace(/\/+$/,'')||'/';var pub={'/':1,'/fonctionnalites':1,'/resultats':1,'/tarifs':1,'/faq':1,'/legal':1};var l=document.getElementById('canonical-link');if(l){if(pub[p])l.href='https://tablurio.com'+p;else l.remove();}})();</script>
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Tablurio" />
@@ -1365,7 +1365,9 @@
   const state = {user:null,jobs:[],link:'',file:null,heroMode:'link',activePage:'dashboard',resultId:null,poll:null,authMode:'signup'};
   const safe = (s) => String(s ?? '').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const timeFmt = (secs) => `${Math.floor(secs/60)}:${String(Math.floor(secs%60)).padStart(2,'0')}`;
-  const dateFmt = (epoch) => new Date(epoch*1000).toLocaleDateString('fr-FR',{day:'numeric',month:'short',year:'numeric'});
+  // Interface anglaise : formats de date et phrases assemblées (le reste passe par assets/i18n-en.js).
+  const EN=window.TablurioI18n?.lang==='en',LOC=EN?'en-GB':'fr-FR',L=(fr,en)=>EN?en:fr;
+  const dateFmt = (epoch) => new Date(epoch*1000).toLocaleDateString(LOC,{day:'numeric',month:'short',year:'numeric'});
   const instrumentIcon = {piano:'🎹',guitare:'🎸',violon:'🎻',voix:'🎤',basse:'🎸'};
   let toastTimer;
   function toast(message,error=false){const el=$('toast');el.textContent=message;el.className=`toast show${error?' error':''}`;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className='toast',5400);}
@@ -1640,7 +1642,7 @@
     $('user-menu-email').textContent=user.email;
     const plan=user.role==='admin'?'admin':user.plan||'free';
     $('top-credits').textContent=plan==='admin'?'Admin':PLAN_NAMES[plan]||'Gratuit';
-    $('top-credits-detail').textContent=plan==='starter'?(starterLeft()?` · prochain dans ${hoursLeft(starterLeft())}`:' · morceau dispo')
+    $('top-credits-detail').textContent=plan==='starter'?(starterLeft()?L(` · prochain dans ${hoursLeft(starterLeft())}`,` · next in ${hoursLeft(starterLeft())}`):' · morceau dispo')
       :plan==='pro'||plan==='lifetime'||plan==='admin'?' · illimité':' · aperçus gratuits';
     const upgrade=$('user-menu-upgrade');
     upgrade.hidden=plan==='lifetime'||plan==='admin';
@@ -1664,7 +1666,7 @@
       $('metric-progress').textContent=state.jobs.filter(j=>['processing','queued'].includes(j.status)).length;
       renderIdentity();
       renderJobs('recent-jobs',songs().slice(0,5));renderJobs('library-jobs',filterJobs());renderRecents();
-      $('library-count').textContent=`${songs().length} création${songs().length===1?'':'s'}`;
+      $('library-count').textContent=L(`${songs().length} création${songs().length===1?'':'s'}`,`${songs().length} creation${songs().length===1?'':'s'}`);
     }catch(e){toast(e.message,true);}
   }
   // One entry per song: a whole song generated from a preview lives under that preview,
@@ -1848,7 +1850,7 @@
     unlimited:{monthly:19,yearly:148.20,checkout:{monthly:'https://whop.com/checkout/plan_4jV8ToLJhBWKm',annual:'https://whop.com/checkout/plan_oTt3xxj15qEY0'}}
   };
   let pricingWasOpen=false;
-  const euroFormatter=new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'});
+  const euroFormatter=new Intl.NumberFormat(LOC,{style:'currency',currency:'EUR'});
 
   function euros(amount){
     return euroFormatter.format(amount).replace(/,00(?=\s)/,'');
@@ -1955,8 +1957,8 @@
     await startCheckout(plan,period,link.href);
     link.removeAttribute('aria-busy');
   }
-  const accountDate=value=>value?new Date(value).toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'';
-  const accountTime=value=>value?new Date(value).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'}):'';
+  const accountDate=value=>value?new Date(value).toLocaleDateString(LOC,{day:'numeric',month:'long',year:'numeric'}):'';
+  const accountTime=value=>value?new Date(value).toLocaleTimeString(LOC,{hour:'2-digit',minute:'2-digit'}):'';
   // ---- Mon abonnement : offre, quota Starter en direct, inclus, derniers morceaux entiers ----
   const PLAN_RANK={free:0,starter:1,pro:2,lifetime:3};
   const PLAN_FEATURES={
@@ -1970,9 +1972,9 @@
     return [h,m,sec].map(n=>String(n).padStart(2,'0')).join(':');};
   const whenText=value=>{const date=new Date(value),today=new Date();
     const tomorrow=new Date(today.getTime()+DAY_MS);
-    const day=date.toDateString()===today.toDateString()?'aujourd’hui':date.toDateString()===tomorrow.toDateString()?'demain':
-      date.toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'});
-    return `${day} à ${date.toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})}`;};
+    const day=date.toDateString()===today.toDateString()?L('aujourd’hui','today'):date.toDateString()===tomorrow.toDateString()?L('demain','tomorrow'):
+      date.toLocaleDateString(LOC,{weekday:'long',day:'numeric',month:'long'});
+    return `${day} ${L('à','at')} ${date.toLocaleTimeString(LOC,{hour:'2-digit',minute:'2-digit'})}`;};
   let accountClock=null;
   function stopAccountClock(){clearInterval(accountClock);accountClock=null;}
   // Live countdowns: every [data-until] inside root, with an optional progress bar over the 24 h window.
@@ -2005,7 +2007,7 @@
       renderIdentity();
     }
     const statusText=!paid?'Aucun abonnement actif':status==='past_due'?'Paiement en attente — Whop va réessayer':
-      ending?`Actif jusqu’au ${accountDate(end)}, puis arrêté`:tier==='lifetime'?'Actif à vie':end?`Renouvellement le ${accountDate(end)}`:'Actif';
+      ending?L(`Actif jusqu’au ${accountDate(end)}, puis arrêté`,`Active until ${accountDate(end)}, then stopped`):tier==='lifetime'?'Actif à vie':end?L(`Renouvellement le ${accountDate(end)}`,`Renews on ${accountDate(end)}`):'Actif';
     const chip=!paid?'<span class="account-chip is-free">Gratuit</span>':status==='past_due'?'<span class="account-chip is-warn">Paiement en attente</span>'
       :ending?'<span class="account-chip is-warn">Se termine</span>':'<span class="account-chip">Actif</span>';
     const fullSongs=state.jobs.filter(j=>j.variant);
@@ -2021,11 +2023,11 @@
         <span class="account-label">Prochain morceau complet dans</span>
         <div class="quota-clock" role="timer" aria-live="off">${clockText(new Date(quota.resets_at)-Date.now())}</div>
         <div class="quota-bar" aria-hidden="true"><span></span></div>
-        <p>Disponible ${safe(whenText(quota.resets_at))} · 24 h après ton dernier morceau entier.</p></div>`;
+        <p>${L(`Disponible ${safe(whenText(quota.resets_at))} · 24 h après ton dernier morceau entier.`,`Available ${safe(whenText(quota.resets_at))} · 24 h after your last full song.`)}</p></div>`;
     }else if(paid){
       quotaHtml=`<div class="quota-state is-ready"><span class="quota-icon" aria-hidden="true">∞</span><div>
         <strong>Sans limite quotidienne</strong>
-        <p>${thisMonth} morceau${thisMonth>1?'x':''} entier${thisMonth>1?'s':''} ce mois-ci · usage personnel raisonnable.</p></div></div>`;
+        <p>${L(`${thisMonth} morceau${thisMonth>1?'x':''} entier${thisMonth>1?'s':''} ce mois-ci · usage personnel raisonnable.`,`${thisMonth} full song${thisMonth===1?'':'s'} this month · reasonable personal use.`)}</p></div></div>`;
     }else{
       quotaHtml=`<div class="quota-state"><span class="quota-icon" aria-hidden="true">♪</span><div>
         <strong>3 aperçus gratuits de 30 secondes</strong>
@@ -2033,7 +2035,7 @@
     }
     const recent=fullSongs.slice(0,4).map(j=>`<a class="account-song" href="${appPath('result',j.id)}" data-job="${safe(j.id)}">
       <span aria-hidden="true">${instrumentIcon[j.instrument]||'♫'}</span><span><b>${safe(j.title)}</b>
-      <small>${new Date(j.created_at*1000).toLocaleDateString('fr-FR',{day:'numeric',month:'long'})} · ${j.status==='completed'?'Morceau entier':j.status==='failed'?'Échec, non décompté':'En cours'}</small></span></a>`).join('');
+      <small>${new Date(j.created_at*1000).toLocaleDateString(LOC,{day:'numeric',month:'long'})} · ${j.status==='completed'?'Morceau entier':j.status==='failed'?'Échec, non décompté':'En cours'}</small></span></a>`).join('');
     box.innerHTML=`${thanks?`<p class="account-thanks">${paid?'Merci ! Ton abonnement est actif.':'Paiement reçu, on active ton abonnement… Cette page se met à jour toute seule.'}</p>`:''}
       <div class="account-grid">
         <section class="account-card account-plan-card">
@@ -2068,7 +2070,7 @@
     if(until&&state.user){state.user.starter_until=until;renderIdentity();}
     const at=until||state.user?.starter_until;
     dialog.querySelector('.quota-dialog-wait').dataset.until=at||'';
-    $('quota-dialog-at').textContent=at?whenText(at):'dans moins de 24 h';
+    $('quota-dialog-at').textContent=at?whenText(at):L('dans moins de 24 h','in less than 24 h');
     clearInterval(quotaDialogClock);
     if(at)quotaDialogClock=runClocks(dialog,()=>{clearInterval(quotaDialogClock);dialog.close();toast('Ton morceau complet est de nouveau disponible.');});
     if(!dialog.open)dialog.showModal();
@@ -2174,7 +2176,7 @@
     showAppPage('dashboard',{replace:true});
     const dialog=$('welcome-dialog');
     const name=state.user?.pseudo?` ${state.user.pseudo}`:'';
-    $('welcome-title').textContent=`Merci${name} !`;
+    $('welcome-title').textContent=L(`Merci${name} !`,`Thank you${name}!`);
     $('welcome-badge').textContent='Paiement reçu';
     $('welcome-text').textContent='On active ton abonnement, ça prend quelques secondes…';
     $('welcome-pending').hidden=false;$('welcome-gets').hidden=true;
@@ -2195,8 +2197,8 @@
     state.user.plan=tier;showPlan(tier);
     state.user.starter_until=tier==='starter'&&data.quota?.resets_at?data.quota.resets_at:null;
     renderIdentity();
-    $('welcome-badge').textContent=`✓ ${PLAN_NAMES[tier]||tier} activé`;
-    $('welcome-title').textContent=`Merci${name}, bienvenue dans le ${PLAN_NAMES[tier]||tier} !`;
+    $('welcome-badge').textContent=L(`✓ ${PLAN_NAMES[tier]||tier} activé`,`✓ ${PLAN_NAMES[tier]||tier} activated`);
+    $('welcome-title').textContent=L(`Merci${name}, bienvenue dans le ${PLAN_NAMES[tier]||tier} !`,`Thank you${name}, welcome to ${PLAN_NAMES[tier]||tier}!`);
     $('welcome-text').textContent=WELCOME_LINES[tier]||'Ton abonnement est actif.';
     $('welcome-features').innerHTML=(PLAN_FEATURES[tier]||[]).map(item=>`<li>${safe(item)}</li>`).join('');
     $('welcome-gets').hidden=false;
@@ -2204,7 +2206,7 @@
     if(!state.jobsLoaded)await refresh();
     const last=songs().find(j=>j.status==='completed'&&j.preview_limit&&!j.full_jobs);
     const go=$('welcome-go');
-    go.textContent=last?`Générer « ${last.title.length>32?last.title.slice(0,31)+'…':last.title} » en entier`:'Créer mon premier morceau entier';
+    go.textContent=last?L(`Générer « ${last.title.length>32?last.title.slice(0,31)+'…':last.title} » en entier`,`Generate the whole of “${last.title.length>32?last.title.slice(0,31)+'…':last.title}”`):'Créer mon premier morceau entier';
     go.href=last?appPath('result',last.id):'/app/new';
     go.dataset.job=last?last.id:'';
     $('welcome-title').focus({preventScroll:true});
@@ -2351,7 +2353,7 @@
       if(!audioUrl){
         const count=Math.ceil(file.size/result.chunk_bytes);
         for(let index=0;index<count;index++){
-          setStatus(`Envoi de l’audio (${index+1}/${count})…`);
+          setStatus(L(`Envoi de l’audio (${index+1}/${count})…`,`Uploading audio (${index+1}/${count})…`));
           const start=index*result.chunk_bytes;
           const data=await encodeChunk(file.slice(start,start+result.chunk_bytes));
           await post('/api/track',{action:'chunk',id,index,data});
@@ -2401,9 +2403,9 @@
     $('code-title').textContent=forgot?(step===3?'Choisis un nouveau mot de passe':'Mot de passe oublié'):'Confirme ton adresse email';
     $('code-text').textContent=forgot
       ?(step===1?'Indique l’adresse de ton compte : on t’envoie un code pour choisir un nouveau mot de passe.'
-        :step===2?`Si un compte existe pour ${$('code-email').value.trim()}, un code à 6 chiffres vient d’y être envoyé. Pense à regarder les spams.`
+        :step===2?L(`Si un compte existe pour ${$('code-email').value.trim()}, un code à 6 chiffres vient d’y être envoyé. Pense à regarder les spams.`,`If an account exists for ${$('code-email').value.trim()}, a 6-digit code has just been sent to it. Check your spam folder too.`)
         :'Code vérifié. Tape ton nouveau mot de passe deux fois.')
-      :`On a envoyé un code à 6 chiffres à ${state.user?.email||'ton adresse'}. Pense à regarder les spams.`;
+      :L(`On a envoyé un code à 6 chiffres à ${state.user?.email||'ton adresse'}. Pense à regarder les spams.`,`We sent a 6-digit code to ${state.user?.email||'your address'}. Check your spam folder too.`);
     const showEmail=forgot&&step===1,showCode=!forgot||step===2,showPassword=forgot&&step===3;
     [['code-email',showEmail],['code-email-label',showEmail],['code-input',showCode],['code-input-label',showCode],
       ['code-password',showPassword],['code-password-label',showPassword],['code-password2',showPassword],['code-password2-label',showPassword]]
@@ -2459,7 +2461,7 @@
   }
   // Free previews used up: the offers page, with the reason.
   function showFreeLimit(message){
-    state.upgradeNotice={message:`${message} Choisis une offre pour générer tes morceaux en entier, dès 10 € par mois.`};
+    state.upgradeNotice={message:`${window.TablurioI18n?window.TablurioI18n.t(message):message} ${L('Choisis une offre pour générer tes morceaux en entier, dès 10 € par mois.','Choose a plan to generate your songs in full, from €10 a month.')}`};
     go('/upgrade');
   }
   async function revealDemo(id){
@@ -2626,23 +2628,23 @@
     switchTrack();
   }
   function showLockedTrack(job,id){
-    const tab=job.format==='tablature',kind=tab?'tablature':'partition';
+    const tab=job.format==='tablature',kind=tab?'tablature':'partition',kindEn=tab?'tab':'sheet music';
     const notation=window.SongToSheetFlow?.placeholderNotation(job.instrument,tab)||'';
     $('result-content').innerHTML=`<div class="result-hero guest-ready-hero">
-      <span class="guest-ready-badge"><span aria-hidden="true">✓</span> Ta ${kind} est prête</span>
+      <span class="guest-ready-badge"><span aria-hidden="true">✓</span> ${L(`Ta ${kind} est prête`,`Your ${kindEn} is ready`)}</span>
       <h1>${safe(job.title)}</h1>
       <p class="result-meta">${instrumentIcon[job.instrument]||'♫'} ${safe(job.instrument)} · ${tab?'Tablature':'Partition'} · Aperçu de 30&nbsp;s</p>
     </div>
-    <section class="guest-teaser" aria-label="Début de ta ${kind}">
+    <section class="guest-teaser" aria-label="${L(`Début de ta ${kind}`,`Start of your ${kindEn}`)}">
       <div class="guest-teaser-sheet" aria-hidden="true" inert>
         <div id="guest-teaser-score" class="guest-teaser-score"><div class="guest-teaser-fallback">${notation}</div></div>
       </div>
       <div class="guest-teaser-veil">
         <div class="guest-teaser-card">
           <span class="guest-teaser-lock" aria-hidden="true">🔒</span>
-          <h2>Plus qu’une étape pour jouer ta ${kind}</h2>
+          <h2>${L(`Plus qu’une étape pour jouer ta ${kind}`,`One more step to play your ${kindEn}`)}</h2>
           <p>Crée ton compte gratuit : tes 30&nbsp;s s’ouvrent aussitôt, avec la lecture audio synchronisée.</p>
-          <a class="btn btn-primary guest-teaser-cta" data-nav="signup" href="/inscription">Voir ma ${kind} gratuitement <span aria-hidden="true">→</span></a>
+          <a class="btn btn-primary guest-teaser-cta" data-nav="signup" href="/inscription">${L(`Voir ma ${kind} gratuitement`,`See my ${kindEn} for free`)} <span aria-hidden="true">→</span></a>
           <a class="guest-teaser-login" href="/connexion" data-nav="login">J’ai déjà un compte</a>
           <ul class="guest-teaser-trust"><li>Gratuit</li><li>Sans carte bancaire</li><li>Gardée dans ton compte</li></ul>
         </div>
@@ -2788,7 +2790,7 @@
           trackSummaryMarkup=trackProgressMarkup=undefined;
         }
         const access=j.preview_limit?'Aperçu gratuit · 30 s':j.variant?'Morceau entier':'Accès admin';
-        const meta=`${safe(j.instrument)}${j.capo?` · Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`:''} · ${access}`;
+        const meta=`${safe(j.instrument)}${j.capo?` · ${L(`Capo ${j.auto_capo?'conseillé case':'case'} ${j.capo}`,`Capo ${j.auto_capo?'suggested, fret':'fret'} ${j.capo}`)}`:''} · ${access}`;
         const notice=ready?`${fallback}${soloFallback}${j.status==='failed'&&j.error_message?' '+j.error_message:''}`.trim():'';
         const hints={pdf:'À lire et imprimer',musicxml:'Pour un éditeur de partitions',tab:'Pour un éditeur de partitions',mid:'Pour un logiciel de musique'};
         const menu=j.preview_limit
@@ -2944,7 +2946,7 @@
         const action=admin?'Transcrire l’audio':j.preview_revealed?'Voir mon aperçu':'Générer mon aperçu';
         const message=admin?'Cette création a été enregistrée en démo. Importe l’audio original pour obtenir le relevé complet.'
           :'Tu peux lancer ton aperçu illustratif depuis ton compte.';
-        $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">CRÉATION ENREGISTRÉE ✦</span><h1>${safe(j.title)}</h1><p class="result-meta">${details}</p></div><div class="note-notation"><h3>Ton ${kind} est dans ton espace</h3><p class="result-note">${message}</p><button class="btn btn-primary" type="button" data-demo-generate="${safe(j.id)}">${action} ↗</button></div>`;
+        $('result-content').innerHTML=`<div class="result-hero"><span class="dashboard-kicker">CRÉATION ENREGISTRÉE ✦</span><h1>${safe(j.title)}</h1><p class="result-meta">${details}</p></div><div class="note-notation"><h3>${L(`Ton ${kind} est dans ton espace`,`Your ${kind==='tablature'?'tab':'sheet music'} is in your space`)}</h3><p class="result-note">${message}</p><button class="btn btn-primary" type="button" data-demo-generate="${safe(j.id)}">${action} ↗</button></div>`;
         clearInterval(state.poll);state.poll=null;return;
       }
       const completed=j.status==='completed',processing=['queued','processing'].includes(j.status);

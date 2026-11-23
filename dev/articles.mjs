@@ -152,4 +152,95 @@ ${tab(['e|--0-----------0--', 'B|--1---------1----', 'G|--0-------0------', 'D|-
       ctaTitle: 'Your favourite song’s tab, in about a minute', ctaText: 'Paste a link and get the tab. 3 free 30-second previews.', ctaBtn: 'Generate a tab ↗', ctaHref: '/en/guitar-tab-generator',
     },
   },
+  {
+    id: 'youtube-tablature',
+    date: '2026-11-24',
+    minutes: 6,
+    fr: {
+      slug: 'transformer-video-youtube-en-tablature',
+      title: 'Transformer une chanson YouTube en tablature guitare (3 méthodes) | Tablurio',
+      description: 'Trouver, relever ou générer la tablature guitare d’une vidéo YouTube : 3 méthodes, leurs limites et les étapes pour obtenir la tab en une minute.',
+      nav: 'Chanson YouTube en tablature guitare',
+      h1: 'Transformer une chanson YouTube en <em>tablature guitare</em>',
+      lead: 'Tu as trouvé le morceau sur YouTube, mais pas la tab ? Trois façons de passer de la vidéo à la tablature, de la plus lente à la plus rapide.',
+      teaser: 'Chercher la tab, la relever à l’oreille ou la générer : 3 méthodes et leurs limites.',
+      toc: 'Au sommaire',
+      body: [
+        ['Le problème : la vidéo existe, la tab non', `<p>YouTube a presque tout : versions studio, lives, reprises acoustiques, morceaux introuvables ailleurs. Les tablatures, elles, n’existent souvent que pour les titres les plus connus, et elles sont de qualité très variable.</p>
+<p>Il y a trois façons de passer d’une vidéo YouTube à une tablature guitare. Elles ne demandent ni le même temps, ni le même niveau.</p>`],
+        ['Méthode 1 : chercher une tab existante', `<p>Tape le titre suivi de <strong>« tab »</strong> ou <strong>« tablature »</strong> dans un moteur de recherche. Pour un morceau connu, tu trouveras souvent une tab écrite par un autre guitariste.</p>
+<ul><li><strong>Avantage</strong> : gratuit et immédiat.</li>
+<li><strong>Limites</strong> : beaucoup de morceaux n’ont pas de tab, les versions live ou les reprises encore moins, et les tabs écrites à la main contiennent souvent des erreurs ou n’indiquent pas le rythme.</li></ul>`],
+        ['Méthode 2 : relever le morceau à l’oreille', `<p>C’est la méthode des musiciens expérimentés : écouter, trouver chaque note sur le manche, puis l’écrire.</p>
+<ul><li>Dans YouTube, clique sur ⚙️ puis <strong>Vitesse de lecture</strong> et passe à 0,75 ou 0,5 pour entendre chaque note.</li>
+<li>Repère d’abord la <strong>tonalité</strong> et les accords, puis la mélodie ou le riff, phrase par phrase.</li>
+<li>Note au fur et à mesure sur une grille de tab vierge.</li></ul>
+<p><strong>Avantage</strong> : c’est un excellent exercice pour l’oreille. <strong>Limite</strong> : compter plusieurs heures pour un morceau entier quand on débute.</p>`],
+        ['Méthode 3 : générer la tab avec l’IA', `<p>Des outils comme Tablurio écoutent l’audio de la vidéo, détectent les notes et le rythme, puis les écrivent en tablature. Concrètement :</p>
+<ol><li><strong>Copie le lien</strong> de la vidéo YouTube (une vidéo classique ou un Short).</li>
+<li><strong>Colle-le</strong> dans le <a href="/tablature-guitare">générateur de tablature guitare</a>.</li>
+<li><strong>Choisis la guitare</strong>, puis la tablature (ou la partition si tu lis le solfège), et la partie du morceau à transcrire.</li>
+<li><strong>Joue</strong> en suivant la tab pendant que le morceau défile, et ralentis si besoin.</li></ol>
+<p>Ça prend en général entre trente secondes et une minute. Avec une offre payante, tu peux ensuite exporter la tab en PDF, MIDI ou MusicXML.</p>`],
+        ['Quelles vidéos donnent les meilleures tabs ?', `<ul><li><strong>Un son propre</strong> : une version studio ou un bon live plutôt qu’un enregistrement au téléphone.</li>
+<li><strong>Une guitare bien audible</strong> : guitare acoustique seule, riff en avant, intro en solo.</li>
+<li><strong>10 minutes maximum</strong> : pour un morceau plus long, choisis le passage à travailler.</li></ul>
+<p>Sur un arrangement très chargé (plusieurs guitares saturées, orchestre), certains passages devront être retouchés. C’est une transcription automatique : vérifie toujours le résultat à l’oreille.</p>`],
+        ['Quelle méthode choisir ?', `<ul><li><strong>Morceau très connu</strong> : commence par chercher une tab existante.</li>
+<li><strong>Tu veux travailler ton oreille</strong> : relève-le toi-même, en ralentissant la vidéo.</li>
+<li><strong>Morceau rare, reprise, live, ou pas le temps</strong> : génère la tab, puis corrige les quelques passages qui le demandent.</li></ul>
+<p>Pas encore à l’aise avec les tabs ? Lis d’abord notre guide <a href="/apprendre/lire-une-tablature-guitare">pour lire une tablature guitare</a>.</p>`],
+      ],
+      faq: [
+        ['Peut-on transformer n’importe quelle vidéo YouTube en tablature ?', 'Presque : les vidéos et les Shorts jusqu’à 10 minutes sont acceptés. Le résultat est meilleur quand la guitare est bien audible dans le mix.'],
+        ['Est-ce gratuit ?', 'Tablurio offre 3 aperçus gratuits de 30 secondes. Les morceaux entiers et les exports sont inclus dans les offres Starter, Pro et Lifetime.'],
+        ['La tab générée est-elle exacte ?', 'Elle trouve la grande majorité des notes, mais c’est une transcription automatique : un passage très chargé peut demander une retouche.'],
+        ['Puis-je ouvrir la tab dans Guitar Pro ?', 'Oui, via l’export MusicXML, lisible par Guitar Pro et MuseScore.'],
+      ],
+      ctaTitle: 'Colle un lien YouTube, récupère la tab', ctaText: 'Essaie sur ton morceau : 3 aperçus gratuits de 30 secondes.', ctaBtn: 'Générer une tablature ↗', ctaHref: '/tablature-guitare',
+    },
+    en: {
+      slug: 'youtube-to-guitar-tabs',
+      title: 'How to turn a YouTube song into guitar tabs (3 ways) | Tablurio',
+      description: 'Find, transcribe by ear or generate the guitar tab of a YouTube video: 3 methods, their limits, and the steps to get the tab in about a minute.',
+      nav: 'YouTube song to guitar tabs',
+      h1: 'How to turn a YouTube song into <em>guitar tabs</em>',
+      lead: 'Found the song on YouTube but not the tab? Three ways to get from the video to a guitar tab, from the slowest to the fastest.',
+      teaser: 'Search for the tab, work it out by ear or generate it: 3 methods and their limits.',
+      toc: 'Contents',
+      body: [
+        ['The problem: the video exists, the tab doesn’t', `<p>YouTube has almost everything: studio versions, live shows, acoustic covers, songs you won’t find anywhere else. Tabs, on the other hand, often only exist for the best-known songs, and their quality varies a lot.</p>
+<p>There are three ways to go from a YouTube video to a guitar tab. They don’t take the same time or the same skill.</p>`],
+        ['Method 1: search for an existing tab', `<p>Type the song title followed by <strong>“tab”</strong> or <strong>“chords”</strong> into a search engine. For a well-known song, you’ll often find a tab written by another guitarist.</p>
+<ul><li><strong>Pros</strong>: free and instant.</li>
+<li><strong>Cons</strong>: many songs have no tab, live versions and covers even less, and hand-written tabs often contain mistakes or leave out the rhythm.</li></ul>`],
+        ['Method 2: work it out by ear', `<p>This is what experienced musicians do: listen, find each note on the fretboard, then write it down.</p>
+<ul><li>On YouTube, click ⚙️ then <strong>Playback speed</strong> and choose 0.75 or 0.5 to hear every note.</li>
+<li>Find the <strong>key</strong> and the chords first, then the melody or riff, phrase by phrase.</li>
+<li>Write it down as you go on a blank tab grid, or in a tab maker.</li></ul>
+<p><strong>Pro</strong>: it’s great ear training. <strong>Con</strong>: expect several hours for a whole song as a beginner.</p>`],
+        ['Method 3: generate the tab with AI', `<p>Tools like Tablurio listen to the video’s audio, detect the notes and rhythm, then write them as a tab. In practice:</p>
+<ol><li><strong>Copy the link</strong> of the YouTube video (a regular video or a Short).</li>
+<li><strong>Paste it</strong> into the <a href="/en/guitar-tab-generator">guitar tab generator</a>.</li>
+<li><strong>Pick guitar</strong>, then tab (or standard notation if you read music), and the part of the song to transcribe.</li>
+<li><strong>Play along</strong> with the tab while the song plays, and slow it down if needed.</li></ol>
+<p>It usually takes thirty seconds to a minute. With a paid plan, you can then export the tab to PDF, MIDI or MusicXML.</p>`],
+        ['Which videos give the best tabs?', `<ul><li><strong>Clean sound</strong>: a studio version or a good live recording rather than a phone recording.</li>
+<li><strong>A clearly audible guitar</strong>: solo acoustic guitar, a riff upfront, a solo intro.</li>
+<li><strong>10 minutes max</strong>: for a longer song, pick the passage you want to practise.</li></ul>
+<p>On very busy arrangements (several distorted guitars, an orchestra), some passages will need a touch-up. It’s an automatic transcription: always check the result by ear.</p>`],
+        ['Which method should you pick?', `<ul><li><strong>A very famous song</strong>: start by searching for an existing tab.</li>
+<li><strong>You want to train your ear</strong>: work it out yourself, with the video slowed down.</li>
+<li><strong>A rare song, a cover, a live version, or no time</strong>: generate the tab, then fix the few passages that need it.</li></ul>
+<p>Not comfortable with tabs yet? Start with our guide on <a href="/en/learn/how-to-read-guitar-tabs">how to read guitar tabs</a>.</p>`],
+      ],
+      faq: [
+        ['Can any YouTube video be turned into a tab?', 'Almost: videos and Shorts up to 10 minutes are accepted. Results are better when the guitar is clearly audible in the mix.'],
+        ['Is it free?', 'Tablurio gives you 3 free 30-second previews. Full songs and exports come with the Starter, Pro and Lifetime plans.'],
+        ['Is the generated tab accurate?', 'It gets the vast majority of notes right, but it’s an automatic transcription: a very busy passage may need a touch-up.'],
+        ['Can I open the tab in Guitar Pro?', 'Yes, through the MusicXML export, which Guitar Pro and MuseScore can open.'],
+      ],
+      ctaTitle: 'Paste a YouTube link, get the tab', ctaText: 'Try it on your song: 3 free 30-second previews.', ctaBtn: 'Generate a tab ↗', ctaHref: '/en/guitar-tab-generator',
+    },
+  },
 ];

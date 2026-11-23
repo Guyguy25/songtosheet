@@ -4,11 +4,11 @@ export const PAGES_EN = [
   {
     slug: 'youtube-to-sheet-music', pair: 'youtube-en-partition',
     nav: 'YouTube to sheet music', teaser: 'Paste a YouTube link, get the notes',
-    title: 'YouTube to Sheet Music: Turn Any Video into Sheet Music | Tablurio',
-    description: 'Paste a YouTube link (video or Short) and get sheet music or tabs for guitar, piano or vocals. Export to PDF, MIDI and MusicXML. Free previews.',
+    title: 'YouTube to Sheet Music Free: Turn Any Video into Sheet Music | Tablurio',
+    description: 'Free online YouTube to sheet music converter: paste a video or Short link and get sheet music or tabs for guitar, piano or vocals. 3 free previews.',
     kicker: '▶ YouTube → sheet music',
     h1: 'Turn a YouTube video into <em>sheet music</em>',
-    lead: 'Found the song on YouTube but not the sheet music? Paste the video link: Tablurio listens to the audio and gives you sheet music or a tab, ready to play.',
+    lead: 'Found the song on YouTube but not the sheet music? Paste the video link: Tablurio listens to the audio and gives you sheet music or a tab, ready to play. Try it free, no credit card.',
     placeholder: 'Paste a YouTube link (video or Short)…',
     visual: { label: 'Illustrative example', title: 'Piano sheet music', sub: 'From a YouTube link', svg: 'staff' },
     stepsTitle: 'From YouTube to sheet music in 3 steps',
@@ -38,8 +38,8 @@ export const PAGES_EN = [
   {
     slug: 'guitar-tab-generator', pair: 'tablature-guitare', instrument: 'guitare',
     nav: 'Guitar tab generator', teaser: 'Guitar tabs for any song',
-    title: 'Guitar Tab Generator: Get Tabs from Any Song | Tablurio',
-    description: 'Generate guitar tabs from a YouTube, Spotify or Deezer link, or from an audio file. Tab or standard notation, export to PDF, MIDI and MusicXML.',
+    title: 'Guitar Tab Generator & Maker: Get Tabs from Any Song | Tablurio',
+    description: 'Online guitar tab maker that writes the tab for you: paste a YouTube, Spotify or Deezer link or upload audio, get the tab of any song or riff. Try it free.',
     kicker: '🎸 Guitar tabs',
     h1: '<em>Guitar tab generator</em> for any song',
     lead: 'No more hunting for a tab that doesn’t exist or spending hours learning by ear. Paste the song link, pick guitar, and get your tab.',
@@ -61,8 +61,11 @@ export const PAGES_EN = [
 <li>Numbers stacked vertically are played together (a chord).</li></ul>
 <h3>Which songs?</h3>
 <p>Riffs, arpeggios, melodies, acoustic intros: transcription is most reliable when the guitar or melody stands out in the mix. On very busy songs some passages may need a touch-up, which you can do in Guitar Pro or MuseScore thanks to the MusicXML export.</p>
+<h3>A tab maker that does the writing for you</h3>
+<p>Most online <strong>tab makers</strong> and <strong>tab creators</strong> give you an empty grid and let you type every number yourself. Tablurio works the other way round: you bring the song, and it writes the tab. It’s handy for a <strong>guitar riff</strong> you want to learn, an intro, a solo or a whole song, and you can then fine-tune the result in Guitar Pro or MuseScore.</p>
 <p>Play bass? 4-string bass tabs are in beta and coming soon.</p>`,
     faq: [
+      ['Can I use it as a guitar riff maker?', 'Yes. Upload a recording of a riff, or paste the link of a song and pick the excerpt you want: Tablurio writes the tab of that passage.'],
       ['Is the tab generator free?', 'You get 3 free previews of 30 seconds to try it on your own songs. Full songs and exports come with Starter (€10/month), Pro (€19/month) and Lifetime (€99 once).'],
       ['Can I get standard notation instead of a tab?', 'Yes. For guitar, you choose between tab and standard notation.'],
       ['Which tuning is used?', 'Tabs are written for a 6-string guitar in standard tuning (E A D G B E).'],

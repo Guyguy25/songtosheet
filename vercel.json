@@ -190,6 +190,14 @@
     {
       "source": "/en/learn/how-to-read-guitar-tabs",
       "destination": "/outils/blog/en/learn/how-to-read-guitar-tabs.html"
+    },
+    {
+      "source": "/apprendre/transformer-video-youtube-en-tablature",
+      "destination": "/outils/blog/apprendre/transformer-video-youtube-en-tablature.html"
+    },
+    {
+      "source": "/en/learn/youtube-to-guitar-tabs",
+      "destination": "/outils/blog/en/learn/youtube-to-guitar-tabs.html"
     }
   ],
   "headers": [

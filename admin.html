@@ -100,15 +100,17 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   let regions=null;try{regions=new Intl.DisplayNames(['fr'],{type:'region'});}catch{}
   const flag=code=>/^[A-Z]{2}$/.test(code)?String.fromCodePoint(...[...code].map(c=>0x1F1E6+c.charCodeAt(0)-65)):'🌐';
   const country=code=>code&&code!=='??'?`${flag(code)} ${esc(regions?.of(code)||code)}`:'Inconnu';
+  const CHANNELS={organic:'🔎 Recherche (Google, Bing…)',ai:'🤖 Assistants IA (ChatGPT, Perplexity…)',social:'📱 Réseaux sociaux',direct:'↩ Direct',referral:'🔗 Autres sites'};
   const SOURCES={direct:'Direct (lien tapé, favori, appli sans info)',tiktok:'TikTok',instagram:'Instagram',meta:'Facebook / Meta (non précisé)',youtube:'YouTube',google:'Google',x:'X / Twitter',bing:'Bing',reddit:'Reddit',whop:'Whop',chatgpt:'ChatGPT'};
   const label=(field,key)=>{
     if(field==='country')return country(key);
     if(field==='source')return esc(SOURCES[key]||key);
+    if(field==='channel')return esc(CHANNELS[key]||key);
     if(field==='content')return key==='—'||!key?'<span class="muted">Sans vidéo précisée</span>':esc(key);
     return esc(key);
   };
   const date=value=>new Date(value).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-  let days=30,data=null,tab='source';
+  let days=30,data=null,tab='channel';
 
   async function load(){
     $('sub').textContent='Chargement…';
@@ -158,7 +160,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
         <span class="rate">${index?`${pct(step.rate_from_previous)} de l’étape précédente · ${pct(step.rate_from_visit)} des visiteurs`:'Point de départ'}${index&&steps[index-1].value>step.value?` · <span class="drop">−${num(steps[index-1].value-step.value)}</span>`:''}</span></div>`).join('')}</div>`;
   }
 
-  const TABS=[['source','Source'],['content','Vidéo / lien'],['device','Appareil'],['country','Pays'],['os','Système'],['browser','Navigateur'],['landing','Page d’arrivée']];
+  const TABS=[['channel','Canal'],['source','Source'],['content','Vidéo / lien'],['device','Appareil'],['country','Pays'],['os','Système'],['browser','Navigateur'],['landing','Page d’arrivée']];
   function breakdown(){
     const rows=data.breakdowns[tab]||[];
     const top=Math.max(1,...rows.map(r=>r.visitors));
@@ -221,6 +223,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       <div class="kpis">
         ${kpi('Visiteurs réels',num(k.visitors),`${num(k.bots)} robots filtrés (aucune interaction)`)}
         ${kpi('Inscriptions',num(k.signups),`${pct(k.visit_to_signup)} des visiteurs · ${num(k.total_users)} comptes au total`)}
+        ${kpi('Recherche (SEO)',num(k.organic_visitors||0),`${num(k.organic_signups||0)} inscriptions venues de Google, Bing… · ${num(k.ai_visitors||0)} visiteurs venus d’assistants IA`)}
         ${kpi('Aperçus lancés',num(k.previews),`${num(k.guest_previews)} sans compte · ${num(k.failed_previews)} en échec`)}
         ${kpi('Morceaux entiers',num(k.full_songs),`${num(k.cached)} servis depuis le cache`)}
         ${kpi('Utilisateurs actifs',num(k.active_users),'Comptes ayant généré sur la période')}

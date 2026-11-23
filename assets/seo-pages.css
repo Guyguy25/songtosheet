@@ -145,3 +145,14 @@ p{margin:0}
 .sp-info .sp-prose a,.sp-info .sp-intro a{color:var(--purple);font-weight:700}
 .sp-info .sp-cta-band a+a{background:transparent;color:#fff;border:1px solid #ffffff80;margin-left:6px}
 @media(max-width:1000px){.sp-info .sp-visual-wrap{display:none}}
+
+/* Blog /apprendre */
+.sp-blog .sp-byline{margin-top:18px;color:#b9aedb;font-size:13.5px}
+.sp-blog .sp-article-visual{width:min(520px,100%);background:#fff;border-radius:22px;padding:22px;box-shadow:0 30px 80px #00000066;transform:rotate(-1.5deg)}
+.sp-article h2{font-size:clamp(24px,2.6vw,32px);margin:34px 0 4px;scroll-margin-top:110px}
+.sp-article code{background:#f0ebff;color:#6136d0;border-radius:6px;padding:1px 6px;font-size:.92em}
+.sp-tab{background:#17112e;color:#e6dcff;border-radius:14px;padding:16px 18px;font:600 14px/1.55 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-x:auto;margin:4px 0}
+.sp-toc{background:#f4f1fc;border:1px solid var(--line);border-radius:18px;padding:20px 24px}
+.sp-toc ol{margin:10px 0 0;padding-left:20px;display:grid;gap:6px}
+.sp-toc a{color:var(--purple);font-weight:650}
+.sp-articles a .sp-meta{display:block;margin-top:10px;color:var(--purple);font-weight:700;font-size:12.5px}

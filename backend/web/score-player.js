@@ -407,25 +407,47 @@
       if(playing)schedule();
       update(position,follow);
     }
+    // Instrument samples (and the voice) are loaded in the background as soon as the player is
+    // ready, so the first click on play starts at once instead of seeming to do nothing.
+    let samplesReady=null;
+    function ensureContext(){
+      const Audio=window.AudioContext||window.webkitAudioContext;
+      if(!context&&Audio)context=new Audio();
+      return context;
+    }
+    function loadSamples(){
+      if(!profile||sampleBuffers)return Promise.resolve();
+      samplesReady??=Promise.all(profile.pitches.map(async pitch=>{
+        const data=await read(new URL(`${pitch}.mp3`,sampleFolder),signal,true);
+        return [pitch,await context.decodeAudioData(data)];
+      })).then(entries=>{sampleBuffers=new Map(entries);}).catch(error=>{samplesReady=null;throw error;});
+      return samplesReady;
+    }
+    function prepareAudio(){
+      if(signal.aborted||!ensureContext())return;
+      loadSamples().catch(()=>{});
+      if(vocalsEnabled&&!vocalsBuffer&&loadVocals){
+        vocalsDecode??=loadVocals().then(bytes=>context.decodeAudioData(bytes.slice(0))).catch(error=>{vocalsDecode=null;throw error;});
+        vocalsDecode.then(buffer=>{vocalsBuffer??=buffer;}).catch(()=>{});
+      }
+    }
+    function busy(on){
+      play.classList.toggle('is-loading',on);
+      if(on){play.textContent='';play.setAttribute('aria-label','Chargement du son…');}
+      else if(!playing){play.textContent='▶';play.setAttribute('aria-label','Lire la transcription');}
+    }
     play.onclick=async()=>{
       if(playing){pause();return;}
       if(starting||play.disabled)return;
       const request=++playRequest;
       starting=true;
       try{
-        const Audio=window.AudioContext||window.webkitAudioContext;
-        if(!context)context=new Audio();
-        await context.resume();
-        if(profile&&!sampleBuffers&&!signal.aborted){
-          const status=get('.sp-status');
-          status.hidden=false;
-          status.textContent=`Chargement du ${profile.label.toLowerCase()}…`;
-          sampleBuffers=new Map(await Promise.all(profile.pitches.map(async pitch=>{
-            const data=await read(new URL(`${pitch}.mp3`,sampleFolder),signal,true);
-            return [pitch,await context.decodeAudioData(data)];
-          })));
-          status.hidden=true;
-        }
+        if(!ensureContext())throw new Error('no audio');
+        // Resumed inside the click itself: browsers only allow sound after a user gesture.
+        const resumed=context.resume();
+        if((profile&&!sampleBuffers)||(vocalsEnabled&&!vocalsBuffer))busy(true);
+        await resumed;
+        if(profile&&!sampleBuffers&&!signal.aborted)await loadSamples();
         if(signal.aborted||request!==playRequest)return;
         if(vocalsEnabled&&!vocalsBuffer){
           try{await setVocals(true);}catch{vocalsEnabled=false;}
@@ -442,7 +464,7 @@
           status.textContent=profile?'Le son de l’instrument n’a pas pu charger. Relance la lecture.':'La lecture audio est indisponible dans ce navigateur.';
         }
       }
-      finally{starting=false;}
+      finally{starting=false;busy(false);}
     };
     seek.oninput=()=>jump(Number(seek.value));
     restart.onclick=()=>{sheet.scrollLeft=0;if(scroll)scroll.scrollLeft=0;jump(playbackStart);};
@@ -585,6 +607,7 @@
         seek.max=duration;
         get('.sp-audio-label').textContent=profile?.label??(tab?'Lecture de la tablature':'Transcription MIDI');
         for(const control of [play,seek,speed,restart])control.disabled=false;
+        (window.requestIdleCallback||(fn=>setTimeout(fn,300)))(prepareAudio);
         if(scroll)drawRoll();
         else update(position);
         onReady?.(duration);

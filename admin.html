@@ -8,7 +8,7 @@
 <link rel="icon" href="/assets/favicon.svg">
 <style>
 :root{--ink:#1e1533;--muted:#6f6585;--line:#ebe5f5;--bg:#f6f4fb;--card:#fff;--purple:#6d3ddc;--purple-soft:#efe8ff;--green:#14966a;--green-soft:#e2f6ee;--amber:#b86e00;--amber-soft:#fff2dc;
-  --s1:#6d3ddc;--s2:#e0791f;--s3:#1a9e74;--s4:#2f6fd6;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg)}
+  --s1:#6d3ddc;--s2:#e0791f;--s3:#1a9e74;--s4:#2f6fd6;--s5:#d6427a;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg)}
 *{box-sizing:border-box}body{margin:0}a{color:var(--purple)}
 main{max-width:1240px;margin:0 auto;padding:28px 22px 70px}
 .top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap}
@@ -67,6 +67,23 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .builder input{flex:1;min-width:160px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px}
 .full{grid-column:1/-1}
 .note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+.ret-kpis{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:4px}
+.dist{display:grid;gap:7px}
+.dist-row{display:grid;grid-template-columns:44px minmax(0,1fr) 54px;gap:10px;align-items:center;font-size:13px;font-weight:750}
+.dist-row .track{height:12px;border-radius:6px;background:#f1edf8;overflow:hidden}
+.dist-row .fill{height:100%;border-radius:6px;background:#ffb938}
+.dist-row.low .fill{background:#ff8a5c}
+.dist-row .n{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.reasons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.reasons h3{margin:0 0 8px;font-size:13px}
+.reasons ul{margin:0;padding:0;list-style:none;display:grid;gap:5px;font-size:12.5px}
+.reasons li{display:flex;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:9px;background:#faf8fe}
+.reasons li b{font-variant-numeric:tabular-nums}
+.stars{color:#f09d00;letter-spacing:1px;white-space:nowrap}.stars.low{color:#e5612e}
+.tags{display:flex;flex-wrap:wrap;gap:4px}.tags span{padding:2px 7px;border-radius:999px;background:var(--purple-soft);color:var(--purple);font-size:11px;font-weight:750}
+.comment{max-width:320px;font-size:12.5px;line-height:1.4}
+.split{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:18px}
+@media(max-width:980px){.ret-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.split,.reasons{grid-template-columns:1fr}}
 @media(max-width:980px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}
 @media(max-width:520px){.kpis{grid-template-columns:1fr}}
 </style>
@@ -134,7 +151,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   }
 
   function chart(series){
-    const keys=[['visitors','Visiteurs','var(--s1)'],['signups','Inscriptions','var(--s2)'],['previews','Aperçus','var(--s3)'],['full','Morceaux entiers','var(--s4)']];
+    const keys=[['visitors','Visiteurs','var(--s1)'],['signups','Inscriptions','var(--s2)'],['previews','Aperçus','var(--s3)'],['full','Morceaux entiers','var(--s4)'],['returns','Comptes revenus','var(--s5)']];
     const W=620,H=210,L=34,B=24,T=10;
     const max=Math.max(1,...series.flatMap(row=>keys.map(([k])=>row[k])));
     const nice=Math.max(1,Math.ceil(max/4))*4;
@@ -206,6 +223,50 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
         <td>${status(r)}</td></tr>`).join('')}</tbody></table></div>`;
   }
 
+  const PLAN={free:'Gratuit',starter:'Starter',pro:'Pro',lifetime:'Lifetime'};
+  const starText=score=>`<span class="stars${score<=2?' low':''}" title="${score} / 5">${'★'.repeat(score)}${'☆'.repeat(5-score)}</span>`;
+  function returning(r,ratings){
+    const rated=ratings||{count:0,average:0,answer_rate:0,dismissed:0,distribution:[0,0,0,0,0],reasons:{low:{},mid:{},high:{}},recent:[],labels:null};
+    const total=Math.max(1,...rated.distribution);
+    const reasonList=bucket=>{
+      const entries=Object.entries(rated.reasons[bucket]||{}).sort((a,b)=>b[1]-a[1]);
+      const names=rated.labels?.[bucket]?.reasons||{};
+      return entries.length?`<ul>${entries.map(([id,n])=>`<li><span>${esc(names[id]?.fr||id)}</span><b>${num(n)}</b></li>`).join('')}</ul>`:'<p class="muted" style="margin:0;font-size:12.5px">Aucune réponse.</p>';
+    };
+    const reasonName=(score,id)=>{const bucket=score<=2?'low':score===3?'mid':'high';return rated.labels?.[bucket]?.reasons?.[id]?.fr||id;};
+    return `<section class="panel full"><h2>Retours & satisfaction</h2><p>Qui revient sur le site, et la note donnée à sa génération via la pop-up affichée au retour, un jour après la génération. <a href="/app?noter" target="_blank" rel="noopener">Voir la pop-up ↗</a></p>
+      <div class="kpis ret-kpis">
+        ${kpi('Comptes revenus',num(r.returning),`Revenus sur la période un autre jour que leur inscription · ${num(r.returning_days)} jours de retour`)}
+        ${kpi('Revenus le lendemain',pct(r.d1),`${num(r.d1_back)} sur ${num(r.d1_cohort)} inscrits de la période (J+1)`)}
+        ${kpi('Revenus sous 7 jours',pct(r.d7),`${num(r.d7_back)} sur ${num(r.d7_cohort)} inscrits d’au moins 7 jours`)}
+        ${kpi('Taux de réponse',pct(rated.answer_rate),`${num(rated.count)} notes · ${num(rated.dismissed)} pop-ups fermées sans note`)}
+        ${kpi('Note moyenne',rated.count?`${String(rated.average).replace('.',',')} / 5`:'—',rated.count?`Sur ${num(rated.count)} générations notées`:'Pas encore de note sur la période',true)}
+      </div>
+      ${r.tracked_since?'<p class="note">Les jours de passage sont enregistrés depuis la mise en ligne de ce suivi : les chiffres de retour se remplissent à partir de maintenant.</p>':''}
+      <div class="split" style="margin-top:16px">
+        <div><h3 style="margin:0 0 10px;font-size:14px">Répartition des notes</h3><div class="dist">${[5,4,3,2,1].map(score=>`<div class="dist-row${score<=2?' low':''}"><span>${score} ★</span><div class="track"><div class="fill" style="width:${rated.distribution[score-1]/total*100}%"></div></div><span class="n">${num(rated.distribution[score-1])}</span></div>`).join('')}</div></div>
+        <div><h3 style="margin:0 0 10px;font-size:14px">Pourquoi cette note</h3><div class="reasons" style="margin-top:0">
+          <div><h3>😣 Notes 1-2 · ce qui n’a pas marché</h3>${reasonList('low')}</div>
+          <div><h3>🙂 Note 3 · ce qui manquait</h3>${reasonList('mid')}</div>
+          <div><h3>🤩 Notes 4-5 · ce qui a plu</h3>${reasonList('high')}</div></div></div>
+      </div>
+      <h3 style="margin:22px 0 4px;font-size:14px">Dernières notes</h3>
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Compte</th><th>Morceau</th><th>Note</th><th>Pourquoi</th><th>Commentaire</th></tr></thead><tbody>
+        ${rated.recent.length?rated.recent.map(x=>`<tr><td class="muted">${date(x.at)}</td><td><div class="email">${esc(x.account)}</div></td>
+          <td><div class="email" style="max-width:240px" title="${esc(x.title)}">${esc(x.title)}</div><div class="muted">${esc(INSTRUMENTS[x.instrument]||x.instrument)} · ${x.kind==='full'?'Morceau entier':'Aperçu 30 s'}</div></td>
+          <td>${starText(x.score)}</td><td><div class="tags">${x.reasons.map(id=>`<span>${esc(reasonName(x.score,id))}</span>`).join('')||'<span class="muted" style="background:none;padding:0">—</span>'}</div></td>
+          <td><div class="comment">${x.comment?esc(x.comment):'<span class="muted">—</span>'}</div></td></tr>`).join('')
+          :'<tr><td colspan="6" class="muted">Aucune note sur cette période.</td></tr>'}
+      </tbody></table></div>
+      <h3 style="margin:22px 0 4px;font-size:14px">Derniers comptes revenus</h3>
+      <div class="table-wrap"><table><thead><tr><th>Compte</th><th>Inscrit le</th><th>Dernier passage</th><th class="n">Jours de retour</th><th class="n">Générations</th><th>Dernier morceau</th><th>Offre</th></tr></thead><tbody>
+        ${r.list.length?r.list.map(x=>`<tr><td><div class="email" title="${esc(x.email)}">${esc(x.pseudo||x.email)}</div>${x.pseudo?`<div class="email muted">${esc(x.email)}</div>`:''}</td>
+          <td class="muted">${date(x.created_at)}</td><td>${x.last_seen_at?date(x.last_seen_at):'—'}</td><td class="n">${num(x.return_days)}</td><td class="n">${num(x.generations)}</td>
+          <td><div class="email" style="max-width:220px">${esc(x.last_job||'—')}</div></td><td><span class="pill ${esc(x.plan)}">${esc(PLAN[x.plan]||x.plan)}</span></td></tr>`).join('')
+          :'<tr><td colspan="7" class="muted">Personne n’est encore revenu sur cette période.</td></tr>'}
+      </tbody></table></div></section>`;
+  }
+
   function links(){
     const base=location.origin;
     const bio=`${base}/tt`,ig=`${base}/ig`;
@@ -233,7 +294,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       </div>
       <div class="grid">
         <section class="panel"><h2>Entonnoir de conversion</h2><p>Des visiteurs arrivés sur la période, combien sont allés jusqu’à chaque étape.</p>${funnel(data.funnel)}</section>
-        <section class="panel"><h2>Jour par jour</h2><p>Visiteurs réels, inscriptions et générations.</p>${chart(data.series)}</section>
+        <section class="panel"><h2>Jour par jour</h2><p>Visiteurs réels, inscriptions, générations et comptes revenus.</p>${chart(data.series)}</section>
         <section class="panel full" id="breakdown"><h2>D’où viennent les visiteurs, et ce qu’ils font</h2><p>Visiteurs réels arrivés sur la période, par groupe.</p>${breakdown()}</section>
         ${data.learn?`<section class="panel full"><h2>Mode Apprentissage</h2><p>Joueurs et niveaux terminés sur la période.</p>
           <div class="kpis learn-kpis">
@@ -243,6 +304,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
             ${kpi('Part au micro',pct(Math.round(data.learn.mic_share*100)),'Niveaux réussis en jouant au micro')}
             ${kpi('Clics « Débloquer »',num(data.learn.unlock_clicks),'Depuis la carte du jeu (comptes gratuits)',true)}
           </div></section>`:''}
+        ${data.returning?returning(data.returning,data.ratings):''}
         <section class="panel full"><h2>Ce que les gens génèrent</h2><p>Par instrument, puis les dernières générations une par une.</p>${instruments(data.instruments||[])}${generations(data.generations||[])}</section>
         <section class="panel full"><h2>Dernières inscriptions</h2><p>Avec la source de leur toute première visite.</p>${recent(data.recent)}</section>
         <section class="panel full"><h2>Liens à suivre</h2><p>Mets ces liens dans ta bio ou sous tes vidéos pour savoir lesquelles ramènent du monde.</p>${links()}</section>

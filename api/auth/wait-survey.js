@@ -5,6 +5,7 @@ const {method,fail}=require('../../lib/authorization');
 
 const {ObjectId}=require('mongodb');
 const {QUESTIONS,PER_GENERATION}=require('../../lib/wait-survey-questions');
+const {ratingRoute}=require('../../lib/ratings');
 const jobId=value=>typeof value==='string'&&/^[a-f0-9]{24}$/i.test(value)?new ObjectId(value):null;
 
 // The next questions for this generation: in order, never one already answered or skipped,
@@ -23,6 +24,8 @@ module.exports=async(req,res)=>{
   try{
     const user=await authenticated(req);
     if(!user)return json(res,401,{detail:'Connexion requise.'});
+    // /api/auth/rating (note d'une génération au retour) partage cette fonction : limite Vercel atteinte.
+    if(req.query?.route==='rating')return ratingRoute(req,res,{db:await database(),user,json});
     const users=(await database()).collection('users');
     const jobs=(await database()).collection('track_jobs');
     if(req.method==='GET'){

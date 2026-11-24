@@ -37,10 +37,14 @@ async function statsRoute(req,res){
   const data=await stats(db,{days});
   // Mode Apprentissage : un incident ici ne doit pas priver l'admin des autres KPI.
   data.learn=await learnStats(db,new Date(Date.now()-days*86400000)).catch(()=>null);
+  // Notes données au retour (pop-up « Combien tu notes ta génération ? »).
+  const admins=new Set((await db.collection('users').find({role:'admin'},{projection:{_id:1}}).toArray()).map(u=>String(u._id)));
+  data.ratings=await ratingStats(db,new Date(Date.now()-days*86400000),admins).catch(()=>null);
   return json(res,200,data);
 }
 
 const {learnStats}=require('../lib/learn');
+const {ratingStats}=require('../lib/ratings');
 module.exports=async(req,res)=>{
   res.setHeader('Cache-Control','no-store');
   const route=req.query?.route;

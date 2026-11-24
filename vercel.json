@@ -12,6 +12,10 @@
       "destination": "/api/jobs?route=learn"
     },
     {
+      "source": "/api/auth/rating",
+      "destination": "/api/auth/wait-survey?route=rating"
+    },
+    {
       "source": "/api/auth/verify",
       "destination": "/api/auth/signup?route=verify"
     },

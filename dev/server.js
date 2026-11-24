@@ -59,6 +59,12 @@ http.createServer(async(req,res)=>{
   const url=new URL(req.url,'http://localhost');
   const route=url.pathname;
   if(route==='/api/auth/me')return json(res,200,{user:{id:'demo',email:'demo@songtosheet.local',role:'admin'}});
+  if(route==='/api/auth/rating'){
+    // Démo : la pop-up de note apparaît à chaque ouverture de /app.
+    if(req.method==='POST')return json(res,200,{ok:true});
+    const {QUESTIONS}=require('../lib/ratings.js');
+    return json(res,200,{prompt:{job:'',title:'Balade d’exemple (accès complet)',instrument:'guitare',kind:'full',created_at:new Date((now-86400)*1000)},questions:QUESTIONS});
+  }
   if(route==='/api/jobs')return json(res,200,{jobs});
   if(route.startsWith('/api/jobs/')){
     const job=jobs.find(item=>item.id===decodeURIComponent(route.slice(10)));

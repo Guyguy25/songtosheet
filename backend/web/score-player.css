@@ -112,3 +112,6 @@
 .sp-voice-toggle:focus-visible{outline:2px solid #7549eb;outline-offset:2px}
 .sp-voice-volume{width:84px;accent-color:#7549eb}
 .sp-voice-volume[hidden]{display:none}
+.sp-controls .sp-play.is-loading::after{content:"";width:15px;height:15px;border:2px solid #ffffff66;border-top-color:#fff;border-radius:50%;animation:sp-spin .8s linear infinite}
+@keyframes sp-spin{to{transform:rotate(1turn)}}
+.sp-controls .sp-play{display:inline-grid;place-items:center;padding:0}

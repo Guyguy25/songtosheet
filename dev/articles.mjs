@@ -27,6 +27,7 @@ export const HUBS = {
 export const ARTICLES = [
   {
     id: 'lire-tablature',
+    tools: ['tablature-guitare'],
     date: '2026-11-23',
     minutes: 8,
     fr: {
@@ -154,6 +155,7 @@ ${tab(['e|--0-----------0--', 'B|--1---------1----', 'G|--0-------0------', 'D|-
   },
   {
     id: 'youtube-tablature',
+    tools: ['tablature-guitare', 'youtube-en-partition'],
     date: '2026-11-24',
     minutes: 6,
     fr: {
@@ -241,6 +243,180 @@ ${tab(['e|--0-----------0--', 'B|--1---------1----', 'G|--0-------0------', 'D|-
         ['Can I open the tab in Guitar Pro?', 'Yes, through the MusicXML export, which Guitar Pro and MuseScore can open.'],
       ],
       ctaTitle: 'Paste a YouTube link, get the tab', ctaText: 'Try it on your song: 3 free 30-second previews.', ctaBtn: 'Generate a tab ↗', ctaHref: '/en/guitar-tab-generator',
+    },
+  },
+  {
+    id: 'alternative-klangio',
+    tools: ['tablature-guitare', 'partition-piano', 'youtube-en-partition', 'mp3-en-partition'],
+    date: '2026-11-25',
+    minutes: 6,
+    fr: {
+      slug: 'alternative-klangio',
+      title: 'Alternative à Klangio : Tablurio vs Klangio (comparatif 2026) | Tablurio',
+      description: 'Tablurio ou Klangio (Guitar2Tabs, Piano2Notes) ? Sources acceptées, instruments, essai gratuit, exports et prix comparés honnêtement pour choisir ton outil de transcription.',
+      nav: 'Alternative à Klangio',
+      h1: 'Alternative à Klangio : <em>Tablurio vs Klangio</em>',
+      lead: 'Deux outils qui transforment un morceau en partition ou en tablature avec l’IA. Voici ce qui les distingue vraiment, pour choisir celui qui te convient.',
+      teaser: 'Sources, instruments, essai gratuit, exports et prix : le comparatif honnête.',
+      toc: 'Au sommaire',
+      body: [
+        ['En bref', `<p><strong>Klangio</strong> est une société de Berlin qui propose une famille d’applications de transcription, une par instrument : Guitar2Tabs, Piano2Notes, Sing2Notes, Drum2Notes et d’autres, plus un « Transcription Studio » multi-instrument. <strong>Tablurio</strong> réunit guitare, piano et voix dans une seule application web, et accepte aussi les liens Spotify et Deezer.</p>
+<p>Les deux font bien le travail de base : tu donnes un morceau, l’IA écrit les notes. La différence se joue sur les sources, les instruments, la façon d’essayer et le modèle de prix.</p>`],
+        ['Le tableau comparatif', `<div class="sp-table-wrap"><table class="sp-table"><thead><tr><th></th><th>Tablurio</th><th>Klangio</th></tr></thead><tbody>
+<tr><td>Sources</td><td>Lien YouTube (et Shorts), Spotify, Deezer, fichier audio</td><td>Fichier audio, lien YouTube, enregistrement au micro</td></tr>
+<tr><td>Instruments</td><td>Guitare (tab ou partition), piano, voix ; basse en bêta</td><td>Une app par instrument : guitare et basse, piano, voix, batterie, et d’autres</td></tr>
+<tr><td>Applications</td><td>Une seule app web, en français et en anglais</td><td>Apps web et mobiles (iOS, Android), une par instrument</td></tr>
+<tr><td>Essai gratuit</td><td>3 aperçus de 30 secondes</td><td>Démo des 20 premières secondes</td></tr>
+<tr><td>Exports</td><td>PDF, MIDI, MusicXML</td><td>PDF, MIDI, MusicXML, Guitar Pro</td></tr>
+<tr><td>Prix</td><td>Starter 10 €/mois, Pro 19 €/mois, Lifetime 99 € une fois</td><td>Abonnement par app ou pour toutes les apps</td></tr>
+</tbody></table></div>
+<p class="sp-note">Informations relevées sur les sites des deux outils en novembre 2026. Les offres de Klangio évoluent : vérifie ses prix actuels sur son site.</p>`],
+        ['Quand choisir Klangio', `<ul><li>Tu veux transcrire la <strong>batterie</strong> ou d’autres instruments que Tablurio ne propose pas.</li>
+<li>Tu veux <strong>t’enregistrer directement</strong> dans une app mobile.</li>
+<li>Tu as besoin d’un export <strong>Guitar Pro</strong> natif.</li>
+<li>Tu travailles sur des morceaux multi-instruments avec leur Transcription Studio.</li></ul>`],
+        ['Quand choisir Tablurio', `<ul><li>Ton morceau est sur <strong>Spotify ou Deezer</strong> : colle le lien, Tablurio retrouve le morceau.</li>
+<li>Tu joues de <strong>plusieurs instruments</strong> et veux tout dans une seule app, sans abonnement par instrument.</li>
+<li>Tu veux <strong>comparer plusieurs versions</strong> : plusieurs moteurs transcrivent le morceau et Tablurio recommande la plus fidèle.</li>
+<li>Tu préfères payer <strong>une seule fois</strong> (Lifetime) ou en euros, avec une app en français.</li>
+<li>Tu veux t’entraîner avec la <strong>lecture audio synchronisée</strong> et ralentie.</li></ul>`],
+        ['Le mieux : essayer les deux sur ton morceau', `<p>La qualité d’une transcription dépend beaucoup du morceau : mixage, instrument mis en avant, style de jeu. Les deux outils ont un essai gratuit. Teste le même passage sur chacun et garde celui qui te donne le résultat le plus juste.</p>
+<p>Pour Tablurio, colle ton lien dans le <a href="/tablature-guitare">générateur de tablature guitare</a> ou l’outil <a href="/partition-piano">partition piano</a>.</p>`],
+      ],
+      faq: [
+        ['Tablurio est-il gratuit comme Klangio ?', 'Les deux ont un essai gratuit : 3 aperçus de 30 secondes sur Tablurio, une démo des 20 premières secondes sur Klangio. Les morceaux entiers et les exports sont payants sur les deux.'],
+        ['Lequel est le plus précis ?', 'Ça dépend du morceau. Les deux utilisent l’IA et peuvent se tromper sur un passage très chargé. Le plus fiable est de tester le même extrait sur les deux.'],
+        ['Tablurio accepte-t-il les liens YouTube comme Klangio ?', 'Oui, ainsi que les liens Spotify et Deezer et les fichiers audio.'],
+        ['Puis-je ouvrir le résultat dans Guitar Pro ?', 'Avec Tablurio, oui, via l’export MusicXML. Klangio propose aussi un export Guitar Pro natif.'],
+      ],
+      ctaTitle: 'Essaie Tablurio sur ton morceau', ctaText: '3 aperçus gratuits de 30 secondes, sans carte bancaire.', ctaBtn: 'Créer ma partition ↗', ctaHref: '/tablature-guitare',
+    },
+    en: {
+      slug: 'klangio-alternative',
+      title: 'Klangio Alternative: Tablurio vs Klangio (2026 Comparison) | Tablurio',
+      description: 'Tablurio or Klangio (Guitar2Tabs, Piano2Notes)? Sources, instruments, free trial, exports and pricing compared honestly to help you pick a transcription tool.',
+      nav: 'Klangio alternative',
+      h1: 'Klangio alternative: <em>Tablurio vs Klangio</em>',
+      lead: 'Two tools that turn a song into sheet music or tabs with AI. Here is what really sets them apart, so you can pick the one that suits you.',
+      teaser: 'Sources, instruments, free trial, exports and pricing: an honest comparison.',
+      toc: 'Contents',
+      body: [
+        ['In short', `<p><strong>Klangio</strong> is a Berlin company with a family of transcription apps, one per instrument: Guitar2Tabs, Piano2Notes, Sing2Notes, Drum2Notes and more, plus a multi-instrument “Transcription Studio”. <strong>Tablurio</strong> brings guitar, piano and vocals together in a single web app, and also accepts Spotify and Deezer links.</p>
+<p>Both do the core job well: you give them a song, the AI writes the notes. The differences are in the sources, the instruments, how you try them and the pricing model.</p>`],
+        ['Side-by-side comparison', `<div class="sp-table-wrap"><table class="sp-table"><thead><tr><th></th><th>Tablurio</th><th>Klangio</th></tr></thead><tbody>
+<tr><td>Sources</td><td>YouTube link (and Shorts), Spotify, Deezer, audio file</td><td>Audio file, YouTube link, microphone recording</td></tr>
+<tr><td>Instruments</td><td>Guitar (tab or notation), piano, vocals; bass in beta</td><td>One app per instrument: guitar and bass, piano, vocals, drums and more</td></tr>
+<tr><td>Apps</td><td>One web app, in English and French</td><td>Web and mobile apps (iOS, Android), one per instrument</td></tr>
+<tr><td>Free trial</td><td>3 previews of 30 seconds</td><td>Demo of the first 20 seconds</td></tr>
+<tr><td>Exports</td><td>PDF, MIDI, MusicXML</td><td>PDF, MIDI, MusicXML, Guitar Pro</td></tr>
+<tr><td>Pricing</td><td>Starter €10/month, Pro €19/month, Lifetime €99 once</td><td>Subscription per app or for all apps</td></tr>
+</tbody></table></div>
+<p class="sp-note">Information gathered from both tools’ websites in November 2026. Klangio’s plans change: check its current prices on its site.</p>`],
+        ['When to pick Klangio', `<ul><li>You want to transcribe <strong>drums</strong> or other instruments Tablurio doesn’t offer.</li>
+<li>You want to <strong>record yourself</strong> directly in a mobile app.</li>
+<li>You need a native <strong>Guitar Pro</strong> export.</li>
+<li>You work on multi-instrument songs with their Transcription Studio.</li></ul>`],
+        ['When to pick Tablurio', `<ul><li>Your song is on <strong>Spotify or Deezer</strong>: paste the link and Tablurio finds the song.</li>
+<li>You play <strong>several instruments</strong> and want everything in one app, without a subscription per instrument.</li>
+<li>You want to <strong>compare versions</strong>: several engines transcribe the song and Tablurio recommends the closest one.</li>
+<li>You’d rather <strong>pay once</strong> (Lifetime).</li>
+<li>You want to practise with <strong>synced, slowed-down audio playback</strong>.</li></ul>`],
+        ['Best option: try both on your song', `<p>Transcription quality depends a lot on the song: the mix, which instrument stands out, the playing style. Both tools have a free trial. Test the same passage on each and keep the one that gets it closest.</p>
+<p>For Tablurio, paste your link into the <a href="/en/guitar-tab-generator">guitar tab generator</a> or the <a href="/en/piano-sheet-music">piano sheet music</a> tool.</p>`],
+      ],
+      faq: [
+        ['Is Tablurio free like Klangio?', 'Both have a free trial: 3 previews of 30 seconds on Tablurio, a demo of the first 20 seconds on Klangio. Full songs and exports are paid on both.'],
+        ['Which one is more accurate?', 'It depends on the song. Both use AI and can get a very busy passage wrong. The most reliable way is to test the same excerpt on both.'],
+        ['Does Tablurio accept YouTube links like Klangio?', 'Yes, as well as Spotify and Deezer links and audio files.'],
+        ['Can I open the result in Guitar Pro?', 'With Tablurio, yes, through the MusicXML export. Klangio also offers a native Guitar Pro export.'],
+      ],
+      ctaTitle: 'Try Tablurio on your song', ctaText: '3 free 30-second previews, no credit card.', ctaBtn: 'Get my sheet music ↗', ctaHref: '/en/guitar-tab-generator',
+    },
+  },
+  {
+    id: 'alternative-songsterr',
+    tools: ['tablature-guitare', 'youtube-en-partition'],
+    date: '2026-11-25',
+    minutes: 5,
+    fr: {
+      slug: 'alternative-songsterr',
+      title: 'Alternative à Songsterr : Songsterr ou Tablurio pour tes tablatures ? | Tablurio',
+      description: 'Songsterr est une bibliothèque de tablatures, Tablurio génère la tab de n’importe quel morceau. Différences, prix et quand utiliser chacun.',
+      nav: 'Alternative à Songsterr',
+      h1: 'Alternative à Songsterr : <em>Songsterr ou Tablurio ?</em>',
+      lead: 'Songsterr et Tablurio ne font pas le même métier. L’un te donne une tab qui existe déjà, l’autre écrit celle qui n’existe pas encore.',
+      teaser: 'Bibliothèque de tabs ou générateur : à quoi sert chacun et lequel choisir.',
+      toc: 'Au sommaire',
+      body: [
+        ['Deux approches différentes', `<p><strong>Songsterr</strong> est d’abord une <strong>bibliothèque</strong> : plus d’un million de tablatures guitare, basse et batterie, sous licence, avec un lecteur qui joue la tab en rythme. Si ton morceau y est, c’est souvent la meilleure option.</p>
+<p><strong>Tablurio</strong> est un <strong>générateur</strong> : tu colles un lien YouTube, Spotify ou Deezer, ou tu importes un fichier audio, et l’IA écrit la tab ou la partition de ce morceau précis. Utile quand la tab n’existe pas, ou pour une reprise, un live, ton propre enregistrement.</p>`],
+        ['Le tableau comparatif', `<div class="sp-table-wrap"><table class="sp-table"><thead><tr><th></th><th>Tablurio</th><th>Songsterr</th></tr></thead><tbody>
+<tr><td>Principe</td><td>Génère la tab ou la partition à partir de l’audio</td><td>Bibliothèque de tabs existantes, avec lecteur</td></tr>
+<tr><td>Morceaux</td><td>N’importe quel morceau, live, reprise ou enregistrement perso</td><td>Ceux de son catalogue</td></tr>
+<tr><td>Instruments</td><td>Guitare, piano, voix ; basse en bêta</td><td>Guitare, basse, batterie</td></tr>
+<tr><td>Formats</td><td>Tab ou partition ; PDF, MIDI, MusicXML</td><td>Tab avec lecteur ; impression avec Plus</td></tr>
+<tr><td>Gratuit</td><td>3 aperçus de 30 secondes</td><td>Lecture des tabs gratuite</td></tr>
+<tr><td>Payant</td><td>Starter 10 €/mois, Pro 19 €/mois, Lifetime 99 €</td><td>Songsterr Plus, environ 10 $/mois</td></tr>
+</tbody></table></div>
+<p class="sp-note">Informations relevées sur les sites des deux outils en novembre 2026. Songsterr Plus inclut aussi un quota mensuel de transcriptions par IA : vérifie ses conditions actuelles sur son site.</p>`],
+        ['Quand choisir Songsterr', `<ul><li>Ton morceau est <strong>dans son catalogue</strong> : tu profites d’une tab vérifiée et d’un excellent lecteur.</li>
+<li>Tu joues de la <strong>batterie</strong>.</li>
+<li>Tu veux explorer beaucoup de morceaux connus sans rien générer.</li></ul>`],
+        ['Quand choisir Tablurio', `<ul><li>La tab <strong>n’existe pas</strong> : morceau rare, récent, reprise, version live.</li>
+<li>Tu as le morceau sur <strong>Spotify, Deezer ou YouTube</strong> et veux sa transcription directement.</li>
+<li>Tu veux la <strong>partition piano ou voix</strong>, pas seulement une tab.</li>
+<li>Tu veux transcrire <strong>ton propre enregistrement</strong>.</li>
+<li>Tu veux un fichier <strong>MIDI ou MusicXML</strong> à retravailler.</li></ul>`],
+        ['Le duo gagnant', `<p>Beaucoup de guitaristes utilisent les deux : Songsterr pour les classiques de son catalogue, et un générateur pour tout le reste. Cherche d’abord ton morceau sur Songsterr ; s’il n’y est pas, colle son lien dans le <a href="/tablature-guitare">générateur de tablature guitare</a>.</p>
+<p>Débutant ? Commence par notre guide <a href="/apprendre/lire-une-tablature-guitare">pour lire une tablature guitare</a>.</p>`],
+      ],
+      faq: [
+        ['Tablurio remplace-t-il Songsterr ?', 'Pas vraiment : ce sont deux outils complémentaires. Songsterr offre des tabs existantes et vérifiées ; Tablurio génère celles qui n’existent pas.'],
+        ['Tablurio est-il gratuit ?', 'Tu as 3 aperçus gratuits de 30 secondes. Les morceaux entiers et les exports sont inclus dans les offres Starter, Pro et Lifetime.'],
+        ['Les tabs générées sont-elles aussi justes que celles de Songsterr ?', 'Une tab vérifiée à la main reste plus fiable qu’une transcription automatique. La tab générée trouve la grande majorité des notes, mais un passage chargé peut demander une retouche.'],
+        ['Tablurio fait-il les partitions de batterie ?', 'Non, Tablurio couvre la guitare, le piano et la voix, avec la basse en bêta.'],
+      ],
+      ctaTitle: 'La tab qui n’existe pas encore', ctaText: 'Colle un lien et récupère la tablature. 3 aperçus gratuits de 30 secondes.', ctaBtn: 'Générer une tablature ↗', ctaHref: '/tablature-guitare',
+    },
+    en: {
+      slug: 'songsterr-alternative',
+      title: 'Songsterr Alternative: Songsterr or Tablurio for Guitar Tabs? | Tablurio',
+      description: 'Songsterr is a tab library, Tablurio generates the tab of any song. Differences, pricing and when to use each, compared honestly.',
+      nav: 'Songsterr alternative',
+      h1: 'Songsterr alternative: <em>Songsterr or Tablurio?</em>',
+      lead: 'Songsterr and Tablurio don’t do the same job. One gives you a tab that already exists, the other writes the one that doesn’t exist yet.',
+      teaser: 'Tab library or tab generator: what each one is for and which to pick.',
+      toc: 'Contents',
+      body: [
+        ['Two different approaches', `<p><strong>Songsterr</strong> is first and foremost a <strong>library</strong>: over a million licensed guitar, bass and drum tabs, with a player that plays the tab in time. If your song is there, it’s often the best option.</p>
+<p><strong>Tablurio</strong> is a <strong>generator</strong>: paste a YouTube, Spotify or Deezer link, or upload an audio file, and the AI writes the tab or sheet music of that exact recording. Handy when the tab doesn’t exist, or for a cover, a live version, your own recording.</p>`],
+        ['Side-by-side comparison', `<div class="sp-table-wrap"><table class="sp-table"><thead><tr><th></th><th>Tablurio</th><th>Songsterr</th></tr></thead><tbody>
+<tr><td>How it works</td><td>Generates the tab or sheet music from the audio</td><td>Library of existing tabs, with a player</td></tr>
+<tr><td>Songs</td><td>Any song, live version, cover or your own recording</td><td>Those in its catalogue</td></tr>
+<tr><td>Instruments</td><td>Guitar, piano, vocals; bass in beta</td><td>Guitar, bass, drums</td></tr>
+<tr><td>Formats</td><td>Tab or notation; PDF, MIDI, MusicXML</td><td>Tab with player; printing with Plus</td></tr>
+<tr><td>Free</td><td>3 previews of 30 seconds</td><td>Free tab viewing and playback</td></tr>
+<tr><td>Paid</td><td>Starter €10/month, Pro €19/month, Lifetime €99</td><td>Songsterr Plus, about $10/month</td></tr>
+</tbody></table></div>
+<p class="sp-note">Information gathered from both tools’ websites in November 2026. Songsterr Plus also includes a monthly quota of AI transcriptions: check its current terms on its site.</p>`],
+        ['When to pick Songsterr', `<ul><li>Your song is <strong>in its catalogue</strong>: you get a checked tab and a great player.</li>
+<li>You play <strong>drums</strong>.</li>
+<li>You want to browse lots of well-known songs without generating anything.</li></ul>`],
+        ['When to pick Tablurio', `<ul><li>The tab <strong>doesn’t exist</strong>: a rare or recent song, a cover, a live version.</li>
+<li>You have the song on <strong>Spotify, Deezer or YouTube</strong> and want its transcription directly.</li>
+<li>You want <strong>piano or vocal sheet music</strong>, not just a tab.</li>
+<li>You want to transcribe <strong>your own recording</strong>.</li>
+<li>You want a <strong>MIDI or MusicXML</strong> file to edit.</li></ul>`],
+        ['The winning combo', `<p>Many guitarists use both: Songsterr for the classics in its catalogue, and a generator for everything else. Look for your song on Songsterr first; if it isn’t there, paste its link into the <a href="/en/guitar-tab-generator">guitar tab generator</a>.</p>
+<p>Just starting out? Read our guide on <a href="/en/learn/how-to-read-guitar-tabs">how to read guitar tabs</a>.</p>`],
+      ],
+      faq: [
+        ['Does Tablurio replace Songsterr?', 'Not really: they complement each other. Songsterr offers existing, checked tabs; Tablurio generates the ones that don’t exist.'],
+        ['Is Tablurio free?', 'You get 3 free 30-second previews. Full songs and exports come with the Starter, Pro and Lifetime plans.'],
+        ['Are generated tabs as accurate as Songsterr’s?', 'A hand-checked tab is still more reliable than an automatic transcription. The generated tab gets the vast majority of notes right, but a busy passage may need a touch-up.'],
+        ['Does Tablurio do drum sheet music?', 'No, Tablurio covers guitar, piano and vocals, with bass in beta.'],
+      ],
+      ctaTitle: 'The tab that doesn’t exist yet', ctaText: 'Paste a link and get the tab. 3 free 30-second previews.', ctaBtn: 'Generate a tab ↗', ctaHref: '/en/guitar-tab-generator',
     },
   },
 ];

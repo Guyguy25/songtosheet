@@ -30,7 +30,7 @@
   var DICT = window.TABLURIO_EN || {};
   var ATTRS = ['placeholder', 'aria-label', 'title', 'alt'];
   // Liens vers les pages outils : version anglaise quand l'interface est en anglais.
-  var LINKS = { '/apprendre': '/en/learn', '/apprendre/lire-une-tablature-guitare': '/en/learn/how-to-read-guitar-tabs', '/apprendre/transformer-video-youtube-en-tablature': '/en/learn/youtube-to-guitar-tabs', '/a-propos': '/en/about', '/contact': '/en/contact', '/youtube-en-partition': '/en/youtube-to-sheet-music', '/tablature-guitare': '/en/guitar-tab-generator', '/partition-piano': '/en/piano-sheet-music', '/mp3-en-partition': '/en/mp3-to-sheet-music', '/spotify-en-partition': '/en/spotify-to-sheet-music', '/deezer-en-partition': '/en/deezer-to-sheet-music', '/musicxml': '/en/musicxml', '/midi': '/en/midi' };
+  var LINKS = { '/apprendre': '/en/learn', '/apprendre/lire-une-tablature-guitare': '/en/learn/how-to-read-guitar-tabs', '/apprendre/transformer-video-youtube-en-tablature': '/en/learn/youtube-to-guitar-tabs', '/apprendre/alternative-klangio': '/en/learn/klangio-alternative', '/apprendre/alternative-songsterr': '/en/learn/songsterr-alternative', '/a-propos': '/en/about', '/contact': '/en/contact', '/youtube-en-partition': '/en/youtube-to-sheet-music', '/tablature-guitare': '/en/guitar-tab-generator', '/partition-piano': '/en/piano-sheet-music', '/mp3-en-partition': '/en/mp3-to-sheet-music', '/spotify-en-partition': '/en/spotify-to-sheet-music', '/deezer-en-partition': '/en/deezer-to-sheet-music', '/musicxml': '/en/musicxml', '/midi': '/en/midi' };
   var PATTERNS = [
     [/^Étape (\d+) sur (\d+)$/i, 'Step $1 of $2'],
     [/^ÉTAPE (\d+) SUR (\d+)$/, 'STEP $1 OF $2'],

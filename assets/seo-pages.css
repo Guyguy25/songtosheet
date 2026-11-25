@@ -156,3 +156,10 @@ p{margin:0}
 .sp-toc ol{margin:10px 0 0;padding-left:20px;display:grid;gap:6px}
 .sp-toc a{color:var(--purple);font-weight:650}
 .sp-articles a .sp-meta{display:block;margin-top:10px;color:var(--purple);font-weight:700;font-size:12.5px}
+/* Tableaux comparatifs (articles du blog) */
+.sp-table-wrap{overflow-x:auto;margin:18px 0 22px;border:1px solid var(--line);border-radius:14px}
+.sp-table{width:100%;border-collapse:collapse;font-size:15px;min-width:560px}
+.sp-table th,.sp-table td{padding:11px 14px;text-align:left;vertical-align:top;border-bottom:1px solid var(--line)}
+.sp-table thead th{background:#f6f2ff;font-weight:800}
+.sp-table tr:last-child td{border-bottom:0}
+.sp-table td:first-child{font-weight:700}

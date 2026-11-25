@@ -5,10 +5,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Tableau de bord KPI · Tablurio</title>
-<link rel="icon" href="/assets/favicon.svg">
+<link rel="icon" href="/favicon.ico" sizes="48x48">
+<link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96.png?v=2">
+<link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png?v=2">
+<link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=2">
 <style>
 :root{--ink:#1e1533;--muted:#6f6585;--line:#ebe5f5;--bg:#f6f4fb;--card:#fff;--purple:#6d3ddc;--purple-soft:#efe8ff;--green:#14966a;--green-soft:#e2f6ee;--amber:#b86e00;--amber-soft:#fff2dc;
-  --s1:#6d3ddc;--s2:#e0791f;--s3:#1a9e74;--s4:#2f6fd6;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg)}
+  --s1:#6d3ddc;--s2:#e0791f;--s3:#1a9e74;--s4:#2f6fd6;--s5:#d6427a;font-family:Inter,ui-sans-serif,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);background:var(--bg)}
 *{box-sizing:border-box}body{margin:0}a{color:var(--purple)}
 main{max-width:1240px;margin:0 auto;padding:28px 22px 70px}
 .top{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;flex-wrap:wrap}
@@ -23,7 +26,7 @@ h1{margin:6px 0 4px;font-size:clamp(28px,4vw,40px);letter-spacing:-.045em}
 .btn:hover{border-color:var(--purple)}
 .state{margin-top:24px;padding:28px;border:1px solid var(--line);border-radius:18px;background:#fff;color:var(--muted)}
 .kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:22px}
-.learn-kpis{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:4px}
+.learn-kpis{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:0}
 .kpi{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px 16px 14px;min-width:0}
 .kpi span{display:block;font-size:12px;font-weight:750;color:var(--muted)}
 .kpi b{display:block;margin:6px 0 4px;font-size:30px;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
@@ -67,6 +70,47 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
 .builder input{flex:1;min-width:160px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;font:inherit;font-size:13px}
 .full{grid-column:1/-1}
 .note{font-size:12px;color:var(--muted);margin-top:10px;line-height:1.5}
+.ret-kpis{grid-template-columns:repeat(5,minmax(0,1fr));margin-top:4px}
+.dist{display:grid;gap:7px}
+.dist-row{display:grid;grid-template-columns:44px minmax(0,1fr) 54px;gap:10px;align-items:center;font-size:13px;font-weight:750}
+.dist-row .track{height:12px;border-radius:6px;background:#f1edf8;overflow:hidden}
+.dist-row .fill{height:100%;border-radius:6px;background:#ffb938}
+.dist-row.low .fill{background:#ff8a5c}
+.dist-row .n{text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.reasons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:16px}
+.reasons h3{margin:0 0 8px;font-size:13px}
+.reasons ul{margin:0;padding:0;list-style:none;display:grid;gap:5px;font-size:12.5px}
+.reasons li{display:flex;justify-content:space-between;gap:8px;padding:6px 9px;border-radius:9px;background:#faf8fe}
+.reasons li b{font-variant-numeric:tabular-nums}
+.stars{color:#f09d00;letter-spacing:1px;white-space:nowrap}.stars.low{color:#e5612e}
+.tags{display:flex;flex-wrap:wrap;gap:4px}.tags span{padding:2px 7px;border-radius:999px;background:var(--purple-soft);color:var(--purple);font-size:11px;font-weight:750}
+.comment{max-width:320px;font-size:12.5px;line-height:1.4}
+.split{display:grid;grid-template-columns:minmax(0,.8fr) minmax(0,1.2fr);gap:18px}
+.nav{position:sticky;top:0;z-index:5;display:flex;gap:4px;overflow-x:auto;margin:18px -22px 0;padding:10px 22px;background:rgba(246,244,251,.92);backdrop-filter:blur(8px);border-bottom:1px solid transparent}
+.nav.stuck{border-bottom-color:var(--line)}
+.nav a{flex:none;padding:8px 12px;border-radius:10px;color:var(--muted);font-size:13px;font-weight:750;text-decoration:none;white-space:nowrap}
+.nav a:hover{background:#fff;color:var(--ink)}.nav a.on{background:#fff;color:var(--purple);box-shadow:0 1px 4px rgba(40,20,90,.07)}
+.nav a small{margin-left:5px;padding:1px 6px;border-radius:999px;background:var(--purple-soft);color:var(--purple);font-size:11px}
+.section{scroll-margin-top:64px;margin-top:30px}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px}
+.section-head h2{margin:0;font-size:22px;letter-spacing:-.035em}
+.section-head p{margin:0;color:var(--muted);font-size:13px}
+.section>.kpis:first-of-type{margin-top:0}
+.stack{display:grid;gap:14px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.toolbar input[type=search]{flex:1;min-width:200px;padding:9px 12px;border:1px solid var(--line);border-radius:11px;font:inherit;font-size:13px;background:#fff}
+.toolbar select{padding:9px 10px;border:1px solid var(--line);border-radius:11px;font:inherit;font-size:13px;background:#fff;color:var(--ink)}
+.filters{display:flex;gap:4px;flex-wrap:wrap}
+.filters button{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 11px;font:inherit;font-size:12.5px;font-weight:750;color:var(--muted);cursor:pointer}
+.filters button[aria-pressed=true]{background:var(--purple-soft);border-color:#d6c7fb;color:var(--purple)}
+.filters button b{margin-left:4px;font-variant-numeric:tabular-nums}
+.more{display:flex;justify-content:center;margin-top:12px}
+.count{font-size:12px;color:var(--muted);margin-left:auto}
+.sub-kpis{grid-template-columns:repeat(4,minmax(0,1fr))}
+td .line2{font-size:12px;color:var(--muted);margin-top:2px}
+.contact a{font-size:12px}
+@media(max-width:980px){.sub-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:980px){.ret-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.split,.reasons{grid-template-columns:1fr}}
 @media(max-width:980px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.grid{grid-template-columns:1fr}}
 @media(max-width:520px){.kpis{grid-template-columns:1fr}}
 </style>
@@ -87,6 +131,10 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       <a class="btn" href="/app">← Mon espace</a>
     </div>
   </div>
+  <nav class="nav" id="nav" aria-label="Sections">
+    <a href="#apercu">Vue d’ensemble</a><a href="#utilisateurs">Utilisateurs<small id="nav-users">–</small></a><a href="#sons">Sons<small id="nav-songs">–</small></a>
+    <a href="#retours">Retours & notes</a><a href="#acquisition">Acquisition</a><a href="#jeu">Mode jeu</a><a href="#liens">Liens</a>
+  </nav>
   <div id="content"></div>
 </main>
 <script>
@@ -110,7 +158,23 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     return esc(key);
   };
   const date=value=>new Date(value).toLocaleString('fr-FR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
-  let days=30,data=null,tab='channel';
+  // Période gardée dans l'adresse (?jours=) et dans le navigateur : « Actualiser » ou F5 restent sur la même période.
+  const PERIODS=[1,7,30,90,365];
+  const savedDays=()=>{
+    const fromUrl=Number(new URLSearchParams(location.search).get('jours'));
+    if(PERIODS.includes(fromUrl))return fromUrl;
+    try{const stored=Number(localStorage.getItem('tb_admin_days'));if(PERIODS.includes(stored))return stored;}catch{}
+    return 30;
+  };
+  let days=savedDays(),data=null,tab='channel';
+  const userView={query:'',filter:'all',sort:'created',shown:50};
+  function setDays(value){
+    days=value;
+    try{localStorage.setItem('tb_admin_days',String(value));}catch{}
+    const url=new URL(location.href);url.searchParams.set('jours',String(value));history.replaceState(null,'',url);
+    document.querySelectorAll('[data-days]').forEach(b=>b.setAttribute('aria-pressed',String(Number(b.dataset.days)===value)));
+  }
+  setDays(days);
 
   async function load(){
     $('sub').textContent='Chargement…';
@@ -134,7 +198,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
   }
 
   function chart(series){
-    const keys=[['visitors','Visiteurs','var(--s1)'],['signups','Inscriptions','var(--s2)'],['previews','Aperçus','var(--s3)'],['full','Morceaux entiers','var(--s4)']];
+    const keys=[['visitors','Visiteurs','var(--s1)'],['signups','Inscriptions','var(--s2)'],['previews','Aperçus','var(--s3)'],['full','Morceaux entiers','var(--s4)'],['returns','Comptes revenus','var(--s5)']];
     const W=620,H=210,L=34,B=24,T=10;
     const max=Math.max(1,...series.flatMap(row=>keys.map(([k])=>row[k])));
     const nice=Math.max(1,Math.ceil(max/4))*4;
@@ -171,16 +235,6 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       </tbody></table></div>`;
   }
 
-  function recent(rows){
-    return `<div class="table-wrap"><table><thead><tr><th>Date</th><th>Compte</th><th>Téléphone</th><th>Source</th><th>Appareil</th><th>Pays</th><th class="n">Aperçus</th><th class="n">Entiers</th><th>Offre</th></tr></thead><tbody>
-      ${rows.length?rows.map(r=>`<tr><td class="muted">${date(r.created_at)}</td><td><div class="email" title="${esc(r.email)}">${esc(r.pseudo||r.email)}</div>${r.pseudo?`<div class="email muted">${esc(r.email)}</div>`:''}</td>
-        <td>${r.phone?`<a href="tel:${esc(r.phone)}">${esc(r.phone)}</a><div><a class="muted" href="https://wa.me/${esc(r.phone.replace(/\D/g,''))}" target="_blank" rel="noopener">WhatsApp</a> · <a class="muted" href="sms:${esc(r.phone)}">SMS</a></div><div>${r.consent?'<span class="pill pro">Accepte les offres</span>':'<span class="pill free">Pas d’offres promo</span>'}</div>`:'<span class="muted">—</span>'}</td>
-        <td>${label('source',r.source)}${r.content?`<div class="muted">${esc(r.content)}</div>`:''}</td><td>${esc(r.device||'—')}</td><td>${r.country?country(r.country):'—'}</td>
-        <td class="n">${num(r.previews)}</td><td class="n">${num(r.full)}</td><td><span class="pill ${esc(r.plan)}">${esc({free:'Gratuit',starter:'Starter',pro:'Pro',lifetime:'Lifetime'}[r.plan]||r.plan)}</span></td></tr>`).join('')
-        :'<tr><td colspan="9" class="muted">Aucune inscription sur cette période.</td></tr>'}
-      </tbody></table></div>`;
-  }
-
   const INSTRUMENTS={piano:'🎹 Piano',guitare:'🎸 Guitare',basse:'🎵 Basse',voix:'🎤 Voix',violon:'🎻 Violon'};
   const VARIANTS={yourmt3:'Version complète',arrangement:'Arrangement deux mains',solo:'Mélodie',playable:'Version jouable','original-v1':'Original','solo-v2':'Solo','held-v1':'Accords'};
   const GOALS={original:'jouer l’original',solo:'solo',chords:'accords'};
@@ -206,6 +260,120 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
         <td>${status(r)}</td></tr>`).join('')}</tbody></table></div>`;
   }
 
+  const PLAN={free:'Gratuit',starter:'Starter',pro:'Pro',lifetime:'Lifetime'};
+  const starText=score=>`<span class="stars${score<=2?' low':''}" title="${score} / 5">${'★'.repeat(score)}${'☆'.repeat(5-score)}</span>`;
+  function returning(r,ratings){
+    const rated=ratings||{count:0,average:0,answer_rate:0,dismissed:0,distribution:[0,0,0,0,0],reasons:{low:{},mid:{},high:{}},recent:[],labels:null};
+    const total=Math.max(1,...rated.distribution);
+    const reasonList=bucket=>{
+      const entries=Object.entries(rated.reasons[bucket]||{}).sort((a,b)=>b[1]-a[1]);
+      const names=rated.labels?.[bucket]?.reasons||{};
+      return entries.length?`<ul>${entries.map(([id,n])=>`<li><span>${esc(names[id]?.fr||id)}</span><b>${num(n)}</b></li>`).join('')}</ul>`:'<p class="muted" style="margin:0;font-size:12.5px">Aucune réponse.</p>';
+    };
+    const reasonName=(score,id)=>{const bucket=score<=2?'low':score===3?'mid':'high';return rated.labels?.[bucket]?.reasons?.[id]?.fr||id;};
+    return `<div class="kpis ret-kpis">
+        ${kpi('Comptes revenus',num(r.returning),`Revenus sur la période un autre jour que leur inscription · ${num(r.returning_days)} jours de retour`)}
+        ${kpi('Revenus le lendemain',pct(r.d1),`${num(r.d1_back)} sur ${num(r.d1_cohort)} inscrits de la période (J+1)`)}
+        ${kpi('Revenus sous 7 jours',pct(r.d7),`${num(r.d7_back)} sur ${num(r.d7_cohort)} inscrits d’au moins 7 jours`)}
+        ${kpi('Pop-ups affichées',num(rated.shown||0),`${pct(rated.answer_rate)} ont noté · ${num(rated.dismissed)} fermées sans note`)}
+        ${kpi('Note moyenne',rated.count?`${String(rated.average).replace('.',',')} / 5`:'—',rated.count?`Sur ${num(rated.count)} générations notées`:'Pas encore de note sur la période',true)}
+      </div>
+      ${r.tracked_since?'<p class="note">Les jours de passage sont enregistrés depuis la mise en ligne de ce suivi : les chiffres de retour se remplissent à partir de maintenant.</p>':''}
+      <div class="panel" style="margin-top:14px"><div class="split">
+        <div><h3 style="margin:0 0 10px;font-size:14px">Répartition des notes</h3><div class="dist">${[5,4,3,2,1].map(score=>`<div class="dist-row${score<=2?' low':''}"><span>${score} ★</span><div class="track"><div class="fill" style="width:${rated.distribution[score-1]/total*100}%"></div></div><span class="n">${num(rated.distribution[score-1])}</span></div>`).join('')}</div></div>
+        <div><h3 style="margin:0 0 10px;font-size:14px">Pourquoi cette note</h3><div class="reasons" style="margin-top:0">
+          <div><h3>😣 Notes 1-2 · ce qui n’a pas marché</h3>${reasonList('low')}</div>
+          <div><h3>🙂 Note 3 · ce qui manquait</h3>${reasonList('mid')}</div>
+          <div><h3>🤩 Notes 4-5 · ce qui a plu</h3>${reasonList('high')}</div></div></div>
+      </div></div>
+      <div class="panel" style="margin-top:14px"><h2>Dernières notes</h2><p>La note, les raisons cochées et le commentaire, génération par génération.</p>
+      <div class="table-wrap"><table><thead><tr><th>Date</th><th>Compte</th><th>Morceau</th><th>Note</th><th>Pourquoi</th><th>Commentaire</th></tr></thead><tbody>
+        ${rated.recent.length?rated.recent.map(x=>`<tr><td class="muted">${date(x.at)}</td><td><div class="email">${esc(x.account)}</div></td>
+          <td><div class="email" style="max-width:240px" title="${esc(x.title)}">${esc(x.title)}</div><div class="muted">${esc(INSTRUMENTS[x.instrument]||x.instrument)} · ${x.kind==='full'?'Morceau entier':'Aperçu 30 s'}</div></td>
+          <td>${starText(x.score)}</td><td><div class="tags">${x.reasons.map(id=>`<span>${esc(reasonName(x.score,id))}</span>`).join('')||'<span class="muted" style="background:none;padding:0">—</span>'}</div></td>
+          <td><div class="comment">${x.comment?esc(x.comment):'<span class="muted">—</span>'}</div></td></tr>`).join('')
+          :'<tr><td colspan="6" class="muted">Aucune note sur cette période.</td></tr>'}
+      </tbody></table></div></div>
+      <div class="panel" style="margin-top:14px"><h2>Derniers comptes revenus</h2><p>Comptes revenus un autre jour que celui de leur inscription.</p>
+      <div class="table-wrap"><table><thead><tr><th>Compte</th><th>Inscrit le</th><th>Dernier passage</th><th class="n">Jours de retour</th><th class="n">Générations</th><th>Dernier morceau</th><th>Offre</th></tr></thead><tbody>
+        ${r.list.length?r.list.map(x=>`<tr><td><div class="email" title="${esc(x.email)}">${esc(x.pseudo||x.email)}</div>${x.pseudo?`<div class="email muted">${esc(x.email)}</div>`:''}</td>
+          <td class="muted">${date(x.created_at)}</td><td>${x.last_seen_at?date(x.last_seen_at):'—'}</td><td class="n">${num(x.return_days)}</td><td class="n">${num(x.generations)}</td>
+          <td><div class="email" style="max-width:220px">${esc(x.last_job||'—')}</div></td><td><span class="pill ${esc(x.plan)}">${esc(PLAN[x.plan]||x.plan)}</span></td></tr>`).join('')
+          :'<tr><td colspan="7" class="muted">Personne n’est encore revenu sur cette période.</td></tr>'}
+      </tbody></table></div></div>`;
+  }
+
+  const PLAN_LABEL={free:'Gratuit',starter:'Starter',pro:'Pro',lifetime:'Lifetime'};
+  const ago=value=>{
+    if(!value)return '—';
+    const minutes=Math.round((Date.now()-new Date(value))/60000);
+    if(minutes<60)return `il y a ${Math.max(1,minutes)} min`;
+    if(minutes<1440)return `il y a ${Math.round(minutes/60)} h`;
+    const d=Math.round(minutes/1440);return d===1?'hier':`il y a ${d} j`;
+  };
+  const USER_FILTERS=[
+    ['all','Tous',()=>true],
+    ['period','Inscrits sur la période',u=>new Date(u.created_at)>=new Date(data.since)],
+    ['paying','Payants',u=>u.plan!=='free'],
+    ['back','Revenus',u=>u.return_days>0],
+    ['generated','Ont généré',u=>u.previews+u.full>0],
+    ['never','Jamais généré',u=>u.previews+u.full===0],
+    ['phone','Avec téléphone',u=>Boolean(u.phone)]
+  ];
+  const USER_SORTS={created:['Inscription la plus récente',u=>-new Date(u.created_at||0)],seen:['Passage le plus récent',u=>-new Date(u.last_seen_at||0)],
+    gens:['Le plus de générations',u=>-(u.previews+u.full)],plays:['Le plus d’écoutes',u=>-u.plays],back:['Le plus de retours',u=>-u.return_days]};
+  function usersSection(){
+    return `<div class="panel"><div class="toolbar">
+        <input type="search" id="user-search" placeholder="Chercher un email, un pseudo, un téléphone, un morceau…" value="${esc(userView.query)}" aria-label="Chercher un utilisateur">
+        <select id="user-sort" aria-label="Trier">${Object.entries(USER_SORTS).map(([key,[name]])=>`<option value="${key}"${key===userView.sort?' selected':''}>${name}</option>`).join('')}</select>
+      </div><div class="filters" id="user-filters"></div><div id="users-table" style="margin-top:12px"></div></div>`;
+  }
+  function paintUsers(){
+    const all=data.users||[];
+    const q=userView.query.trim().toLowerCase();
+    const match=u=>!q||[u.email,u.pseudo,u.phone,u.last_job,u.source,u.content].some(value=>String(value||'').toLowerCase().includes(q));
+    $('user-filters').innerHTML=USER_FILTERS.map(([key,name,test])=>`<button type="button" data-user-filter="${key}" aria-pressed="${key===userView.filter}">${name}<b>${num(all.filter(test).length)}</b></button>`).join('');
+    const test=USER_FILTERS.find(([key])=>key===userView.filter)[2];
+    const by=USER_SORTS[userView.sort][1];
+    const rows=all.filter(u=>test(u)&&match(u)).sort((a,b)=>by(a)-by(b));
+    const shown=rows.slice(0,userView.shown);
+    $('users-table').innerHTML=`<div class="table-wrap"><table><thead><tr><th>Compte</th><th>Inscrit</th><th>Source</th><th>Offre</th><th class="n">Aperçus</th><th class="n">Entiers</th><th class="n">Écoutes</th><th>Dernière génération</th><th>Dernier passage</th><th class="n">Retours</th><th>Note</th></tr></thead><tbody>
+      ${shown.length?shown.map(u=>`<tr>
+        <td><div class="email" title="${esc(u.email)}">${esc(u.pseudo||u.email)}</div>${u.pseudo?`<div class="email line2">${esc(u.email)}</div>`:''}
+          ${u.phone?`<div class="contact line2"><a href="tel:${esc(u.phone)}">${esc(u.phone)}</a> · <a href="https://wa.me/${esc(u.phone.replace(/\D/g,''))}" target="_blank" rel="noopener">WhatsApp</a>${u.consent?' · <span class="pill pro">Accord</span>':''}</div>`:''}</td>
+        <td class="muted">${date(u.created_at)}</td>
+        <td>${u.source==='direct'?'Direct':label('source',u.source)}${u.content?`<div class="line2">${esc(u.content)}</div>`:''}<div class="line2">${[u.device,u.country?country(u.country):''].filter(Boolean).join(' · ')}</div></td>
+        <td><span class="pill ${esc(u.plan)}">${esc(PLAN_LABEL[u.plan]||u.plan)}</span></td>
+        <td class="n">${num(u.previews)}</td><td class="n">${num(u.full)}</td><td class="n">${num(u.plays)}</td>
+        <td>${u.last_job_at?`<div class="email" style="max-width:220px" title="${esc(u.last_job)}">${esc(u.last_job||'Sans titre')}</div><div class="line2">${ago(u.last_job_at)}</div>`:'<span class="muted">—</span>'}</td>
+        <td>${u.last_seen_at?`${ago(u.last_seen_at)}`:'<span class="muted">—</span>'}</td>
+        <td class="n">${u.return_days?num(u.return_days):'<span class="muted">0</span>'}</td>
+        <td>${u.rating!=null?`${starText(Math.round(u.rating))}<div class="line2">${String(u.rating).replace('.',',')} · ${num(u.rated)} note${u.rated>1?'s':''}</div>`:'<span class="muted">—</span>'}</td></tr>`).join('')
+        :'<tr><td colspan="11" class="muted">Aucun utilisateur ne correspond.</td></tr>'}
+      </tbody></table></div>
+      <div class="more"><span class="count">${num(shown.length)} affichés sur ${num(rows.length)}</span>${rows.length>shown.length?'<button type="button" class="btn" id="users-more" style="margin-left:12px">Afficher 100 de plus</button>':''}</div>`;
+  }
+
+  function sounds(){
+    const p=data.plays||{plays:0,listeners:0,songs:0,recent:[]};
+    const k=data.kpis;
+    return `<div class="kpis sub-kpis">
+        ${kpi('Écoutes',num(p.plays),'Appuis sur lecture depuis l’écran partition')}
+        ${kpi('Personnes qui écoutent',num(p.listeners),'Comptes ayant écouté au moins un morceau')}
+        ${kpi('Morceaux écoutés',num(p.songs),'Partitions différentes écoutées')}
+        ${kpi('Générations',num(k.previews+k.full_songs),`${num(k.previews)} aperçus · ${num(k.full_songs)} morceaux entiers`,true)}
+      </div>
+      <div class="panel" style="margin-top:14px"><h2>Sons écoutés récemment</h2><p>Une ligne par compte, morceau et jour, la plus récente en haut. Ton compte admin est exclu.</p>
+      <div class="table-wrap"><table><thead><tr><th>Quand</th><th>Morceau</th><th>Instrument</th><th>Type</th><th>Compte</th><th class="n">Lectures</th></tr></thead><tbody>
+        ${p.recent.length?p.recent.map(r=>`<tr><td class="muted" title="${esc(date(r.at))}">${ago(r.at)}</td>
+          <td><div class="email" style="max-width:320px" title="${esc(r.title)}">${r.youtube_id?`<a href="https://www.youtube.com/watch?v=${esc(r.youtube_id)}" target="_blank" rel="noopener">${esc(r.title)}</a>`:esc(r.title)}</div></td>
+          <td>${esc(INSTRUMENTS[r.instrument]||r.instrument||'—')}</td><td>${r.kind==='full'?'Morceau entier':'Aperçu 30 s'}</td>
+          <td><div class="email">${esc(r.account)}</div></td><td class="n">${num(r.count)}</td></tr>`).join('')
+          :'<tr><td colspan="6" class="muted">Aucune écoute enregistrée sur cette période. Les écoutes sont comptées depuis la mise en ligne de ce suivi.</td></tr>'}
+      </tbody></table></div></div>
+      <div class="panel" style="margin-top:14px"><h2>Dernières générations</h2><p>Par instrument, puis une par une.</p>${instruments(data.instruments||[])}${generations(data.generations||[])}</div>`;
+  }
+
   function links(){
     const base=location.origin;
     const bio=`${base}/tt`,ig=`${base}/ig`;
@@ -220,6 +388,7 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
     const k=data.kpis;
     $('sub').textContent=`${days===1?'Dernières 24 h':`${days} derniers jours`} · mis à jour à ${new Date(data.generated_at).toLocaleTimeString('fr-FR',{hour:'2-digit',minute:'2-digit'})} · ton compte admin est exclu`;
     $('content').innerHTML=`
+      <section class="section" id="apercu" style="margin-top:6px">
       <div class="kpis">
         ${kpi('Visiteurs réels',num(k.visitors),`${num(k.bots)} robots filtrés (aucune interaction)`)}
         ${kpi('Inscriptions',num(k.signups),`${pct(k.visit_to_signup)} des visiteurs · ${num(k.total_users)} comptes au total`)}
@@ -233,27 +402,40 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       </div>
       <div class="grid">
         <section class="panel"><h2>Entonnoir de conversion</h2><p>Des visiteurs arrivés sur la période, combien sont allés jusqu’à chaque étape.</p>${funnel(data.funnel)}</section>
-        <section class="panel"><h2>Jour par jour</h2><p>Visiteurs réels, inscriptions et générations.</p>${chart(data.series)}</section>
-        <section class="panel full" id="breakdown"><h2>D’où viennent les visiteurs, et ce qu’ils font</h2><p>Visiteurs réels arrivés sur la période, par groupe.</p>${breakdown()}</section>
-        ${data.learn?`<section class="panel full"><h2>Mode Apprentissage</h2><p>Joueurs et niveaux terminés sur la période.</p>
+        <section class="panel"><h2>Jour par jour</h2><p>Visiteurs réels, inscriptions, générations et comptes revenus.</p>${chart(data.series)}</section>
+      </div></section>
+      <section class="section" id="utilisateurs"><div class="section-head"><h2>Utilisateurs</h2><p>Tous les comptes depuis le début, avec leur activité. Recherche, filtres et tri.</p></div>${usersSection()}</section>
+      <section class="section" id="sons"><div class="section-head"><h2>Sons</h2><p>Ce qui est écouté et généré sur la période.</p></div>${sounds()}</section>
+      <section class="section" id="retours"><div class="section-head"><h2>Retours & notes</h2><p>Qui revient un autre jour, et la note donnée via la pop-up de retour. <a href="/app?noter" target="_blank" rel="noopener">Voir la pop-up ↗</a></p></div>
+        ${data.returning?returning(data.returning,data.ratings):''}</section>
+      <section class="section" id="acquisition"><div class="section-head"><h2>Acquisition</h2><p>D’où viennent les visiteurs, et ce qu’ils font.</p></div>
+        <div class="panel" id="breakdown">${breakdown()}</div></section>
+      <section class="section" id="jeu"><div class="section-head"><h2>Mode jeu</h2><p>Joueurs et niveaux terminés sur la période.</p></div>
+        ${data.learn?`
           <div class="kpis learn-kpis">
             ${kpi('Joueurs',num(data.learn.players),'Comptes ayant terminé au moins un niveau')}
             ${kpi('Niveaux terminés',num(data.learn.levels_done),'Avec étoiles ou validés sans micro')}
             ${kpi('Morceaux joués',num(data.learn.songs),'Morceaux ouverts en mode jeu avec un niveau terminé')}
             ${kpi('Part au micro',pct(Math.round(data.learn.mic_share*100)),'Niveaux réussis en jouant au micro')}
             ${kpi('Clics « Débloquer »',num(data.learn.unlock_clicks),'Depuis la carte du jeu (comptes gratuits)',true)}
-          </div></section>`:''}
-        <section class="panel full"><h2>Ce que les gens génèrent</h2><p>Par instrument, puis les dernières générations une par une.</p>${instruments(data.instruments||[])}${generations(data.generations||[])}</section>
-        <section class="panel full"><h2>Dernières inscriptions</h2><p>Avec la source de leur toute première visite.</p>${recent(data.recent)}</section>
-        <section class="panel full"><h2>Liens à suivre</h2><p>Mets ces liens dans ta bio ou sous tes vidéos pour savoir lesquelles ramènent du monde.</p>${links()}</section>
-      </div>`;
+          </div>`:'<div class="state">Pas encore de donnée.</div>'}</section>
+      <section class="section" id="liens"><div class="section-head"><h2>Liens à suivre</h2><p>Mets ces liens dans ta bio ou sous tes vidéos pour savoir lesquelles ramènent du monde.</p></div><div class="panel">${links()}</div></section>`;
+    $('nav-users').textContent=num((data.users||[]).length);
+    $('nav-songs').textContent=num(data.plays?.plays||0);
+    paintUsers();
+    $('user-search').addEventListener('input',event=>{userView.query=event.target.value;userView.shown=50;paintUsers();});
+    $('user-sort').addEventListener('change',event=>{userView.sort=event.target.value;paintUsers();});
+    if(location.hash&&!render.scrolled){render.scrolled=true;document.querySelector(location.hash)?.scrollIntoView();}
   }
 
   document.addEventListener('click',async event=>{
     const chip=event.target.closest('[data-days]');
-    if(chip){days=Number(chip.dataset.days);document.querySelectorAll('[data-days]').forEach(b=>b.setAttribute('aria-pressed',String(b===chip)));load();return;}
+    if(chip){setDays(Number(chip.dataset.days));load();return;}
+    const filterButton=event.target.closest('[data-user-filter]');
+    if(filterButton&&data){userView.filter=filterButton.dataset.userFilter;userView.shown=50;paintUsers();return;}
+    if(event.target.closest('#users-more')&&data){userView.shown+=100;paintUsers();return;}
     const tabButton=event.target.closest('[data-tab]');
-    if(tabButton&&data){tab=tabButton.dataset.tab;$('breakdown').innerHTML=`<h2>D’où viennent les visiteurs, et ce qu’ils font</h2><p>Visiteurs réels arrivés sur la période, par groupe.</p>${breakdown()}`;return;}
+    if(tabButton&&data){tab=tabButton.dataset.tab;$('breakdown').innerHTML=breakdown();return;}
     if(event.target.closest('#refresh')){load();return;}
     const copy=event.target.closest('[data-copy]');
     if(copy){try{await navigator.clipboard.writeText(copy.dataset.copy);copy.textContent='Copié ✓';setTimeout(()=>copy.textContent='Copier',1600);}catch{}return;}
@@ -264,6 +446,14 @@ td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
       $('made-link').innerHTML=`<div class="link-row"><label>${esc(name)}</label><code>${esc(url)}</code><button type="button" class="btn" data-copy="${esc(url)}">Copier</button></div>`;
     }
   });
+  // Section visible surlignée dans la barre du haut.
+  const navLinks=[...document.querySelectorAll('#nav a')];
+  addEventListener('scroll',()=>{
+    $('nav').classList.toggle('stuck',$('nav').getBoundingClientRect().top<=0);
+    let current=null;
+    for(const link of navLinks){const target=document.querySelector(link.getAttribute('href'));if(target&&target.getBoundingClientRect().top<120)current=link;}
+    navLinks.forEach(link=>link.classList.toggle('on',link===current));
+  },{passive:true});
   load();
 })();
 </script>

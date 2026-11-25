@@ -19,6 +19,7 @@ const {emailEnabled}=require('../lib/email');
 const {allow,clientIp}=require('../lib/rate-limit');
 const {shouldRetry,requeue,alertAdmins}=require('../lib/track-retry');
 const {notifyReady}=require('../lib/ready-email');
+const {recordPlay}=require('../lib/plays');
 const {PIANO_CRITERIA,CHUNK_BYTES,MAX_BYTES,PREVIEW_SECONDS,QUEUE_TIMEOUT_MESSAGE,PROCESSING_MS,PROCESSING_TIMEOUT_MESSAGE,INSTRUMENTS,AUDIO_TYPES,SOURCE_TYPES,REVIEW_TRACKS,FORMATS,PIANO_VARIANTS,SOLO_FORMATS,APPROVED_SOLO_ENGINE,showSolo,isId,trackFilter,expiredQueue,expiredProcessing,prepareTracks,serialTrack}=require('../lib/track-jobs');
 
 const UPLOAD_MS=10*60*1000;
@@ -564,6 +565,11 @@ module.exports=async(req,res)=>{
     const uploadAction=req.method==='POST'&&['begin','chunk','queue','cancel'].includes(body.action);
     const owner=user||(uploadAction&&guestSession(req,res,body.action==='begin'));
     if(!owner)return json(res,401,{detail:'Connexion requise.'});
+    if(req.method==='POST'&&body.action==='played'){
+      // Appui sur « lecture » (liste « Sons écoutés » du tableau de bord) : sans effet pour un invité.
+      await recordPlay(await database(),user,body.id).catch(()=>false);
+      return json(res,200,{ok:true});
+    }
     if(req.method==='POST'&&body.action==='full'){
       const result=await createFullSong(await database(),user,{id:body.id,variant:body.variant},new Date(),scheduleWake);
       return json(res,result.status,result.body);

@@ -6,6 +6,7 @@ const {cleanProfile}=require('../../lib/profile');
 const {starterUntil}=require('../../lib/billing-store');
 const {exportData,deleteAccount}=require('../../lib/account-flows');
 const {langOf}=require('../../lib/email');
+const {recordSeen}=require('../../lib/ratings');
 module.exports=async(req,res)=>{
   if(!['GET','PATCH','DELETE'].includes(req.method)){
     res.setHeader('Allow','GET, PATCH, DELETE');
@@ -23,6 +24,8 @@ module.exports=async(req,res)=>{
     }
     if(req.method==='GET'){
       if(!user)return json(res,200,{user:null});
+      // Jour de passage du compte (KPI « revenus » du tableau de bord) : une écriture par jour au plus.
+      await recordSeen(await database(),user).catch(()=>{});
       // Language of the interface, for the emails sent later (sheet music ready).
       const lang=langOf(req);
       if(/tablurio_lang=/.test(String(req.headers?.cookie||''))&&user.lang!==lang)

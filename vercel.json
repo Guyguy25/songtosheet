@@ -198,6 +198,26 @@
     {
       "source": "/en/learn/youtube-to-guitar-tabs",
       "destination": "/outils/blog/en/learn/youtube-to-guitar-tabs.html"
+    },
+    {
+      "source": "/en",
+      "destination": "/outils/en/home.html"
+    },
+    {
+      "source": "/apprendre/alternative-klangio",
+      "destination": "/outils/blog/apprendre/alternative-klangio.html"
+    },
+    {
+      "source": "/apprendre/alternative-songsterr",
+      "destination": "/outils/blog/apprendre/alternative-songsterr.html"
+    },
+    {
+      "source": "/en/learn/klangio-alternative",
+      "destination": "/outils/blog/en/learn/klangio-alternative.html"
+    },
+    {
+      "source": "/en/learn/songsterr-alternative",
+      "destination": "/outils/blog/en/learn/songsterr-alternative.html"
     }
   ],
   "headers": [

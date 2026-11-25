@@ -11,9 +11,12 @@
   <meta name="description" content="Tablurio transforme un lien YouTube, Spotify, Deezer ou un fichier audio en partition ou tablature (guitare, piano, voix). Exports PDF, MIDI, MusicXML. 3 aperçus gratuits de 30 s." />
   <title>Tablurio.com — Partitions et tablatures de vos musiques préférées</title>
   <link rel="canonical" href="https://tablurio.com/" id="canonical-link" />
-  <script src="/assets/i18n-en.js?v=3"></script>
+  <link rel="alternate" hreflang="fr" href="https://tablurio.com/" data-home-alt />
+  <link rel="alternate" hreflang="en" href="https://tablurio.com/en" data-home-alt />
+  <link rel="alternate" hreflang="x-default" href="https://tablurio.com/" data-home-alt />
+  <script>/* Dictionnaire anglais (106 Ko) chargé seulement si l'interface est en anglais. */(function(){var l=null;try{l=localStorage.getItem('tablurio_lang')}catch(e){}if(l==='en')document.write('<script src="/assets/i18n-en.js?v=3"><\/script>')})();</script>
   <script src="/assets/i18n.js?v=2"></script>
-  <script>(function(){var p=location.pathname.replace(/\/+$/,'')||'/';var pub={'/':1,'/fonctionnalites':1,'/resultats':1,'/tarifs':1,'/faq':1,'/legal':1};var l=document.getElementById('canonical-link');if(l){if(pub[p])l.href='https://tablurio.com'+p;else l.remove();}})();</script>
+  <script>(function(){var p=location.pathname.replace(/\/+$/,'')||'/';var pub={'/':1,'/fonctionnalites':1,'/resultats':1,'/tarifs':1,'/faq':1,'/legal':1};var l=document.getElementById('canonical-link');if(l){if(pub[p])l.href='https://tablurio.com'+p;else l.remove();}if(p!=='/')document.querySelectorAll('[data-home-alt]').forEach(function(e){e.remove()});})();</script>
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Tablurio" />
   <meta property="og:locale" content="fr_FR" />

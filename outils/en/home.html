@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en" class="has-overlay-header" data-alt-fr="/" data-alt-en="/en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tablurio: AI Sheet Music &amp; Guitar Tab Generator from Any Song</title>
+  <meta name="description" content="Turn any song into sheet music or guitar tabs with AI: paste a YouTube, Spotify or Deezer link or upload an audio file. Guitar, piano, vocals. Try it free.">
+  <link rel="canonical" href="https://tablurio.com/en">
+  <link rel="alternate" hreflang="fr" href="https://tablurio.com/">
+  <link rel="alternate" hreflang="en" href="https://tablurio.com/en">
+  <link rel="alternate" hreflang="x-default" href="https://tablurio.com/">
+  <meta name="theme-color" content="#0b0719">
+  <link rel="icon" href="/favicon.ico" sizes="48x48">
+  <link rel="icon" type="image/png" sizes="96x96" href="/assets/favicon-96.png?v=2">
+  <link rel="icon" type="image/png" sizes="192x192" href="/assets/favicon-192.png?v=2">
+  <link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png?v=2">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Tablurio">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:url" content="https://tablurio.com/en">
+  <meta property="og:title" content="Tablurio: AI Sheet Music &amp; Guitar Tab Generator from Any Song">
+  <meta property="og:description" content="Turn any song into sheet music or guitar tabs with AI: paste a YouTube, Spotify or Deezer link or upload an audio file. Guitar, piano, vocals. Try it free.">
+  <meta property="og:image" content="https://tablurio.com/assets/og-tablurio.jpg">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://tablurio.com/assets/og-tablurio.jpg">
+  <link rel="stylesheet" href="/assets/site-ui.css?v=6">
+  <link rel="stylesheet" href="/assets/landing.css?v=5">
+  <link rel="stylesheet" href="/assets/seo-pages.css?v=5">
+  <script src="/assets/i18n.js?v=2"></script>
+  <script defer src="/_vercel/insights/script.js"></script>
+  <script defer src="/assets/tb-analytics.js?v=1"></script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@graph":[{"@type":"WebPage","@id":"https://tablurio.com/en#page","url":"https://tablurio.com/en","name":"Tablurio: AI Sheet Music & Guitar Tab Generator from Any Song","description":"Turn any song into sheet music or guitar tabs with AI: paste a YouTube, Spotify or Deezer link or upload an audio file. Guitar, piano, vocals. Try it free.","inLanguage":"en","isPartOf":{"@id":"https://tablurio.com/#website"},"about":{"@id":"https://tablurio.com/#app"},"dateModified":"2026-11-21","breadcrumb":{"@id":"https://tablurio.com/en#breadcrumb"}},{"@type":"BreadcrumbList","@id":"https://tablurio.com/en#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Tablurio","item":"https://tablurio.com/en"},{"@type":"ListItem","position":2,"name":"Tablurio","item":"https://tablurio.com/en"}]},{"@type":"FAQPage","@id":"https://tablurio.com/en#faq","mainEntity":[{"@type":"Question","name":"Is Tablurio free?","acceptedAnswer":{"@type":"Answer","text":"Your free account includes 3 previews of 30 seconds to judge the result on your own songs. Full songs and exports come with Starter (€10/month), Pro (€19/month) or Lifetime (€99 once)."}},{"@type":"Question","name":"Which instruments are supported?","acceptedAnswer":{"@type":"Answer","text":"Guitar (tab or standard notation), piano and vocals. Bass tabs are in beta."}},{"@type":"Question","name":"Which links work?","acceptedAnswer":{"@type":"Answer","text":"YouTube videos and Shorts, Spotify and Deezer tracks. You can also upload an MP3, WAV, M4A or FLAC file."}},{"@type":"Question","name":"How long does a transcription take?","acceptedAnswer":{"@type":"Answer","text":"Usually thirty seconds to a minute, depending on the length of the excerpt."}},{"@type":"Question","name":"How accurate is it?","acceptedAnswer":{"@type":"Answer","text":"It gets the vast majority of notes right on songs where the instrument is clearly audible. Very dense mixes may need a touch-up, which the MusicXML export makes easy."}},{"@type":"Question","name":"Is the app available in English?","acceptedAnswer":{"@type":"Answer","text":"Yes. The whole app, from generation to your account, is in English. Your choice is remembered with the EN / FR switch at the top of the page."}}]}]}</script>
+</head>
+<body class="has-public-header">
+<header id="public-header" class="site-header">
+  <div class="container nav-inner nav-capsule">
+    <a href="/en" data-nav="home" class="brand" aria-label="Tablurio — Home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Tablurio logo" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a>
+    <nav class="top-nav" aria-label="Main menu">
+      <a href="/#comment-ca-marche" data-nav="how">How does it work?</a>
+      <a href="/fonctionnalites" data-nav="features">Features</a>
+      <a href="/resultats" data-nav="results">Results</a>
+      <a href="/tarifs" data-nav="pricing">Pricing</a>
+      <a href="/faq" data-nav="faq">FAQ</a>
+    </nav>
+    <div class="nav-actions"><div class="lang-switch" role="group" aria-label="Language"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="nav-login" class="nav-link-btn" type="button">Log in</button><button id="nav-cta" class="btn btn-primary btn-nav" type="button">Get started ↗</button></div>
+    <button id="mobile-menu-btn" class="mobile-menu-btn" type="button" aria-label="Show menu" aria-controls="mobile-menu" aria-expanded="false">☰</button>
+  </div>
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <a href="/#comment-ca-marche" data-nav="how">How does it work?</a><a href="/fonctionnalites" data-nav="features">Features</a><a href="/resultats" data-nav="results">Results</a><a href="/tarifs" data-nav="pricing">Pricing</a><a href="/faq" data-nav="faq">FAQ</a>
+    <div class="lang-switch" role="group" aria-label="Language"><button type="button" data-lang="fr" lang="fr">FR</button><button type="button" data-lang="en" lang="en">EN</button></div><button id="mobile-login" type="button">Log in</button><button id="mobile-start" type="button">Get my sheet music</button>
+  </div></header>
+<main id="landing" class="sp-page">
+  <section class="split-hero sp-tool-hero" aria-labelledby="sp-h1">
+    <div class="hero-gridlines" aria-hidden="true"></div><div class="hero-light" aria-hidden="true"></div>
+    <div class="container split-inner">
+      <div class="split-copy">
+        
+        <span class="sp-kicker">✦ AI music transcription</span>
+        <h1 id="sp-h1">Turn any song into <em>sheet music</em> or guitar tabs</h1>
+        <p class="split-subtitle">Paste a YouTube, Spotify or Deezer link, or upload an audio file. Tablurio listens to the song and writes the sheet music or tab for guitar, piano or vocals, in about a minute.</p>
+        <div class="sp-tool" id="outil">
+  <form class="sp-tool-form hero-action-panel" action="/" method="get" data-instrument="" novalidate>
+    <div class="hero-action-row">
+      <label class="hero-input" for="sp-link"><span aria-hidden="true">↗</span><input id="sp-link" name="lien" type="url" inputmode="url" autocomplete="off" aria-label="Song link" placeholder="Paste a YouTube, Spotify or Deezer link…"></label>
+      <button type="submit" class="split-submit">Get my sheet music <span aria-hidden="true">→</span></button>
+    </div>
+  </form>
+  <p class="sp-tool-error" role="alert"></p>
+  <div class="sp-tool-alt"><span>No link?</span><a href="/?source=fichier">Upload an audio file</a></div>
+  <div class="sp-badges"><span><b>✓</b>3 free 30-second previews</span><span><b>✓</b>Guitar, piano, vocals</span><span><b>✓</b>PDF · MIDI · MusicXML</span></div>
+</div>
+      </div>
+      <div class="sp-visual-wrap"><div class="sp-visual" aria-label="Illustrative example">
+  <div class="sp-visual-top"><span>Illustrative example</span><b>● Ready</b></div>
+  <h3>Guitar tab</h3><small>From a YouTube link</small>
+  <svg viewBox="0 0 520 150" role="img" aria-label="Exemple illustratif de tablature guitare à six cordes">
+  <g stroke="#c9c2dc" stroke-width="1.3"><line x1="40" y1="22" x2="505" y2="22"/><line x1="40" y1="42" x2="505" y2="42"/><line x1="40" y1="62" x2="505" y2="62"/><line x1="40" y1="82" x2="505" y2="82"/><line x1="40" y1="102" x2="505" y2="102"/><line x1="40" y1="122" x2="505" y2="122"/></g>
+  <line x1="40" y1="22" x2="40" y2="122" stroke="#211c35" stroke-width="2"/><line x1="272" y1="22" x2="272" y2="122" stroke="#211c35" stroke-width="1.5"/><line x1="505" y1="22" x2="505" y2="122" stroke="#211c35" stroke-width="2.5"/>
+  <text x="14" y="50" font-size="15" font-weight="800" fill="#211c35">T</text><text x="14" y="74" font-size="15" font-weight="800" fill="#211c35">A</text><text x="14" y="98" font-size="15" font-weight="800" fill="#211c35">B</text>
+  <g font-size="15" font-weight="800" fill="#6136d0" text-anchor="middle">
+    <text x="78" y="127">3</text><text x="112" y="87">2</text><text x="146" y="67">0</text><text x="180" y="47">1</text><text x="214" y="27">0</text><text x="246" y="47">1</text>
+    <text x="304" y="107">0</text><text x="338" y="87">2</text><text x="372" y="67">2</text><text x="406" y="47">1</text><text x="440" y="27">0</text><text x="474" y="47">1</text>
+  </g></svg>
+  <div class="sp-chips"><span>↓ PDF</span><span>MIDI</span><span>MusicXML</span></div>
+</div></div>
+    </div>
+  </section>
+
+  <section class="sp-section alt">
+    <div class="wrap sp-center">
+      <span class="sp-label">How it works</span>
+      <h2>From the song you hear to the song you play</h2>
+      <div class="sp-steps" style="text-align:left"><div class="sp-step"><i>1</i><h3>Add your song</h3><p>Paste a YouTube (video or Short), Spotify or Deezer link, or upload an MP3, WAV, M4A or FLAC file (25 MB and 10 minutes max).</p></div><div class="sp-step"><i>2</i><h3>Pick your instrument</h3><p>Guitar (tab or standard notation), piano or vocals. Bass tabs are in beta. Choose the part of the song you want.</p></div><div class="sp-step"><i>3</i><h3>Play, slow down, export</h3><p>Read along while the song plays, slow it down, then export to PDF, MIDI or MusicXML with a paid plan.</p></div></div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap narrow">
+      <span class="sp-label">The guide</span>
+      <h2>What is Tablurio?</h2>
+      <div class="sp-prose"><p>Sheet music is usually sold one song at a time, and many songs simply don’t have any. <strong>Tablurio starts from the music instead.</strong> Its AI analyses the audio, detects pitches and rhythm, and writes them as a tab or on a staff, depending on the instrument you picked.</p>
+<p>Several transcription engines each produce a version, and Tablurio recommends the one closest to the song. You get synced audio playback with adjustable speed, so you can practise a passage slowly before playing it at full tempo.</p>
+<h3>What can you transcribe?</h3>
+<ul><li><strong>Guitar</strong>: <a href="/en/guitar-tab-generator">guitar tabs</a> or standard notation, for riffs, intros, solos or whole songs.</li>
+<li><strong>Piano</strong>: <a href="/en/piano-sheet-music">piano sheet music</a> on two staves.</li>
+<li><strong>Vocals</strong>: the sung melody on a staff.</li></ul>
+<h3>Where can the song come from?</h3>
+<ul><li>A <a href="/en/youtube-to-sheet-music">YouTube video</a>, including Shorts.</li>
+<li>A <a href="/en/spotify-to-sheet-music">Spotify</a> or <a href="/en/deezer-to-sheet-music">Deezer</a> track: Tablurio identifies the song and finds it on YouTube.</li>
+<li>Your own <a href="/en/mp3-to-sheet-music">audio file</a>: MP3, WAV, M4A or FLAC.</li></ul>
+<p>Exports: PDF to print, <a href="/en/midi">MIDI</a> for your music software, and <a href="/en/musicxml">MusicXML</a> to edit in MuseScore, Guitar Pro, Dorico or Sibelius.</p>
+<p class="sp-note">It’s an automatic transcription: it gets most notes right, but a very busy passage may need a touch-up. Only transcribe songs you’re allowed to, for example for your own practice.</p></div>
+    </div>
+  </section>
+
+  <section class="sp-section dark">
+    <div class="wrap sp-center">
+      <span class="sp-label">Why Tablurio</span>
+      <h2>Less time searching. More time playing.</h2>
+      <div class="sp-cards" style="text-align:left">
+        <div class="sp-card"><span class="emoji">⚡</span><b>Fast</b><p>Your sheet music in about thirty seconds to a minute, instead of hours learning by ear.</p></div>
+        <div class="sp-card"><span class="emoji">♾️</span><b>No more buying song by song</b><p>One plan for all your songs: switch tracks as often as you like.</p></div>
+        <div class="sp-card"><span class="emoji">🎸</span><b>Several instruments</b><p>The same song for guitar (tab or notation), piano or vocals.</p></div>
+        <div class="sp-card"><span class="emoji">📄</span><b>Useful formats</b><p>PDF to print, MIDI and MusicXML to edit in your software.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap sp-faq-grid">
+      <div><span class="sp-label">FAQ</span><h2>Answers before you play.</h2><p class="sp-intro">Another question? See the <a href="/faq" style="color:var(--purple);font-weight:700">full FAQ</a> or <a href="/tarifs" style="color:var(--purple);font-weight:700">pricing</a> (in euros).</p></div>
+      <div class="sp-faq"><details open><summary>Is Tablurio free?</summary><p>Your free account includes 3 previews of 30 seconds to judge the result on your own songs. Full songs and exports come with Starter (€10/month), Pro (€19/month) or Lifetime (€99 once).</p></details><details><summary>Which instruments are supported?</summary><p>Guitar (tab or standard notation), piano and vocals. Bass tabs are in beta.</p></details><details><summary>Which links work?</summary><p>YouTube videos and Shorts, Spotify and Deezer tracks. You can also upload an MP3, WAV, M4A or FLAC file.</p></details><details><summary>How long does a transcription take?</summary><p>Usually thirty seconds to a minute, depending on the length of the excerpt.</p></details><details><summary>How accurate is it?</summary><p>It gets the vast majority of notes right on songs where the instrument is clearly audible. Very dense mixes may need a touch-up, which the MusicXML export makes easy.</p></details><details><summary>Is the app available in English?</summary><p>Yes. The whole app, from generation to your account, is in English. Your choice is remembered with the EN / FR switch at the top of the page.</p></details></div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap">
+      <span class="sp-label">Learn</span>
+      <h2>Guides to go further</h2>
+      <div class="sp-related"><a href="/en/learn/how-to-read-guitar-tabs"><b>How to read guitar tabs</b><span>The 6 lines, the numbers, chords and every symbol, explained simply with examples.</span></a><a href="/en/learn/youtube-to-guitar-tabs"><b>YouTube song to guitar tabs</b><span>Search for the tab, work it out by ear or generate it: 3 methods and their limits.</span></a><a href="/en/learn/klangio-alternative"><b>Klangio alternative</b><span>Sources, instruments, free trial, exports and pricing: an honest comparison.</span></a><a href="/en/learn/songsterr-alternative"><b>Songsterr alternative</b><span>Tab library or tab generator: what each one is for and which to pick.</span></a></div>
+      <p class="sp-intro" style="margin-top:18px"><a href="/en/learn" style="color:var(--purple);font-weight:700">All guides →</a></p>
+    </div>
+  </section>
+
+  <section class="sp-section alt">
+    <div class="wrap">
+      <span class="sp-label">More tools</span>
+      <h2>Every way to get your notes</h2>
+      <div class="sp-related"><a href="/en/youtube-to-sheet-music"><b>YouTube to sheet music</b><span>Paste a YouTube link, get the notes</span></a><a href="/en/guitar-tab-generator"><b>Guitar tab generator</b><span>Guitar tabs for any song</span></a><a href="/en/piano-sheet-music"><b>Piano sheet music from a song</b><span>Piano sheet music for your songs</span></a><a href="/en/mp3-to-sheet-music"><b>MP3 to sheet music</b><span>Upload an audio file, get the notes</span></a><a href="/en/spotify-to-sheet-music"><b>Spotify to sheet music</b><span>A Spotify track becomes sheet music</span></a><a href="/en/deezer-to-sheet-music"><b>Deezer to sheet music</b><span>A Deezer track becomes sheet music</span></a><a href="/en/musicxml"><b>MusicXML export</b><span>Open your sheet music in MuseScore, Dorico…</span></a><a href="/en/midi"><b>MIDI export</b><span>A song’s notes as a MIDI file</span></a></div>
+    </div>
+  </section>
+
+  <section class="sp-section">
+    <div class="wrap"><div class="sp-cta-band">
+      <h2>The next song you play starts here.</h2>
+      <p>3 free 30-second previews to try it on your own songs.</p>
+      <a href="#outil">Get my sheet music ↗</a>
+    </div></div>
+  </section>
+</main>
+<footer id="public-footer" class="site-footer"><div class="container footer-wrap">
+<div><a href="/en" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Tablurio logo" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><p>Your music deserves to be played.</p></div>
+<nav aria-label="Footer navigation"><a href="/#comment-ca-marche" data-nav="how">How it works</a><a href="/fonctionnalites" data-nav="features">Features</a><a href="/resultats" data-nav="results">Results</a><a href="/tarifs" data-nav="pricing">Pricing</a><a href="/faq" data-nav="faq">FAQ</a><a href="/en/learn">Learn</a><a href="/en/about">About</a><a href="/en/contact">Contact</a><a href="/legal" data-nav="legal">Legal</a><a href="https://www.trustpilot.com/review/tablurio.com" target="_blank" rel="noopener">Trustpilot reviews</a></nav>
+<div><small>Sheet music and tabs generated by AI: always check the result before playing.</small><small>© 2026 Tablurio</small></div>
+</div><nav class="container footer-tools" aria-label="Tablurio tools"><span>Tools</span><a href="/en/youtube-to-sheet-music">YouTube to sheet music</a><a href="/en/guitar-tab-generator">Guitar tab</a><a href="/en/piano-sheet-music">Piano sheet music</a><a href="/en/mp3-to-sheet-music">MP3 to sheet music</a><a href="/en/spotify-to-sheet-music">Spotify to sheet music</a><a href="/en/deezer-to-sheet-music">Deezer to sheet music</a><a href="/en/musicxml">MusicXML export</a><a href="/en/midi">MIDI export</a></nav>
+</footer>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  function go(u){location.href=u}
+  function tool(){var t=$('outil');if(t){t.scrollIntoView({behavior:'smooth',block:'center'});var i=t.querySelector('input');if(i)setTimeout(function(){i.focus({preventScroll:true})},350)}}
+  var map={'nav-login':function(){go('/connexion')},'mobile-login':function(){go('/connexion')},'nav-cta':tool,'mobile-start':function(){menu(false);tool()}};
+  Object.keys(map).forEach(function(id){var el=$(id);if(el)el.addEventListener('click',map[id])});
+  var btn=$('mobile-menu-btn'),mm=$('mobile-menu');
+  function menu(open){if(!mm||!btn)return;mm.classList.toggle('open',open);mm.setAttribute('aria-hidden',open?'false':'true');btn.setAttribute('aria-expanded',open?'true':'false')}
+  if(btn)btn.addEventListener('click',function(){menu(!mm.classList.contains('open'))});
+  if(mm)mm.addEventListener('click',function(e){if(e.target.tagName==='A')menu(false)});
+  var h=$('public-header');function compact(){if(h)h.classList.toggle('is-compact',window.scrollY>72)}
+  window.addEventListener('scroll',compact,{passive:true});compact();
+})();
+</script>
+<script>
+document.querySelectorAll('.sp-tool-form').forEach(function(form){
+  form.addEventListener('submit',function(e){
+    e.preventDefault();
+    var input=form.querySelector('input'),err=form.parentNode.querySelector('.sp-tool-error'),v=input.value.trim();
+    if(!v){err.textContent="Paste the song link, or upload an audio file.";input.focus();return;}
+    if(!/^https:\/\//i.test(v)){err.textContent="Paste a full link starting with https://";input.focus();return;}
+    var q=new URLSearchParams({lien:v});if(form.dataset.instrument)q.set('instrument',form.dataset.instrument);
+    location.href='/?'+q.toString();
+  });
+});
+</script>
+</body>
+</html>

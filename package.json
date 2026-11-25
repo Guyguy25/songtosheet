@@ -11,5 +11,8 @@
     "@vercel/functions": "^3.11.3",
     "mongodb": "^6.21.0",
     "opensheetmusicdisplay": "2.3.0"
+  },
+  "devDependencies": {
+    "purgecss": "^6.0.0"
   }
 }

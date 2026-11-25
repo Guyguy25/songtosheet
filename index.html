@@ -2493,6 +2493,16 @@
       window.SongToSheetFlow.openSavedDemo(job);
     }catch(e){toast(e.message||'Impossible de lancer cet aperçu.',true);}
   }
+    // Écoute d'une partition (bouton lecture du lecteur ou « Écouter » d'une version) : une fois par morceau et par page.
+    const playedOnce=new Set();
+    document.addEventListener('click',event=>{
+      const id=state.resultId;
+      if(!id||!state.user||playedOnce.has(id))return;
+      if(!event.target.closest('#result-content .sp-play,#result-content .score-play,#guitar-comparison .btn-outline'))return;
+      if(event.target.closest('#guitar-comparison')&&!/couter|isten/.test(event.target.textContent||''))return;
+      playedOnce.add(id);
+      post('/api/track',{action:'played',id}).catch(()=>{});
+    },true);
     function openResult(id){stopPlayer();state.resultId=id;$('result-page').classList.remove('is-score');$('result-content').textContent='Chargement de la création…';startApp('result');}
   function notesSvg(notes){
     const notesToDraw=notes.slice(0,48),perLine=12,lineCount=Math.max(1,Math.ceil(notesToDraw.length/perLine)),height=150*lineCount+12;

@@ -149,6 +149,7 @@
     dialog.addEventListener('cancel',event=>{event.preventDefault();close();});
     dialog.addEventListener('close',()=>dialog.remove());
     dialog.showModal();
+    save({shown:true}).catch(()=>{});
   }
 
   async function check(user){

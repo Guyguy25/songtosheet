@@ -40,11 +40,14 @@ async function statsRoute(req,res){
   // Notes données au retour (pop-up « Combien tu notes ta génération ? »).
   const admins=new Set((await db.collection('users').find({role:'admin'},{projection:{_id:1}}).toArray()).map(u=>String(u._id)));
   data.ratings=await ratingStats(db,new Date(Date.now()-days*86400000),admins).catch(()=>null);
+  // Écoutes (bouton lecture sur l'écran partition).
+  data.plays=await playStats(db,new Date(Date.now()-days*86400000)).catch(()=>null);
   return json(res,200,data);
 }
 
 const {learnStats}=require('../lib/learn');
 const {ratingStats}=require('../lib/ratings');
+const {playStats}=require('../lib/plays');
 module.exports=async(req,res)=>{
   res.setHeader('Cache-Control','no-store');
   const route=req.query?.route;

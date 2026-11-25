@@ -65,3 +65,20 @@ test('le jour de passage n’est écrit qu’une fois par jour',async()=>{
   assert.equal(calls.length,1);
   assert.deepEqual(calls[0][0],{_id:'u',seen_last_day:{$ne:'2026-11-24'}});
 });
+
+test('une écoute est comptée sur la génération et dans score_plays, jamais pour un invité',async()=>{
+  const {recordPlay}=require('../lib/plays');
+  const calls={jobs:[],plays:[]};
+  const id='0123456789abcdef01234567';
+  const db={collection:name=>name==='track_jobs'
+    ?{findOneAndUpdate:async(filter,update)=>{calls.jobs.push([filter,update]);return {_id:filter._id,title:'Wonderwall',instrument:'guitare',variant:'solo'};}}
+    :{createIndex:async()=>{},updateOne:async(filter,update)=>{calls.plays.push([filter,update]);return {};}}};
+  const now=new Date('2026-11-25T20:00:00Z');
+  assert.equal(await recordPlay(db,{_id:'g',guest:true},id,now),false);
+  assert.equal(await recordPlay(db,{_id:'u'},'pas-un-id',now),false);
+  assert.equal(await recordPlay(db,{_id:'u',role:'user'},id,now),true);
+  assert.deepEqual(calls.jobs[0][1].$inc,{plays:1});
+  assert.equal(calls.plays[0][0].day,'2026-11-25');
+  assert.equal(calls.plays[0][1].$set.kind,'full');
+  assert.equal(calls.plays[0][1].$set.admin,false);
+});

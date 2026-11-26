@@ -52,3 +52,14 @@ test('the unsubscribe link only works for its own account',()=>{
   assert.strictEqual(validUnsubscribe(other,unsubscribeToken(id)),false);
   assert.strictEqual(validUnsubscribe(id,'nope'),false);
 });
+
+test('email language: country and site language agree, else the chosen language, else the country',()=>{
+  const {emailLang}=require('../lib/email.js');
+  assert.strictEqual(emailLang({lang:'fr',lang_chosen:true,country:'BE'}),'fr');
+  assert.strictEqual(emailLang({lang:'en',lang_chosen:true,country:'US'}),'en');
+  assert.strictEqual(emailLang({lang:'en',lang_chosen:true,country:'FR'}),'en');
+  assert.strictEqual(emailLang({lang:'fr',country:'US'}),'en');
+  assert.strictEqual(emailLang({lang:'fr',country:'CH'}),'fr');
+  assert.strictEqual(emailLang({lang:'fr',country:'SN'}),'fr');
+  assert.strictEqual(emailLang({lang:'fr'}),'fr');
+});

@@ -8,6 +8,14 @@
   },
   "rewrites": [
     {
+      "source": "/api/cron/nudges",
+      "destination": "/api/health?route=nudges"
+    },
+    {
+      "source": "/api/desabonnement",
+      "destination": "/api/health?route=unsubscribe"
+    },
+    {
       "source": "/api/learn",
       "destination": "/api/jobs?route=learn"
     },

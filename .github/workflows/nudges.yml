@@ -1,0 +1,32 @@
+name: Relances par email
+
+# Every hour: asks the site to send the follow-up emails that are due (lib/nudges.js).
+on:
+  schedule:
+    - cron: "23 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry:
+        description: "Simulation : compter sans envoyer"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+jobs:
+  nudges:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Envoyer les relances
+        env:
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DRY: ${{ inputs.dry && '1' || '0' }}
+        run: |
+          if [ -z "$CRON_SECRET" ]; then
+            echo "::error::Ajoute le secret CRON_SECRET dans GitHub (et la même valeur dans Vercel)."
+            exit 1
+          fi
+          curl -fsS --max-time 240 -X POST -H "Authorization: Bearer $CRON_SECRET" "https://tablurio.com/api/cron/nudges?dry=$DRY"
+          echo

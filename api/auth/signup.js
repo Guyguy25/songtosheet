@@ -34,7 +34,7 @@ module.exports=async(req,res)=>{
     const result=await db.collection('users').insertOne({email:fields.email,phone:fields.phone,password_hash,created_at:new Date(),tier:'free',lang,lang_chosen,...(country?{country}:{}),
       marketing_consent:req.body?.marketing_consent===true,...(req.body?.marketing_consent===true?{marketing_consent_at:new Date()}:{}),
       ...(verifying?{email_verified:false}:{})});
-    const user={_id:result.insertedId,email:fields.email,phone:fields.phone,lang,lang_chosen,country,...(verifying?{email_verified:false}:{})};
+    const user={_id:result.insertedId,email:fields.email,phone:fields.phone,password_hash,lang,lang_chosen,country,...(verifying?{email_verified:false}:{})};
     if(pending)await addGeneration(db,String(user._id),pending);
     issue(res,user);
     const sent=verifying?await sendVerification(db,user):{sent:false};

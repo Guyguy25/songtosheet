@@ -14,7 +14,7 @@
   <link rel="alternate" hreflang="fr" href="https://tablurio.com/" data-home-alt />
   <link rel="alternate" hreflang="en" href="https://tablurio.com/en" data-home-alt />
   <link rel="alternate" hreflang="x-default" href="https://tablurio.com/" data-home-alt />
-  <script>/* Dictionnaire anglais (106 Ko) chargé seulement si l'interface est en anglais. */(function(){var l=null;try{l=localStorage.getItem('tablurio_lang')}catch(e){}if(l==='en')document.write('<script src="/assets/i18n-en.js?v=3"><\/script>')})();</script>
+  <script>/* Dictionnaire anglais (106 Ko) chargé seulement si l'interface est en anglais. */(function(){var l=null;try{l=localStorage.getItem('tablurio_lang')}catch(e){}if(l==='en')document.write('<script src="/assets/i18n-en.js?v=4"><\/script>')})();</script>
   <script src="/assets/i18n.js?v=2"></script>
   <script>(function(){var p=location.pathname.replace(/\/+$/,'')||'/';var pub={'/':1,'/fonctionnalites':1,'/resultats':1,'/tarifs':1,'/faq':1,'/legal':1};var l=document.getElementById('canonical-link');if(l){if(pub[p])l.href='https://tablurio.com'+p;else l.remove();}if(p!=='/')document.querySelectorAll('[data-home-alt]').forEach(function(e){e.remove()});})();</script>
   <meta property="og:type" content="website" />
@@ -82,7 +82,7 @@
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
   <link rel="stylesheet" href="/assets/site-ui.css?v=6" />
-  <link rel="stylesheet" href="/assets/account.css?v=9" />
+  <link rel="stylesheet" href="/assets/account.css?v=10" />
   <link rel="stylesheet" href="/backend/web/track-onboarding.css?v=15" />
   <script src="/assets/audio-source.js?v=7" defer></script>
   <script src="/backend/web/track-onboarding.js?v=34" defer></script>
@@ -1282,7 +1282,7 @@
  </div>
 </main>
 
-  <main id="auth-view" class="hidden"><div class="auth-container"><a href="/" class="brand auth-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div class="auth-card"><span class="auth-flower">✦</span><h1 id="auth-title">Bienvenue sur Tablurio</h1><p id="auth-subtitle">Crée ton compte pour retrouver toutes tes partitions.</p><form id="auth-form"><label for="auth-email">Adresse email</label><input id="auth-email" class="field" type="email" autocomplete="email" placeholder="toi@exemple.com" required/><div id="auth-phone-row" class="auth-phone-row"><label for="auth-phone">Numéro de téléphone</label><input id="auth-phone" class="field" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" maxlength="24"/></div><label for="auth-password">Mot de passe</label><input id="auth-password" class="field" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum" required/><button type="button" id="auth-forgot" class="auth-forgot" hidden>Mot de passe oublié ?</button><p id="auth-password-hint" class="auth-demo-hint">8 caractères minimum. Ton mot de passe est haché sur le serveur et n’est jamais conservé en clair.</p><label id="auth-consent-row" class="auth-consent"><input type="checkbox" id="auth-consent"/><span>J’accepte de recevoir des conseils et des offres de Tablurio par SMS ou WhatsApp (facultatif, désinscription à tout moment).</span></label><p id="auth-error" class="auth-error hidden"></p><button id="auth-submit" class="btn btn-primary" type="submit">Créer mon compte <span>↗</span></button><p id="auth-terms" class="auth-terms">En créant un compte, tu acceptes les <a href="/legal#cgu" target="_blank">conditions d’utilisation</a>, les <a href="/legal#cgv" target="_blank">conditions de vente</a> et la <a href="/legal#confidentialite" target="_blank">politique de confidentialité</a>.</p></form><div id="auth-verify" class="auth-verify" hidden><label for="auth-code">Code à 6 chiffres</label><input id="auth-code" class="field code-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" placeholder="••••••"/><p id="auth-verify-error" class="auth-error hidden" role="alert"></p><button id="auth-verify-submit" class="btn btn-primary" type="button">Valider mon adresse <span>↗</span></button><p class="auth-verify-links"><button type="button" id="auth-resend">Renvoyer le code</button><span aria-hidden="true">·</span><button type="button" id="auth-change">Utiliser une autre adresse</button></p></div><p id="auth-alternate" class="auth-alternate">Déjà un compte ? <a href="/connexion" data-nav="login">Se connecter</a></p></div><p class="auth-footer">Tablurio · Ton studio de musique en ligne</p></div><div class="auth-art"><div class="auth-art-inner"><span>♫</span><h2>Chaque morceau a une histoire.<br/>À toi de la <i>jouer.</i></h2><div class="auth-art-card"><div class="auth-lines"></div><span>Ta prochaine partition commence ici. ✦</span></div></div></div></main>
+  <main id="auth-view" class="hidden"><div class="auth-container"><a href="/" class="brand auth-brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a><div class="auth-card"><span class="auth-flower">✦</span><h1 id="auth-title">Bienvenue sur Tablurio</h1><p id="auth-subtitle">Crée ton compte pour retrouver toutes tes partitions.</p><div id="auth-oauth" class="auth-oauth" hidden><a id="auth-google" class="oauth-btn oauth-google" href="/api/auth/oauth/google" hidden><svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg><span>Continuer avec Google</span></a><a id="auth-apple" class="oauth-btn oauth-apple" href="/api/auth/oauth/apple" hidden><svg viewBox="0 0 384 512" width="16" height="18" aria-hidden="true"><path fill="currentColor" d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg><span>Continuer avec Apple</span></a><p class="auth-or"><span>ou avec ton email</span></p></div><form id="auth-form"><div id="auth-email-row" class="auth-phone-row"><label for="auth-email">Adresse email</label><input id="auth-email" class="field" type="email" autocomplete="email" placeholder="toi@exemple.com" required/></div><div id="auth-phone-row" class="auth-phone-row"><label for="auth-phone">Numéro de téléphone</label><input id="auth-phone" class="field" type="tel" inputmode="tel" autocomplete="tel" placeholder="06 12 34 56 78" maxlength="24"/></div><div id="auth-password-row" class="auth-phone-row"><label for="auth-password">Mot de passe</label><input id="auth-password" class="field" type="password" autocomplete="new-password" minlength="8" placeholder="8 caractères minimum" required/><button type="button" id="auth-forgot" class="auth-forgot" hidden>Mot de passe oublié ?</button><p id="auth-password-hint" class="auth-demo-hint">8 caractères minimum. Ton mot de passe est haché sur le serveur et n’est jamais conservé en clair.</p></div><label id="auth-consent-row" class="auth-consent"><input type="checkbox" id="auth-consent"/><span>J’accepte de recevoir des conseils et des offres de Tablurio par SMS ou WhatsApp (facultatif, désinscription à tout moment).</span></label><p id="auth-error" class="auth-error hidden"></p><button id="auth-submit" class="btn btn-primary" type="submit">Créer mon compte <span>↗</span></button><p id="auth-terms" class="auth-terms">En créant un compte, tu acceptes les <a href="/legal#cgu" target="_blank">conditions d’utilisation</a>, les <a href="/legal#cgv" target="_blank">conditions de vente</a> et la <a href="/legal#confidentialite" target="_blank">politique de confidentialité</a>.</p></form><div id="auth-verify" class="auth-verify" hidden><label for="auth-code">Code à 6 chiffres</label><input id="auth-code" class="field code-input" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]*" maxlength="6" placeholder="••••••"/><p id="auth-verify-error" class="auth-error hidden" role="alert"></p><button id="auth-verify-submit" class="btn btn-primary" type="button">Valider mon adresse <span>↗</span></button><p class="auth-verify-links"><button type="button" id="auth-resend">Renvoyer le code</button><span aria-hidden="true">·</span><button type="button" id="auth-change">Utiliser une autre adresse</button></p></div><p id="auth-alternate" class="auth-alternate">Déjà un compte ? <a href="/connexion" data-nav="login">Se connecter</a></p></div><p class="auth-footer">Tablurio · Ton studio de musique en ligne</p></div><div class="auth-art"><div class="auth-art-inner"><span>♫</span><h2>Chaque morceau a une histoire.<br/>À toi de la <i>jouer.</i></h2><div class="auth-art-card"><div class="auth-lines"></div><span>Ta prochaine partition commence ici. ✦</span></div></div></div></main>
 
   <main id="legal-view" class="hidden legal-view"><div class="container"><a href="/" class="brand" data-nav="home"><span class="brand-mark" aria-hidden="true"><img src="/assets/tablurio-wave-mark.svg" alt="Logo Tablurio" width="40" height="40" loading="eager" decoding="async"/></span><span>tablurio<span class="brand-dot">.com</span></span></a>
 <h1>Informations légales</h1>
@@ -1543,6 +1543,7 @@
       state.activePage=route.page;
       if(route.page==='result')state.resultId=route.id;
       if(state.user?.email_verified===false){rememberReturn(location.pathname);go('/verification',true);return;}
+      if(state.user?.phone_pending){rememberReturn(location.pathname);go('/inscription',true);return;}
       if(!canOpenStudio(state.activePage)){
         // A shared or bookmarked studio link: sign in, then come back to it.
         rememberReturn(location.pathname);
@@ -1555,7 +1556,8 @@
     }
     if(pathname==='/verification'&&!state.user){go('/connexion',true);return;}
     if(pathname==='/verification'&&state.user?.email_verified!==false){finishAuth().catch(error=>toast(error.message,true));return;}
-    if(authPage){state.authMode=pathname==='/connexion'?'login':pathname==='/verification'?'verify':'signup';renderAuth({clearError:true});}
+    if(authPage&&state.user?.phone_pending&&pathname!=='/verification'){if(pathname!=='/inscription'){go('/inscription',true);return;}state.authMode='phone';renderAuth({clearError:true});}
+    else if(authPage){state.authMode=pathname==='/connexion'?'login':pathname==='/verification'?'verify':'signup';renderAuth({clearError:true});}
     if(window.SongToSheetFlow)window.SongToSheetFlow.render(pathname);
     window.SongToSheetWaitSurvey?.mount($('demo-wait-survey'),state.user?.id,pathname==='/generation');
     const titles={'/':'Tablurio.com — Partitions et tablatures de vos musiques préférées',
@@ -1591,6 +1593,26 @@
       $('auth-code').focus();
       return;
     }
+    const phoneStep=state.authMode==='phone';
+    show('auth-email-row',!phoneStep);show('auth-password-row',!phoneStep);
+    $('auth-email').required=!phoneStep;$('auth-password').required=!phoneStep;
+    // Google / Apple buttons: logged out only, on the login and signup forms.
+    const providers=state.oauth||{};
+    $('auth-oauth').hidden=phoneStep||Boolean(state.user)||!(providers.google||providers.apple);
+    $('auth-google').hidden=!providers.google;$('auth-apple').hidden=!providers.apple;
+    if(phoneStep){
+      // Account just made with Google / Apple: the phone number every account gives at sign-up.
+      show('auth-phone-row',true);$('auth-phone').required=true;
+      $('auth-consent-row').hidden=false;$('auth-terms').hidden=false;$('auth-alternate').hidden=true;
+      $('auth-title').textContent='Plus qu’une étape';
+      $('auth-subtitle').innerHTML=`<span class="auth-step">Étape 2 sur 2</span>Ton compte <b>${safe(state.user?.email||'')}</b> est créé. Ajoute ton numéro de téléphone pour accéder à ton studio.`;
+      $('auth-submit').innerHTML='Accéder à mon studio <span>↗</span>';
+      $('flow-auth-disclaimer')?.setAttribute('hidden','');
+      if(clearError)show('auth-error',false);
+      $('auth-phone').focus();
+      return;
+    }
+    $('flow-auth-disclaimer')?.removeAttribute('hidden');
     const login=state.authMode==='login';
     show('auth-phone-row',!login);$('auth-phone').required=!login;
     $('auth-consent-row').hidden=login;$('auth-terms').hidden=login;
@@ -1662,7 +1684,34 @@
     if(open)menu.querySelector('[role="menuitem"]:not([hidden])')?.focus();
   }
 
-  async function loadUser(){try{const data=await api('/api/auth/me');setCurrentUser(data.user);}catch{setCurrentUser(null);}}
+  async function loadUser(){try{const data=await api('/api/auth/me');state.oauth=data.oauth||null;setCurrentUser(data.user);}catch{setCurrentUser(null);}}
+  const OAUTH_ERRORS={
+    cancelled:'Connexion annulée. Tu peux réessayer ou utiliser ton email.',
+    expired:'La connexion a pris trop de temps. Réessaie.',
+    unavailable:'Cette méthode de connexion n’est pas encore disponible. Utilise ton email.',
+    email_missing:'Ton compte ne nous a pas transmis d’adresse email vérifiée. Utilise ton email pour t’inscrire.',
+    email_linked:'Cette adresse email est déjà liée à un autre compte. Connecte-toi avec ton email et ton mot de passe.',
+    rate_limited:'Trop de comptes créés depuis cette connexion. Réessaie dans une heure.',
+    failed:'La connexion n’a pas abouti. Réessaie ou utilise ton email.'};
+  /** Back from Google / Apple (?oauth=login|signup or ?oauth_error=…): finish like the email form does. */
+  async function finishOauth(){
+    const params=new URLSearchParams(location.search);
+    const error=params.get('oauth_error'),done=params.get('oauth');
+    if(!error&&!done)return false;
+    history.replaceState({},'',location.pathname);
+    if(error||!state.user){
+      go('/connexion',true);
+      $('auth-error').textContent=OAUTH_ERRORS[error]||OAUTH_ERRORS.failed;show('auth-error',true);
+      return true;
+    }
+    // A demo finished before signing in: saved to the account, as the email form does.
+    const pending=window.SongToSheetFlow?.pendingData?.();
+    if(pending&&pending.completed===true){
+      try{await post('/api/jobs',{generation:pending});window.SongToSheetFlow.clearPending();}catch{}
+    }
+    try{await finishAuth();}catch(e){toast(e.message,true);go('/app',true);}
+    return true;
+  }
   async function refresh(){if(!state.user)return;
     try{const [user,jobs]=await Promise.all([api('/api/auth/me'),api('/api/jobs')]);setCurrentUser(user.user);state.jobs=jobs.jobs||[];state.jobsLoaded=true;
       if(!state.user){go('/inscription');return;}
@@ -2122,8 +2171,9 @@
         <h3>Supprimer mon compte</h3>
         <p class="profile-note">Ton compte, tes partitions et ton historique sont effacés définitivement.${user.plan&&user.plan!=='free'?' <b>Résilie d’abord ton abonnement</b> depuis « Mon abonnement » : la suppression du compte n’arrête pas le paiement chez Whop.':''}</p>
         <form id="profile-delete" class="profile-delete" novalidate>
-          <label for="profile-delete-password">Confirme avec ton mot de passe</label>
-          <input id="profile-delete-password" class="field" type="password" autocomplete="current-password" placeholder="Ton mot de passe">
+          ${user.has_password===false?`<label for="profile-delete-password">Confirme en tapant l’adresse email de ton compte</label>
+          <input id="profile-delete-password" class="field" type="email" autocomplete="off" placeholder="${safe(user.email)}">`:`<label for="profile-delete-password">Confirme avec ton mot de passe</label>
+          <input id="profile-delete-password" class="field" type="password" autocomplete="current-password" placeholder="Ton mot de passe">`}
           <p class="profile-error" id="profile-delete-error" hidden></p>
           <button class="btn btn-danger" type="submit">Supprimer définitivement mon compte</button>
         </form></section>`;
@@ -2993,6 +3043,7 @@
   }
   async function finishAuth(){
     if(state.user?.email_verified===false){go('/verification');return;}
+    if(state.user?.phone_pending){go('/inscription',true);return;}
     const id=guestTrackId();
     if(id){
       try{
@@ -3017,6 +3068,12 @@
     const email=$('auth-email').value.trim(),password=$('auth-password').value;
     const btn=$('auth-submit');btn.disabled=true;btn.textContent='Un instant…';show('auth-error',false);
     try{
+      if(state.authMode==='phone'){
+        const result=await api('/api/auth/me',{method:'PATCH',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({phone:$('auth-phone').value.trim(),marketing_consent:$('auth-consent').checked})});
+        setCurrentUser(result.user);
+        await finishAuth();return;
+      }
       if(state.user&&guestTrackId()){await finishAuth();return;}
       if(password.length<8)throw new Error('Le mot de passe doit contenir au moins 8 caractères.');
       const pending=window.SongToSheetFlow?.pendingData?.();
@@ -3256,6 +3313,7 @@
   }
   const sessionReady=loadUser();
   async function init(){wire();howShowStep(1);await sessionReady;
+    if(await finishOauth())return;
     const audioUrl=rememberedTrackLink();
     if(audioUrl&&location.pathname==='/app')history.replaceState({},'','/app/new'+location.search);
     const guestId=guestTrackId();

@@ -6,11 +6,15 @@ const {matches}=require('../../lib/passwords');
 const {addGeneration}=require('../../lib/generations');
 const {forgot,reset}=require('../../lib/account-flows');
 const {allow,clientIp}=require('../../lib/rate-limit');
+const oauth=require('../../lib/oauth');
 const LIMIT=8,WINDOW=15*60*1000;
 module.exports=async(req,res)=>{
   // /api/auth/forgot and /api/auth/reset, see vercel.json.
   if(req.query?.route==='forgot')return forgot(req,res);
   if(req.query?.route==='reset')return reset(req,res);
+  // /api/auth/oauth/:provider and its /callback (Google, Apple), see vercel.json.
+  if(req.query?.route==='oauth')return oauth.start(req,res,String(req.query.provider||''));
+  if(req.query?.route==='oauth-callback')return oauth.callback(req,res,String(req.query.provider||''));
   if(!method(req,res,'POST'))return;
   let fields;try{fields=credentials(req.body);}catch(e){return json(res,400,{detail:e.message});}
   try{

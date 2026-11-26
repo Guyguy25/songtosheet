@@ -28,6 +28,14 @@
       "destination": "/api/auth/signup?route=verify"
     },
     {
+      "source": "/api/auth/oauth/:provider/callback",
+      "destination": "/api/auth/login?route=oauth-callback&provider=:provider"
+    },
+    {
+      "source": "/api/auth/oauth/:provider",
+      "destination": "/api/auth/login?route=oauth&provider=:provider"
+    },
+    {
       "source": "/api/auth/forgot",
       "destination": "/api/auth/login?route=forgot"
     },

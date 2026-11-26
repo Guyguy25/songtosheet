@@ -172,3 +172,13 @@ button.user-avatar:hover,button.user-avatar[aria-expanded="true"]{box-shadow:0 0
 .app-header .lang-switch button{color:#8a7fa1}
 .app-header .lang-switch button:hover{color:#5a36c4}
 .app-header .lang-switch button.active{background:#7549eb;color:#fff}
+/* Connexion / inscription avec Google et Apple */
+.auth-oauth{display:grid;gap:10px;margin:0 0 6px}
+.auth-oauth[hidden],.oauth-btn[hidden]{display:none!important}
+.oauth-btn{display:flex;align-items:center;justify-content:center;gap:10px;min-height:50px;border-radius:12px;font-size:14px;font-weight:750;text-decoration:none;transition:transform .15s,box-shadow .15s,background .15s}
+.oauth-btn:hover{transform:translateY(-1px);box-shadow:0 8px 20px #2712461a}
+.oauth-btn:focus-visible{outline:3px solid #6d3ddc55;outline-offset:2px}
+.oauth-google{background:#fff;color:#1f1f1f;border:1px solid #dadce0}
+.oauth-apple{background:#000;color:#fff;border:1px solid #000}
+.auth-or{display:flex;align-items:center;gap:12px;margin:12px 0 0!important;color:#b0aabb;font-size:12px!important}
+.auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:#ece7f4}

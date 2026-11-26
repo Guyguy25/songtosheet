@@ -77,7 +77,7 @@
     window.va = window.va || function () { (window.vaq = window.vaq || []).push(arguments); };
   </script>
   <script defer src="/_vercel/insights/script.js"></script>
-  <script defer src="/assets/tb-analytics.js?v=1"></script>
+  <script defer src="/assets/tb-analytics.js?v=2"></script>
   <script>document.documentElement.classList.toggle('has-overlay-header', /^\/(?:tarifs\/?|upgrade\/?)?$/.test(location.pathname.toLowerCase()));</script>
   
   <link rel="stylesheet" href="/assets/conversion-flow.css?v=9" />
@@ -2130,6 +2130,7 @@
     clearInterval(quotaDialogClock);
     if(at)quotaDialogClock=runClocks(dialog,()=>{clearInterval(quotaDialogClock);dialog.close();toast('Ton morceau complet est de nouveau disponible.');});
     if(!dialog.open)dialog.showModal();
+    window.tbTrack?.('pricing');
   }
 
   // ---- Profil et paramètres ----
@@ -2328,6 +2329,7 @@
     $('unlock-continue').textContent='Débloquer la '+format+' complète';
     showUnlockStep(false);
     dialog.showModal();
+    window.tbTrack?.('pricing'); // paywall vu (tunnel du tableau de bord)
     $('unlock-dialog-title').focus({preventScroll:true});
   }
   function showUnlockOffers(){

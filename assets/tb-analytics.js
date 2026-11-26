@@ -34,7 +34,7 @@
   function view(){
     if(location.pathname===lastPath)return;lastPath=location.pathname;
     send('view');
-    if(/^\/(tarifs|upgrade|pricing)/.test(lastPath))send('pricing');
+    if(/^\/(en\/)?(tarifs|upgrade|pricing)/.test(lastPath))send('pricing');
     if(/^\/inscription/.test(lastPath))send('signup_open');
   }
   ['pushState','replaceState'].forEach(function(name){

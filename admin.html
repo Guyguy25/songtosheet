@@ -195,7 +195,6 @@ td .line2{font-size:12px;color:var(--muted);margin-top:2px}
   };
   let days=savedDays(),data=null,tab='channel';
   const userView={query:'',filter:'all',sort:'created',shown:50};
-  let tunnelFilter='all';
   const videosKey=()=>'tb_admin_videos_'+days;
   function setDays(value){
     days=value;
@@ -333,23 +332,15 @@ td .line2{font-size:12px;color:var(--muted);margin-top:2px}
   }
 
   // ---- Onglet Tunnel : Vidéos → Landing → A généré → Compte → Paywall → Paiement, puis rétention ----
-  const CHANNEL_NAMES={social:'Réseaux sociaux',organic:'Recherche (SEO)',ai:'Assistants IA',direct:'Direct',referral:'Autres sites'};
-  function tunnelSteps(){
-    const t=data.tunnel;
-    if(tunnelFilter==='all')return t.all;
-    const [kind,key]=tunnelFilter.split(':');
-    return (kind==='c'?t.channels:t.sources).find(row=>row.key===key)||t.all;
-  }
+  const tunnelSteps=()=>data.tunnel.all;
   function tunnelSection(){
     const t=data.tunnel;
-    const options=[['all','Toutes les sources'],...t.channels.map(c=>['c:'+c.key,'Canal · '+(CHANNEL_NAMES[c.key]||c.key)]),...t.sources.map(x=>['s:'+x.key,'Source · '+(x.key==='direct'?'Direct':(SOURCES[x.key]||x.key))])];
     let videos='';try{videos=localStorage.getItem(videosKey())||'';}catch{}
     const r=t.retention;
     const pages=t.landing_pages||{};
     return `<div class="tunnel-wrap">
       <div class="panel">
         <div class="tun-input">
-          <select id="tunnel-filter" aria-label="Source">${options.map(([key,name])=>`<option value="${esc(key)}"${key===tunnelFilter?' selected':''}>${esc(name)}</option>`).join('')}</select>
           <label for="tunnel-videos">Vues des vidéos</label><input id="tunnel-videos" type="number" min="0" inputmode="numeric" placeholder="ex. 100000" value="${esc(videos)}">
           <small>À recopier depuis TikTok / Instagram pour la période (gardé dans ton navigateur).</small>
         </div>
@@ -359,7 +350,7 @@ td .line2{font-size:12px;color:var(--muted);margin-top:2px}
         <div class="panel"><h2>Rétention des payants</h2><p>Abonnés toujours actifs après leur premier paiement (depuis le début).</p>
           <div class="ret-box">${kpi('M1',r.m1_cohort?pct(r.m1):'—',r.m1_cohort?`${num(r.m1_kept)} sur ${num(r.m1_cohort)} payants d’au moins 1 mois`:'Aucun payant d’au moins 1 mois')}
           ${kpi('M3',r.m3_cohort?pct(r.m3):'—',r.m3_cohort?`${num(r.m3_kept)} sur ${num(r.m3_cohort)} payants d’au moins 3 mois`:'Aucun payant d’au moins 3 mois')}</div></div>
-        <div class="panel"><h2>Où arrivent les gens</h2><p>Première page vue sur le site, toutes sources.</p><ul class="facts">
+        <div class="panel"><h2>Où arrivent les gens</h2><p>Première page vue sur le site.</p><ul class="facts">
           <li>Page d’accueil : <b>${num(pages.accueil||0)}</b></li><li>Pages outils (SEO) : <b>${num(pages.outils||0)}</b></li>
           <li>Articles « Apprendre » : <b>${num(pages.articles||0)}</b></li><li>Autres pages (app, tarifs, connexion…) : <b>${num(pages.autre||0)}</b></li></ul></div>
         <div class="panel" id="tunnel-facts"></div>
@@ -403,7 +394,7 @@ td .line2{font-size:12px;color:var(--muted);margin-top:2px}
         <div class="tun-rate">${row.rate?rateText(row.rate.v):'—'}<small>${row.rate?row.rate.of:'point de départ'}</small></div></div>`;
     }).join('')}</div>
     <p class="note">Chaque personne est comptée une fois, robots exclus. Les étapes s’emboîtent : le paywall ne compte que les personnes qui ont créé un compte, le paiement celles qui ont vu le paywall. « A généré un son » est mesuré à côté (on peut créer son compte avant ou après).</p>`;
-    $('tunnel-facts').innerHTML=`<h2>À retenir</h2><p>Sur la sélection et la période.</p><ul class="facts">
+    $('tunnel-facts').innerHTML=`<h2>À retenir</h2><p>Sur la période.</p><ul class="facts">
       <li><b>${num(st.generated_without_account)}</b> ont généré un son sans créer de compte.</li>
       <li><b>${num(st.account_without_generation)}</b> ont créé un compte sans jamais générer.</li>
       <li><b>${num(Math.max(0,st.account-st.paywall))}</b> comptes n’ont jamais vu le paywall.</li>
@@ -533,7 +524,6 @@ td .line2{font-size:12px;color:var(--muted);margin-top:2px}
     $('nav-songs').textContent=num(data.plays?.plays||0);
     if(data.tunnel){
       paintTunnel();
-      $('tunnel-filter').addEventListener('change',event=>{tunnelFilter=event.target.value;paintTunnel();});
       $('tunnel-videos').addEventListener('input',event=>{try{localStorage.setItem(videosKey(),event.target.value);}catch{}paintTunnel();});
     }
     paintUsers();

@@ -82,3 +82,9 @@ test('une écoute est comptée sur la génération et dans score_plays, jamais p
   assert.equal(calls.plays[0][1].$set.kind,'full');
   assert.equal(calls.plays[0][1].$set.admin,false);
 });
+
+test('un compte sans jour de passage enregistré ne fait pas planter les retours',()=>{
+  const now=new Date('2026-11-27T00:00:00Z'),since=new Date('2026-11-19T23:00:00Z');
+  const r=retention([{_id:'x',created_at:new Date('2026-11-20T09:00:00Z')}],since,now);
+  assert.equal(r.d7_cohort,1);assert.equal(r.d7_back,0);assert.equal(r.returning,0);
+});

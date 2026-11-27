@@ -352,7 +352,7 @@ td .line2{font-size:12px;color:var(--muted);margin-top:2px}
           ${kpi('M3',r.m3_cohort?pct(r.m3):'—',r.m3_cohort?`${num(r.m3_kept)} sur ${num(r.m3_cohort)} payants d’au moins 3 mois`:'Aucun payant d’au moins 3 mois')}</div></div>
         <div class="panel"><h2>Où arrivent les gens</h2><p>Première page vue sur le site.</p><ul class="facts">
           <li>Page d’accueil : <b>${num(pages.accueil||0)}</b></li><li>Pages outils (SEO) : <b>${num(pages.outils||0)}</b></li>
-          <li>Articles « Apprendre » : <b>${num(pages.articles||0)}</b></li><li>Autres pages (app, tarifs, connexion…) : <b>${num(pages.autre||0)}</b></li></ul></div>
+          <li>Articles « Apprendre » : <b>${num(pages.articles||0)}</b></li><li>Autres pages (app, tarifs, connexion…) : <b>${num(pages.autre||0)}</b></li>${pages.inconnue?`<li>Inconnue (navigateur qui bloque le suivi) : <b>${num(pages.inconnue)}</b></li>`:''}</ul></div>
         <div class="panel" id="tunnel-facts"></div>
       </div></div>
       <div class="panel" style="margin-top:14px"><h2>Tunnel par source</h2><p>Mêmes étapes, source par source. Le taux sous chaque nombre suit la même règle que le tunnel.</p>
@@ -371,7 +371,7 @@ td .line2{font-size:12px;color:var(--muted);margin-top:2px}
     const videos=Number($('tunnel-videos')?.value)||0;
     const rows=[
       ...(videos?[{key:'video',name:'Vidéos',sub:'Vues saisies',value:videos,rate:null}]:[]),
-      {key:'landing',name:'Landing',sub:`${num(st.engaged)} ont interagi`,value:st.landing,rate:videos?{v:videos?st.landing/videos*100:0,of:'des vues'}:null},
+      {key:'landing',name:'Landing',sub:`${num(st.engaged)} ont interagi${st.earlier||st.untracked?` · dont ${num((st.earlier||0)+(st.untracked||0))} inscrits venus avant ou sans suivi`:''}`,value:st.landing,rate:videos?{v:videos?st.landing/videos*100:0,of:'des vues'}:null},
       {key:'generated',name:'A généré un son',sub:'Aperçu ou morceau lancé',value:st.generated,rate:{v:st.generated_rate,of:'de la landing'},muted:true},
       {key:'account',name:'Compte',sub:'Inscription',value:st.account,rate:{v:st.account_rate,of:'de la landing'}},
       {key:'paywall',name:'Paywall',sub:'Tarifs ou « Débloquer » vus',value:st.paywall,rate:{v:st.paywall_rate,of:'des comptes'}},

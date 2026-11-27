@@ -61,3 +61,22 @@ test('rétention M1 / M3 des payants',()=>{
   assert.equal(r.m1_cohort,1);assert.equal(r.m1_kept,0);
   assert.equal(r.m3_cohort,0);
 });
+
+test('toutes les inscriptions de la période sont dans le tunnel, même sans visite reliée',()=>{
+  const users=[
+    {_id:'n1',created_at:new Date('2026-11-27T23:50:00Z')}, // navigateur qui bloque le suivi : aucune visite
+    {_id:'n2',created_at:new Date('2026-11-27T21:00:00Z')}, // première visite avant la période
+    {_id:'n3',created_at:new Date('2026-11-27T20:00:00Z')}  // visite de la période, déjà comptée
+  ];
+  const visitors=[{_id:'v3',first_seen:new Date('2026-11-27T19:58:00Z'),source:'google',landing:'/',human:true,user_id:'n3',steps:{preview:1}}];
+  const old={_id:'v2',first_seen:new Date('2026-11-20T10:00:00Z'),source:'google',landing:'/',user_id:'n2',steps:{pricing:1}};
+  const userById=new Map(users.map(u=>[u._id,u]));
+  const t=tunnel(visitors,{userById,jobsOf:new Map([['n1',[{}]]]),paying:()=>false},
+    {channelOf,users,now:new Date('2026-11-28T00:00:00Z'),signups:users,visitorOf:new Map([['n2',old],['n3',visitors[0]]])});
+  assert.equal(t.all.account,3);
+  assert.equal(t.all.landing,3);
+  assert.equal(t.all.generated,2);
+  assert.equal(t.all.paywall,1);
+  assert.equal(t.all.earlier,1);assert.equal(t.all.untracked,1);
+  assert.equal(t.landing_pages.inconnue,1);
+});
